@@ -231,7 +231,7 @@ test('cuando falta la fila TOTALES de un bloque, el bloque no invade al siguient
   assert.ok(advertenciaSinTotales, `se esperaba una advertencia SIN_TOTALES: ${JSON.stringify(resultado.advertencias)}`);
 });
 
-test('cuando falta el nombre del segundo equipo, no se cuela un número de jugador ni el nombre del bloque anterior', () => {
+test('cuando falta el nombre del segundo equipo, no se cuela un número de jugador del bloque anterior (que sí tiene jugadores)', () => {
   const headerRow = ['Num.', 'Nombre', 'MIN', 'PTS', 'A/I', '%', 'A/I', '%', 'A/I', '%', 'DEF', 'OF', 'Tot.', 'AST', 'REC', 'PER', 'TC', 'TR', 'FC', 'FR', 'VAL', '+/-'];
   const agrupadoresRow = ['', '', '', '', 'TC 2P', '', 'TC 3P', '', 'TL'];
   const aoa = [
@@ -240,8 +240,11 @@ test('cuando falta el nombre del segundo equipo, no se cuela un número de jugad
     ['TEAM A'],
     agrupadoresRow,
     headerRow,
-    // TEAM A no tiene jugadores: TOTALES llega justo después del header
-    ['', 'TOTALES', '0:00', '0', '0/0', '0', '0/0', '0', '0/0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'],
+    // TEAM A tiene jugadores reales (con números de camiseta) y su TOTALES está presente,
+    // igual que el caso real reportado por el revisor final
+    ['4', 'PEREZ, JUAN', '10:00', '5', '2/4', '50', '0/1', '0', '1/2', '50', '1', '1', '2', '1', '0', '0', '0', '0', '1', '1', '5', '2'],
+    ['5', 'GOMEZ, LUIS', '8:00', '3', '1/2', '50', '0/0', '0', '1/1', '100', '0', '1', '1', '0', '1', '0', '0', '0', '0', '0', '3', '1'],
+    ['', 'TOTALES', '18:00', '8', '3/6', '50', '0/1', '0', '2/3', '67', '1', '2', '3', '1', '1', '0', '0', '0', '1', '1', '8', '3'],
     // la fila con el nombre de TEAM B falta a propósito: el bloque arranca directo en agrupadores+header
     agrupadoresRow,
     headerRow,
@@ -256,9 +259,13 @@ test('cuando falta el nombre del segundo equipo, no se cuela un número de jugad
   const resultado = parsearPartidoCabb(buffer, 'sinNombreEquipo.xlsx');
 
   assert.strictEqual(resultado.equipos.length, 2);
+  const equipoA = resultado.equipos[0];
+  assert.strictEqual(equipoA.nombre, 'TEAM A');
+  assert.deepStrictEqual(equipoA.jugadores.map((j) => j.nombreClave), ['PEREZ JUAN', 'GOMEZ LUIS']);
+
   const equipoB = resultado.equipos[1];
   assert.strictEqual(equipoB.condicion, 'visitante');
-  assert.strictEqual(equipoB.nombre, null, 'no debería colarse un número de jugador ni el nombre de TEAM A');
+  assert.strictEqual(equipoB.nombre, null, 'no debería colarse un número de camiseta de TEAM A (p.ej. "4" o "5") ni el nombre de TEAM A');
   assert.strictEqual(equipoB.filaNombre, null);
   assert.deepStrictEqual(equipoB.jugadores.map((j) => j.nombreClave), ['LOPEZ ANA']);
 

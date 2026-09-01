@@ -346,16 +346,18 @@ export function parsearPartidoCabb(datos, nombreArchivo) {
     }
 
     const condiciones = ['local', 'visitante'];
+    let finBloqueAnterior = -1;
     filasHeader.forEach((filaHeaderIdx, i) => {
       const filaHeaders = grilla[filaHeaderIdx] ?? [];
       const filaAgrupadores = grilla[filaHeaderIdx - 1] ?? [];
       const resuelto = resolverColumnas(filaHeaders, filaAgrupadores);
       if (resuelto.error) {
         salida.errores.push({ fila: filaHeaderIdx + 1, campo: null, mensaje: resuelto.error });
+        finBloqueAnterior = filaHeaderIdx;
         return;
       }
       const limite = filasHeader[i + 1] ?? grilla.length;
-      const { nombre, fila: filaNombre } = encontrarNombreEquipo(grilla, filaHeaderIdx, filasHeader[i - 1] ?? -1);
+      const { nombre, fila: filaNombre } = encontrarNombreEquipo(grilla, filaHeaderIdx, finBloqueAnterior);
       if (nombre === null) {
         salida.advertencias.push({ fila: filaHeaderIdx + 1, campo: null, mensaje: '[SIN_NOMBRE_EQUIPO] no se encontró el nombre del equipo para este bloque' });
       }
@@ -365,6 +367,7 @@ export function parsearPartidoCabb(datos, nombreArchivo) {
       }
       verificarSumas(jugadores, totales, salida.advertencias);
       salida.equipos.push({ condicion: condiciones[i], nombre, filaNombre, jugadores, totales });
+      finBloqueAnterior = totales ? totales.fila - 1 : filaHeaderIdx;
     });
   } catch (e) {
     salida.errores.push({ fila: null, campo: null, mensaje: `[LECTURA_FALLIDA] error inesperado: ${e.message}` });
