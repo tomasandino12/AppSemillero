@@ -193,3 +193,37 @@ test('nunca lanza excepción con un xlsx que no es de la CABB', () => {
     assert.ok(resultado.errores.length > 0);
   });
 });
+
+test('cuando falta la fila TOTALES de un bloque, el bloque no invade al siguiente equipo', () => {
+  const headerRow = ['Num.', 'Nombre', 'MIN', 'PTS', 'A/I', '%', 'A/I', '%', 'A/I', '%', 'DEF', 'OF', 'Tot.', 'AST', 'REC', 'PER', 'TC', 'TR', 'FC', 'FR', 'VAL', '+/-'];
+  const agrupadoresRow = ['', '', '', '', 'TC 2P', '', 'TC 3P', '', 'TL'];
+  const aoa = [
+    ["Estadísticas - TEAM A vs TEAM B - CAT - COMP - X - CABB - 2026"],
+    [],
+    ['TEAM A'],
+    agrupadoresRow,
+    headerRow,
+    ['4', 'PEREZ, JUAN', '10:00', '5', '2/4', '50', '0/1', '0', '1/2', '50', '1', '1', '2', '1', '0', '0', '0', '0', '1', '1', '5', '2'],
+    ['5', 'GOMEZ, LUIS', '8:00', '3', '1/2', '50', '0/0', '0', '1/1', '100', '0', '1', '1', '0', '1', '0', '0', '0', '0', '0', '3', '1'],
+    // la fila TOTALES del equipo A falta a propósito: el bloque de TEAM B arranca inmediatamente
+    ['TEAM B'],
+    agrupadoresRow,
+    headerRow,
+    ['7', 'LOPEZ, ANA', '6:00', '2', '1/1', '100', '0/0', '0', '0/0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '2', '0'],
+    ['', 'TOTALES', '6:00', '2', '1/1', '100', '0/0', '0', '0/0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '2', '0'],
+  ];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  XLSX.utils.book_append_sheet(wb, ws, 'Estadísticas - Test');
+  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+  const resultado = parsearPartidoCabb(buffer, 'sinTotales.xlsx');
+
+  const equipoA = resultado.equipos.find((e) => e.nombre === 'TEAM A');
+  assert.ok(equipoA, 'debería encontrar el equipo TEAM A');
+  assert.strictEqual(equipoA.totales, null);
+  assert.deepStrictEqual(equipoA.jugadores.map((j) => j.nombreClave), ['PEREZ JUAN', 'GOMEZ LUIS']);
+
+  const advertenciaSinTotales = resultado.advertencias.find((a) => a.mensaje.includes('SIN_TOTALES'));
+  assert.ok(advertenciaSinTotales, `se esperaba una advertencia SIN_TOTALES: ${JSON.stringify(resultado.advertencias)}`);
+});

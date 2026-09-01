@@ -235,11 +235,11 @@ function parsearJugador(filaDatos, columnas, fila, advertencias) {
   };
 }
 
-function extraerFilasDelBloque(grilla, filaHeaderIdx, columnas, advertencias) {
+function extraerFilasDelBloque(grilla, filaHeaderIdx, columnas, advertencias, limite) {
   const jugadores = [];
   let totales = null;
   let f = filaHeaderIdx + 1;
-  while (f < grilla.length) {
+  while (f < limite) {
     const filaDatos = grilla[f] ?? [];
     const nombreTexto = leerCelda(filaDatos, columnas.nombre);
     if (nombreTexto === '') { f++; continue; }
@@ -354,8 +354,12 @@ export function parsearPartidoCabb(datos, nombreArchivo) {
         salida.errores.push({ fila: filaHeaderIdx + 1, campo: null, mensaje: resuelto.error });
         return;
       }
+      const limite = filasHeader[i + 1] ?? grilla.length;
       const { nombre, fila: filaNombre } = encontrarNombreEquipo(grilla, filaHeaderIdx);
-      const { jugadores, totales } = extraerFilasDelBloque(grilla, filaHeaderIdx, resuelto.columnas, salida.advertencias);
+      const { jugadores, totales } = extraerFilasDelBloque(grilla, filaHeaderIdx, resuelto.columnas, salida.advertencias, limite);
+      if (!totales) {
+        salida.advertencias.push({ fila: filaHeaderIdx + 1, campo: null, mensaje: '[SIN_TOTALES] no se encontró la fila TOTALES para este bloque' });
+      }
       verificarSumas(jugadores, totales, salida.advertencias);
       salida.equipos.push({ condicion: condiciones[i], nombre, filaNombre, jugadores, totales });
     });
