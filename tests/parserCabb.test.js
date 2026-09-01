@@ -8,6 +8,21 @@ import {
   parsearMinutos,
   parsearTitulo,
 } from '../src/parser/parserCabb.js';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as XLSX from 'xlsx';
+import { parsearPartidoCabb } from '../src/parser/parserCabb.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const fixture = (nombre) => readFileSync(path.join(__dirname, 'fixtures', nombre));
+
+const ARCHIVOS = [
+  'estadisticaPartido_2026105023.xlsx',
+  'estadisticaPartido_2026105329.xlsx',
+  'DOC-20260901-WA0002.xlsx',
+  'estadisticaPartido_2026105541sub17.xlsx',
+];
 
 test('limpiarNombre limpia los casos sucios reales', () => {
   const casos = [
@@ -81,4 +96,100 @@ test('parsearTitulo devuelve error en un título no reconocible', () => {
   assert.ok(resultado.error);
   assert.strictEqual(resultado.local, null);
   assert.strictEqual(resultado.visitante, null);
+});
+
+test('los 4 archivos reales parsean sin errores', () => {
+  for (const archivo of ARCHIVOS) {
+    const resultado = parsearPartidoCabb(fixture(archivo), archivo);
+    assert.deepStrictEqual(resultado.errores, [], `${archivo}: ${JSON.stringify(resultado.errores)}`);
+  }
+});
+
+test('cada archivo detecta exactamente 2 equipos', () => {
+  for (const archivo of ARCHIVOS) {
+    const resultado = parsearPartidoCabb(fixture(archivo), archivo);
+    assert.strictEqual(resultado.equipos.length, 2, archivo);
+  }
+});
+
+test('el título del partido se propaga igual que parsearTitulo en los 4 archivos', () => {
+  const esperado = {
+    'estadisticaPartido_2026105023.xlsx': { local: 'MUNICIPALIDAD DE PUERTO SAN MARTIN', visitante: 'NEWELLS OLD BOYS', categoria: 'U21M' },
+    'estadisticaPartido_2026105329.xlsx': { local: 'NEWELLS OLD BOYS', visitante: 'UNION Y PROGRESO', categoria: 'U21M' },
+    'DOC-20260901-WA0002.xlsx': { local: 'NEWELLS OLD BOYS', visitante: "ATLANTIC SPORTSMEN CLUB 'B'", categoria: 'U21M' },
+    'estadisticaPartido_2026105541sub17.xlsx': { local: 'TALLERES ARROYO SECO', visitante: 'NEWELLS OLD BOYS', categoria: 'U17M' },
+  };
+  for (const archivo of ARCHIVOS) {
+    const resultado = parsearPartidoCabb(fixture(archivo), archivo);
+    assert.strictEqual(resultado.partido.local, esperado[archivo].local, archivo);
+    assert.strictEqual(resultado.partido.visitante, esperado[archivo].visitante, archivo);
+    assert.strictEqual(resultado.partido.categoria, esperado[archivo].categoria, archivo);
+    assert.strictEqual(resultado.partido.competencia, 'ARBB FORMATIVAS MASCULINO 2026', archivo);
+    assert.strictEqual(resultado.partido.anio, 2026, archivo);
+  }
+});
+
+test('el matcheo por nombre une el plantel de Newells a través de 3 partidos U21M', () => {
+  const archivosU21M = [
+    'estadisticaPartido_2026105023.xlsx',
+    'estadisticaPartido_2026105329.xlsx',
+    'DOC-20260901-WA0002.xlsx',
+  ];
+  const clavesPorPartido = archivosU21M.map((archivo) => {
+    const resultado = parsearPartidoCabb(fixture(archivo), archivo);
+    const equipoNewells = resultado.equipos.find((e) => e.nombre === 'NEWELLS OLD BOYS');
+    assert.ok(equipoNewells, archivo);
+    return equipoNewells.jugadores.map((j) => j.nombreClave);
+  });
+  for (const claves of clavesPorPartido) {
+    assert.ok(claves.length <= 12, `no debería haber más de 12 jugadores por partido (hay ${claves.length})`);
+  }
+  const union = new Set(clavesPorPartido.flat());
+  assert.strictEqual(union.size, 13);
+});
+
+test('un jugador que cambió de número de camiseta mantiene el mismo nombreClave', () => {
+  const casos = [
+    { archivo: 'DOC-20260901-WA0002.xlsx', numeroEsperado: '16' },
+    { archivo: 'estadisticaPartido_2026105023.xlsx', numeroEsperado: '15' },
+    { archivo: 'estadisticaPartido_2026105329.xlsx', numeroEsperado: '10' },
+  ];
+  for (const { archivo, numeroEsperado } of casos) {
+    const resultado = parsearPartidoCabb(fixture(archivo), archivo);
+    const equipoNewells = resultado.equipos.find((e) => e.nombre === 'NEWELLS OLD BOYS');
+    const jugador = equipoNewells.jugadores.find((j) => j.nombreClave === 'PALUMBO BAUTISTA');
+    assert.ok(jugador, archivo);
+    assert.strictEqual(jugador.numero, numeroEsperado, archivo);
+  }
+});
+
+test('idPartidoCabb sólo matchea el patrón real de la CABB, nunca basura de WhatsApp', () => {
+  const cabb = parsearPartidoCabb(fixture('estadisticaPartido_2026105023.xlsx'), 'estadisticaPartido_2026105023.xlsx');
+  assert.strictEqual(cabb.origen.idPartidoCabb, '2026105023');
+
+  const whatsapp = parsearPartidoCabb(fixture('DOC-20260901-WA0002.xlsx'), 'DOC-20260901-WA0002.xlsx');
+  assert.strictEqual(whatsapp.origen.idPartidoCabb, null);
+  assert.notStrictEqual(whatsapp.origen.idPartidoCabb, cabb.origen.idPartidoCabb);
+
+  const sub17 = parsearPartidoCabb(fixture('estadisticaPartido_2026105541sub17.xlsx'), 'estadisticaPartido_2026105541sub17.xlsx');
+  assert.strictEqual(sub17.origen.idPartidoCabb, '2026105541');
+});
+
+test('nunca lanza excepción con un archivo vacío', () => {
+  assert.doesNotThrow(() => {
+    const resultado = parsearPartidoCabb(new ArrayBuffer(0), 'vacio.xlsx');
+    assert.ok(resultado.errores.length > 0);
+  });
+});
+
+test('nunca lanza excepción con un xlsx que no es de la CABB', () => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([['hola', 'mundo']]);
+  XLSX.utils.book_append_sheet(wb, ws, 'Hoja1');
+  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  assert.doesNotThrow(() => {
+    const resultado = parsearPartidoCabb(buffer, 'otro.xlsx');
+    assert.strictEqual(resultado.equipos.length, 0);
+    assert.ok(resultado.errores.length > 0);
+  });
 });
