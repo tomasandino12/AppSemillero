@@ -1,0 +1,68 @@
+/* =====================================================================
+   TOKENS — fuente única de valores reutilizables: color, superficie,
+   sombra, tipografía. No declarar hex sueltos de estas familias en
+   app.css ni en js/app.js — siempre referenciar el token.
+   (v3, a partir de la auditoría de accesibilidad/UX de v2)
+   ===================================================================== */
+
+:root{
+  /* ---- color de marca ---- */
+  --rojo:#D9122E;
+  --rojo-osc:#A00D22;
+  --rojo-cl:#FFEBEE;      /* auditoría #4: estado activo de categoría sobre --rojo.
+                              antes #FFD9DF -> 3.98:1, ahora 4.51:1 (AA en texto chico) */
+
+  /* ---- neutros base ---- */
+  --negro:#131316;
+  --papel:#F3F1ED;
+  --blanco:#fff;
+  --linea:#DFDBD3;
+  --tinta:#131316;
+  --gris:#6E6B66;
+
+  /* --gris-cl: texto/dato secundario sobre fondo CLARO (papel, blanco).
+     auditoría #2: antes #9C988F daba 2.5-2.9:1 sobre --papel/blanco
+     (fallaba AA 4.5:1) en chevrones, ejes de gráfico y placeholders
+     numéricos. Bajado de luminosidad manteniendo el matiz. */
+  --gris-cl:#726E65;       /* 4.50:1 sobre --papel · 5.08:1 sobre blanco */
+
+  /* --gris-osc: texto secundario sobre fondo OSCURO (negro, sup-1, sup-2).
+     auditoría #10: consolida tres tonos casi idénticos que convivían sin
+     necesidad real (#A9A5A0 / #B9B5B0 / #8A8781) en un solo token. */
+  --gris-osc:#A9A5A0;      /* 7.57:1 sobre negro · 6.45:1 sobre sup-1 · 5.65:1 sobre sup-2 */
+
+  /* ---- superficies sobre fondo oscuro (auditoría #10) ---- */
+  --sup-1:#22222A;
+  --sup-2:#2C2C34;
+
+  /* ---- semántico ---- */
+  --sube:#15794F;
+  --baja:#985E0C;          /* auditoría #4: antes #B4700E daba 3.40:1 sobre el chip, ahora 4.55:1 */
+
+  /* ---- sombra / radio ---- */
+  --sombra:0 1px 2px rgba(19,19,22,.05),0 6px 18px rgba(19,19,22,.05);
+  --sombra-alta:0 2px 4px rgba(19,19,22,.10),0 10px 26px rgba(19,19,22,.14); /* auditoría #11: solo .al */
+  --r:11px;
+
+  /* =====================================================================
+     ESCALA TIPOGRÁFICA (auditoría #14)
+     v2 tenía 27 tamaños ad hoc entre 9.5px y 30px, ajustados a ojo caso
+     por caso. Se consolidan en 14 escalones documentados; cada tamaño
+     original quedó a una distancia máxima de 0.5px de su escalón
+     (tolerancia pedida: máx. 1px de deriva visual por elemento).
+     ===================================================================== */
+  --fs-100:10px;    /* reemplaza 9.5 / 10 / 10.5px */
+  --fs-115:11.5px;  /* reemplaza 11 / 11.4 / 11.5 / 11.6px */
+  --fs-125:12.5px;  /* reemplaza 12 / 12.2 / 12.5px */
+  --fs-135:13.5px;  /* reemplaza 13 / 13.2 / 13.3 / 13.5px */
+  --fs-145:14.5px;  /* reemplaza 13.8 / 14 / 14.5 / 15px */
+  --fs-160:16px;
+  --fs-170:17px;
+  --fs-190:19px;
+  --fs-200:20px;
+  --fs-220:22px;
+  --fs-230:23px;
+  --fs-250:25px;
+  --fs-260:26px;
+  --fs-300:30px;
+}
