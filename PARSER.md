@@ -6,6 +6,20 @@
 `parsearPartidoCabb(datos, nombreArchivo)`) y devuelve un objeto de datos verificado.
 Es club-agnóstico: no filtra ni conoce ningún club, y nunca lanza excepciones.
 
+## Nota sobre los fixtures reales de test
+
+Los 4 archivos `.xlsx` reales usados por `tests/parserCabb.test.js` (`estadisticaPartido_2026105023.xlsx`,
+`estadisticaPartido_2026105329.xlsx`, `DOC-20260901-WA0002.xlsx`,
+`estadisticaPartido_2026105541sub17.xlsx`) están **deliberadamente excluidos de git**
+(ver `.gitignore`): contienen nombres reales de jugadores, incluyendo menores de la
+categoría U17. No se suben al repo bajo ninguna circunstancia.
+
+Un desarrollador que clone este repo y quiera correr los tests que dependen de estos
+archivos debe conseguirlos por su cuenta (exportación real del club/CABB) y colocarlos en
+`tests/fixtures/` con esos 4 nombres exactos. Sin ellos, `npm test` sigue corriendo
+completo: los tests que dependen de los fixtures se saltean automáticamente (`skip`) en
+vez de fallar.
+
 ## API
 
 ```js
@@ -45,7 +59,7 @@ También se exportan, para poder testearlas sueltas: `limpiarNombre`, `clavearNo
       nombre: "...",         // string o null
       filaNombre: 13,        // número de fila del archivo (para debug), 1-indexado
       jugadores: [ Jugador ],
-      totales: Metricas | null, // mismas métricas que un jugador, sin numero/nombre
+      totales: { fila, ...Metricas } | null, // mismas métricas que un jugador (con fila), sin numero/nombre
     },
     // ... exactamente 2 entradas si no hubo errores
   ],
@@ -96,6 +110,7 @@ Reglas clave:
 | `REBOTES_INCONSISTENTES` | `reb.tot` no es igual a `reb.def + reb.of`. |
 | `SUMA_INCONSISTENTE` | La suma de una columna de jugadores no coincide con la fila `TOTALES` del bloque (se chequea en `pts`, `reb.def`, `reb.of`, `reb.tot`, `ast`, `rec`, `per`, `fal.cometidas`, `fal.recibidas`). |
 | `SIN_TOTALES` | No se encontró la fila `TOTALES` de un bloque antes de llegar al siguiente bloque (o al final de la hoja). `equipos[].totales` queda `null` en ese caso; los jugadores ya encontrados se conservan. |
+| `SIN_NOMBRE_EQUIPO` | No se encontró el nombre del equipo de un bloque antes de llegar al bloque anterior (o al inicio de la hoja). `nombre` queda `null` en ese caso. |
 
 Estas discrepancias nunca son errores: los planilleros de inferiores anotan bien los datos
 esenciales pero las estadísticas secundarias tienen errores de conteo habituales. El dato

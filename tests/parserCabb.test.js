@@ -8,7 +8,7 @@ import {
   parsearMinutos,
   parsearTitulo,
 } from '../src/parser/parserCabb.js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as XLSX from 'xlsx';
@@ -23,6 +23,9 @@ const ARCHIVOS = [
   'DOC-20260901-WA0002.xlsx',
   'estadisticaPartido_2026105541sub17.xlsx',
 ];
+
+const FIXTURES_DISPONIBLES = ARCHIVOS.every((archivo) => existsSync(path.join(__dirname, 'fixtures', archivo)));
+const SKIP_SIN_FIXTURES = { skip: !FIXTURES_DISPONIBLES && 'tests/fixtures/*.xlsx no están presentes (excluidos deliberadamente del repo — ver PARSER.md)' };
 
 test('limpiarNombre limpia los casos sucios reales', () => {
   const casos = [
@@ -98,21 +101,21 @@ test('parsearTitulo devuelve error en un título no reconocible', () => {
   assert.strictEqual(resultado.visitante, null);
 });
 
-test('los 4 archivos reales parsean sin errores', () => {
+test('los 4 archivos reales parsean sin errores', SKIP_SIN_FIXTURES, () => {
   for (const archivo of ARCHIVOS) {
     const resultado = parsearPartidoCabb(fixture(archivo), archivo);
     assert.deepStrictEqual(resultado.errores, [], `${archivo}: ${JSON.stringify(resultado.errores)}`);
   }
 });
 
-test('cada archivo detecta exactamente 2 equipos', () => {
+test('cada archivo detecta exactamente 2 equipos', SKIP_SIN_FIXTURES, () => {
   for (const archivo of ARCHIVOS) {
     const resultado = parsearPartidoCabb(fixture(archivo), archivo);
     assert.strictEqual(resultado.equipos.length, 2, archivo);
   }
 });
 
-test('el título del partido se propaga igual que parsearTitulo en los 4 archivos', () => {
+test('el título del partido se propaga igual que parsearTitulo en los 4 archivos', SKIP_SIN_FIXTURES, () => {
   const esperado = {
     'estadisticaPartido_2026105023.xlsx': { local: 'MUNICIPALIDAD DE PUERTO SAN MARTIN', visitante: 'NEWELLS OLD BOYS', categoria: 'U21M' },
     'estadisticaPartido_2026105329.xlsx': { local: 'NEWELLS OLD BOYS', visitante: 'UNION Y PROGRESO', categoria: 'U21M' },
@@ -129,7 +132,7 @@ test('el título del partido se propaga igual que parsearTitulo en los 4 archivo
   }
 });
 
-test('el matcheo por nombre une el plantel de Newells a través de 3 partidos U21M', () => {
+test('el matcheo por nombre une el plantel de Newells a través de 3 partidos U21M', SKIP_SIN_FIXTURES, () => {
   const archivosU21M = [
     'estadisticaPartido_2026105023.xlsx',
     'estadisticaPartido_2026105329.xlsx',
@@ -148,7 +151,7 @@ test('el matcheo por nombre une el plantel de Newells a través de 3 partidos U2
   assert.strictEqual(union.size, 13);
 });
 
-test('un jugador que cambió de número de camiseta mantiene el mismo nombreClave', () => {
+test('un jugador que cambió de número de camiseta mantiene el mismo nombreClave', SKIP_SIN_FIXTURES, () => {
   const casos = [
     { archivo: 'DOC-20260901-WA0002.xlsx', numeroEsperado: '16' },
     { archivo: 'estadisticaPartido_2026105023.xlsx', numeroEsperado: '15' },
@@ -163,7 +166,7 @@ test('un jugador que cambió de número de camiseta mantiene el mismo nombreClav
   }
 });
 
-test('idPartidoCabb sólo matchea el patrón real de la CABB, nunca basura de WhatsApp', () => {
+test('idPartidoCabb sólo matchea el patrón real de la CABB, nunca basura de WhatsApp', SKIP_SIN_FIXTURES, () => {
   const cabb = parsearPartidoCabb(fixture('estadisticaPartido_2026105023.xlsx'), 'estadisticaPartido_2026105023.xlsx');
   assert.strictEqual(cabb.origen.idPartidoCabb, '2026105023');
 
@@ -226,4 +229,39 @@ test('cuando falta la fila TOTALES de un bloque, el bloque no invade al siguient
 
   const advertenciaSinTotales = resultado.advertencias.find((a) => a.mensaje.includes('SIN_TOTALES'));
   assert.ok(advertenciaSinTotales, `se esperaba una advertencia SIN_TOTALES: ${JSON.stringify(resultado.advertencias)}`);
+});
+
+test('cuando falta el nombre del segundo equipo, no se cuela un número de jugador ni el nombre del bloque anterior', () => {
+  const headerRow = ['Num.', 'Nombre', 'MIN', 'PTS', 'A/I', '%', 'A/I', '%', 'A/I', '%', 'DEF', 'OF', 'Tot.', 'AST', 'REC', 'PER', 'TC', 'TR', 'FC', 'FR', 'VAL', '+/-'];
+  const agrupadoresRow = ['', '', '', '', 'TC 2P', '', 'TC 3P', '', 'TL'];
+  const aoa = [
+    ["Estadísticas - TEAM A vs TEAM B - CAT - COMP - X - CABB - 2026"],
+    [],
+    ['TEAM A'],
+    agrupadoresRow,
+    headerRow,
+    // TEAM A no tiene jugadores: TOTALES llega justo después del header
+    ['', 'TOTALES', '0:00', '0', '0/0', '0', '0/0', '0', '0/0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'],
+    // la fila con el nombre de TEAM B falta a propósito: el bloque arranca directo en agrupadores+header
+    agrupadoresRow,
+    headerRow,
+    ['7', 'LOPEZ, ANA', '6:00', '2', '1/1', '100', '0/0', '0', '0/0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '2', '0'],
+    ['', 'TOTALES', '6:00', '2', '1/1', '100', '0/0', '0', '0/0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '2', '0'],
+  ];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  XLSX.utils.book_append_sheet(wb, ws, 'Estadísticas - Test');
+  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+  const resultado = parsearPartidoCabb(buffer, 'sinNombreEquipo.xlsx');
+
+  assert.strictEqual(resultado.equipos.length, 2);
+  const equipoB = resultado.equipos[1];
+  assert.strictEqual(equipoB.condicion, 'visitante');
+  assert.strictEqual(equipoB.nombre, null, 'no debería colarse un número de jugador ni el nombre de TEAM A');
+  assert.strictEqual(equipoB.filaNombre, null);
+  assert.deepStrictEqual(equipoB.jugadores.map((j) => j.nombreClave), ['LOPEZ ANA']);
+
+  const advertenciaSinNombre = resultado.advertencias.find((a) => a.mensaje.includes('SIN_NOMBRE_EQUIPO'));
+  assert.ok(advertenciaSinNombre, `se esperaba una advertencia SIN_NOMBRE_EQUIPO: ${JSON.stringify(resultado.advertencias)}`);
 });
