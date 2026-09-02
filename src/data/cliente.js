@@ -12,9 +12,9 @@ function leerVariableEntorno(nombre) {
 
 export function crearClienteSupabase() {
   const url = leerVariableEntorno('SUPABASE_URL');
-  const anonKey = leerVariableEntorno('SUPABASE_ANON_KEY');
-  if (!url || !anonKey) {
-    throw new Error('Faltan las variables de entorno SUPABASE_URL / SUPABASE_ANON_KEY');
+  const publishableKey = leerVariableEntorno('SUPABASE_PUBLISHABLE_KEY');
+  if (!url || !publishableKey) {
+    throw new Error('Faltan las variables de entorno SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY');
   }
-  return createClient(url, anonKey);
+  return createClient(url, publishableKey);
 }

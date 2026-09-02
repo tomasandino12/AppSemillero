@@ -101,7 +101,11 @@ test('contexto sin fecha devuelve error, no adivina', () => {
 test('resultadoParser con errores no se mapea', () => {
   const resultado = resultadoParserFicticio({ localJugadores: [], visitanteJugadores: [] });
   resultado.errores = [{ fila: null, campo: null, mensaje: '[TITULO_INVALIDO] x' }];
-  const r = mapearImportacion(resultado, { condicionPropia: 'local' }, []);
+  const r = mapearImportacion(
+    resultado,
+    { condicionPropia: 'local', clubId: 'c1', plantelId: 'p1', temporadaId: 't1', fecha: '2026-05-01' },
+    [],
+  );
   assert.ok(r.error);
 });
 
