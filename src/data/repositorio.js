@@ -145,3 +145,62 @@ export async function crearEstadisticas(clubId, partidoId, estadisticas) {
   const { error } = await supabase.from('estadistica_jugador_partido').insert(filas);
   if (error) throw error;
 }
+
+export async function iniciarSesion(email, password) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data.session;
+}
+
+export async function cerrarSesion() {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
+
+export async function obtenerSesionActual() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  return data.session;
+}
+
+/**
+ * RLS filtra `club` a únicamente los clubes donde el usuario autenticado
+ * tiene una fila en miembro_club (ver 0002_rls.sql) — no hace falta joinear
+ * contra miembro_club acá, Postgres ya lo hizo.
+ */
+export async function obtenerClubesDelEntrenador() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.from('club').select('id, nombre');
+  if (error) throw error;
+  return data.map((fila) => ({ id: fila.id, nombre: fila.nombre }));
+}
+
+export async function obtenerPlantelesDelClub(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('plantel')
+    .select('id, categoria, codigo_cabb, temporada_id')
+    .eq('club_id', clubId);
+  if (error) throw error;
+  return data.map((fila) => ({
+    id: fila.id,
+    categoria: fila.categoria,
+    codigoCabb: fila.codigo_cabb,
+    temporadaId: fila.temporada_id,
+  }));
+}
+
+/**
+ * Única llamada transaccional: importar_partido (0005_rpc_importar_partido.sql)
+ * hace todos los inserts de una importación en una sola transacción de
+ * Postgres — o se guarda todo, o no se guarda nada. Ver ESQUEMA.md.
+ */
+export async function importarPartido(payload) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('importar_partido', { payload });
+  if (error) throw error;
+  return data;
+}
