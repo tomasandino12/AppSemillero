@@ -764,7 +764,7 @@ git commit -m "feat: add transactional importar_partido RPC and manual rollback 
 - Create: `src/ui/main.js` (versión mínima — solo confirma que los módulos cargan; se completa en Task 7)
 
 **Interfaces:**
-- Produces: `mostrarPantalla(id: string): void`, `toast(mensaje: string): void`, `esErrorDeRed(e: Error): boolean` desde `src/ui/nav.js` — usados por todas las pantallas (Tasks 7-10).
+- Produces: `mostrarPantalla(id: string): void`, `toast(mensaje: string): void`, `esErrorDeRed(e: Error): boolean`, `escaparHtml(s: string): string` desde `src/ui/nav.js` — usados por todas las pantallas (Tasks 7-10).
 
 - [ ] **Step 1: Escribir `public/index.html`**
 
