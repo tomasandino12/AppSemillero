@@ -6,6 +6,10 @@ import {
   calcularHashArchivo,
   esDuplicado,
 } from '../src/data/mapearImportacion.js';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parsearPartidoCabb } from '../src/parser/parserCabb.js';
 
 function jugadorFicticio({ numero, nombreClave, nombreLimpio, pts = 10 }) {
   const [apellido, nombre] = nombreLimpio.split(',').map((s) => s.trim());
@@ -190,4 +194,24 @@ test('calcularHashArchivo: contenidos distintos dan hashes distintos', async () 
   const hashA = await calcularHashArchivo(Buffer.from('contenido A'));
   const hashB = await calcularHashArchivo(Buffer.from('contenido B'));
   assert.notStrictEqual(hashA, hashB);
+});
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+test('integración: la salida real del parser sobre partido_ok.xlsx se mapea sin error', () => {
+  const datos = readFileSync(path.join(__dirname, 'fixtures', 'sintetico', 'partido_ok.xlsx'));
+  const resultadoParser = parsearPartidoCabb(datos, 'partido_ok.xlsx');
+  assert.deepStrictEqual(resultadoParser.errores, []);
+
+  const r = mapearImportacion(
+    resultadoParser,
+    { condicionPropia: 'local', clubId: 'c1', plantelId: 'p1', temporadaId: 't1', fecha: '2026-05-01' },
+    [],
+  );
+  assert.strictEqual(r.error, null);
+  assert.strictEqual(r.partido.rivalNombre, 'EQUIPO SINTÉTICO B');
+  assert.strictEqual(r.partido.puntosPropios, 24);
+  assert.strictEqual(r.partido.puntosRival, 23);
+  assert.strictEqual(r.estadisticas.length, 3);
+  assert.strictEqual(r.jugadoresNuevos.length, 3, 'club vacío: los 3 jugadores propios son nuevos');
 });

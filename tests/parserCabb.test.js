@@ -272,3 +272,41 @@ test('cuando falta el nombre del segundo equipo, no se cuela un número de jugad
   const advertenciaSinNombre = resultado.advertencias.find((a) => a.mensaje.includes('SIN_NOMBRE_EQUIPO'));
   assert.ok(advertenciaSinNombre, `se esperaba una advertencia SIN_NOMBRE_EQUIPO: ${JSON.stringify(resultado.advertencias)}`);
 });
+
+const fixtureSintetico = (nombre) => readFileSync(path.join(__dirname, 'fixtures', 'sintetico', nombre));
+
+test('fixture sintético partido_ok.xlsx parsea sin errores ni advertencias', () => {
+  const resultado = parsearPartidoCabb(fixtureSintetico('partido_ok.xlsx'), 'partido_ok.xlsx');
+  assert.deepStrictEqual(resultado.errores, []);
+  assert.deepStrictEqual(resultado.advertencias, []);
+  assert.strictEqual(resultado.equipos.length, 2);
+  assert.strictEqual(resultado.equipos[0].jugadores.length, 3);
+  assert.strictEqual(resultado.equipos[1].jugadores.length, 3);
+});
+
+test('fixture sintético partido_sin_totales.xlsx: advertencia SIN_TOTALES, sin mezclar datos entre bloques', () => {
+  const resultado = parsearPartidoCabb(fixtureSintetico('partido_sin_totales.xlsx'), 'partido_sin_totales.xlsx');
+  const equipoA = resultado.equipos.find((e) => e.nombre === 'EQUIPO SINTÉTICO A');
+  const equipoB = resultado.equipos.find((e) => e.nombre === 'EQUIPO SINTÉTICO B');
+  assert.ok(equipoA);
+  assert.ok(equipoB);
+  assert.strictEqual(equipoA.totales, null);
+  assert.strictEqual(equipoA.jugadores.length, 3);
+  assert.strictEqual(equipoB.totales.pts, 23, 'el segundo equipo no debería verse afectado');
+  assert.strictEqual(equipoB.jugadores.length, 3);
+  assert.ok(resultado.advertencias.some((a) => a.mensaje.includes('SIN_TOTALES')));
+});
+
+test('fixture sintético partido_sin_nombre_equipo.xlsx: advertencia SIN_NOMBRE_EQUIPO, sin mezclar datos entre bloques', () => {
+  const resultado = parsearPartidoCabb(fixtureSintetico('partido_sin_nombre_equipo.xlsx'), 'partido_sin_nombre_equipo.xlsx');
+  assert.strictEqual(resultado.equipos.length, 2);
+  const equipoA = resultado.equipos[0];
+  const equipoB = resultado.equipos[1];
+  assert.strictEqual(equipoA.nombre, 'EQUIPO SINTÉTICO A');
+  assert.strictEqual(equipoA.jugadores.length, 3);
+  assert.strictEqual(equipoB.condicion, 'visitante');
+  assert.strictEqual(equipoB.nombre, null);
+  assert.strictEqual(equipoB.jugadores.length, 3, 'los jugadores del segundo equipo deben seguir siendo los suyos, no los del primero');
+  assert.deepStrictEqual(equipoB.jugadores.map((j) => j.apellido), ['FERNÁNDEZ', 'NÚÑEZ', 'MARTÍNEZ']);
+  assert.ok(resultado.advertencias.some((a) => a.mensaje.includes('SIN_NOMBRE_EQUIPO')));
+});
