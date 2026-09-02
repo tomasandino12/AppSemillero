@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mkdirSync } from 'node:fs';
 
 const HEADER_ROW = ['Num.', 'Nombre', 'MIN', 'PTS', 'A/I', '%', 'A/I', '%', 'A/I', '%', 'DEF', 'OF', 'Tot.', 'AST', 'REC', 'PER', 'TC', 'TR', 'FC', 'FR', 'VAL', '+/-'];
 const AGRUPADORES_ROW = ['', '', '', '', 'TC 2P', '', 'TC 3P', '', 'TL'];
@@ -84,6 +85,8 @@ function construirLibro({ omitirTotalesA = false, omitirNombreB = false } = {}) 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(__dirname, 'fixtures', 'sintetico');
+
+mkdirSync(outDir, { recursive: true });
 
 XLSX.writeFile(construirLibro({}), path.join(outDir, 'partido_ok.xlsx'));
 XLSX.writeFile(construirLibro({ omitirTotalesA: true }), path.join(outDir, 'partido_sin_totales.xlsx'));

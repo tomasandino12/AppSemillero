@@ -6,13 +6,24 @@ function obtenerCliente() {
   return clienteCache;
 }
 
+const TAMANIO_PAGINA = 1000;
+
 export async function obtenerJugadoresDelClub(clubId) {
   const supabase = obtenerCliente();
-  const { data, error } = await supabase
-    .from('jugador')
-    .select('id, nombre_clave, nombre_limpio, pertenencia(plantel_id, hasta)')
-    .eq('club_id', clubId);
-  if (error) throw error;
+  const data = [];
+  let desde = 0;
+  for (;;) {
+    const hasta = desde + TAMANIO_PAGINA - 1;
+    const { data: pagina, error } = await supabase
+      .from('jugador')
+      .select('id, nombre_clave, nombre_limpio, pertenencia(plantel_id, hasta)')
+      .eq('club_id', clubId)
+      .range(desde, hasta);
+    if (error) throw error;
+    data.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
   return data.map((fila) => ({
     id: fila.id,
     nombreClave: fila.nombre_clave,
@@ -89,7 +100,17 @@ export async function crearPertenencia({ clubId, jugadorId, plantelId, temporada
   if (error) throw error;
 }
 
+/**
+ * Precondición: todo elemento de `estadisticas` debe traer `jugadorId` resuelto
+ * (no null) — el caller es responsable de resolver cada uno vía crearJugador/
+ * pertenencia antes de llamar acá, porque estadistica_jugador_partido.jugador_id
+ * es not null en el esquema.
+ */
 export async function crearEstadisticas(clubId, partidoId, estadisticas) {
+  const sinResolver = estadisticas.filter((e) => e.jugadorId == null).map((e) => e.nombreClave);
+  if (sinResolver.length > 0) {
+    throw new Error(`no se puede persistir estadisticas de jugadores sin resolver: ${sinResolver.join(', ')}`);
+  }
   const supabase = obtenerCliente();
   const filas = estadisticas.map((e) => ({
     club_id: clubId,

@@ -76,7 +76,7 @@ function buscarCoincidenciaExacta(jugadorArchivo, jugadoresExistentes) {
 }
 
 function buscarSugerencia(jugadorArchivo, jugadoresExistentes) {
-  const apellidoArchivo = extraerApellido(jugadorArchivo.nombreLimpio);
+  const apellidoArchivo = jugadorArchivo.apellido;
   let mejor = null;
   for (const existente of jugadoresExistentes) {
     if (existente.nombreClave === jugadorArchivo.nombreClave) continue;
@@ -84,14 +84,14 @@ function buscarSugerencia(jugadorArchivo, jugadoresExistentes) {
     const mismoApellido = extraerApellido(existente.nombreLimpio) === apellidoArchivo;
     if (distancia > DISTANCIA_MAXIMA_SUGERENCIA && !mismoApellido) continue;
     if (!mejor || distancia < mejor.distancia) {
-      mejor = { candidato: existente, distancia, mismoApellido };
+      mejor = { candidato: existente, distancia };
     }
   }
   return mejor;
 }
 
 /**
- * Puro: sin red, sin Supabase, sin generar IDs. Clasifica la salida del
+ * Puro: sin red, sin cliente de base de datos, sin generar IDs. Clasifica la salida del
  * parser (ver PARSER.md) en datos listos para persistir. condicionPropia
  * ("local"|"visitante") es un dato que decide el entrenador — nunca se
  * infiere comparando nombres de club.
@@ -109,6 +109,11 @@ export function mapearImportacion(resultadoParser, contexto, jugadoresExistentes
   if (contexto.condicionPropia !== 'local' && contexto.condicionPropia !== 'visitante') {
     return { ...vacio, error: `condicionPropia debe ser "local" o "visitante", se recibió ${JSON.stringify(contexto.condicionPropia)}` };
   }
+  const camposRequeridos = ['clubId', 'plantelId', 'temporadaId', 'fecha'];
+  const camposFaltantes = camposRequeridos.filter((campo) => contexto[campo] === null || contexto[campo] === undefined || contexto[campo] === '');
+  if (camposFaltantes.length > 0) {
+    return { ...vacio, error: `faltan campos requeridos en contexto: ${camposFaltantes.join(', ')}` };
+  }
   if (!resultadoParser || resultadoParser.errores.length > 0) {
     return { ...vacio, error: 'el resultado del parser tiene errores; no se puede mapear una importación a partir de un parseo incompleto' };
   }
@@ -118,6 +123,16 @@ export function mapearImportacion(resultadoParser, contexto, jugadoresExistentes
 
   const equipoPropio = resultadoParser.equipos.find((e) => e.condicion === contexto.condicionPropia);
   const equipoRival = resultadoParser.equipos.find((e) => e.condicion !== contexto.condicionPropia);
+
+  const nombresClaveVistos = new Set();
+  const nombresClaveDuplicados = new Set();
+  for (const j of equipoPropio.jugadores) {
+    if (nombresClaveVistos.has(j.nombreClave)) nombresClaveDuplicados.add(j.nombreClave);
+    nombresClaveVistos.add(j.nombreClave);
+  }
+  if (nombresClaveDuplicados.size > 0) {
+    return { ...vacio, error: `nombres duplicados en el archivo: ${[...nombresClaveDuplicados].join(', ')}` };
+  }
 
   const partido = {
     clubId: contexto.clubId,

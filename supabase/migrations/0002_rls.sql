@@ -2,7 +2,8 @@
 --
 -- Un usuario ve/edita únicamente lo de un club donde tiene una fila en
 -- miembro_club. Como TODA tabla de dominio lleva club_id (0001), la misma
--- forma de política sirve para las nueve tablas sin excepción.
+-- forma de política sirve para las ocho tablas de dominio (todas menos
+-- miembro_club, que tiene su propia política más abajo).
 
 alter table club enable row level security;
 alter table temporada enable row level security;

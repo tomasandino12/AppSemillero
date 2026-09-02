@@ -67,9 +67,20 @@ Todo lo que trae el parser para un jugador **propio** en un partido: minutos en 
 
 ## Políticas RLS
 
-Ver `migrations/0002_rls.sql`. Un usuario ve/edita únicamente filas cuyo `club_id` aparece en una fila de `miembro_club` con `user_id = auth.uid()`. Como toda tabla de dominio lleva `club_id` (decisión de la Etapa 2A), la política es literalmente la misma forma en las nueve tablas — sin excepciones ni casos especiales.
+Ver `migrations/0002_rls.sql`. Un usuario ve/edita únicamente filas cuyo `club_id` aparece en una fila de `miembro_club` con `user_id = auth.uid()`. Como toda tabla de dominio lleva `club_id` (decisión de la Etapa 2A), la política es literalmente la misma forma en las ocho tablas de dominio — todas menos `miembro_club`, que es la excepción descrita abajo.
 
 `miembro_club` es la única tabla sin esa forma de política: un usuario ve únicamente sus propias filas (`user_id = auth.uid()`), y **no existe política de insert/update/delete** para el cliente autenticado — dar de alta la membresía de un entrenador en un club es un acto administrativo, se hace desde el panel de Supabase o con un rol de servicio, nunca desde el cliente RLS-restringido. Para el piloto (un solo club, un puñado de entrenadores) esto es simple y suficiente; automatizar el alta de entrenadores es un problema de un estadio posterior del producto, no de esta etapa.
+
+## Orden de persistencia de una importación
+
+`src/data/repositorio.js` expone una función por operación de base de datos, sin transacción que las envuelva. Persistir un partido importado requiere, en este orden:
+
+1. Resolver el `jugadorId` de cada jugador propio: `obtenerJugadoresDelClub` + la clasificación de `mapearImportacion` (creando `jugador`/`pertenencia` nuevos donde corresponda, vía `crearJugador`/`crearPertenencia`, para cualquier `jugadoresNuevos`/`sugerencias` confirmadas por el entrenador).
+2. `crearImportacion`.
+3. `crearPartido`.
+4. `crearEstadisticas` al final — requiere que **todos** los `jugadorId` ya estén resueltos (ver la guarda en `repositorio.js`; `estadistica_jugador_partido.jugador_id` es `not null`).
+
+**Gap de atomicidad conocido:** estas son llamadas separadas, no una transacción. Si un paso falla, lo persistido en los pasos anteriores queda en la base — y como `importacion` tiene `unique(club_id, hash_archivo)`, reintentar el mismo archivo falla como "duplicado" aunque los datos estén incompletos. Envolver el import completo en una única transacción de base de datos (por ejemplo, una función Postgres `security invoker`) es un ítem abierto deliberado para la próxima etapa del proyecto, no resuelto acá.
 
 ## Cómo probar localmente
 

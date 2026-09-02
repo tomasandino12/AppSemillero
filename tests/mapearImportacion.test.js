@@ -65,6 +65,39 @@ test('condicionPropia inválida devuelve error, no adivina', () => {
   assert.deepStrictEqual(r.estadisticas, []);
 });
 
+test('nombreClave duplicado en el archivo devuelve error, no adivina', () => {
+  const jA = jugadorFicticio({ numero: '4', nombreClave: 'PEREZ JUAN', nombreLimpio: 'PEREZ, JUAN' });
+  const jB = jugadorFicticio({ numero: '9', nombreClave: 'PEREZ JUAN', nombreLimpio: 'PEREZ, JUAN' });
+  const r = mapearImportacion(
+    resultadoParserFicticio({ localJugadores: [jA, jB], visitanteJugadores: [] }),
+    { condicionPropia: 'local', clubId: 'c1', plantelId: 'p1', temporadaId: 't1', fecha: '2026-05-01' },
+    [],
+  );
+  assert.ok(r.error);
+  assert.ok(r.error.includes('PEREZ JUAN'), 'el error debe nombrar el nombreClave duplicado');
+  assert.strictEqual(r.partido, null);
+  assert.deepStrictEqual(r.estadisticas, []);
+  assert.deepStrictEqual(r.jugadoresNuevos, []);
+  assert.deepStrictEqual(r.jugadoresCoincidentes, []);
+  assert.deepStrictEqual(r.sugerencias, []);
+});
+
+test('contexto sin fecha devuelve error, no adivina', () => {
+  const archivoJ = jugadorFicticio({ numero: '10', nombreClave: 'PEREZ JUAN', nombreLimpio: 'PEREZ, JUAN' });
+  const r = mapearImportacion(
+    resultadoParserFicticio({ localJugadores: [archivoJ], visitanteJugadores: [] }),
+    { condicionPropia: 'local', clubId: 'c1', plantelId: 'p1', temporadaId: 't1' },
+    [],
+  );
+  assert.ok(r.error);
+  assert.ok(r.error.includes('fecha'), 'el error debe nombrar el campo faltante');
+  assert.strictEqual(r.partido, null);
+  assert.deepStrictEqual(r.estadisticas, []);
+  assert.deepStrictEqual(r.jugadoresNuevos, []);
+  assert.deepStrictEqual(r.jugadoresCoincidentes, []);
+  assert.deepStrictEqual(r.sugerencias, []);
+});
+
 test('resultadoParser con errores no se mapea', () => {
   const resultado = resultadoParserFicticio({ localJugadores: [], visitanteJugadores: [] });
   resultado.errores = [{ fila: null, campo: null, mensaje: '[TITULO_INVALIDO] x' }];
