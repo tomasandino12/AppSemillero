@@ -2,3 +2,4 @@ node_modules/
 tests/fixtures/*
 !tests/fixtures/sintetico/
 .env
+.claude/worktrees/
