@@ -181,6 +181,8 @@ function actualizarBotonConfirmar() {
 
 async function avanzarAJugadores() {
   const club = obtenerClubActual();
+  document.getElementById('cargando-jugadores')?.remove();
+  document.getElementById('btn-volver-inicio')?.remove();
   contenedor().insertAdjacentHTML('beforeend', `<div class="p" id="cargando-jugadores">Cargando plantel...</div>`);
   $('btn-confirmar-equipo-plantel').disabled = true;
 
@@ -192,7 +194,7 @@ async function avanzarAJugadores() {
   } catch (e) {
     $('cargando-jugadores').textContent = esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'Ocurrió un error inesperado.';
     $('btn-confirmar-equipo-plantel').disabled = false;
-    contenedor().insertAdjacentHTML('beforeend', botonVolver());
+    $('btn-confirmar-equipo-plantel').insertAdjacentHTML('afterend', '<button class="btn sec" id="btn-volver-inicio" style="margin-top:8px">Volver</button>');
     ligarBotonVolver();
     return;
   }
@@ -206,7 +208,7 @@ async function avanzarAJugadores() {
   if (resultadoMapeo.error) {
     $('cargando-jugadores').textContent = 'Ocurrió un error inesperado: ' + resultadoMapeo.error;
     $('btn-confirmar-equipo-plantel').disabled = false;
-    contenedor().insertAdjacentHTML('beforeend', botonVolver());
+    $('btn-confirmar-equipo-plantel').insertAdjacentHTML('afterend', '<button class="btn sec" id="btn-volver-inicio" style="margin-top:8px">Volver</button>');
     ligarBotonVolver();
     return;
   }
