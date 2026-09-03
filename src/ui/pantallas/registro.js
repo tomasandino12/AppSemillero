@@ -4,6 +4,9 @@ import { renderPlantel, setAbrirFicha, setAbrirAltaManual } from './plantel.js';
 import { renderFicha, abrirFicha } from './fichaJugador.js';
 import { iniciarHoja } from '../componentes/hoja.js';
 import { abrirAltaManual } from './altaJugador.js';
+import { renderHoy } from './hoy.js';
+import { renderMedir } from './medir.js';
+import { renderRecursos } from './recursos.js';
 
 /**
  * Punto único donde se registran las pantallas. Existe para que main.js no
@@ -17,6 +20,9 @@ export function registrarPantallas() {
   registrarPantalla('p-datos', { titulo: 'Datos', render: renderDatos });
   registrarPantalla('p-confirmacion', { titulo: 'Confirmar partido' });
   registrarPantalla('p-resultado', { titulo: 'Partido guardado' });
+  registrarPantalla('p-hoy', { titulo: 'Hoy', render: renderHoy });
+  registrarPantalla('p-medir', { titulo: 'Medir', render: renderMedir });
+  registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });
   setAbrirFicha(abrirFicha);
   iniciarDatos();
   iniciarHoja();
