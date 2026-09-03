@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131316">
+<title>Cargar partido · Inferiores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/public/css/import.css">
+<script type="importmap">
+{
+  "imports": {
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.112.4"
+  }
+}
+</script>
+<script>
+  // Públicas por diseño (publishable key, no la secret key) — ver
+  // docs/superpowers/specs/2026-09-02-etapa-2b-import-ui-design.md.
+  window.SUPABASE_URL = 'https://lseqvbtdzebomxwtqhwu.supabase.co';
+  window.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_nuPVo5yqsAFzY1uf6qcWBA_quRRgUFF';
+</script>
+</head>
+<body>
+<div class="marco">
+  <div class="cuerpo" id="cuerpo">
+
+    <div class="pant" id="p-login">
+      <div class="pad">
+        <div class="h2">Ingresar</div>
+        <div class="campo"><label for="in-email">Email</label><input id="in-email" type="email" autocomplete="username" inputmode="email"></div>
+        <div class="campo"><label for="in-pass">Contraseña</label><input id="in-pass" type="password" autocomplete="current-password"></div>
+        <div class="al" id="login-error" style="display:none"><div class="tx"></div></div>
+        <button class="btn" id="btn-login">Ingresar</button>
+      </div>
+    </div>
+
+    <div class="pant" id="p-inicio">
+      <div class="pad inicio-pad">
+        <button class="btn" id="btn-cargar-partido">Cargar partido</button>
+        <input type="file" id="input-archivo" accept=".xlsx" style="display:none">
+      </div>
+    </div>
+
+    <div class="pant" id="p-confirmacion">
+      <div class="pad" id="confirmacion-contenido"></div>
+    </div>
+
+    <div class="pant" id="p-resultado">
+      <div class="pad" id="resultado-contenido"></div>
+    </div>
+
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-tx"></span></div>
+</div>
+<script type="module" src="/src/ui/main.js"></script>
+</body>
+</html>
