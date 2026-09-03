@@ -19,8 +19,20 @@ test('confirmacionImport nunca appendea botonVolver() con beforeend', () => {
 
 test('avanzarAJugadores limpia los restos del intento anterior antes de reinsertar', () => {
   const src = fuente('src/ui/pantallas/confirmacionImport.js');
-  assert.match(src, /getElementById\('cargando-jugadores'\)\?\.remove\(\)/);
-  assert.match(src, /getElementById\('btn-volver-inicio'\)\?\.remove\(\)/);
+  const idxRemoveCargando = src.indexOf("getElementById('cargando-jugadores')?.remove()");
+  const idxRemoveBoton = src.indexOf("getElementById('btn-volver-inicio')?.remove()");
+  const idxReinsercion = src.indexOf("insertAdjacentHTML('beforeend'");
+  assert.notStrictEqual(idxRemoveCargando, -1, 'falta el remove() de #cargando-jugadores al tope de avanzarAJugadores');
+  assert.notStrictEqual(idxRemoveBoton, -1, 'falta el remove() de #btn-volver-inicio al tope de avanzarAJugadores');
+  assert.notStrictEqual(idxReinsercion, -1, 'falta la reinserción de #cargando-jugadores vía insertAdjacentHTML(\'beforeend\', ...)');
+  assert.ok(
+    idxRemoveCargando < idxReinsercion,
+    'el remove() de #cargando-jugadores debe ejecutarse ANTES de la reinserción: si se mueve después (o a otra función), un segundo intento fallido deja dos nodos #cargando-jugadores y el mensaje de error se escribe en el que quedó muerto e invisible',
+  );
+  assert.ok(
+    idxRemoveBoton < idxReinsercion,
+    'el remove() de #btn-volver-inicio debe ejecutarse ANTES de la reinserción: es exactamente el bug de footers superpuestos de la Etapa 2B — si se mueve después de reinsertar, dos intentos fallidos seguidos apilan dos botones "Volver" con el mismo id y el que queda visible es el muerto',
+  );
 });
 
 test('el router no conoce ni toca el botón de volver del contenido', () => {
