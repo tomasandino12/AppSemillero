@@ -1,11 +1,11 @@
-import { parsearPartidoCabb } from '../parser/parserCabb.js';
-import { calcularHashArchivo, mapearImportacion } from '../data/mapearImportacion.js';
-import { obtenerPlantelesDelClub, obtenerJugadoresDelClub, buscarImportacionPorHash, importarPartido } from '../data/repositorio.js';
-import { prepararPayloadImportacion } from '../data/prepararPayloadImportacion.js';
-import { obtenerClubActual } from './sesion.js';
-import { mostrarPantalla, toast, esErrorDeRed, escaparHtml } from './nav.js';
-import { mostrarInicio } from './pantallaInicio.js';
-import { mostrarResultado } from './pantallaResultado.js';
+import { parsearPartidoCabb } from '../../parser/parserCabb.js';
+import { calcularHashArchivo, mapearImportacion } from '../../data/mapearImportacion.js';
+import { obtenerPlantelesDelClub, obtenerJugadoresDelClub, buscarImportacionPorHash, importarPartido } from '../../data/repositorio.js';
+import { prepararPayloadImportacion } from '../../data/prepararPayloadImportacion.js';
+import { obtenerClubActual } from '../sesion.js';
+import { mostrarPantalla, toast, esErrorDeRed, escaparHtml } from '../nav.js';
+import { mostrarResultado } from './resultadoImport.js';
+import { retornarDeImport } from './retornoImport.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('confirmacion-contenido');
@@ -89,7 +89,7 @@ function botonVolver() {
   return `<div class="pie-fijo"><button class="btn sec" id="btn-volver-inicio">Volver</button></div>`;
 }
 function ligarBotonVolver() {
-  $('btn-volver-inicio')?.addEventListener('click', mostrarInicio);
+  $('btn-volver-inicio')?.addEventListener('click', retornarDeImport);
 }
 
 function renderPasoEquipoYPlantel() {

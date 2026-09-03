@@ -1,5 +1,5 @@
-import { mostrarPantalla, escaparHtml } from './nav.js';
-import { mostrarInicio } from './pantallaInicio.js';
+import { mostrarPantalla, escaparHtml } from '../nav.js';
+import { retornarDeImport } from './retornoImport.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -18,5 +18,5 @@ export function mostrarResultado({ resumen, advertencias }) {
     ${detalleAdvertencias}
     <div class="pie-fijo"><button class="btn" id="btn-volver-resultado">Cargar otro partido</button></div>
   `;
-  $('btn-volver-resultado').addEventListener('click', mostrarInicio);
+  $('btn-volver-resultado').addEventListener('click', retornarDeImport);
 }
