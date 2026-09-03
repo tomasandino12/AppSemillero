@@ -1,0 +1,44 @@
+/* =====================================================================
+   BASE — reset, tipografía y comportamiento de documento.
+   Sin media queries: todos los breakpoints viven en layout.css.
+   ===================================================================== */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+html,body{margin:0;padding:0}
+
+body{
+  background:var(--papel);
+  font-family:var(--ff-cuerpo);
+  color:var(--tinta);
+  font-size:var(--fs-160);
+  line-height:1.45;
+  min-height:100dvh;
+  overscroll-behavior-y:none;
+}
+
+button{font-family:inherit;font-size:inherit;border:0;background:none;cursor:pointer;color:inherit;padding:0;user-select:none}
+input,select,textarea{font-family:inherit;font-size:inherit}
+img,svg{max-width:100%}
+ul,ol{margin:0;padding:0;list-style:none}
+
+h1,h2,h3{font-family:var(--ff-titulo);font-weight:700;text-transform:uppercase;letter-spacing:.02em;line-height:1.05;margin:0}
+h1{font-size:var(--fs-titulo)}
+h2{font-size:var(--fs-titulo-chico)}
+
+/* Título de sección, portado del prototipo */
+.h2{font-family:var(--ff-titulo);font-size:var(--fs-titulo-chico);font-weight:700;text-transform:uppercase;letter-spacing:.02em;line-height:1;margin:var(--sp-4) 0 var(--sp-3)}
+.p{font-size:var(--fs-135);color:var(--gris);line-height:1.45}
+
+.eyebrow{
+  font-family:var(--ff-titulo);font-size:var(--fs-125);font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--gris);
+  display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-5) 0 var(--sp-2);
+}
+.eyebrow::before{content:"";width:.4375rem;height:.4375rem;background:var(--rojo);flex:0 0 auto}
+.eyebrow .der{margin-left:auto;color:var(--rojo);letter-spacing:.05em}
+
+.mono{font-family:var(--ff-mono)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+*:focus-visible{outline:2px solid var(--rojo);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
