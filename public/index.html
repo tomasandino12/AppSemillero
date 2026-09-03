@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#131316">
-<title>Cargar partido · Inferiores</title>
+<title>Inferiores · Seguimiento de jugadores</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/tokens.css">
-<link rel="stylesheet" href="/public/css/import.css">
+<link rel="stylesheet" href="/public/css/tokens.css">
+<link rel="stylesheet" href="/public/css/base.css">
+<link rel="stylesheet" href="/public/css/layout.css">
+<link rel="stylesheet" href="/public/css/componentes.css">
 <script type="importmap">
 {
   "imports": {
@@ -26,37 +28,46 @@
 </script>
 </head>
 <body>
-<div class="marco">
-  <div class="cuerpo" id="cuerpo">
+<div class="app" id="app">
 
-    <div class="pant" id="p-login">
+  <header class="cabecera" id="cabecera"></header>
+  <div class="cats" id="cats"></div>
+
+  <main class="cuerpo" id="cuerpo">
+
+    <section class="pant" id="p-login">
       <div class="pad">
-        <div class="h2">Ingresar</div>
+        <h2 class="h2">Ingresar</h2>
         <div class="campo"><label for="in-email">Email</label><input id="in-email" type="email" autocomplete="username" inputmode="email"></div>
         <div class="campo"><label for="in-pass">Contraseña</label><input id="in-pass" type="password" autocomplete="current-password"></div>
         <div class="al" id="login-error" style="display:none"><div class="tx"></div></div>
         <button class="btn" id="btn-login">Ingresar</button>
       </div>
-    </div>
+    </section>
 
-    <div class="pant" id="p-inicio">
-      <div class="pad inicio-pad">
-        <button class="btn" id="btn-cargar-partido">Cargar partido</button>
-        <input type="file" id="input-archivo" accept=".xlsx" style="display:none">
-      </div>
-    </div>
+    <section class="pant" id="p-plantel"><div id="plantel-contenido"></div></section>
+    <section class="pant" id="p-ficha"><div id="ficha-contenido"></div></section>
+    <section class="pant" id="p-datos"><div id="datos-contenido"></div></section>
+    <section class="pant" id="p-hoy"><div id="hoy-contenido"></div></section>
+    <section class="pant" id="p-medir"><div id="medir-contenido"></div></section>
+    <section class="pant" id="p-recursos"><div id="recursos-contenido"></div></section>
 
-    <div class="pant" id="p-confirmacion">
-      <div class="pad" id="confirmacion-contenido"></div>
-    </div>
+    <!-- Pantallas del flujo de import de la Etapa 2B. Los ids de contenido
+         los usa su lógica, que no se toca. -->
+    <section class="pant" id="p-confirmacion"><div class="pad" id="confirmacion-contenido"></div></section>
+    <section class="pant" id="p-resultado"><div class="pad" id="resultado-contenido"></div></section>
 
-    <div class="pant" id="p-resultado">
-      <div class="pad" id="resultado-contenido"></div>
-    </div>
+  </main>
 
-  </div>
-  <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-tx"></span></div>
+  <nav class="nav" id="nav" aria-label="Navegación principal"></nav>
 </div>
+
+<div class="velo" id="velo"></div>
+<div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-titulo"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-tx"></span></div>
+
+<input type="file" id="input-archivo" accept=".xlsx" class="sr" tabindex="-1" aria-hidden="true">
+
 <script type="module" src="/src/ui/main.js"></script>
 </body>
 </html>
