@@ -1,0 +1,204 @@
+/* =====================================================================
+   COMPONENTES — absorbe public/css/import.css (Etapa 2B) conservando
+   exactamente sus nombres de clase, porque confirmacionImport.js genera
+   markup con ellos y su lógica no se toca (Etapa 3, Decisión 2).
+   Sin media queries de ancho: viven todas en layout.css.
+   ===================================================================== */
+
+/* ---- botones ---- */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  width:100%;min-height:var(--tap);
+  background:var(--rojo);color:#fff;padding:var(--sp-4);
+  border-radius:var(--r);font-family:var(--ff-titulo);font-size:var(--fs-190);
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  transition:transform 120ms ease-out,background 120ms ease-out;
+}
+.btn:active{background:var(--rojo-osc);transform:scale(.97)}
+.btn:disabled{background:#C9C5BE;color:#fff;transform:none}
+.btn.sec{background:transparent;color:var(--tinta);border:1.5px solid var(--negro);font-size:var(--fs-145)}
+.btn.osc{background:var(--negro)}
+@media (hover:hover){
+  .btn:not(:disabled):hover{background:var(--rojo-osc)}
+  .btn.sec:not(:disabled):hover{background:rgba(19,19,22,.06)}
+}
+
+/* ---- campos ---- */
+.campo{margin-bottom:var(--sp-4)}
+.campo label{
+  font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.11em;
+  text-transform:uppercase;color:var(--gris);font-weight:500;
+  display:block;margin-bottom:var(--sp-2);
+}
+.campo input{
+  width:100%;min-height:var(--tap);padding:var(--sp-3);
+  border-radius:.5625rem;border:1px solid var(--linea);
+  font-size:var(--fs-160);font-family:var(--ff-mono);background:#fff;
+}
+.campo .ayuda{font-size:var(--fs-115);color:var(--gris);margin-top:var(--sp-1)}
+
+/* ---- tarjetas ---- */
+.tarj{background:var(--blanco);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--sombra)}
+.tarj-h{display:flex;align-items:baseline;gap:var(--sp-2)}
+.tarj-h .t{font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.tarj-h .n{margin-left:auto;font-family:var(--ff-mono);font-size:var(--fs-190);font-weight:600}
+.tarj-h .n small{font-size:var(--fs-115);color:var(--gris)}
+
+/* ---- marcador (resultado de un partido) ---- */
+.marcador{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3)}
+.marcador .lado{flex:1;text-align:center}
+.marcador .n{font-family:var(--ff-mono);font-size:var(--fs-260);font-weight:600}
+.marcador .nom{font-size:var(--fs-115);color:var(--gris);text-transform:uppercase;letter-spacing:.05em;margin-top:.125rem}
+.marcador .vs{font-family:var(--ff-titulo);font-size:var(--fs-135);color:var(--gris-cl);padding:0 var(--sp-2)}
+
+/* ---- opciones seleccionables (elegir equipo, elegir plantel) ---- */
+.opt{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-1);
+  background:var(--blanco);padding:var(--sp-4) var(--sp-3);border-radius:var(--r);
+  width:100%;text-align:center;box-shadow:var(--sombra);
+  border:2px solid transparent;min-height:4rem;transition:transform 120ms ease-out;
+}
+.opt:active{transform:scale(.97)}
+.opt.on{border-color:var(--rojo);background:var(--rojo-cl)}
+.opt .t{font-weight:600;font-size:var(--fs-145);line-height:1.2}
+.opt .d{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
+.equipos{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+
+/* ---- avisos ---- */
+.al{
+  background:var(--blanco);border-left:3px solid var(--rojo);
+  border-radius:0 var(--r) var(--r) 0;padding:var(--sp-3);
+  margin-bottom:var(--sp-3);display:flex;gap:var(--sp-3);box-shadow:var(--sombra-alta);
+}
+.al .ico{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-145);color:var(--rojo)}
+.al .tx{font-size:var(--fs-135);line-height:1.4}
+.al .mt{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
+.al.ok{border-left-color:var(--sube)}
+.al.ok .ico{color:var(--sube)}
+
+/* ---- franja de datos de ejemplo (Etapa 3, Decisión 7) ----
+   Alto contraste y ancho completo: tiene que ser imposible confundirla
+   con una alerta del negocio y verse sin scrollear. */
+.banner-ejemplo{
+  display:flex;align-items:center;gap:var(--sp-2);
+  background:var(--aviso-fondo);color:var(--aviso);
+  border-bottom:2px solid var(--aviso);
+  padding:var(--sp-3) var(--sp-4);
+  font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.banner-ejemplo .ico{font-size:var(--fs-160)}
+
+/* ---- estado vacío ---- */
+.estado-vacio{
+  background:var(--blanco);border-radius:var(--r);box-shadow:var(--sombra);
+  padding:var(--sp-6) var(--sp-4);text-align:center;margin-bottom:var(--sp-3);
+}
+.estado-vacio h2{margin-bottom:var(--sp-2)}
+.estado-vacio .p{margin:0 auto var(--sp-5);max-width:26rem}
+.estado-vacio .acciones{display:flex;flex-direction:column;gap:var(--sp-2)}
+
+/* ---- grupos colapsables (revisión de jugadores del import) ---- */
+.grupo{margin-bottom:var(--sp-1)}
+.grupo-h{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--sp-3) 0;min-height:var(--tap);width:100%;cursor:pointer;
+}
+.grupo-h .t{font-family:var(--ff-titulo);font-size:var(--fs-145);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.grupo-h .n{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris)}
+.grupo-cuerpo{display:none}
+.grupo.abierto .grupo-cuerpo{display:block}
+
+/* ---- filas de jugador ---- */
+.jug-fila{
+  display:flex;align-items:center;gap:var(--sp-3);background:var(--blanco);
+  padding:var(--sp-3);border-radius:var(--r);margin-bottom:var(--sp-2);box-shadow:var(--sombra);
+}
+.jug-fila .nom{font-weight:600;font-size:var(--fs-145);flex:1}
+.jug-fila .det{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
+.jug-fila .chk{
+  min-width:var(--tap);min-height:var(--tap);flex:0 0 auto;
+  border-radius:.375rem;border:2px solid var(--linea);
+  display:flex;align-items:center;justify-content:center;
+}
+.jug-fila .chk.on{background:var(--rojo);border-color:var(--rojo);color:#fff;font-weight:700}
+
+.jug-sugerencia{background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
+.jug-sugerencia .decision{display:flex;gap:var(--sp-2);margin-top:var(--sp-2)}
+.jug-sugerencia .decision button{
+  flex:1;min-height:var(--tap);padding:var(--sp-2) 0;border-radius:.5rem;background:#EFECE6;
+  font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;text-transform:uppercase;
+}
+.jug-sugerencia .decision button.on{background:var(--negro);color:#fff}
+
+/* ---- fila de jugador clicable (PLANTEL) ---- */
+.jug{
+  display:flex;align-items:center;gap:var(--sp-3);background:var(--blanco);
+  padding:var(--sp-3);border-radius:var(--r);margin-bottom:var(--sp-2);
+  box-shadow:var(--sombra);width:100%;text-align:left;min-height:var(--tap);
+  transition:transform 120ms ease-out;
+}
+.jug:active{transform:scale(.985)}
+.jug .nom{font-weight:600;font-size:var(--fs-145);line-height:1.15}
+.jug .det{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem;font-family:var(--ff-mono)}
+.jug .der{margin-left:auto;display:flex;align-items:center;gap:var(--sp-2)}
+.av{
+  width:2.125rem;height:2.125rem;flex:0 0 auto;border-radius:50%;
+  background:var(--negro);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-125);
+}
+.chip{
+  font-family:var(--ff-mono);font-size:var(--fs-115);font-weight:600;
+  padding:.1875rem .375rem;border-radius:.3125rem;background:#EFECE6;color:var(--gris);white-space:nowrap;
+}
+.chip.sube{background:#E1F0E9;color:var(--sube)}
+.chip.baja{background:#F6ECD9;color:var(--baja)}
+.chip.sin{background:#EFECE6;color:var(--gris-cl);font-style:italic}
+.flecha{color:var(--gris-cl);font-size:var(--fs-170);line-height:1}
+
+/* ---- datos de la ficha ---- */
+.datos-ficha{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-3)}
+.dato{flex:1 1 7rem;background:var(--sup-1);border-radius:.5625rem;padding:var(--sp-2) var(--sp-3)}
+.dato .k{
+  font-family:var(--ff-titulo);font-size:var(--fs-100);letter-spacing:.11em;
+  text-transform:uppercase;color:var(--gris-osc);font-weight:400;
+}
+.dato .v{font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600;margin-top:.125rem;color:#fff}
+.dato .v.sin{color:var(--gris-osc);font-style:italic;font-size:var(--fs-135)}
+.ficha-top{background:var(--negro);color:#fff;padding:var(--sp-4)}
+.ficha-top .nom{font-family:var(--ff-titulo);font-size:var(--fs-titulo);font-weight:700;line-height:1;text-transform:uppercase}
+.ficha-top .sub{font-size:var(--fs-115);color:var(--gris-osc);margin-top:var(--sp-2);font-family:var(--ff-mono)}
+
+/* ---- filas de test y recursos (pantallas de ejemplo) ---- */
+.test-fila{
+  display:flex;align-items:center;gap:var(--sp-3);background:var(--blanco);
+  padding:var(--sp-3);border-radius:var(--r);margin-bottom:var(--sp-2);
+  box-shadow:var(--sombra);width:100%;text-align:left;min-height:var(--tap);
+}
+.test-fila .ic{
+  width:1.875rem;height:1.875rem;border-radius:.5rem;background:#EFECE6;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-125);color:var(--gris);
+}
+.test-fila.hecho .ic{background:var(--sube);color:#fff}
+.test-fila .t{font-weight:600;font-size:var(--fs-145)}
+.test-fila .d{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem;font-family:var(--ff-mono)}
+.rec{background:var(--blanco);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
+.rec .t{font-weight:600;font-size:var(--fs-145)}
+.rec .d{font-size:var(--fs-125);color:var(--gris);margin-top:.1875rem;line-height:1.4}
+.rec .m{display:flex;gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap}
+.tag{font-family:var(--ff-mono);font-size:var(--fs-100);color:var(--gris);background:#EFECE6;padding:.1875rem .4375rem;border-radius:.3125rem}
+.tag.rojo{background:#FBE4E8;color:var(--rojo-osc)}
+
+/* ---- gráficos portados del prototipo ---- */
+svg.g{width:100%;display:block;overflow:visible}
+.leyenda{
+  display:flex;gap:var(--sp-4);font-size:var(--fs-115);font-weight:400;color:var(--gris);
+  margin-top:var(--sp-2);font-family:var(--ff-mono);flex-wrap:wrap;
+}
+.leyenda i{display:inline-block;width:.875rem;height:.15625rem;background:var(--rojo);vertical-align:middle;margin-right:.3125rem}
+.leyenda i.pt{background:none;border-top:.15625rem dashed var(--gris-cl)}
+
+/* Feedback de presión (auditoría de accesibilidad del prototipo, punto 8) */
+.al,.opt,.test-fila,.jug,.btn{transition:transform 120ms ease-out}
+.al:active,.opt:active,.test-fila:active{transform:scale(.97)}
