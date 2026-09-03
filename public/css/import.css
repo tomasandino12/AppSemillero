@@ -49,7 +49,7 @@ input{font-family:inherit}
 .al.ok{border-left-color:var(--sube)}
 
 .grupo{margin-bottom:6px}
-.grupo-h{display:flex;align-items:center;justify-content:space-between;padding:9px 0;cursor:pointer}
+.grupo-h{display:flex;align-items:center;justify-content:space-between;padding:14px 0;min-height:44px;cursor:pointer}
 .grupo-h .t{font-family:'Barlow Condensed';font-size:var(--fs-145);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
 .grupo-h .n{font-family:'IBM Plex Mono';font-size:var(--fs-125);color:var(--gris)}
 .grupo-cuerpo{display:none}
@@ -58,7 +58,7 @@ input{font-family:inherit}
 .jug-fila{display:flex;align-items:center;gap:10px;background:var(--blanco);padding:11px 12px;border-radius:var(--r);margin-bottom:7px;box-shadow:var(--sombra)}
 .jug-fila .nom{font-weight:600;font-size:var(--fs-145);flex:1}
 .jug-fila .det{font-size:var(--fs-115);color:var(--gris);margin-top:2px}
-.jug-fila .chk{width:26px;height:26px;flex:0 0 auto;border-radius:6px;border:2px solid var(--linea);display:flex;align-items:center;justify-content:center}
+.jug-fila .chk{min-width:44px;min-height:44px;flex:0 0 auto;border-radius:6px;border:2px solid var(--linea);display:flex;align-items:center;justify-content:center}
 .jug-fila .chk.on{background:var(--rojo);border-color:var(--rojo);color:#fff;font-weight:700}
 .jug-sugerencia{background:var(--blanco);border-radius:var(--r);padding:11px 12px;margin-bottom:7px;box-shadow:var(--sombra)}
 .jug-sugerencia .decision{display:flex;gap:8px;margin-top:8px}

@@ -51,7 +51,8 @@ async function main() {
   if (!errorRpc) { console.error('FALLO: el RPC no tiró error con un jugadorId inexistente — el rollback no se está probando.'); process.exit(1); }
   console.log('OK: el RPC rechazó el payload roto:', errorRpc.message);
 
-  const { data: importacionHuerfana } = await supabase.from('importacion').select('id').eq('hash_archivo', hashUnico).maybeSingle();
+  const { data: importacionHuerfana, error: errorHuerfana } = await supabase.from('importacion').select('id').eq('hash_archivo', hashUnico).maybeSingle();
+  if (errorHuerfana) { console.error('No se pudo verificar si quedó una fila de importacion:', errorHuerfana.message); process.exit(1); }
   if (importacionHuerfana) { console.error('FALLO: quedó una fila de importacion sin partido — el rollback no funcionó.'); process.exit(1); }
   console.log('OK: no quedó ninguna fila de importacion — el rollback fue completo.');
 

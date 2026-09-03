@@ -14,18 +14,21 @@ let estado = null;
 
 export async function iniciarConfirmacion(archivo) {
   mostrarPantalla('p-confirmacion');
+  const hoy = new Date();
+  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
   estado = {
     archivo,
     resultadoParser: null,
     hashArchivo: null,
     condicionPropia: null,
-    fecha: new Date().toISOString().slice(0, 10),
+    fecha,
     planteles: [],
     plantelId: null,
     jugadoresExistentes: null,
     resultadoMapeo: null,
     decisionesSugerencias: {},
     nuevosExcluidos: new Set(),
+    guardando: false,
   };
   contenedor().innerHTML = `<div class="p">Leyendo archivo...</div>`;
 
@@ -189,6 +192,8 @@ async function avanzarAJugadores() {
   } catch (e) {
     $('cargando-jugadores').textContent = esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'Ocurrió un error inesperado.';
     $('btn-confirmar-equipo-plantel').disabled = false;
+    contenedor().insertAdjacentHTML('beforeend', botonVolver());
+    ligarBotonVolver();
     return;
   }
   estado.jugadoresExistentes = jugadoresExistentes;
@@ -201,6 +206,8 @@ async function avanzarAJugadores() {
   if (resultadoMapeo.error) {
     $('cargando-jugadores').textContent = 'Ocurrió un error inesperado: ' + resultadoMapeo.error;
     $('btn-confirmar-equipo-plantel').disabled = false;
+    contenedor().insertAdjacentHTML('beforeend', botonVolver());
+    ligarBotonVolver();
     return;
   }
   estado.resultadoMapeo = resultadoMapeo;
@@ -222,6 +229,7 @@ function mostrarGrupos() {
     ${grupoHtml('nuevos', 'Nuevos', nuevos.length, true, nuevos.map((n) => filaNuevoHtml(n)).join(''))}
     <div class="pie-fijo">
       <button class="btn" id="btn-guardar" disabled>Guardar</button>
+      <button class="btn sec" id="btn-volver-inicio">Volver</button>
     </div>
   `;
 
@@ -259,6 +267,7 @@ function mostrarGrupos() {
 
   actualizarBotonGuardar();
   $('btn-guardar').addEventListener('click', guardar);
+  ligarBotonVolver();
 }
 
 function grupoHtml(id, titulo, cantidad, abiertoPorDefecto, filasHtml) {
@@ -311,6 +320,11 @@ function contarACrear() {
 
 function actualizarBotonGuardar() {
   const boton = $('btn-guardar');
+  if (estado.guardando) {
+    boton.disabled = true;
+    boton.textContent = 'Guardando...';
+    return;
+  }
   const { resultadoMapeo, decisionesSugerencias } = estado;
   const faltaAlgunaDecision = resultadoMapeo.sugerencias.some((s) => !decisionesSugerencias[s.nombreClave]);
   boton.disabled = faltaAlgunaDecision;
@@ -321,12 +335,12 @@ function actualizarBotonGuardar() {
 }
 
 async function guardar() {
+  estado.guardando = true;
   const boton = $('btn-guardar');
   boton.disabled = true;
   const textoOriginal = boton.textContent;
   boton.textContent = 'Guardando...';
 
-  const club = obtenerClubActual();
   const plantel = estado.planteles.find((p) => p.id === estado.plantelId);
   const { payload, error: errorPayload } = prepararPayloadImportacion(
     estado.resultadoMapeo,
@@ -342,6 +356,7 @@ async function guardar() {
   );
   if (errorPayload) {
     toast('Ocurrió un error inesperado: ' + errorPayload);
+    estado.guardando = false;
     boton.disabled = false;
     boton.textContent = textoOriginal;
     return;
@@ -357,13 +372,15 @@ async function guardar() {
     } else {
       toast('No se pudo guardar. Intentá de nuevo.');
     }
+    estado.guardando = false;
     boton.disabled = false;
     boton.textContent = textoOriginal;
     return;
   }
 
+  const nombreRival = estado.resultadoParser.equipos.find((e) => e.condicion !== estado.condicionPropia).nombre ?? 'el rival';
   mostrarResultado({
-    resumen: `Partido vs. ${estado.resultadoParser.equipos.find((e) => e.condicion !== estado.condicionPropia).nombre} guardado — ${contarACrear()} jugador${contarACrear() === 1 ? '' : 'es'} nuevo${contarACrear() === 1 ? '' : 's'}.`,
+    resumen: `Partido vs. ${nombreRival} guardado — ${contarACrear()} jugador${contarACrear() === 1 ? '' : 'es'} nuevo${contarACrear() === 1 ? '' : 's'}.`,
     advertencias: estado.resultadoParser.advertencias,
   });
 }
