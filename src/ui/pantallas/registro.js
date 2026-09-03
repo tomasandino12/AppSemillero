@@ -1,7 +1,9 @@
 import { registrarPantalla } from '../main.js';
 import { renderDatos, iniciarDatos } from './datos.js';
-import { renderPlantel, setAbrirFicha } from './plantel.js';
+import { renderPlantel, setAbrirFicha, setAbrirAltaManual } from './plantel.js';
 import { renderFicha, abrirFicha } from './fichaJugador.js';
+import { iniciarHoja } from '../componentes/hoja.js';
+import { abrirAltaManual } from './altaJugador.js';
 
 /**
  * Punto único donde se registran las pantallas. Existe para que main.js no
@@ -17,4 +19,6 @@ export function registrarPantallas() {
   registrarPantalla('p-resultado', { titulo: 'Partido guardado' });
   setAbrirFicha(abrirFicha);
   iniciarDatos();
+  iniciarHoja();
+  setAbrirAltaManual(abrirAltaManual);
 }
