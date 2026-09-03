@@ -1,5 +1,5 @@
-import { iniciarSesion } from '../data/repositorio.js';
-import { mostrarPantalla, esErrorDeRed } from './nav.js';
+import { iniciarSesion } from '../../data/repositorio.js';
+import { mostrarPantalla, esErrorDeRed } from '../nav.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -8,7 +8,7 @@ export function mostrarLogin() {
   ocultarError();
 }
 
-export function iniciarAuth(alIniciarSesion) {
+export function iniciarLogin(alIniciarSesion) {
   $('btn-login').addEventListener('click', () => manejarLogin(alIniciarSesion));
   $('in-pass').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') manejarLogin(alIniciarSesion);
