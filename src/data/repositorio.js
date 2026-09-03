@@ -204,3 +204,77 @@ export async function importarPartido(payload) {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Jugadores con pertenencia VIGENTE (hasta is null) al plantel dado, con sus
+ * columnas de medición (0007). Distinta de obtenerJugadoresDelClub, que es la
+ * que consume el flujo de import y no se toca.
+ */
+export async function obtenerJugadoresDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('jugador')
+    .select('id, nombre_clave, nombre_limpio, talla_cm, peso_kg, fecha_medicion, pertenencia!inner(plantel_id, hasta)')
+    .eq('club_id', clubId)
+    .eq('pertenencia.plantel_id', plantelId)
+    .is('pertenencia.hasta', null);
+  if (error) throw error;
+  return data.map((fila) => ({
+    id: fila.id,
+    nombreClave: fila.nombre_clave,
+    nombreLimpio: fila.nombre_limpio,
+    tallaCm: fila.talla_cm,
+    pesoKg: fila.peso_kg,
+    fechaMedicion: fila.fecha_medicion,
+  }));
+}
+
+export async function obtenerPartidosDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('partido')
+    .select('id, fecha, rival_nombre, puntos_propios, puntos_rival, condicion_propia')
+    .eq('club_id', clubId)
+    .eq('plantel_id', plantelId)
+    .order('fecha', { ascending: false });
+  if (error) throw error;
+  return data.map((fila) => ({
+    id: fila.id,
+    fecha: fila.fecha,
+    rivalNombre: fila.rival_nombre,
+    puntosPropios: fila.puntos_propios,
+    puntosRival: fila.puntos_rival,
+    condicionPropia: fila.condicion_propia,
+  }));
+}
+
+/** Pertenencias vigentes de un jugador, para mostrar en su ficha en qué categorías está. */
+export async function obtenerPertenenciasDeJugador(clubId, jugadorId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('pertenencia')
+    .select('plantel_id, desde, plantel(categoria)')
+    .eq('club_id', clubId)
+    .eq('jugador_id', jugadorId)
+    .is('hasta', null);
+  if (error) throw error;
+  return data.map((fila) => ({
+    plantelId: fila.plantel_id,
+    categoria: fila.plantel?.categoria ?? null,
+    desde: fila.desde,
+  }));
+}
+
+/**
+ * Alta manual: crea el jugador y su pertenencia en una sola transacción
+ * (0008_rpc_alta_jugador.sql). Lanza un Error con message
+ * 'JUGADOR_YA_EXISTE' si el nombreClave ya existe en el club.
+ */
+export async function altaJugadorManual({ clubId, nombreClave, nombreLimpio, plantelId, temporadaId, desde }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('alta_jugador_manual', {
+    payload: { clubId, nombreClave, nombreLimpio, plantelId, temporadaId, desde },
+  });
+  if (error) throw error;
+  return data;
+}
