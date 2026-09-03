@@ -37,9 +37,14 @@ export function abrirAltaManual() {
 }
 
 async function confirmarAlta() {
+  const boton = $('btn-alta-confirmar');
+  // Guarda acá, no sólo en el keydown: click (que el navegador ya frena solo
+  // con boton.disabled) y Enter son dos entradas al mismo flujo, y esta es la
+  // única que cubre a las dos contra un doble submit con la RPC en vuelo.
+  if (boton.disabled) return;
+
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
-  const boton = $('btn-alta-confirmar');
   const aviso = $('alta-aviso');
   const crudo = $('in-nombre-jugador').value;
 
