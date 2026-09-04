@@ -240,3 +240,10 @@ svg.g{width:100%;display:block;overflow:visible}
 .progreso-tira .paso.on{outline:2px solid var(--tinta);outline-offset:1px}
 .acciones-bateria{display:flex;gap:8px;margin-top:16px}
 .acciones-bateria .btn{flex:1}
+
+/* Etapa 4 — carga de velocidad */
+.vel-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--linea)}
+.vel-fila .nom{font-size:var(--fs-145);color:var(--tinta)}
+.campo-vel{display:flex;align-items:center;gap:6px}
+.campo-vel input{width:5rem;min-height:48px;text-align:right;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);padding:0 10px}
+.campo-vel .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);color:var(--gris-cl)}
