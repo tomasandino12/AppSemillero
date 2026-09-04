@@ -13,9 +13,9 @@ export function obtenerClubActual() {
 }
 
 export function setPlanteles(lista) {
-  planteles = lista;
-  if (!plantelActivoId || !lista.some((p) => p.id === plantelActivoId)) {
-    plantelActivoId = lista.length ? lista[0].id : null;
+  planteles = [...lista].sort((a, b) => a.categoria.localeCompare(b.categoria));
+  if (!plantelActivoId || !planteles.some((p) => p.id === plantelActivoId)) {
+    plantelActivoId = planteles.length ? planteles[0].id : null;
   }
 }
 

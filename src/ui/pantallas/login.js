@@ -25,6 +25,9 @@ function mostrarError(mensaje) {
 }
 
 async function manejarLogin(alIniciarSesion) {
+  const boton = $('btn-login');
+  if (boton.disabled) return;
+
   const email = $('in-email').value.trim();
   const password = $('in-pass').value;
   ocultarError();
@@ -32,7 +35,6 @@ async function manejarLogin(alIniciarSesion) {
     mostrarError('Completá email y contraseña.');
     return;
   }
-  const boton = $('btn-login');
   boton.disabled = true;
   boton.textContent = 'Ingresando...';
   try {

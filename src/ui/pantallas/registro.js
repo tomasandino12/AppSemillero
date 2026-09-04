@@ -18,8 +18,8 @@ export function registrarPantallas() {
   registrarPantalla('p-plantel', { titulo: 'Plantel', render: renderPlantel });
   registrarPantalla('p-ficha', { titulo: 'Jugador', render: renderFicha });
   registrarPantalla('p-datos', { titulo: 'Datos', render: renderDatos });
-  registrarPantalla('p-confirmacion', { titulo: 'Confirmar partido' });
-  registrarPantalla('p-resultado', { titulo: 'Partido guardado' });
+  registrarPantalla('p-confirmacion', { titulo: 'Cargar partido' });
+  registrarPantalla('p-resultado', { titulo: 'Cargar partido' });
   registrarPantalla('p-hoy', { titulo: 'Hoy', render: renderHoy });
   registrarPantalla('p-medir', { titulo: 'Medir', render: renderMedir });
   registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });

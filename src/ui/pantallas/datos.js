@@ -9,7 +9,7 @@ const $ = (id) => document.getElementById(id);
 const contenedor = () => $('datos-contenido');
 
 function formatearFecha(iso) {
-  // 'YYYY-MM-DD' → 'DD/MM'. Se parsea a mano para no depender de la zona
+  // 'YYYY-MM-DD' → 'DD/MM/YY'. Se parsea a mano para no depender de la zona
   // horaria del navegador (new Date('2026-05-01') es UTC y puede correrse un día).
   const [anio, mes, dia] = iso.split('-');
   return `${dia}/${mes}/${anio.slice(2)}`;

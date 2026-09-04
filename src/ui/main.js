@@ -43,6 +43,20 @@ export async function ir(id, { push = false } = {}) {
   if (def.render) await def.render();
 }
 
+/**
+ * Vuelve a renderizar la pantalla actual sin tocar la pila de navegación.
+ * Usada cuando se cambia de categoría desde el chip selector: eso es un
+ * refresco del contenido, no una navegación, y no debe vaciar el back stack
+ * (a diferencia de ir() sin push).
+ */
+export async function refrescar() {
+  const id = pantallaActualId();
+  const def = pantallas.get(id);
+  if (!def) return;
+  sincronizarChrome();
+  if (def.render) await def.render();
+}
+
 export async function volver() {
   const destino = pila.pop() ?? TABS[1].id;
   mostrarPantalla(destino);
@@ -91,12 +105,16 @@ async function iniciar() {
   iniciarLogin(entrarConSesion);
   iniciarChrome({
     onTab: (id) => ir(id),
-    onPlantel: () => ir(pantallaActualId()),
+    onPlantel: () => refrescar(),
     onVolver: () => volver(),
   });
 
   const { registrarPantallas } = await import('./pantallas/registro.js');
   registrarPantallas();
+
+  // Pinta la cabecera no autenticada de una así la pantalla no queda en
+  // blanco durante el round trip de red de obtenerSesionActual().
+  sincronizarChrome();
 
   let sesion;
   try {

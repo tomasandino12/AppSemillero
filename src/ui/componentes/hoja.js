@@ -1,3 +1,5 @@
+import { escaparHtml } from '../nav.js';
+
 const $ = (id) => document.getElementById(id);
 
 /** Bottom sheet en celular; diálogo centrado a partir de 1024px (layout.css). */
@@ -5,7 +7,7 @@ export function abrirHoja({ titulo, cuerpo }) {
   const hoja = $('hoja');
   hoja.innerHTML = `
     <div class="asa"></div>
-    <h2 id="hoja-titulo">${titulo}</h2>
+    <h2 id="hoja-titulo">${escaparHtml(titulo)}</h2>
     <div class="pad">${cuerpo}</div>
   `;
   $('velo').classList.add('on');
