@@ -219,3 +219,24 @@ svg.g{width:100%;display:block;overflow:visible}
 /* Etapa 4 — acciones dentro de un aviso */
 .acciones-al{display:flex;gap:8px;margin-top:10px}
 .btn.chico{min-height:40px;padding:0 14px;font-size:var(--fs-135);width:auto}
+
+/* Etapa 4 — carga de la batería en cancha.
+   Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
+   a la pantalla. La tira envuelve sola en dos líneas a 375px. */
+.tira{display:flex;flex-wrap:wrap;gap:6px}
+.tira .num{flex:1 0 2.6rem;min-height:48px;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);font-weight:600}
+.tira .num.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.posiciones{display:flex;flex-direction:column;gap:16px;margin:14px 0}
+.posicion .et{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:var(--fs-135);color:var(--tinta)}
+.posicion .et .de{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.jug-actual{margin:12px 0 4px}
+.jug-actual .nom{font-size:var(--fs-220);font-weight:700;color:var(--tinta)}
+.jug-actual .sub{font-size:var(--fs-125);color:var(--gris-cl)}
+.progreso-tira{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.progreso-tira .paso{min-width:34px;min-height:34px;border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-115)}
+.progreso-tira .paso.completo{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.progreso-tira .paso.parcial{border-color:var(--rojo);color:var(--rojo)}
+.progreso-tira .paso.ausente{border-style:dashed}
+.progreso-tira .paso.on{outline:2px solid var(--tinta);outline-offset:1px}
+.acciones-bateria{display:flex;gap:8px;margin-top:16px}
+.acciones-bateria .btn{flex:1}
