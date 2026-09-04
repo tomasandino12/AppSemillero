@@ -118,3 +118,137 @@ export function evolucionDeTiroDelEquipo(partidos, estadisticas) {
       };
     });
 }
+
+/**
+ * Las dos series de la ficha del jugador: triples y libres, cada una con
+ * práctica y partido sobre el mismo eje temporal.
+ *
+ * Práctica de triples = las 5 posiciones del arco SUMADAS en esa sesión
+ * (x/50). Las 5 posiciones de la batería caen sobre el arco (ver
+ * posiciones.js), y el boxscore de la CABB no trae desde dónde se tiró
+ * (PARSER.md), así que ésta es la única pareja honesta a esa granularidad.
+ *
+ * NUNCA se resta una serie de la otra: la brecha la lee el entrenador
+ * mirando, y una resta sugeriría una precisión que no existe.
+ *
+ * Los puntos sin intentos se descartan — un punto sin valor no es un punto.
+ */
+export function serieDeTiroDelJugador({ sesiones, medicionesTiro, partidos, estadisticas, jugadorId }) {
+  const sesionesPorId = new Map(sesiones.map((s) => [s.id, s]));
+  const porSesion = new Map();
+
+  for (const m of medicionesTiro) {
+    if (m.jugadorId !== jugadorId) continue;
+    if (m.anotados == null) continue;   // ausente: no aporta a la serie
+    const sesion = sesionesPorId.get(m.sesionId);
+    if (!sesion || sesion.tipo !== 'tiro') continue;
+
+    if (!porSesion.has(m.sesionId)) {
+      porSesion.set(m.sesionId, {
+        fecha: sesion.fecha,
+        triplesAnotados: 0, triplesIntentados: 0,
+        libresAnotados: 0, libresIntentados: 0,
+      });
+    }
+    const acum = porSesion.get(m.sesionId);
+    if (m.posicion === 'libres') {
+      acum.libresAnotados += m.anotados;
+      acum.libresIntentados += m.intentos;
+    } else {
+      acum.triplesAnotados += m.anotados;
+      acum.triplesIntentados += m.intentos;
+    }
+  }
+
+  const practica = [...porSesion.values()].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const partidosPorId = new Map(partidos.map((p) => [p.id, p]));
+  const delJugador = estadisticas
+    .filter((e) => e.jugadorId === jugadorId && partidosPorId.has(e.partidoId))
+    .map((e) => ({ ...e, fecha: partidosPorId.get(e.partidoId).fecha }))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+  const serie = (fuente, anotados, intentos) => fuente
+    .map((x) => ({ fecha: x.fecha, valor: porcentaje(x[anotados], x[intentos]) }))
+    .filter((p) => p.valor != null);
+
+  return {
+    triples: {
+      practica: serie(practica, 'triplesAnotados', 'triplesIntentados'),
+      partido: serie(delJugador, 'tresAnotados', 'tresIntentados'),
+    },
+    libres: {
+      practica: serie(practica, 'libresAnotados', 'libresIntentados'),
+      partido: serie(delJugador, 'libresAnotados', 'libresIntentados'),
+    },
+  };
+}
+
+/**
+ * La batería de tiro más reciente de un jugador, posición por posición.
+ * `porPosicion[id]` es null cuando esa posición quedó en NULL (ausente),
+ * que es distinto de 0 de 10.
+ */
+export function ultimaBateriaDeJugador(sesiones, medicionesTiro, jugadorId) {
+  const conMedicion = new Set(
+    medicionesTiro.filter((m) => m.jugadorId === jugadorId).map((m) => m.sesionId)
+  );
+  const candidatas = sesiones
+    .filter((s) => s.tipo === 'tiro' && conMedicion.has(s.id))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  if (!candidatas.length) return null;
+
+  const sesion = candidatas[0];
+  const porPosicion = {};
+  for (const m of medicionesTiro) {
+    if (m.jugadorId !== jugadorId || m.sesionId !== sesion.id) continue;
+    porPosicion[m.posicion] = porcentaje(m.anotados, m.intentos);
+  }
+  return { sesionId: sesion.id, fecha: sesion.fecha, porPosicion };
+}
+
+/** Partido a partido de un jugador, del más reciente al más viejo. */
+export function historialDePartidosDelJugador(partidos, estadisticas, jugadorId) {
+  const partidosPorId = new Map(partidos.map((p) => [p.id, p]));
+  return estadisticas
+    .filter((e) => e.jugadorId === jugadorId && partidosPorId.has(e.partidoId))
+    .map((e) => {
+      const p = partidosPorId.get(e.partidoId);
+      return {
+        partidoId: e.partidoId,
+        fecha: p.fecha,
+        rivalNombre: p.rivalNombre,
+        minSegundos: e.minSegundos,
+        pts: e.pts,
+        dos: porcentaje(e.dosAnotados, e.dosIntentados),
+        tres: porcentaje(e.tresAnotados, e.tresIntentados),
+        libres: porcentaje(e.libresAnotados, e.libresIntentados),
+      };
+    })
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+}
+
+/**
+ * Promedio del plantel por posición sobre la última sesión de tiro, para HOY.
+ * Los ausentes (anotados null) no entran en el promedio.
+ */
+export function promedioDeCanchaDelPlantel(sesiones, medicionesTiro) {
+  const sesionesTiro = sesiones
+    .filter((s) => s.tipo === 'tiro')
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  if (!sesionesTiro.length) return null;
+
+  const sesion = sesionesTiro[0];
+  const acum = {};
+  for (const m of medicionesTiro) {
+    if (m.sesionId !== sesion.id || m.anotados == null) continue;
+    if (!acum[m.posicion]) acum[m.posicion] = { anotados: 0, intentos: 0 };
+    acum[m.posicion].anotados += m.anotados;
+    acum[m.posicion].intentos += m.intentos;
+  }
+
+  const porPosicion = {};
+  for (const [posicion, a] of Object.entries(acum)) {
+    porPosicion[posicion] = porcentaje(a.anotados, a.intentos);
+  }
+  return { sesionId: sesion.id, fecha: sesion.fecha, porPosicion };
+}

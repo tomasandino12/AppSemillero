@@ -6,6 +6,10 @@ import {
   porcentaje,
   repartoPorJugador,
   evolucionDeTiroDelEquipo,
+  serieDeTiroDelJugador,
+  ultimaBateriaDeJugador,
+  historialDePartidosDelJugador,
+  promedioDeCanchaDelPlantel,
 } from '../src/data/estadisticas.js';
 import { POSICIONES, POSICIONES_BATERIA, INTENTOS_POR_POSICION } from '../src/data/posiciones.js';
 
@@ -115,4 +119,101 @@ test('un partido sin estadísticas cargadas no rompe la evolución', () => {
   const ev = evolucionDeTiroDelEquipo([{ id: 'p1', fecha: '2026-05-01' }], []);
   assert.equal(ev.length, 1);
   assert.equal(ev[0].tres, null);
+});
+
+const SESIONES = [
+  { id: 's1', fecha: '2026-03-05', tipo: 'tiro' },
+  { id: 's2', fecha: '2026-04-05', tipo: 'tiro' },
+  { id: 's3', fecha: '2026-04-05', tipo: 'velocidad' },
+];
+
+// s1: 5 posiciones de arco a 4/10 cada una = 20/50, y libres 8/10.
+// s2: sólo libres, 6/10 (el chico faltó a lo demás no: simplemente no se midió).
+const MEDICIONES = [
+  ...['esq_izq', 'c45_izq', 'frontal', 'c45_der', 'esq_der'].map((posicion) => (
+    { sesionId: 's1', jugadorId: 'j1', posicion, anotados: 4, intentos: 10 }
+  )),
+  { sesionId: 's1', jugadorId: 'j1', posicion: 'libres', anotados: 8, intentos: 10 },
+  { sesionId: 's2', jugadorId: 'j1', posicion: 'libres', anotados: 6, intentos: 10 },
+  // Otro jugador, ausente en s1: filas en NULL.
+  ...['esq_izq', 'libres'].map((posicion) => (
+    { sesionId: 's1', jugadorId: 'j2', posicion, anotados: null, intentos: 10 }
+  )),
+];
+
+const PARTIDOS = [
+  { id: 'p1', fecha: '2026-03-20', rivalNombre: 'Rival A' },
+  { id: 'p2', fecha: '2026-04-20', rivalNombre: 'Rival B' },
+];
+
+const ESTADISTICAS = [
+  { jugadorId: 'j1', partidoId: 'p1', minSegundos: 1200, pts: 9, dosAnotados: 2, dosIntentados: 4, tresAnotados: 1, tresIntentados: 5, libresAnotados: 2, libresIntentados: 2 },
+  { jugadorId: 'j1', partidoId: 'p2', minSegundos: 900, pts: 5, dosAnotados: 1, dosIntentados: 3, tresAnotados: 1, tresIntentados: 2, libresAnotados: 0, libresIntentados: 1 },
+];
+
+test('la serie de triples suma las 5 posiciones del arco de cada sesión', () => {
+  const s = serieDeTiroDelJugador({ sesiones: SESIONES, medicionesTiro: MEDICIONES, partidos: PARTIDOS, estadisticas: ESTADISTICAS, jugadorId: 'j1' });
+  assert.equal(s.triples.practica.length, 1);
+  assert.equal(s.triples.practica[0].fecha, '2026-03-05');
+  assert.equal(s.triples.practica[0].valor.anotados, 20);
+  assert.equal(s.triples.practica[0].valor.intentos, 50);
+  assert.equal(s.triples.practica[0].valor.pct, 40);
+});
+
+test('libres es su propia serie y no entra en triples', () => {
+  const s = serieDeTiroDelJugador({ sesiones: SESIONES, medicionesTiro: MEDICIONES, partidos: PARTIDOS, estadisticas: ESTADISTICAS, jugadorId: 'j1' });
+  assert.deepEqual(s.libres.practica.map((p) => p.valor.anotados), [8, 6]);
+  assert.deepEqual(s.libres.practica.map((p) => p.fecha), ['2026-03-05', '2026-04-05']);
+});
+
+test('la serie de partido sale de las estadísticas importadas, ordenada por fecha', () => {
+  const s = serieDeTiroDelJugador({ sesiones: SESIONES, medicionesTiro: MEDICIONES, partidos: PARTIDOS, estadisticas: ESTADISTICAS, jugadorId: 'j1' });
+  assert.deepEqual(s.triples.partido.map((p) => p.fecha), ['2026-03-20', '2026-04-20']);
+  assert.equal(s.triples.partido[0].valor.intentos, 5);
+  assert.equal(s.triples.partido[0].valor.muestraChica, true);
+});
+
+test('un jugador ausente no aporta puntos a la serie', () => {
+  const s = serieDeTiroDelJugador({ sesiones: SESIONES, medicionesTiro: MEDICIONES, partidos: PARTIDOS, estadisticas: ESTADISTICAS, jugadorId: 'j2' });
+  assert.deepEqual(s.triples.practica, []);
+  assert.deepEqual(s.libres.practica, []);
+});
+
+test('un jugador sin nada devuelve series vacías, no rompe', () => {
+  const s = serieDeTiroDelJugador({ sesiones: [], medicionesTiro: [], partidos: [], estadisticas: [], jugadorId: 'j9' });
+  assert.deepEqual(s.triples.practica, []);
+  assert.deepEqual(s.libres.partido, []);
+});
+
+test('la última batería es la sesión de tiro más reciente donde el jugador midió', () => {
+  const b = ultimaBateriaDeJugador(SESIONES, MEDICIONES, 'j1');
+  assert.equal(b.fecha, '2026-04-05');
+  assert.equal(b.porPosicion.libres.anotados, 6);
+});
+
+test('un jugador ausente tiene batería con la posición en null, no en cero', () => {
+  const b = ultimaBateriaDeJugador(SESIONES, MEDICIONES, 'j2');
+  assert.equal(b.fecha, '2026-03-05');
+  assert.equal(b.porPosicion.esq_izq, null);
+});
+
+test('sin ninguna batería devuelve null', () => {
+  assert.equal(ultimaBateriaDeJugador([], [], 'j1'), null);
+  assert.equal(promedioDeCanchaDelPlantel([], []), null);
+});
+
+test('el historial de partidos va del más reciente al más viejo', () => {
+  const h = historialDePartidosDelJugador(PARTIDOS, ESTADISTICAS, 'j1');
+  assert.deepEqual(h.map((x) => x.fecha), ['2026-04-20', '2026-03-20']);
+  assert.equal(h[0].rivalNombre, 'Rival B');
+  assert.equal(h[0].pts, 5);
+  assert.equal(h[0].libres.pct, 0);       // 0 de 1: dato real
+  assert.equal(h[1].libres.pct, 100);
+});
+
+test('el promedio del plantel usa la última sesión de tiro y saltea los ausentes', () => {
+  const p = promedioDeCanchaDelPlantel(SESIONES, MEDICIONES);
+  assert.equal(p.fecha, '2026-04-05');
+  assert.equal(p.porPosicion.libres.anotados, 6);
+  assert.equal(p.porPosicion.esq_izq, undefined);
 });
