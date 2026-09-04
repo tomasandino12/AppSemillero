@@ -20,3 +20,24 @@ export function esErrorDeRed(e) {
 export function escaparHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
+
+/**
+ * Un porcentaje SIEMPRE con sus intentos al lado, y la marca de muestra
+ * chica cuando corresponde. `p` es lo que devuelve porcentaje() de
+ * estadisticas.js: o null, o {pct, anotados, intentos, muestraChica}.
+ *
+ * Es el único lugar donde se convierte un porcentaje en texto, así que la
+ * regla "ningún porcentaje sin su denominador" no depende de que cada
+ * pantalla se acuerde.
+ */
+export function textoPorcentaje(p) {
+  if (p == null) return '<span class="sin">sin datos</span>';
+  const marca = p.muestraChica ? '<span class="poco-tag">pocos datos</span>' : '';
+  return `<span class="${p.muestraChica ? 'poco' : ''}">${p.pct}% · ${p.anotados}/${p.intentos}</span>${marca}`;
+}
+
+/** 'YYYY-MM-DD' → 'DD/MM'. A mano: new Date('2026-05-01') es UTC y se corre un día. */
+export function formatearFechaCorta(iso) {
+  const [, mes, dia] = iso.split('-');
+  return `${dia}/${mes}`;
+}

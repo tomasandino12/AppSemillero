@@ -247,3 +247,9 @@ svg.g{width:100%;display:block;overflow:visible}
 .campo-vel{display:flex;align-items:center;gap:6px}
 .campo-vel input{width:5rem;min-height:48px;text-align:right;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);padding:0 10px}
 .campo-vel .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);color:var(--gris-cl)}
+
+/* Etapa 4 — evolución del equipo */
+.tabla-ev{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.fila-ev{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}
+.fila-ev .f{font-family:'IBM Plex Mono',monospace;color:var(--gris-cl)}
+.fila-ev .sin{color:var(--gris-cl)}
