@@ -253,3 +253,25 @@ svg.g{width:100%;display:block;overflow:visible}
 .fila-ev{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}
 .fila-ev .f{font-family:'IBM Plex Mono',monospace;color:var(--gris-cl)}
 .fila-ev .sin{color:var(--gris-cl)}
+.fila-ev.dos{grid-template-columns:auto 1fr}
+
+/* Etapa 4 — sin datos: la marca de "sin medir"/"sin datos" es itálica en
+   cualquier contexto, para no depender de que cada pantalla la re-declare. */
+.sin{color:var(--gris-cl);font-style:italic}
+
+/* Etapa 4 — ficha del jugador: series de tiro (práctica vs. partido).
+   Práctica y partido se distinguen por color Y por trazo (línea sólida vs.
+   punteada), nunca sólo por color. */
+.leyenda .linea-practica,.leyenda .linea-partido{display:inline-flex;align-items:center;gap:.375rem}
+.leyenda .linea-practica::before,.leyenda .linea-partido::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--negro)}
+.leyenda .linea-partido::before{border-top-color:var(--rojo);border-top-style:dashed}
+.detalle-serie{display:flex;flex-direction:column;gap:2px;margin-top:8px;font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
+
+/* Etapa 4 — ficha del jugador: partido a partido */
+.tabla-part{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.fila-part{background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);box-shadow:var(--sombra)}
+.fila-part .cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fila-part .riv{font-weight:600;font-size:var(--fs-145)}
+.fila-part .f{font-family:var(--ff-mono);font-size:var(--fs-115);color:var(--gris-cl)}
+.fila-part .nums{display:flex;gap:12px;margin-top:4px;font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--tinta)}
+.fila-part .tiros{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:var(--fs-115);color:var(--gris-cl)}
