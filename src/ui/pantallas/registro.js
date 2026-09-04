@@ -6,6 +6,8 @@ import { iniciarHoja } from '../componentes/hoja.js';
 import { abrirAltaManual } from './altaJugador.js';
 import { renderHoy } from './hoy.js';
 import { renderMedir } from './medir.js';
+import { renderBateria } from './medirBateria.js';
+import { renderVelocidad } from './medirVelocidad.js';
 import { renderRecursos } from './recursos.js';
 
 /**
@@ -22,6 +24,8 @@ export function registrarPantallas() {
   registrarPantalla('p-resultado', { titulo: 'Cargar partido' });
   registrarPantalla('p-hoy', { titulo: 'Hoy', render: renderHoy });
   registrarPantalla('p-medir', { titulo: 'Medir', render: renderMedir });
+  registrarPantalla('p-medir-bateria', { titulo: 'Batería de tiro', render: renderBateria });
+  registrarPantalla('p-medir-velocidad', { titulo: 'Velocidad', render: renderVelocidad });
   registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });
   setAbrirFicha(abrirFicha);
   iniciarDatos();

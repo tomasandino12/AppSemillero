@@ -215,3 +215,7 @@ svg.g{width:100%;display:block;overflow:visible}
    color, para que no dependa de que alguien distinga dos grises. */
 .poco{opacity:.55}
 .poco-tag{display:inline-block;margin-left:6px;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+
+/* Etapa 4 — acciones dentro de un aviso */
+.acciones-al{display:flex;gap:8px;margin-top:10px}
+.btn.chico{min-height:40px;padding:0 14px;font-size:var(--fs-135);width:auto}
