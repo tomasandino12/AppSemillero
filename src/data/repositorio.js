@@ -278,3 +278,135 @@ export async function altaJugadorManual({ clubId, nombreClave, nombreLimpio, pla
   if (error) throw error;
   return data;
 }
+
+/* ---------- Etapa 4: mediciones ---------- */
+
+export async function obtenerSesionesDeMedicion(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('sesion_medicion')
+    .select('id, fecha, tipo')
+    .eq('club_id', clubId)
+    .eq('plantel_id', plantelId)
+    .order('fecha', { ascending: false });
+  if (error) throw error;
+  return data.map((f) => ({ id: f.id, fecha: f.fecha, tipo: f.tipo }));
+}
+
+/**
+ * Todas las mediciones de tiro del plantel. El filtro por plantel va por el
+ * join contra sesion_medicion con !inner, igual que obtenerJugadoresDelPlantel
+ * filtra por pertenencia.
+ */
+export async function obtenerMedicionesTiroDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('medicion_tiro')
+    .select('sesion_id, jugador_id, posicion, anotados, intentos, sesion_medicion!inner(plantel_id)')
+    .eq('club_id', clubId)
+    .eq('sesion_medicion.plantel_id', plantelId);
+  if (error) throw error;
+  return data.map((f) => ({
+    sesionId: f.sesion_id,
+    jugadorId: f.jugador_id,
+    posicion: f.posicion,
+    anotados: f.anotados,
+    intentos: f.intentos,
+  }));
+}
+
+export async function obtenerMedicionesVelocidadDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('medicion_velocidad')
+    .select('sesion_id, jugador_id, segundos, sesion_medicion!inner(plantel_id, fecha)')
+    .eq('club_id', clubId)
+    .eq('sesion_medicion.plantel_id', plantelId);
+  if (error) throw error;
+  return data.map((f) => ({
+    sesionId: f.sesion_id,
+    jugadorId: f.jugador_id,
+    // numeric de Postgres llega como string por PostgREST: se convierte acá,
+    // en la capa de datos, para que las vistas reciban números.
+    segundos: f.segundos == null ? null : Number(f.segundos),
+    fecha: f.sesion_medicion?.fecha ?? null,
+  }));
+}
+
+/**
+ * Estadísticas de todos los partidos del plantel, con la fecha del partido
+ * ya resuelta. Es la entrada de repartoPorJugador y evolucionDeTiroDelEquipo.
+ */
+export async function obtenerEstadisticasDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('estadistica_jugador_partido')
+    .select('partido_id, jugador_id, min_segundos, pts, dos_anotados, dos_intentados, tres_anotados, tres_intentados, libres_anotados, libres_intentados, partido!inner(plantel_id)')
+    .eq('club_id', clubId)
+    .eq('partido.plantel_id', plantelId);
+  if (error) throw error;
+  return data.map((f) => ({
+    partidoId: f.partido_id,
+    jugadorId: f.jugador_id,
+    minSegundos: f.min_segundos,
+    pts: f.pts,
+    dosAnotados: f.dos_anotados,
+    dosIntentados: f.dos_intentados,
+    tresAnotados: f.tres_anotados,
+    tresIntentados: f.tres_intentados,
+    libresAnotados: f.libres_anotados,
+    libresIntentados: f.libres_intentados,
+  }));
+}
+
+export async function guardarSesionMedicion(payload) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('guardar_sesion_medicion', { payload });
+  if (error) throw error;
+  return data;
+}
+
+/* ---------- Etapa 4: recursos ---------- */
+
+export async function obtenerRecursos(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('recurso')
+    .select('id, titulo, descripcion, enlace, creado_en, envio_recurso(jugador_id, fecha)')
+    .eq('club_id', clubId)
+    .order('creado_en', { ascending: false });
+  if (error) throw error;
+  return data.map((f) => ({
+    id: f.id,
+    titulo: f.titulo,
+    descripcion: f.descripcion,
+    enlace: f.enlace,
+    creadoEn: f.creado_en,
+    envios: (f.envio_recurso ?? []).map((e) => ({ jugadorId: e.jugador_id, fecha: e.fecha })),
+  }));
+}
+
+/** Recursos que se le enviaron a un jugador, para su ficha. */
+export async function obtenerEnviosDeJugador(clubId, jugadorId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('envio_recurso')
+    .select('fecha, recurso(id, titulo, enlace)')
+    .eq('club_id', clubId)
+    .eq('jugador_id', jugadorId)
+    .order('fecha', { ascending: false });
+  if (error) throw error;
+  return data.map((f) => ({
+    fecha: f.fecha,
+    recursoId: f.recurso?.id ?? null,
+    titulo: f.recurso?.titulo ?? null,
+    enlace: f.recurso?.enlace ?? null,
+  }));
+}
+
+export async function guardarRecurso(payload) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('guardar_recurso', { payload });
+  if (error) throw error;
+  return data;
+}
