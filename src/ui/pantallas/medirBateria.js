@@ -113,11 +113,18 @@ function render() {
 
   $('btn-ausente').addEventListener('click', () => {
     if (valores[jugador.id]?.ausente) {
+      // Desmarcar nunca avanza: el entrenador tiene que ver el resultado de
+      // su propia corrección, no perderlo de vista al saltar de jugador.
       delete valores[jugador.id].ausente;
-    } else {
-      valores[jugador.id] = { ausente: true };
+      persistir();
+      render();
+      return;
     }
+    valores[jugador.id] = { ausente: true };
     persistir();
+    // Avanza al siguiente sólo si hay uno: si es el último de la lista no hay
+    // adónde ir, y cerrar la sesión sola no es una decisión que el botón deba tomar.
+    if (indice < jugadores.length - 1) indice += 1;
     render();
   });
 
