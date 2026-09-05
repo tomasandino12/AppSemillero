@@ -3,7 +3,7 @@ import { promedioDeCanchaDelPlantel, porcentaje } from '../../data/estadisticas.
 import { obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel } from '../../data/repositorio.js';
 import { cancha } from '../componentes/graficos.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, formatearFechaCorta } from '../nav.js';
+import { escaparHtml, esErrorDeRed, formatearFechaCorta, textoPorcentaje } from '../nav.js';
 import { ir } from '../main.js';
 
 const $ = (id) => document.getElementById(id);
@@ -86,6 +86,31 @@ export async function renderHoy() {
       medidas += 1;
     }
   });
+  // Hubo una sesión de tiro ese día, pero ninguna posición quedó con datos
+  // reales: es lo que pasa cuando se marca a todos los jugadores como
+  // ausentes (cada ausente deja sus 6 filas en anotados: null, así que la
+  // sesión se guarda igual). No es lo mismo que "nunca hubo sesión" —eso ya
+  // lo cubre el `if (!bateria)` de arriba— así que no reusamos
+  // estadoVacioHtml ni fingimos un promedio: porcentaje(0, 0) devuelve null
+  // por diseño (sin intentos no hay porcentaje), y ahí es donde crasheaba.
+  // Se dice la verdad: hubo sesión, pero no quedó nada cargado.
+  if (medidas === 0) {
+    contenedor().innerHTML = `
+      <div class="pad">
+        <h2 class="h2">Buen día</h2>
+        <div class="p">Así está ${escaparHtml(plantel.categoria)} con la última batería de tiro, del ${escaparHtml(formatearFechaCorta(bateria.fecha))}.</div>
+
+        <div class="eyebrow">Tiro de campo</div>
+        <div class="tarj">
+          <div class="p">Esa batería quedó sin ninguna medición cargada: todos los jugadores figuran como ausentes. En cuanto se cargue un tiro real de alguno, acá va a aparecer el promedio de la categoría.</div>
+          <button class="btn" id="btn-hoy-medir">Hacer una medición</button>
+        </div>
+      </div>
+    `;
+    $('btn-hoy-medir').addEventListener('click', () => ir('p-medir'));
+    return;
+  }
+
   const faltan = POSICIONES.length - medidas;
   const promedio = porcentaje(totalAnotados, totalIntentos);
 
@@ -98,7 +123,7 @@ export async function renderHoy() {
       <div class="tarj">
         <div class="tarj-h">
           <div class="t">Promedio de la categoría</div>
-          <div class="n">${promedio.pct}<small> % · ${promedio.anotados}/${promedio.intentos}</small></div>
+          <div class="n">${textoPorcentaje(promedio)}</div>
         </div>
         <svg class="g" id="hoy-cancha"></svg>
         <div class="leyenda"><span>Cuanto más lleno el círculo, mejor el porcentaje</span></div>

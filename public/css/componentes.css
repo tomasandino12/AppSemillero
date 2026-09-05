@@ -42,8 +42,7 @@
 .tarj{background:var(--blanco);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--sombra)}
 .tarj-h{display:flex;align-items:baseline;gap:var(--sp-2)}
 .tarj-h .t{font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
-.tarj-h .n{margin-left:auto;font-family:var(--ff-mono);font-size:var(--fs-190);font-weight:600}
-.tarj-h .n small{font-size:var(--fs-115);color:var(--gris)}
+.tarj-h .n{margin-left:auto;font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600}
 
 /* ---- marcador (resultado de un partido) ---- */
 .marcador{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3)}

@@ -217,3 +217,20 @@ test('el promedio del plantel usa la última sesión de tiro y saltea los ausent
   assert.equal(p.porPosicion.libres.anotados, 6);
   assert.equal(p.porPosicion.esq_izq, undefined);
 });
+
+test('una sesión donde todos los jugadores están ausentes devuelve porPosicion vacío, no null', () => {
+  // Cada ausente deja sus 6 filas en anotados: null (así está diseñado), así
+  // que la sesión existe y se guarda igual — pero ninguna posición tiene un
+  // solo dato real. Es el caso que hacía crashear a HOY: "hubo sesión" no es
+  // lo mismo que "nunca hubo sesión", así que esta función NO debe devolver
+  // null acá. El consumidor (hoy.js) es quien tiene que distinguir "hay
+  // batería pero sin mediciones" de "sí hay promedio para mostrar".
+  const sesiones = [{ id: 's9', fecha: '2026-05-01', tipo: 'tiro' }];
+  const mediciones = ['esq_izq', 'c45_izq', 'frontal', 'c45_der', 'esq_der', 'libres'].map((posicion) => (
+    { sesionId: 's9', jugadorId: 'j3', posicion, anotados: null, intentos: 10 }
+  ));
+  const p = promedioDeCanchaDelPlantel(sesiones, mediciones);
+  assert.notEqual(p, null);
+  assert.equal(p.fecha, '2026-05-01');
+  assert.deepEqual(p.porPosicion, {});
+});
