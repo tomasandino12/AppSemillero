@@ -2,6 +2,7 @@ import { obtenerRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { ir } from '../main.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('recursos-contenido');
@@ -60,7 +61,34 @@ function cuerpoDeHoja(jugadores, { conCampos }) {
   `;
 }
 
+/**
+ * Sin un solo jugador en el plantel no hay a quién elegir: abrir el
+ * formulario igual llevaba a un callejón sin salida ("Elegí al menos un
+ * jugador" sobre una lista vacía, sin explicación ni salida). Se lo dice
+ * antes de abrir la hoja y se ofrece ir a PLANTEL, como en el resto de la
+ * app (HOY, DATOS, MEDIR y la ficha ya tienen este mismo patrón).
+ */
+function avisarPlantelVacio() {
+  const plantel = obtenerPlantelActivo();
+  const categoria = plantel?.categoria ? ` (${plantel.categoria})` : '';
+  abrirHoja({
+    titulo: 'Todavía no hay jugadores',
+    cuerpo: `
+      <div class="p">Para enviar un recurso hace falta elegir a quién mandárselo, y este plantel${escaparHtml(categoria)} todavía no tiene jugadores cargados.</div>
+      <button class="btn" id="btn-rec-ir-plantel">Ir a PLANTEL</button>
+    `,
+  });
+  $('btn-rec-ir-plantel').addEventListener('click', () => {
+    cerrarHoja();
+    ir('p-plantel');
+  });
+}
+
 function abrirAltaDeRecurso(recursoId, jugadores) {
+  if (!jugadores.length) {
+    avisarPlantelVacio();
+    return;
+  }
   const esNuevo = recursoId == null;
   abrirHoja({
     titulo: esNuevo ? 'Ofrecer un recurso' : 'Enviar a más jugadores',
@@ -88,9 +116,16 @@ async function confirmarEnvio(recursoId) {
   const jugadorIds = [...document.querySelectorAll('.chk-jug:checked')].map((c) => c.value);
   const titulo = recursoId ? null : $('in-rec-titulo').value.trim();
   const descripcion = recursoId ? null : $('in-rec-desc').value.trim();
+  const enlace = recursoId ? null : ($('in-rec-link').value.trim() || null);
 
   if (!recursoId && (!titulo || !descripcion)) {
     $('rec-aviso').innerHTML = `<div class="al"><div class="tx">Poné un título y las instrucciones.</div></div>`;
+    return;
+  }
+  // escaparHtml evita romper el atributo href, pero no frena un
+  // "javascript:..." o cualquier otro esquema: eso se rechaza acá.
+  if (enlace && !/^https?:\/\//i.test(enlace)) {
+    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">El link tiene que empezar con http:// o https://.</div></div>`;
     return;
   }
   if (!jugadorIds.length) {
@@ -106,7 +141,7 @@ async function confirmarEnvio(recursoId) {
       recursoId: recursoId ?? null,
       titulo,
       descripcion,
-      enlace: recursoId ? null : ($('in-rec-link').value.trim() || null),
+      enlace,
       fecha: hoyLocal(),
       jugadorIds,
     });
