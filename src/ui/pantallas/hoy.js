@@ -95,6 +95,14 @@ export async function renderHoy() {
   // por diseño (sin intentos no hay porcentaje), y ahí es donde crasheaba.
   // Se dice la verdad: hubo sesión, pero no quedó nada cargado.
   if (medidas === 0) {
+    // "Ninguna posición del ARCO tiene datos" no es lo mismo que "todos
+    // ausentes": una sesión de sólo tiros libres es perfectamente razonable
+    // y también deja medidas en 0 (medidas sólo cuenta las 5 posiciones del
+    // arco). Se distingue para no decir una ausencia que no es tal.
+    const libres = bateria.porPosicion.libres ?? null;
+    const detalle = libres
+      ? 'Esa batería sólo tiene tiros libres cargados: todavía nadie tiró desde el arco. En cuanto se cargue un tiro de campo real, acá va a aparecer el promedio de la categoría.'
+      : 'Esa batería quedó sin ninguna medición cargada: todos los jugadores figuran como ausentes. En cuanto se cargue un tiro real de alguno, acá va a aparecer el promedio de la categoría.';
     contenedor().innerHTML = `
       <div class="pad">
         <h2 class="h2">Buen día</h2>
@@ -102,7 +110,8 @@ export async function renderHoy() {
 
         <div class="eyebrow">Tiro de campo</div>
         <div class="tarj">
-          <div class="p">Esa batería quedó sin ninguna medición cargada: todos los jugadores figuran como ausentes. En cuanto se cargue un tiro real de alguno, acá va a aparecer el promedio de la categoría.</div>
+          <div class="p">${detalle}</div>
+          ${libres ? `<div class="p">Libres: ${textoPorcentaje(libres)}</div>` : ''}
           <button class="btn" id="btn-hoy-medir">Hacer una medición</button>
         </div>
       </div>

@@ -68,9 +68,15 @@ async function renderSeccionesDeEquipo(club, plantel) {
   const minutos = repartoPorJugador(estadisticas, 'minSegundos');
   const puntos = repartoPorJugador(estadisticas, 'pts');
 
-  const lectura = (r, que) => r.jugadoresQueConcentranLaMitad === 0
-    ? ''
-    : `<div class="p">Los primeros ${r.jugadoresQueConcentranLaMitad} jugadores concentran más de la mitad de ${que}.</div>`;
+  // Con un solo partido cargado es común que el que más juega/anota supere
+  // el 50% solo: "Los primeros 1 jugadores concentran..." no es castellano.
+  const lectura = (r, que) => {
+    const n = r.jugadoresQueConcentranLaMitad;
+    if (n === 0) return '';
+    const sujeto = n === 1 ? 'El primero' : `Los primeros ${n} jugadores`;
+    const verbo = n === 1 ? 'concentra' : 'concentran';
+    return `<div class="p">${sujeto} ${verbo} más de la mitad de ${que}.</div>`;
+  };
 
   cont.innerHTML = `
     <div class="eyebrow">Reparto de minutos</div>

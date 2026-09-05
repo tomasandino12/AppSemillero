@@ -1,7 +1,7 @@
 import { obtenerJugadoresDelPlantel, guardarSesionMedicion } from '../../data/repositorio.js';
 import { prepararPayloadVelocidad, redondearSegundos } from '../../data/prepararPayloadMedicion.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, toast, esErrorDeRed } from '../nav.js';
+import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
 import { ir } from '../main.js';
 
@@ -37,7 +37,7 @@ function persistir() {
 function render() {
   contenedor().innerHTML = `
     <div class="pad">
-      <div class="eyebrow">Velocidad · ${escaparHtml(fecha)}</div>
+      <div class="eyebrow">Velocidad · ${escaparHtml(formatearFechaCorta(fecha))}</div>
       <div class="p">${escaparHtml(PROTOCOLO_VELOCIDAD)}</div>
       <div class="lista-2col">
         ${jugadores.map((j) => `
@@ -78,6 +78,10 @@ function render() {
 async function guardar() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
+  // Se captura ANTES del await: si el entrenador cambia de categoría con la
+  // RPC en vuelo, clave() recalculada al final borraría el borrador de la
+  // categoría equivocada, no el de esta sesión.
+  const claveDeEstaSesion = clave();
   const boton = $('btn-guardar-velocidad');
   if (boton.disabled) return;
 
@@ -103,7 +107,7 @@ async function guardar() {
     return;
   }
 
-  borrarBorrador(clave());
+  borrarBorrador(claveDeEstaSesion);
   toast('Sesión guardada');
   await ir('p-medir');
 }

@@ -2,7 +2,7 @@ import { obtenerJugadoresDelPlantel, guardarSesionMedicion } from '../../data/re
 import { POSICIONES_BATERIA, INTENTOS_POR_POSICION } from '../../data/posiciones.js';
 import { prepararPayloadBateria } from '../../data/prepararPayloadMedicion.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, toast, esErrorDeRed } from '../nav.js';
+import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
 import { ir } from '../main.js';
 
@@ -63,7 +63,7 @@ function render() {
 
       <div class="jug-actual">
         <div class="nom">${escaparHtml(jugador.nombreLimpio)}</div>
-        <div class="sub">${indice + 1} de ${jugadores.length} · ${escaparHtml(fecha)}</div>
+        <div class="sub">${indice + 1} de ${jugadores.length} · ${escaparHtml(formatearFechaCorta(fecha))}</div>
       </div>
 
       ${ausente ? `
@@ -139,6 +139,10 @@ function render() {
 async function cerrarSesion() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
+  // Se captura ANTES del await: si el entrenador cambia de categoría con la
+  // RPC en vuelo, clave() recalculada al final borraría el borrador de la
+  // categoría equivocada, no el de esta sesión.
+  const claveDeEstaSesion = clave();
   const boton = $('btn-cerrar-sesion');
   if (boton.disabled) return;
 
@@ -166,7 +170,7 @@ async function cerrarSesion() {
     return;
   }
 
-  borrarBorrador(clave());
+  borrarBorrador(claveDeEstaSesion);
   toast('Sesión guardada');
   await ir('p-medir');
 }
