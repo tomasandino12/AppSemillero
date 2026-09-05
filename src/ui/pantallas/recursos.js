@@ -1,26 +1,184 @@
-import { bannerEjemplo } from '../componentes/bannerEjemplo.js';
-import { BIBLIO } from '../datosEjemplo.js';
-import { toast } from '../nav.js';
+import { obtenerRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
+import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
+import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
+import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 
 const $ = (id) => document.getElementById(id);
+const contenedor = () => $('recursos-contenido');
 
-export function renderRecursos() {
-  $('recursos-contenido').innerHTML = `
-    ${bannerEjemplo()}
-    <div class="pad">
-      <h2 class="h2">Recursos</h2>
-      <div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>
-      <div class="eyebrow">Ofrecidos</div>
-      ${BIBLIO.map((b, i) => `
-        <div class="rec">
-          <div class="t">${b.t}</div>
-          <div class="d">${b.d}</div>
-          <div class="m"><span class="tag rojo">${i === 1 ? 'Todo el plantel' : `${2 + i} jugadores`}</span><span class="tag">${2 + i} lo abrieron</span></div>
-        </div>
-      `).join('')}
-      <div class="p">Nadie queda “en falta” por no abrirlo. Si te interesa saber si sirvió, preguntá en el entrenamiento.</div>
-      <button class="btn sec" id="btn-ofrecer">Ofrecer un recurso</button>
+function hoyLocal() {
+  // Fecha local, no UTC: después de las 21:00 en Argentina, toISOString() ya
+  // devuelve el día siguiente.
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Un recurso muestra a cuántos se les mandó y cuándo. NO muestra quién lo
+ * mira, ni una seguidilla de envíos, ni marcas de lectura: con adolescentes,
+ * el control estricto convierte una herramienta de desarrollo en una de
+ * vigilancia.
+ */
+function tarjetaRecurso(r) {
+  const cuantos = r.envios.length;
+  const ultima = cuantos ? r.envios.map((e) => e.fecha).sort().at(-1) : null;
+  return `
+    <div class="rec">
+      <div class="t">${escaparHtml(r.titulo)}</div>
+      <div class="d">${escaparHtml(r.descripcion)}</div>
+      ${r.enlace ? `<a class="enlace-rec" href="${escaparHtml(r.enlace)}" target="_blank" rel="noopener noreferrer">Abrir el material</a>` : ''}
+      <div class="m">
+        <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
+        ${ultima ? `<span class="tag">${escaparHtml(formatearFechaCorta(ultima))}</span>` : ''}
+      </div>
+      <button class="btn sec chico" data-reenviar="${r.id}">Enviar a más jugadores</button>
     </div>
   `;
-  $('btn-ofrecer').addEventListener('click', () => toast('Ofrecer recursos todavía no está construido.'));
+}
+
+function cuerpoDeHoja(jugadores, { conCampos }) {
+  return `
+    ${conCampos ? `
+      <div class="campo"><label for="in-rec-titulo">Título</label>
+        <input id="in-rec-titulo" type="text" autocomplete="off"></div>
+      <div class="campo"><label for="in-rec-desc">Instrucciones</label>
+        <textarea id="in-rec-desc" rows="3"></textarea></div>
+      <div class="campo"><label for="in-rec-link">Link (opcional)</label>
+        <input id="in-rec-link" type="url" autocomplete="off" inputmode="url" placeholder="https://"></div>
+    ` : ''}
+    <div class="eyebrow">A quién <button class="btn sec chico" id="btn-todos" type="button">Todo el plantel</button></div>
+    <div class="lista-chk">
+      ${jugadores.map((j) => `
+        <label class="chk-fila">
+          <input type="checkbox" class="chk-jug" value="${j.id}">
+          <span>${escaparHtml(j.nombreLimpio)}</span>
+        </label>
+      `).join('')}
+    </div>
+    <div id="rec-aviso"></div>
+    <button class="btn" id="btn-rec-confirmar">Registrar el envío</button>
+  `;
+}
+
+function abrirAltaDeRecurso(recursoId, jugadores) {
+  const esNuevo = recursoId == null;
+  abrirHoja({
+    titulo: esNuevo ? 'Ofrecer un recurso' : 'Enviar a más jugadores',
+    cuerpo: cuerpoDeHoja(jugadores, { conCampos: esNuevo }),
+  });
+  $('btn-todos').addEventListener('click', () => {
+    document.querySelectorAll('.chk-jug').forEach((c) => { c.checked = true; });
+  });
+  $('btn-rec-confirmar').addEventListener('click', () => confirmarEnvio(recursoId));
+  if (esNuevo) {
+    $('in-rec-titulo').focus();
+    // Enter en un campo de una sola línea es la otra entrada al mismo submit
+    // que el click del botón; confirmarEnvio() cubre las dos con su guarda.
+    $('in-rec-titulo').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarEnvio(recursoId); });
+    $('in-rec-link').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarEnvio(recursoId); });
+  }
+}
+
+async function confirmarEnvio(recursoId) {
+  const boton = $('btn-rec-confirmar');
+  // Misma guarda que altaJugador.js: click y Enter son dos entradas al mismo
+  // flujo, y ésta es la única que cubre a las dos con la RPC en vuelo.
+  if (boton.disabled) return;
+
+  const jugadorIds = [...document.querySelectorAll('.chk-jug:checked')].map((c) => c.value);
+  const titulo = recursoId ? null : $('in-rec-titulo').value.trim();
+  const descripcion = recursoId ? null : $('in-rec-desc').value.trim();
+
+  if (!recursoId && (!titulo || !descripcion)) {
+    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">Poné un título y las instrucciones.</div></div>`;
+    return;
+  }
+  if (!jugadorIds.length) {
+    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">Elegí al menos un jugador.</div></div>`;
+    return;
+  }
+
+  boton.disabled = true;
+  boton.textContent = 'Registrando...';
+  try {
+    await guardarRecurso({
+      clubId: obtenerClubActual().id,
+      recursoId: recursoId ?? null,
+      titulo,
+      descripcion,
+      enlace: recursoId ? null : ($('in-rec-link').value.trim() || null),
+      fecha: hoyLocal(),
+      jugadorIds,
+    });
+  } catch (e) {
+    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">${
+      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo registrar el envío.'
+    }</div></div>`;
+    boton.disabled = false;
+    boton.textContent = 'Registrar el envío';
+    return;
+  }
+  cerrarHoja();
+  toast('Envío registrado');
+  await renderRecursos();
+}
+
+const encabezado = `<div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>`;
+
+export async function renderRecursos() {
+  const club = obtenerClubActual();
+  const plantel = obtenerPlantelActivo();
+  if (!club || !plantel) {
+    contenedor().innerHTML = `<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
+    return;
+  }
+
+  contenedor().innerHTML = `
+    <div class="pad">
+      ${encabezado}
+      <div class="eyebrow">Ofrecidos</div>
+      <div class="p" id="recursos-estado">Cargando recursos...</div>
+    </div>
+  `;
+
+  let recursos, jugadores;
+  try {
+    [recursos, jugadores] = await Promise.all([
+      obtenerRecursos(club.id),
+      obtenerJugadoresDelPlantel(club.id, plantel.id),
+    ]);
+  } catch (e) {
+    $('recursos-estado').textContent = esErrorDeRed(e)
+      ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
+      : 'No se pudieron cargar los recursos.';
+    return;
+  }
+
+  if (!recursos.length) {
+    contenedor().innerHTML = `
+      <div class="pad">
+        ${encabezado}
+        <div class="estado-vacio">
+          <h2>Todavía no compartiste ningún recurso</h2>
+          <div class="p">El chico lo recibe por donde ya se hablan hoy (WhatsApp). Lo que hace la app es dejar registrado qué se mandó, a quién y cuándo — que es justo lo que se pierde cuando cambia el entrenador.</div>
+          <div class="acciones"><button class="btn" id="btn-ofrecer">Ofrecer un recurso</button></div>
+        </div>
+      </div>
+    `;
+    $('btn-ofrecer').addEventListener('click', () => abrirAltaDeRecurso(null, jugadores));
+    return;
+  }
+
+  contenedor().innerHTML = `
+    <div class="pad">
+      ${encabezado}
+      <div class="eyebrow">Ofrecidos</div>
+      ${recursos.map(tarjetaRecurso).join('')}
+    </div>
+    <div class="pie-fijo"><button class="btn sec" id="btn-ofrecer">Ofrecer un recurso</button></div>
+  `;
+  $('btn-ofrecer').addEventListener('click', () => abrirAltaDeRecurso(null, jugadores));
+  contenedor().querySelectorAll('[data-reenviar]').forEach((b) => {
+    b.addEventListener('click', () => abrirAltaDeRecurso(b.dataset.reenviar, jugadores));
+  });
 }

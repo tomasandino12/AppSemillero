@@ -30,11 +30,12 @@
   text-transform:uppercase;color:var(--gris);font-weight:500;
   display:block;margin-bottom:var(--sp-2);
 }
-.campo input{
+.campo input,.campo textarea{
   width:100%;min-height:var(--tap);padding:var(--sp-3);
   border-radius:.5625rem;border:1px solid var(--linea);
   font-size:var(--fs-160);font-family:var(--ff-mono);background:#fff;
 }
+.campo textarea{resize:vertical}
 .campo .ayuda{font-size:var(--fs-115);color:var(--gris);margin-top:var(--sp-1)}
 
 /* ---- tarjetas ---- */
@@ -282,3 +283,9 @@ svg.g{width:100%;display:block;overflow:visible}
 .leyenda .s2::before,.leyenda .s3::before,.leyenda .sl::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--rojo)}
 .leyenda .s3::before{border-top-color:var(--negro)}
 .leyenda .sl::before{border-top-color:var(--gris-cl);border-top-style:dashed}
+
+/* Etapa 4 — RECURSOS: selección múltiple de jugadores para un envío */
+.lista-chk{display:flex;flex-direction:column;max-height:40vh;overflow-y:auto;margin:8px 0}
+.chk-fila{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 2px;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
+.chk-fila input{width:22px;height:22px;flex:0 0 auto}
+.enlace-rec{display:inline-block;margin-top:6px;font-size:var(--fs-135);color:var(--rojo)}
