@@ -77,19 +77,6 @@
 .al.ok{border-left-color:var(--sube)}
 .al.ok .ico{color:var(--sube)}
 
-/* ---- franja de datos de ejemplo (Etapa 3, Decisión 7) ----
-   Alto contraste y ancho completo: tiene que ser imposible confundirla
-   con una alerta del negocio y verse sin scrollear. */
-.banner-ejemplo{
-  display:flex;align-items:center;gap:var(--sp-2);
-  background:var(--aviso-fondo);color:var(--aviso);
-  border-bottom:2px solid var(--aviso);
-  padding:var(--sp-3) var(--sp-4);
-  font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;
-  letter-spacing:.04em;text-transform:uppercase;
-}
-.banner-ejemplo .ico{font-size:var(--fs-160)}
-
 /* ---- estado vacío ---- */
 .estado-vacio{
   background:var(--blanco);border-radius:var(--r);box-shadow:var(--sombra);

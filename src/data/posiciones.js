@@ -2,9 +2,9 @@
  * Las posiciones de la batería de tiro, con la geometría que usa cancha()
  * para dibujarlas.
  *
- * Es dato real de la app, no de ejemplo: sale de datosEjemplo.js (que se
- * borra en la Task 17) porque nunca fue un dato inventado, sólo estaba
- * guardado en el archivo equivocado.
+ * Es dato real de la app, no de ejemplo: venía del archivo de datos
+ * ficticios de la Etapa 3 (borrado en la Task 17) porque nunca fue un dato
+ * inventado, sólo estaba guardado en el lugar equivocado.
  *
  * Las 5 caen sobre el arco de triples: el arco se dibuja en
  * "M28 284 L28 232 A126 126 0 0 1 272 232 L272 284" y cada posición está
