@@ -300,12 +300,21 @@ export async function obtenerSesionesDeMedicion(clubId, plantelId) {
  */
 export async function obtenerMedicionesTiroDelPlantel(clubId, plantelId) {
   const supabase = obtenerCliente();
-  const { data, error } = await supabase
-    .from('medicion_tiro')
-    .select('sesion_id, jugador_id, posicion, anotados, intentos, sesion_medicion!inner(plantel_id)')
-    .eq('club_id', clubId)
-    .eq('sesion_medicion.plantel_id', plantelId);
-  if (error) throw error;
+  const data = [];
+  let desde = 0;
+  for (;;) {
+    const hasta = desde + TAMANIO_PAGINA - 1;
+    const { data: pagina, error } = await supabase
+      .from('medicion_tiro')
+      .select('sesion_id, jugador_id, posicion, anotados, intentos, sesion_medicion!inner(plantel_id)')
+      .eq('club_id', clubId)
+      .eq('sesion_medicion.plantel_id', plantelId)
+      .range(desde, hasta);
+    if (error) throw error;
+    data.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
   return data.map((f) => ({
     sesionId: f.sesion_id,
     jugadorId: f.jugador_id,
@@ -339,12 +348,21 @@ export async function obtenerMedicionesVelocidadDelPlantel(clubId, plantelId) {
  */
 export async function obtenerEstadisticasDelPlantel(clubId, plantelId) {
   const supabase = obtenerCliente();
-  const { data, error } = await supabase
-    .from('estadistica_jugador_partido')
-    .select('partido_id, jugador_id, min_segundos, pts, dos_anotados, dos_intentados, tres_anotados, tres_intentados, libres_anotados, libres_intentados, partido!inner(plantel_id)')
-    .eq('club_id', clubId)
-    .eq('partido.plantel_id', plantelId);
-  if (error) throw error;
+  const data = [];
+  let desde = 0;
+  for (;;) {
+    const hasta = desde + TAMANIO_PAGINA - 1;
+    const { data: pagina, error } = await supabase
+      .from('estadistica_jugador_partido')
+      .select('partido_id, jugador_id, min_segundos, pts, dos_anotados, dos_intentados, tres_anotados, tres_intentados, libres_anotados, libres_intentados, partido!inner(plantel_id)')
+      .eq('club_id', clubId)
+      .eq('partido.plantel_id', plantelId)
+      .range(desde, hasta);
+    if (error) throw error;
+    data.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
   return data.map((f) => ({
     partidoId: f.partido_id,
     jugadorId: f.jugador_id,
