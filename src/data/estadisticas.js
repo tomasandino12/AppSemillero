@@ -206,6 +206,38 @@ export function ultimaBateriaDeJugador(sesiones, medicionesTiro, jugadorId) {
   return { sesionId: sesion.id, fecha: sesion.fecha, porPosicion };
 }
 
+/**
+ * La batería de tiro más reciente de un jugador que tenga AL MENOS una
+ * medición real (no todas en null). Es distinta de ultimaBateriaDeJugador:
+ * esa devuelve la sesión más reciente donde el jugador aparece, aunque haya
+ * estado ausente en las 6 posiciones; ésta busca la última vez que
+ * efectivamente tiró, para poder mostrarla cuando la más reciente es una
+ * ausencia completa.
+ *
+ * "Faltó a la del 5/4" e "hizo la del 5/3" son dos hechos distintos: la
+ * ficha necesita poder mostrar los dos, así que esta función no reemplaza a
+ * ultimaBateriaDeJugador, la complementa.
+ */
+export function ultimaBateriaConDatosDeJugador(sesiones, medicionesTiro, jugadorId) {
+  const sesionesConDato = new Set(
+    medicionesTiro
+      .filter((m) => m.jugadorId === jugadorId && m.anotados != null)
+      .map((m) => m.sesionId)
+  );
+  const candidatas = sesiones
+    .filter((s) => s.tipo === 'tiro' && sesionesConDato.has(s.id))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  if (!candidatas.length) return null;
+
+  const sesion = candidatas[0];
+  const porPosicion = {};
+  for (const m of medicionesTiro) {
+    if (m.jugadorId !== jugadorId || m.sesionId !== sesion.id) continue;
+    porPosicion[m.posicion] = porcentaje(m.anotados, m.intentos);
+  }
+  return { sesionId: sesion.id, fecha: sesion.fecha, porPosicion };
+}
+
 /** Partido a partido de un jugador, del más reciente al más viejo. */
 export function historialDePartidosDelJugador(partidos, estadisticas, jugadorId) {
   const partidosPorId = new Map(partidos.map((p) => [p.id, p]));

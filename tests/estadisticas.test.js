@@ -8,6 +8,7 @@ import {
   evolucionDeTiroDelEquipo,
   serieDeTiroDelJugador,
   ultimaBateriaDeJugador,
+  ultimaBateriaConDatosDeJugador,
   historialDePartidosDelJugador,
   promedioDeCanchaDelPlantel,
 } from '../src/data/estadisticas.js';
@@ -200,6 +201,41 @@ test('un jugador ausente tiene batería con la posición en null, no en cero', (
 test('sin ninguna batería devuelve null', () => {
   assert.equal(ultimaBateriaDeJugador([], [], 'j1'), null);
   assert.equal(promedioDeCanchaDelPlantel([], []), null);
+});
+
+test('ultimaBateriaConDatosDeJugador salta una ausencia completa más reciente y trae la última con datos reales', () => {
+  const sesiones = [
+    { id: 's1', fecha: '2026-03-05', tipo: 'tiro' },
+    { id: 's2', fecha: '2026-04-05', tipo: 'tiro' },
+  ];
+  const mediciones = [
+    // s1: el chico tiró de verdad.
+    { sesionId: 's1', jugadorId: 'jX', posicion: 'esq_izq', anotados: 5, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'jX', posicion: 'libres', anotados: 7, intentos: 10 },
+    // s2: faltó a la sesión completa (las 6 filas quedan en null).
+    { sesionId: 's2', jugadorId: 'jX', posicion: 'esq_izq', anotados: null, intentos: 10 },
+    { sesionId: 's2', jugadorId: 'jX', posicion: 'libres', anotados: null, intentos: 10 },
+  ];
+  // ultimaBateriaDeJugador no cambia de contrato: sigue trayendo la ausencia.
+  const masReciente = ultimaBateriaDeJugador(sesiones, mediciones, 'jX');
+  assert.equal(masReciente.fecha, '2026-04-05');
+  assert.equal(masReciente.porPosicion.esq_izq, null);
+  // La nueva función salta esa ausencia y trae la sesión anterior, con datos.
+  const conDatos = ultimaBateriaConDatosDeJugador(sesiones, mediciones, 'jX');
+  assert.equal(conDatos.fecha, '2026-03-05');
+  assert.equal(conDatos.porPosicion.esq_izq.anotados, 5);
+});
+
+test('ultimaBateriaConDatosDeJugador coincide con ultimaBateriaDeJugador cuando la más reciente ya tiene datos reales', () => {
+  const conDatos = ultimaBateriaConDatosDeJugador(SESIONES, MEDICIONES, 'j1');
+  assert.equal(conDatos.fecha, '2026-04-05');
+  assert.equal(conDatos.porPosicion.libres.anotados, 6);
+});
+
+test('ultimaBateriaConDatosDeJugador devuelve null si el jugador nunca tuvo un dato real', () => {
+  // j2 sólo tiene la fila de s1, y ahí está ausente (todo en null).
+  assert.equal(ultimaBateriaConDatosDeJugador(SESIONES, MEDICIONES, 'j2'), null);
+  assert.equal(ultimaBateriaConDatosDeJugador([], [], 'j9'), null);
 });
 
 test('el historial de partidos va del más reciente al más viejo', () => {

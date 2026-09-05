@@ -3,7 +3,7 @@ import {
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel, obtenerMedicionesVelocidadDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
 } from '../../data/repositorio.js';
-import { serieDeTiroDelJugador, ultimaBateriaDeJugador, historialDePartidosDelJugador } from '../../data/estadisticas.js';
+import { serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador } from '../../data/estadisticas.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta } from '../nav.js';
 import { ir } from '../main.js';
@@ -45,11 +45,31 @@ function ejeComun(serieA, serieB) {
   return { fechas, a: alinear(serieA), b: alinear(serieB) };
 }
 
+/**
+ * Fila fecha + porcentaje-con-denominador para un punto de la serie. Mismo
+ * patrón que datos.js usa en la tabla debajo del gráfico de evolución del
+ * equipo (fila-ev): el gráfico da la forma, esta tabla da el número exacto
+ * de cada punto, no sólo el último. Es lo que evita que un 1/1 se vea
+ * idéntico a un 25/50 por pintarse los dos como un pico al 100%.
+ */
+function filaDePunto(p) {
+  return `
+    <div class="fila-ev dos">
+      <div class="f">${escaparHtml(formatearFechaCorta(p.fecha))}</div>
+      <div>${textoPorcentaje(p.valor)}</div>
+    </div>
+  `;
+}
+
 function bloqueDeSerie(id, titulo, serie, ayuda) {
   const total = serie.practica.length + serie.partido.length;
   if (total === 0) {
     return `<div class="eyebrow">${titulo}</div><div class="p">${ayuda}</div>`;
   }
+  // Más reciente primero, igual que el resto de las tablas de la ficha
+  // (partidos, velocidad).
+  const practicaDesc = [...serie.practica].reverse();
+  const partidoDesc = [...serie.partido].reverse();
   return `
     <div class="eyebrow">${titulo}</div>
     <svg class="g" id="${id}"></svg>
@@ -58,8 +78,14 @@ function bloqueDeSerie(id, titulo, serie, ayuda) {
       <span class="linea-partido">Partido</span>
     </div>
     <div class="detalle-serie">
-      ${serie.practica.length ? `<div>Última práctica: ${textoPorcentaje(serie.practica.at(-1).valor)}</div>` : ''}
-      ${serie.partido.length ? `<div>Último partido: ${textoPorcentaje(serie.partido.at(-1).valor)}</div>` : ''}
+      ${practicaDesc.length ? `
+        <div class="leyenda"><span class="linea-practica">Práctica</span></div>
+        <div class="tabla-ev">${practicaDesc.map(filaDePunto).join('')}</div>
+      ` : ''}
+      ${partidoDesc.length ? `
+        <div class="leyenda"><span class="linea-partido">Partido</span></div>
+        <div class="tabla-ev">${partidoDesc.map(filaDePunto).join('')}</div>
+      ` : ''}
     </div>
   `;
 }
@@ -77,13 +103,43 @@ function dibujarSerie(id, serie) {
   });
 }
 
-function seccionCancha(bateria) {
+/**
+ * `bateria` es siempre la sesión de tiro más reciente del jugador, tal cual
+ * la devuelve ultimaBateriaDeJugador — incluso si faltó a las 6 posiciones.
+ * `bateriaConDatos` es la última con al menos una medición real (puede ser
+ * la misma `bateria`, una anterior, o null si nunca midió nada).
+ *
+ * Un jugador ausente a la más reciente no puede quedar mostrado con la
+ * cancha vacía y nada más: eso lee como "nunca lo medimos". Se dicen los dos
+ * hechos por separado — faltó tal día, midió tal otro — y se dibuja la
+ * cancha de la batería con datos reales, no la de la ausencia.
+ */
+function seccionCancha(bateria, bateriaConDatos) {
   if (!bateria) {
     return `<div class="eyebrow">Tiro por posición</div>
       <div class="p">Todavía no tiene ninguna batería cargada. Se mide desde MEDIR.</div>`;
   }
+
+  const ausenteEnLaMasReciente = bateria !== bateriaConDatos;
+  if (!ausenteEnLaMasReciente) {
+    return `
+      <div class="eyebrow">Tiro por posición <span class="der">${escaparHtml(formatearFechaCorta(bateria.fecha))}</span></div>
+      <div class="tarj">
+        <svg class="g" id="ficha-cancha"></svg>
+        <div class="leyenda"><span>Práctica: 10 tiros por posición. El partido no dice desde dónde se tiró, así que no se superpone acá.</span></div>
+      </div>
+    `;
+  }
+
+  const aviso = `<div class="p">Faltó a la batería del ${escaparHtml(formatearFechaCorta(bateria.fecha))}.</div>`;
+  if (!bateriaConDatos) {
+    return `<div class="eyebrow">Tiro por posición</div>
+      ${aviso}
+      <div class="p">Todavía no hizo ninguna batería con mediciones reales.</div>`;
+  }
   return `
-    <div class="eyebrow">Tiro por posición <span class="der">${escaparHtml(formatearFechaCorta(bateria.fecha))}</span></div>
+    <div class="eyebrow">Tiro por posición <span class="der">${escaparHtml(formatearFechaCorta(bateriaConDatos.fecha))}</span></div>
+    ${aviso}
     <div class="tarj">
       <svg class="g" id="ficha-cancha"></svg>
       <div class="leyenda"><span>Práctica: 10 tiros por posición. El partido no dice desde dónde se tiró, así que no se superpone acá.</span></div>
@@ -221,6 +277,13 @@ export async function renderFicha() {
     ]);
 
     const bateria = ultimaBateriaDeJugador(sesiones, medicionesTiro, jugadorId);
+    // Si la más reciente es una ausencia completa (todas las posiciones en
+    // null), se busca la última vez que sí midió algo real. Si no, es la
+    // misma batería: no hace falta ir a buscar otra.
+    const bateriaEsAusenciaCompleta = !!bateria && !Object.values(bateria.porPosicion).some((v) => v != null);
+    const bateriaConDatos = bateriaEsAusenciaCompleta
+      ? ultimaBateriaConDatosDeJugador(sesiones, medicionesTiro, jugadorId)
+      : bateria;
     const series = serieDeTiroDelJugador({ sesiones, medicionesTiro, partidos, estadisticas, jugadorId });
     const historial = historialDePartidosDelJugador(partidos, estadisticas, jugadorId);
     const velocidadesDelJugador = velocidades
@@ -228,7 +291,7 @@ export async function renderFicha() {
       .sort((a, b) => b.fecha.localeCompare(a.fecha));
 
     $('ficha-historia').innerHTML = `
-      ${seccionCancha(bateria)}
+      ${seccionCancha(bateria, bateriaConDatos)}
       ${bloqueDeSerie('ficha-triples', 'Tiro de tres', series.triples, 'Todavía no hay datos de triples, ni de práctica ni de partido.')}
       ${bloqueDeSerie('ficha-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial)}
@@ -238,8 +301,8 @@ export async function renderFicha() {
 
     // Los SVG se dibujan después de meter el HTML en el DOM: recién ahí
     // existen los elementos. cancha() sólo se llama si seccionCancha() dibujó
-    // el <svg> (bateria no nula); dibujarSerie ya se cuida sola de eso.
-    if (bateria) cancha($('ficha-cancha'), bateria.porPosicion);
+    // el <svg> (bateriaConDatos no nula); dibujarSerie ya se cuida sola de eso.
+    if (bateriaConDatos) cancha($('ficha-cancha'), bateriaConDatos.porPosicion);
     dibujarSerie('ficha-triples', series.triples);
     dibujarSerie('ficha-libres', series.libres);
   } catch (e) {
