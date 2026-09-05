@@ -183,9 +183,17 @@ export async function renderRecursos() {
       obtenerJugadoresDelPlantel(club.id, plantel.id),
     ]);
   } catch (e) {
-    $('recursos-estado').textContent = esErrorDeRed(e)
-      ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-      : 'No se pudieron cargar los recursos.';
+    // Que falle la lectura no puede dejar la pantalla sin su acción principal:
+    // el entrenador tiene que poder reintentar sin salir y volver a entrar.
+    $('recursos-estado').outerHTML = `
+      <div class="al"><div class="tx">${
+        esErrorDeRed(e)
+          ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
+          : 'No se pudieron cargar los recursos.'
+      }</div></div>
+      <button class="btn sec" id="btn-reintentar-recursos">Reintentar</button>
+    `;
+    $('btn-reintentar-recursos').addEventListener('click', () => renderRecursos());
     return;
   }
 

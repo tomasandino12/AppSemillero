@@ -192,7 +192,7 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Etapa 4 — barras de reparto */
 .barras{display:flex;flex-direction:column;gap:8px;margin:12px 0}
-.barra{display:grid;grid-template-columns:minmax(0,4.5rem) 1fr auto;align-items:center;gap:8px}
+.barra{display:grid;grid-template-columns:minmax(0,7.5rem) 1fr auto;align-items:center;gap:8px}
 .barra .et{font-size:var(--fs-135);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .barra .pista{height:14px;background:var(--linea);border-radius:7px;overflow:hidden}
 .barra .relleno{height:100%;background:var(--rojo);border-radius:7px}
@@ -210,8 +210,8 @@ svg.g{width:100%;display:block;overflow:visible}
 /* Etapa 4 — carga de la batería en cancha.
    Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
    a la pantalla. La tira envuelve sola en dos líneas a 375px. */
-.tira{display:flex;flex-wrap:wrap;gap:6px}
-.tira .num{flex:1 0 2.6rem;min-height:48px;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);font-weight:600}
+.tira{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.tira .num{min-height:48px;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);font-weight:600}
 .tira .num.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
 .posiciones{display:flex;flex-direction:column;gap:16px;margin:14px 0}
 .posicion .et{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:var(--fs-135);color:var(--tinta)}
@@ -220,7 +220,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .jug-actual .nom{font-size:var(--fs-220);font-weight:700;color:var(--tinta)}
 .jug-actual .sub{font-size:var(--fs-125);color:var(--gris-cl)}
 .progreso-tira{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
-.progreso-tira .paso{min-width:34px;min-height:34px;border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-115)}
+.progreso-tira .paso{min-width:38px;min-height:38px;padding:0 4px;border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-115)}
 .progreso-tira .paso.completo{background:var(--rojo);border-color:var(--rojo);color:#fff}
 .progreso-tira .paso.parcial{border-color:var(--rojo);color:var(--rojo)}
 .progreso-tira .paso.ausente{border-style:dashed}
@@ -229,11 +229,21 @@ svg.g{width:100%;display:block;overflow:visible}
 .acciones-bateria .btn{flex:1}
 
 /* Etapa 4 — carga de velocidad */
-.vel-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--linea)}
-.vel-fila .nom{font-size:var(--fs-145);color:var(--tinta)}
-.campo-vel{display:flex;align-items:center;gap:6px}
-.campo-vel input{width:5rem;min-height:48px;text-align:right;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);padding:0 10px}
-.campo-vel .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);color:var(--gris-cl)}
+.lista-vel{display:flex;flex-direction:column;margin:12px 0}
+.vel-fila{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;width:100%;min-height:56px;padding:6px 2px;border:0;border-bottom:1px solid var(--linea);background:none;text-align:left}
+.vel-fila .nom{font-size:var(--fs-145);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vel-fila .caja{min-width:4.5rem;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--linea);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-190);font-weight:600}
+.vel-fila .caja.si{background:var(--rojo-cl);color:var(--tinta)}
+.vel-fila.on .caja{outline:2px solid var(--rojo);outline-offset:1px;color:var(--tinta)}
+.vel-fila .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+
+/* Teclado propio, portado del prototipo. Teclas grandes para cargar de pie en
+   la cancha, y sólo dígitos y una coma: nada de tipear precisión falsa. */
+.kb{position:fixed;left:0;right:0;bottom:0;z-index:45;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:var(--linea);transform:translateY(110%);transition:transform 180ms ease-out}
+.kb.on{transform:translateY(0)}
+.kb button{min-height:56px;border:0;border-radius:9px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-220);font-weight:600}
+.kb button.ac{background:var(--negro);color:var(--papel);font-size:var(--fs-190)}
+.kb button.ok{grid-column:1 / -1;background:var(--rojo);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.08em;text-transform:uppercase}
 
 /* Etapa 4 — evolución del equipo */
 .tabla-ev{display:flex;flex-direction:column;gap:6px;margin-top:10px}
@@ -275,3 +285,6 @@ svg.g{width:100%;display:block;overflow:visible}
 .chk-fila{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 2px;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
 .chk-fila input{width:22px;height:22px;flex:0 0 auto}
 .enlace-rec{display:inline-block;margin-top:6px;font-size:var(--fs-135);color:var(--rojo)}
+/* Con el teclado abierto, las últimas filas de la lista quedarían debajo de
+   él. Este hueco las deja alcanzables scrolleando. */
+.espacio-kb{height:17rem}

@@ -41,3 +41,15 @@ export function formatearFechaCorta(iso) {
   const [, mes, dia] = iso.split('-');
   return `${dia}/${mes}`;
 }
+
+/**
+ * 'TODESCHINI, MATEO' → 'TODESCHINI, M.'. Para listas angostas donde el
+ * apellido es lo que identifica y el nombre completo obliga a cortar la
+ * palabra que importa. Si no hay coma, devuelve el nombre tal cual.
+ */
+export function nombreCorto(nombreLimpio) {
+  const [apellido, nombre] = String(nombreLimpio).split(',');
+  if (nombre == null) return String(nombreLimpio);
+  const inicial = nombre.trim()[0];
+  return inicial ? `${apellido.trim()}, ${inicial}.` : apellido.trim();
+}

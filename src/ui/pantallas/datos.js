@@ -1,6 +1,6 @@
 import { obtenerPartidosDelPlantel, obtenerEstadisticasDelPlantel, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, textoPorcentaje } from '../nav.js';
+import { escaparHtml, esErrorDeRed, textoPorcentaje, nombreCorto } from '../nav.js';
 import { ir } from '../main.js';
 import { iniciarConfirmacion } from './confirmacionImport.js';
 import { setRetornoImport } from './retornoImport.js';
@@ -63,7 +63,7 @@ async function renderSeccionesDeEquipo(club, plantel) {
   }
 
   const nombre = new Map(jugadores.map((j) => [j.id, j.nombreLimpio]));
-  const etiqueta = (id) => nombre.get(id) ?? 'Jugador de otra categoría';
+  const etiqueta = (id) => nombre.has(id) ? nombreCorto(nombre.get(id)) : 'Otra categoría';
 
   const minutos = repartoPorJugador(estadisticas, 'minSegundos');
   const puntos = repartoPorJugador(estadisticas, 'pts');

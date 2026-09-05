@@ -4,6 +4,7 @@ import { prepararPayloadBateria } from '../../data/prepararPayloadMedicion.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
+import { iniciales } from './plantel.js';
 import { ir } from '../main.js';
 
 const $ = (id) => document.getElementById(id);
@@ -55,9 +56,10 @@ function render() {
 
   contenedor().innerHTML = `
     <div class="pad">
+      <div class="eyebrow">Saltar a otro jugador</div>
       <div class="progreso-tira" id="progreso-tira">
         ${jugadores.map((j, i) => `
-          <button class="paso ${estadoDeJugador(j.id)} ${i === indice ? 'on' : ''}" data-saltar="${i}" aria-label="${escaparHtml(j.nombreLimpio)}">${i + 1}</button>
+          <button class="paso ${estadoDeJugador(j.id)} ${i === indice ? 'on' : ''}" data-saltar="${i}" title="${escaparHtml(j.nombreLimpio)}" aria-label="${escaparHtml(j.nombreLimpio)}">${escaparHtml(iniciales(j.nombreLimpio))}</button>
         `).join('')}
       </div>
 

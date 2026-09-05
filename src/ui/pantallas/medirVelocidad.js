@@ -18,6 +18,10 @@ export const PROTOCOLO_VELOCIDAD =
 let jugadores = [];
 let valores = {};
 let fecha = null;
+// Jugador que está cargando ahora, y lo que lleva tecleado. Mientras hay uno
+// activo el teclado está arriba y el pie fijo queda escondido debajo.
+let activo = null;
+let buffer = '';
 
 function hoyLocal() {
   const d = new Date();
@@ -34,54 +38,125 @@ function persistir() {
   guardarBorrador(clave(), { fecha, valores });
 }
 
+/**
+ * Teclado propio en pantalla, portado del prototipo. Teclas grandes, una sola
+ * mano, y nada más que dígitos y una coma: no se puede tipear una precisión
+ * que un cronómetro a mano no tiene. El teclado nativo del celular ofrece
+ * teclas más chicas y un montón de caracteres que acá no sirven.
+ */
+function teclado() {
+  const tecla = (t, clase = '') => `<button class="${clase}" data-tecla="${t}">${t}</button>`;
+  return `
+    <div class="kb ${activo ? 'on' : ''}" id="kb">
+      ${['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((n) => tecla(n)).join('')}
+      ${tecla(',', 'ac')}
+      ${tecla('0')}
+      <button class="ac" data-tecla="borrar" aria-label="Borrar">&#9003;</button>
+      <button class="ok" data-tecla="siguiente">Siguiente &rsaquo;</button>
+    </div>
+  `;
+}
+
+function textoDeCaja(jugador) {
+  if (activo === jugador.id) return buffer || '|';
+  return valores[jugador.id] ? valores[jugador.id] : '—';
+}
+
 function render() {
   contenedor().innerHTML = `
     <div class="pad">
       <div class="eyebrow">Velocidad · ${escaparHtml(formatearFechaCorta(fecha))}</div>
       <div class="p">${escaparHtml(PROTOCOLO_VELOCIDAD)}</div>
-      <div class="lista-2col">
+      <div class="lista-vel">
         ${jugadores.map((j) => `
-          <div class="vel-fila">
-            <div class="nom">${escaparHtml(j.nombreLimpio)}</div>
-            <div class="campo-vel">
-              <input id="vel-${j.id}" data-jugador="${j.id}" type="text" inputmode="decimal"
-                     autocomplete="off" placeholder="—" value="${escaparHtml(valores[j.id] ?? '')}"
-                     aria-label="Segundos de ${escaparHtml(j.nombreLimpio)}">
-              <span class="u">s</span>
-            </div>
-          </div>
+          <button class="vel-fila ${activo === j.id ? 'on' : ''}" data-jugador="${j.id}">
+            <span class="nom">${escaparHtml(j.nombreLimpio)}</span>
+            <span class="caja ${valores[j.id] ? 'si' : ''}">${escaparHtml(textoDeCaja(j))}</span>
+            <span class="u">seg</span>
+          </button>
         `).join('')}
       </div>
       <div id="velocidad-aviso"></div>
+      ${activo ? '<div class="espacio-kb"></div>' : ''}
     </div>
-    <div class="pie-fijo"><button class="btn" id="btn-guardar-velocidad">Guardar la sesión</button></div>
+    <div class="pie-fijo" ${activo ? 'hidden' : ''}><button class="btn" id="btn-guardar-velocidad">Guardar la sesión</button></div>
+    ${teclado()}
   `;
 
-  contenedor().querySelectorAll('[data-jugador]').forEach((input) => {
-    input.addEventListener('input', () => {
-      valores[input.dataset.jugador] = input.value;
-      persistir();
-    });
-    // Al salir del campo se normaliza a un decimal, para que el entrenador
-    // vea exactamente lo que se va a guardar y no una precisión que no existe.
-    input.addEventListener('blur', () => {
-      const n = redondearSegundos(input.value);
-      input.value = n == null ? '' : String(n);
-      valores[input.dataset.jugador] = input.value;
-      persistir();
-    });
+  contenedor().querySelectorAll('[data-jugador]').forEach((fila) => {
+    fila.addEventListener('click', () => activar(fila.dataset.jugador));
   });
-
-  $('btn-guardar-velocidad').addEventListener('click', guardar);
+  contenedor().querySelectorAll('[data-tecla]').forEach((b) => {
+    b.addEventListener('click', () => pulsar(b.dataset.tecla));
+  });
+  const guardar = $('btn-guardar-velocidad');
+  if (guardar) guardar.addEventListener('click', guardarSesion);
 }
 
-async function guardar() {
+function activar(jugadorId) {
+  // Re-tocar la fila activa la cierra: se vuelve a la lista completa sin tener
+  // que recorrer a los catorce con "Siguiente".
+  if (activo === jugadorId) {
+    confirmarActivo();
+    activo = null;
+    buffer = '';
+    render();
+    return;
+  }
+  if (activo) confirmarActivo();
+  activo = jugadorId;
+  buffer = valores[jugadorId] ?? '';
+  render();
+}
+
+/** Pasa lo tecleado a `valores`. Un buffer vacío borra el valor; no lo deja en cero. */
+function confirmarActivo() {
+  if (!activo) return;
+  const n = redondearSegundos(buffer);
+  if (n == null) delete valores[activo];
+  else valores[activo] = String(n);
+  persistir();
+}
+
+function pulsar(tecla) {
+  if (!activo) return;
+
+  if (tecla === 'borrar') {
+    buffer = buffer.slice(0, -1);
+    render();
+    return;
+  }
+
+  if (tecla === 'siguiente') {
+    confirmarActivo();
+    const i = jugadores.findIndex((j) => j.id === activo);
+    const siguiente = jugadores[i + 1];
+    activo = siguiente ? siguiente.id : null;
+    buffer = siguiente ? (valores[siguiente.id] ?? '') : '';
+    render();
+    return;
+  }
+
+  if (tecla === ',') {
+    if (buffer.includes(',') || buffer === '') return;   // ni dos comas ni empezar con coma
+    buffer += ',';
+    render();
+    return;
+  }
+
+  // Un solo decimal, y nada de tiempos de tres cifras: un largo de cancha no
+  // llega a 100 segundos, así que el tope es dos dígitos enteros.
+  const [entera, decimal] = buffer.split(',');
+  if (decimal != null && decimal.length >= 1) return;
+  if (decimal == null && entera.length >= 2) return;
+  buffer += tecla;
+  render();
+}
+
+async function guardarSesion() {
+  confirmarActivo();
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
-  // Se captura ANTES del await: si el entrenador cambia de categoría con la
-  // RPC en vuelo, clave() recalculada al final borraría el borrador de la
-  // categoría equivocada, no el de esta sesión.
-  const claveDeEstaSesion = clave();
   const boton = $('btn-guardar-velocidad');
   if (boton.disabled) return;
 
@@ -91,6 +166,9 @@ async function guardar() {
     return;
   }
 
+  // La clave se captura antes del await: si el entrenador toca otra categoría
+  // con la llamada en vuelo, no se borra el borrador de la categoría equivocada.
+  const claveDeEstaSesion = clave();
   boton.disabled = true;
   boton.textContent = 'Guardando...';
 
@@ -145,5 +223,7 @@ export async function renderVelocidad() {
   const borrador = leerBorrador(clave());
   fecha = borrador?.fecha ?? hoyLocal();
   valores = borrador?.valores ?? {};
+  activo = null;
+  buffer = '';
   render();
 }
