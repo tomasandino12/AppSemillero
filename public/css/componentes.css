@@ -275,3 +275,10 @@ svg.g{width:100%;display:block;overflow:visible}
 .fila-part .f{font-family:var(--ff-mono);font-size:var(--fs-115);color:var(--gris-cl)}
 .fila-part .nums{display:flex;gap:12px;margin-top:4px;font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--tinta)}
 .fila-part .tiros{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:var(--fs-115);color:var(--gris-cl)}
+
+/* Etapa 4 — evolución del equipo: series de tiro (2P/3P/TL). Mismo patrón
+   que .linea-practica/.linea-partido: color Y trazo, nunca sólo color. */
+.leyenda .s2,.leyenda .s3,.leyenda .sl{display:inline-flex;align-items:center;gap:.375rem}
+.leyenda .s2::before,.leyenda .s3::before,.leyenda .sl::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--rojo)}
+.leyenda .s3::before{border-top-color:var(--negro)}
+.leyenda .sl::before{border-top-color:var(--gris-cl);border-top-style:dashed}
