@@ -36,10 +36,15 @@ export function prepararPayloadBateria({ clubId, plantelId, fecha, valores }) {
  * Un decimal, siempre. Un cronómetro a mano tiene error humano de ~0.2s;
  * sobre 5 segundos eso es 4%. Mostrar centésimas sería precisión falsa.
  * Devuelve null para cualquier cosa que no sea un tiempo positivo.
+ *
+ * La coma se normaliza a punto antes de todo: el teclado numérico de un
+ * celular en es-AR ofrece coma como tecla decimal, y Number('4,7') es NaN.
+ * Sin esto, "4,7" se pierde en silencio y ese jugador no entra al payload.
  */
 export function redondearSegundos(valor) {
   if (valor == null || valor === '') return null;
-  const n = Number(valor);
+  const normalizado = typeof valor === 'string' ? valor.replace(',', '.') : valor;
+  const n = Number(normalizado);
   if (!Number.isFinite(n) || n <= 0) return null;
   return Math.round(n * 10) / 10;
 }

@@ -46,6 +46,13 @@ test('la velocidad se redondea a un decimal', () => {
   assert.equal(redondearSegundos(5), 5);
 });
 
+test('un tiempo escrito con coma (teclado es-AR) se normaliza a punto y no se pierde', () => {
+  assert.equal(redondearSegundos('4,7'), 4.7);
+  assert.equal(redondearSegundos('4,75'), 4.8);
+  const p = prepararPayloadVelocidad({ ...BASE, valores: { j1: '4,7' } });
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', segundos: 4.7 }]);
+});
+
 test('una velocidad inválida o vacía no genera fila', () => {
   assert.equal(redondearSegundos(''), null);
   assert.equal(redondearSegundos(null), null);
