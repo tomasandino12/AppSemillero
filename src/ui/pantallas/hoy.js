@@ -1,7 +1,7 @@
 import { POSICIONES, LIBRES } from '../../data/posiciones.js';
 import {
   zonasDeSesion, zonasDelFoco, compararPorcentajes, jugadoresDeZona, contarPorDebajo,
-  totalDeZonas,
+  totalDeZonas, serieDeZonas,
 } from '../../data/estadisticas.js';
 import { metaDeZona, alcanzaMeta, resumenDeMetas } from '../../data/objetivosClub.js';
 import { ultimaMedicion, ultimaMedicionPorJugador } from '../../data/antropometria.js';
@@ -12,6 +12,7 @@ import {
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta, textoPorcentaje } from '../nav.js';
 import { abrirHoja } from '../componentes/hoja.js';
+import { grafico } from '../componentes/graficos.js';
 import { ir } from '../main.js';
 
 const $ = (id) => document.getElementById(id);
@@ -80,6 +81,7 @@ function zonaHtml(zona) {
         <span class="pct">${pct == null ? '—' : `${pct}%`}</span>
       </div>
       <div class="zona-pie">
+        <button class="btn-zona-recurso" data-recurso-zona="${zona.id}">Mandar un recurso</button>
         ${zona.meta == null ? '' : `<span class="marca-meta ${llego === true ? 'si' : 'no'}">${llego === true ? '✓ llegó a la meta' : `meta ${zona.meta}%`}</span>`}
         ${zona.valor?.muestraChica ? '<span class="poco-tag">pocos datos</span>' : ''}
         ${variacionHtml(zona.variacion)}
@@ -206,8 +208,15 @@ export async function renderHoy() {
     variacion: compararPorcentajes(porZona[def.id] ?? null, zonasAnterior[def.id] ?? null),
   });
 
-  // De peor a mejor porcentaje, no por posición en cancha: el orden es la
-  // primera pista de qué entrenar. Las zonas sin medir van al final.
+  // De peor a mejor porcentaje, no por posición en cancha.
+  //
+  // OJO con la premisa: esto NO es una recomendación de qué entrenar. En
+  // estas categorías no se entrena tiro por posición — el tiro se trabaja en
+  // un ejercicio al inicio y la práctica va a situaciones de partido. El
+  // ranking sirve para elegir un recurso y para darle algo de foco a ese
+  // ejercicio inicial, nada más. Cualquier texto que suene a "entrená esta
+  // zona" está reintroduciendo una premisa que el cuerpo técnico ya
+  // descartó. Las zonas sin medir van al final.
   const zonasArco = POSICIONES.map(armarZona).sort((a, b) => {
     if (!a.valor) return 1;
     if (!b.valor) return -1;
@@ -224,6 +233,9 @@ export async function renderHoy() {
   const totalActual = totalDeZonas(porZona, idsArco);
   const totalVariacion = compararPorcentajes(totalActual, totalDeZonas(zonasAnterior, idsArco));
   const metasArco = resumenDeMetas(zonasArco);
+  // Una batería anterior sólo da una comparación; seis dan una serie. El
+  // margen invalida el salto entre dos puntos, no mirar todos los puntos.
+  const serieArco = serieDeZonas(sesiones, mediciones, idsArco);
 
   if (!zonasArco.some((z) => z.valor) && !zonaLibres.valor) {
     contenedor().innerHTML = `
@@ -270,6 +282,7 @@ export async function renderHoy() {
             ${variacionHtml(totalVariacion) || '<span class="var neutra">Primera batería: todavía no hay con qué comparar</span>'}
             ${metasArco ? `<span class="metas-resumen">${metasArco.alcanzadas} de ${metasArco.conMeta} zona${metasArco.conMeta === 1 ? '' : 's'} llegó a su meta</span>` : ''}
           </div>
+          ${curvaHtml(serieArco)}
         </div>
       ` : ''}
 
@@ -298,5 +311,61 @@ export async function renderHoy() {
   $('btn-hoy-medir').addEventListener('click', () => ir('p-medir'));
   $('btn-hoy-plantel')?.addEventListener('click', () => ir('p-plantel'));
   $('btn-hoy-metas').addEventListener('click', () => ir('p-metas', { push: true }));
+  dibujarCurva(serieArco);
+  $('btn-curva-arco')?.addEventListener('click', () => ir('p-datos'));
+  // Atajo de navegación, no automatización: lleva a RECURSOS con el plantel
+  // cargado y ahí el entrenador elige QUÉ mandar. La app no sugiere un
+  // recurso por zona ni filtra una biblioteca por debilidad — eso sería
+  // decidir qué necesita un chico, que no le corresponde.
+  contenedor().querySelectorAll('[data-recurso-zona]').forEach((b) => {
+    b.addEventListener('click', () => ir('p-recursos'));
+  });
   $('btn-ver-quienes')?.addEventListener('click', () => abrirListaDeZona(zonaDelFoco, jugadoresDelFoco, nombres));
+}
+
+/**
+ * Curva del arco completo, un punto por batería.
+ *
+ * Une los puntos observados y nada más: no hay línea de tendencia, ni
+ * proyección, ni ninguna afirmación sobre si el equipo mejora. Ajustar una
+ * recta sobre cuatro mediciones y extenderla sería inventar. La lectura la
+ * hace el entrenador mirando los puntos.
+ *
+ * Con una sola batería se dibuja el punto y ninguna línea: una tendencia de
+ * un punto no existe.
+ *
+ * Las fracciones del primero y el último van como texto —la regla es que
+ * ningún punto se muestre sin su denominador— y las de todos los puntos
+ * están en DATOS, adonde lleva el toque.
+ */
+function curvaHtml(serie) {
+  if (!serie.length) return '';
+  const primero = serie[0];
+  const ultimo = serie[serie.length - 1];
+  return `
+    <button class="curva" id="btn-curva-arco" aria-label="Ver la evolución completa en DATOS">
+      <svg class="chispa" id="svg-curva-arco"></svg>
+      <div class="curva-pie">
+        ${serie.length === 1
+          ? `<span>Una sola batería: ${escaparHtml(formatearFechaCorta(primero.fecha))} · ${primero.valor.anotados}/${primero.valor.intentos}</span>`
+          : `<span>${serie.length} baterías · primera ${primero.valor.pct}% (${primero.valor.anotados}/${primero.valor.intentos}) · última ${ultimo.valor.pct}% (${ultimo.valor.anotados}/${ultimo.valor.intentos})</span>`}
+        <span class="ver">Ver todo ›</span>
+      </div>
+    </button>
+  `;
+}
+
+/** Dibuja la curva. Se llama después de meter el HTML: el svg tiene que existir. */
+function dibujarCurva(serie) {
+  const svg = document.getElementById('svg-curva-arco');
+  if (!svg || !serie.length) return;
+  grafico(svg, {
+    etiquetas: serie.map((p) => formatearFechaCorta(p.fecha)),
+    series: [{
+      nombre: 'Arco',
+      c: '#D9122E',
+      d: serie.map((p) => p.valor.pct),
+      chico: serie.map((p) => p.valor.muestraChica),
+    }],
+  }, { alto: 96 });
 }

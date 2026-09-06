@@ -11,6 +11,7 @@ import {
   jugadoresDeZona,
   contarPorDebajo,
   totalDeZonas,
+  serieDeZonas,
   repartoPorJugador,
   evolucionDeTiroDelEquipo,
   serieDeTiroDelJugador,
@@ -404,4 +405,57 @@ test('la comparación del total sí puede ser concluyente con ~700 intentos', ()
   const actual = totalDeZonas({ a: porcentaje(266, 700) }, ['a']);     // 38%
   const anterior = totalDeZonas({ a: porcentaje(210, 700) }, ['a']);   // 30%
   assert.equal(compararPorcentajes(actual, anterior).concluyente, true);
+});
+
+test('la serie ordena de la batería más vieja a la más nueva', () => {
+  const ses = [
+    { id: 's3', fecha: '2026-07-01', tipo: 'tiro' },
+    { id: 's1', fecha: '2026-03-01', tipo: 'tiro' },
+    { id: 's2', fecha: '2026-05-01', tipo: 'tiro' },
+  ];
+  const med = [
+    { sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: 2, intentos: 10 },
+    { sesionId: 's2', jugadorId: 'a', posicion: 'frontal', anotados: 3, intentos: 10 },
+    { sesionId: 's3', jugadorId: 'a', posicion: 'frontal', anotados: 4, intentos: 10 },
+  ];
+  const s = serieDeZonas(ses, med, ['frontal']);
+  assert.deepEqual(s.map((p) => p.fecha), ['2026-03-01', '2026-05-01', '2026-07-01']);
+  assert.deepEqual(s.map((p) => p.valor.pct), [20, 30, 40]);
+});
+
+test('cada punto de la serie lleva su fracción real', () => {
+  const ses = [{ id: 's1', fecha: '2026-03-01', tipo: 'tiro' }];
+  const med = ['esq_izq', 'frontal'].map((posicion) => (
+    { sesionId: 's1', jugadorId: 'a', posicion, anotados: 3, intentos: 10 }
+  ));
+  const [p] = serieDeZonas(ses, med, ['esq_izq', 'frontal']);
+  assert.equal(p.valor.anotados, 6);
+  assert.equal(p.valor.intentos, 20);
+});
+
+test('las sesiones de velocidad no generan puntos en la serie de tiro', () => {
+  const ses = [
+    { id: 's1', fecha: '2026-03-01', tipo: 'tiro' },
+    { id: 'sv', fecha: '2026-04-01', tipo: 'velocidad' },
+  ];
+  const med = [{ sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: 3, intentos: 10 }];
+  assert.equal(serieDeZonas(ses, med, ['frontal']).length, 1);
+});
+
+test('una batería sin mediciones reales no deja un punto en cero', () => {
+  const ses = [
+    { id: 's1', fecha: '2026-03-01', tipo: 'tiro' },
+    { id: 's2', fecha: '2026-04-01', tipo: 'tiro' },
+  ];
+  const med = [
+    { sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: 3, intentos: 10 },
+    { sesionId: 's2', jugadorId: 'a', posicion: 'frontal', anotados: null, intentos: 10 },
+  ];
+  const s = serieDeZonas(ses, med, ['frontal']);
+  assert.equal(s.length, 1, 'la sesión de todos ausentes no aporta punto');
+  assert.equal(s[0].fecha, '2026-03-01');
+});
+
+test('sin ninguna batería la serie es vacía, no null', () => {
+  assert.deepEqual(serieDeZonas([], [], ['frontal']), []);
 });

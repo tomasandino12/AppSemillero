@@ -52,7 +52,10 @@ export function cancha(svg, valores, { alto = 200 } = {}) {
  * son el caso normal, no el borde.
  *
  * datos.etiquetas: string[]  — el eje X ya formateado
- * datos.series: [{ nombre, c: color, dash?: boolean, d: (number|null)[] }]
+ * datos.series: [{ nombre, c: color, dash?: boolean, d: (number|null)[],
+ *                   chico?: (boolean)[] }]
+ *   `chico[i]` marca el punto i como muestra chica: se dibuja hueco y
+ *   punteado. Es opcional — quien no lo pase se dibuja como siempre.
  *   Cada `d` tiene el mismo largo que `etiquetas`. Los null son huecos.
  *
  * Devuelve false si no había nada que dibujar, para que la pantalla muestre
@@ -95,13 +98,17 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
 
   series.forEach((s) => {
     const puntos = s.d
-      .map((v, i) => (v == null ? null : { x: X(i), y: Y(v), ultimo: i === s.d.length - 1 }))
+      .map((v, i) => (v == null ? null : { x: X(i), y: Y(v), ultimo: i === s.d.length - 1, chico: s.chico?.[i] === true }))
       .filter(Boolean);
     if (puntos.length > 1) {
       g += `<polyline points="${puntos.map((p) => `${p.x},${p.y}`).join(' ')}" fill="none" stroke="${s.c}" stroke-width="${s.w || 2.4}" ${s.dash ? 'stroke-dasharray="5 4"' : ''} stroke-linejoin="round"/>`;
     }
     puntos.forEach((p) => {
-      g += `<circle cx="${p.x}" cy="${p.y}" r="${p.ultimo ? 4 : 2.8}" fill="${p.ultimo ? s.c : '#fff'}" stroke="${s.c}" stroke-width="1.8"/>`;
+      // Un punto de muestra chica se dibuja hueco y con el borde punteado:
+      // es forma, no color, así que sobrevive en cualquier pantalla y para
+      // cualquiera. Sin esto, un 1/2 se ve igual de sólido que un 25/50.
+      const chico = p.chico === true;
+      g += `<circle cx="${p.x}" cy="${p.y}" r="${p.ultimo ? 4 : 2.8}" fill="${chico ? '#fff' : (p.ultimo ? s.c : '#fff')}" stroke="${s.c}" stroke-width="1.8"${chico ? ' stroke-dasharray="2 1.6"' : ''}/>`;
     });
   });
 

@@ -1,10 +1,11 @@
 import { obtenerPartidosDelPlantel, obtenerEstadisticasDelPlantel, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, textoPorcentaje, nombreCorto } from '../nav.js';
+import { escaparHtml, esErrorDeRed, textoPorcentaje, nombreCorto, formatearFechaCorta } from '../nav.js';
 import { ir } from '../main.js';
 import { iniciarConfirmacion } from './confirmacionImport.js';
 import { setRetornoImport } from './retornoImport.js';
-import { repartoPorJugador, evolucionDeTiroDelEquipo } from '../../data/estadisticas.js';
+import { repartoPorJugador, evolucionDeTiroDelEquipo, serieDeZonas } from '../../data/estadisticas.js';
+import { POSICIONES_BATERIA } from '../../data/posiciones.js';
 import { barras } from '../componentes/barras.js';
 import { grafico } from '../componentes/graficos.js';
 
@@ -133,10 +134,16 @@ export async function renderDatos() {
       <div class="p" id="datos-estado">Cargando partidos...</div>
       <div id="datos-lista"></div>
       <div id="datos-equipo"></div>
+      <div id="datos-curvas"></div>
     </div>
     <div class="pie-fijo"><button class="btn" id="btn-cargar-partido">Cargar partido</button></div>
   `;
   $('btn-cargar-partido').addEventListener('click', () => $('input-archivo').click());
+
+  // Las baterías de tiro no dependen de que haya partidos cargados, así que
+  // la curva por zona se dibuja antes de las dos ramas que retornan: un club
+  // que midió tiro pero todavía no importó ningún partido igual la ve.
+  renderCurvasDeTiro(club, plantel);
 
   let partidos;
   try {
@@ -177,4 +184,78 @@ export function iniciarDatos() {
   // Punto único de retorno del import: vuelve a DATOS y releé la lista, así
   // el partido recién importado aparece sin recargar la página.
   setRetornoImport(() => { ir('p-datos'); });
+}
+
+/**
+ * Curvas de tiro por zona, una por cada posición del arco más libres.
+ *
+ * Acá hay lugar para verlas en detalle, con la fracción de CADA punto y no
+ * sólo del primero y el último como en la card de HOY.
+ *
+ * Como toda curva del proyecto: une los puntos observados y nada más. Sin
+ * línea de tendencia, sin proyección, y sin decir en ningún lado que algo
+ * está mejorando — eso lo lee el entrenador. La única afirmación que la app
+ * se permite sigue siendo la comparación puntual con su margen de error, que
+ * vive en la card de HOY.
+ */
+async function renderCurvasDeTiro(club, plantel) {
+  const cont = document.getElementById('datos-curvas');
+  if (!cont) return;
+
+  let sesiones, mediciones;
+  try {
+    [sesiones, mediciones] = await Promise.all([
+      obtenerSesionesDeMedicion(club.id, plantel.id),
+      obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
+    ]);
+  } catch {
+    cont.innerHTML = `<div class="eyebrow">Tiro por zona</div><div class="p">No se pudieron cargar las mediciones de tiro.</div>`;
+    return;
+  }
+
+  const series = POSICIONES_BATERIA.map((z) => ({
+    zona: z,
+    puntos: serieDeZonas(sesiones, mediciones, [z.id]),
+  })).filter((s) => s.puntos.length);
+
+  if (!series.length) {
+    cont.innerHTML = `
+      <div class="eyebrow">Tiro por zona</div>
+      <div class="p">Todavía no hay ninguna batería cargada. Con la primera vas a ver el punto de partida de cada zona; con la segunda empieza a haber serie.</div>`;
+    return;
+  }
+
+  cont.innerHTML = `
+    <div class="eyebrow">Tiro por zona</div>
+    <div class="p">Un punto por batería. Los puntos con pocos intentos se dibujan huecos y punteados.</div>
+    ${series.map((s) => `
+      <div class="curva-zona">
+        <div class="zona-cab">
+          <span class="nom">${escaparHtml(s.zona.nombre)}</span>
+          <span class="frac">${s.puntos.length} ${s.puntos.length === 1 ? 'batería' : 'baterías'}</span>
+        </div>
+        <svg class="g" id="svg-zona-${s.zona.id}"></svg>
+        <div class="tabla-ev">
+          ${[...s.puntos].reverse().map((p) => `
+            <div class="fila-ev dos">
+              <div class="f">${escaparHtml(formatearFechaCorta(p.fecha))}</div>
+              <div>${textoPorcentaje(p.valor)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+
+  for (const s of series) {
+    grafico(document.getElementById(`svg-zona-${s.zona.id}`), {
+      etiquetas: s.puntos.map((p) => formatearFechaCorta(p.fecha)),
+      series: [{
+        nombre: s.zona.nombre,
+        c: '#D9122E',
+        d: s.puntos.map((p) => p.valor.pct),
+        chico: s.puntos.map((p) => p.valor.muestraChica),
+      }],
+    }, { alto: 140 });
+  }
 }

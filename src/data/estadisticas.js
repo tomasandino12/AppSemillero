@@ -400,3 +400,31 @@ export function totalDeZonas(porZona, zonaIds) {
   }
   return porcentaje(anotados, intentos);
 }
+
+/**
+ * La serie temporal de un conjunto de zonas, un punto por batería.
+ *
+ * Existe porque comparar sólo contra la batería anterior tira información:
+ * el margen de error invalida la comparación entre DOS puntos, pero no
+ * invalida mirar seis y ver que suben. Esa lectura la hace el entrenador —
+ * la app une los puntos observados y no dibuja ninguna tendencia ni afirma
+ * que algo esté mejorando.
+ *
+ * Con `zonaIds` = las 5 del arco da la serie del arco completo (~700
+ * intentos por punto, la única con muestra para que se lea). Con una sola
+ * zona da la de esa zona (~140 por punto).
+ *
+ * Ordenada de la más vieja a la más nueva. Las sesiones sin ninguna medición
+ * real de esas zonas no generan punto: un hueco no es un cero.
+ */
+export function serieDeZonas(sesiones, medicionesTiro, zonaIds) {
+  return (sesiones ?? [])
+    .filter((s) => s.tipo === 'tiro')
+    .sort((a, b) => a.fecha.localeCompare(b.fecha))
+    .map((s) => ({
+      sesionId: s.id,
+      fecha: s.fecha,
+      valor: totalDeZonas(zonasDeSesion(medicionesTiro, s.id).porZona, zonaIds),
+    }))
+    .filter((p) => p.valor != null);
+}
