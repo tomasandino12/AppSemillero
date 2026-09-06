@@ -2,10 +2,16 @@ import {
   obtenerJugadoresDelPlantel, obtenerPertenenciasDeJugador,
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel, obtenerMedicionesVelocidadDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
+  obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
+  actualizarFechaNacimiento,
 } from '../../data/repositorio.js';
 import { serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador } from '../../data/estadisticas.js';
+import {
+  edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
+  ALTURA_MIN_CM, ALTURA_MAX_CM, PESO_MIN_KG, PESO_MAX_KG,
+} from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta } from '../nav.js';
+import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast } from '../nav.js';
 import { ir } from '../main.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 
@@ -247,21 +253,17 @@ export async function renderFicha() {
     <div class="ficha-top">
       <div class="nom">${escaparHtml(jugador.nombreLimpio)}</div>
       <div class="sub">${categorias.length ? escaparHtml(categorias.join(' · ')) : 'Sin categoría vigente'}</div>
-      <div class="datos-ficha">
-        ${dato('Talla', jugador.tallaCm, 'cm')}
-        ${dato('Peso', jugador.pesoKg, 'kg')}
+      <div class="datos-ficha" id="ficha-cabecera-datos">
+        ${dato('Edad', edadEnAnios(jugador.fechaNacimiento), 'años')}
       </div>
     </div>
-    <div class="pad">
-      <div class="eyebrow">Mediciones</div>
-      <div class="p">${
-        jugador.fechaMedicion
-          ? `Última medición: ${escaparHtml(jugador.fechaMedicion)}.`
-          : 'Todavía no tiene mediciones cargadas. Talla y peso salen de los estudios médicos de principio de año y se cargan aparte.'
-      }</div>
-    </div>
+    <div class="pad" id="ficha-personales"></div>
+    <div class="pad" id="ficha-corporal"><div class="p">Cargando mediciones...</div></div>
     <div class="pad" id="ficha-historia"><div class="p">Cargando historia del jugador...</div></div>
   `;
+
+  renderPersonales(jugador);
+  cargarCorporal(club.id, jugador.id);
 
   // Todo lo de acá abajo va en su propio try/catch: los datos básicos ya
   // están pintados arriba, así que un error de red trayendo la historia no
@@ -310,4 +312,190 @@ export async function renderFicha() {
       esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar la historia del jugador.'
     }</div></div>`;
   }
+}
+
+/* ---------- Datos personales: fecha de nacimiento ---------- */
+
+/**
+ * La fecha de nacimiento se edita acá y no en el alta: los jugadores entran
+ * casi siempre por una planilla de la CABB, que no la trae. Vacía es un
+ * estado válido y significa "no se sabe" — nunca se infiere.
+ *
+ * Sin ella no se puede separar "mejoró" de "creció" al comparar dos
+ * generaciones, que es exactamente para lo que existe el dato.
+ */
+function renderPersonales(jugador) {
+  const cont = $('ficha-personales');
+  if (!cont) return;
+  cont.innerHTML = `
+    <div class="eyebrow">Datos personales</div>
+    <div class="campo">
+      <label for="in-nacimiento">Fecha de nacimiento</label>
+      <input id="in-nacimiento" type="date" max="${hoyLocal()}" value="${escaparHtml(jugador.fechaNacimiento ?? '')}">
+      <div class="ayuda">Las planillas de la CABB no la traen, así que se carga a mano. Sin ella no se puede saber si una mejora es progreso o es crecimiento.</div>
+    </div>
+    <div id="nacimiento-aviso"></div>
+    <button class="btn sec" id="btn-guardar-nacimiento">Guardar fecha de nacimiento</button>
+  `;
+
+  $('btn-guardar-nacimiento').addEventListener('click', async () => {
+    const boton = $('btn-guardar-nacimiento');
+    if (boton.disabled) return;
+    const aviso = $('nacimiento-aviso');
+    const { ok, errores, valor } = validarFechaNacimiento($('in-nacimiento').value);
+    if (!ok) {
+      aviso.innerHTML = `<div class="al"><div class="tx">${escaparHtml(errores.join(' '))}</div></div>`;
+      return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = 'Guardando...';
+    aviso.innerHTML = '';
+    try {
+      await actualizarFechaNacimiento(obtenerClubActual().id, jugador.id, valor);
+    } catch (e) {
+      aviso.innerHTML = `<div class="al"><div class="tx">${
+        esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar la fecha.'
+      }</div></div>`;
+      boton.disabled = false;
+      boton.textContent = 'Guardar fecha de nacimiento';
+      return;
+    }
+
+    jugador.fechaNacimiento = valor;
+    const cabecera = $('ficha-cabecera-datos');
+    if (cabecera) cabecera.innerHTML = dato('Edad', edadEnAnios(valor), 'años');
+    boton.disabled = false;
+    boton.textContent = 'Guardar fecha de nacimiento';
+    toast(valor ? 'Fecha de nacimiento guardada' : 'Fecha de nacimiento borrada');
+  });
+}
+
+/* ---------- Mediciones corporales: histórico y alta ---------- */
+
+async function cargarCorporal(clubId, idJugador) {
+  const cont = $('ficha-corporal');
+  if (!cont) return;
+  let mediciones;
+  try {
+    mediciones = await obtenerMedicionesCorporalesDeJugador(clubId, idJugador);
+  } catch (e) {
+    cont.innerHTML = `
+      <div class="eyebrow">Mediciones</div>
+      <div class="al"><div class="tx">${
+        esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudieron cargar las mediciones.'
+      }</div></div>
+      <button class="btn sec" id="btn-reintentar-corporal">Reintentar</button>
+    `;
+    $('btn-reintentar-corporal').addEventListener('click', () => cargarCorporal(clubId, idJugador));
+    return;
+  }
+  renderCorporal(clubId, idJugador, mediciones);
+}
+
+/** NULL es "no se midió" y se muestra como tal; nunca como un cero. */
+function celdaMedida(valor, unidad) {
+  return valor == null ? '<span class="sin">sin medir</span>' : `${valor} ${unidad}`;
+}
+
+function renderCorporal(clubId, idJugador, mediciones) {
+  const cont = $('ficha-corporal');
+  if (!cont) return;
+  const ordenadas = ordenarMediciones(mediciones);
+
+  cont.innerHTML = `
+    <div class="eyebrow">Mediciones <span class="der">${ordenadas.length}</span></div>
+    ${ordenadas.length ? `
+      <div class="tabla-corporal">
+        <div class="fila-corporal cab"><div>Fecha</div><div>Altura</div><div>Peso</div><div></div></div>
+        ${ordenadas.map((m) => `
+          <div class="fila-corporal">
+            <div class="f">${escaparHtml(formatearFechaCorta(m.fechaMedicion))}</div>
+            <div>${celdaMedida(m.alturaCm, 'cm')}</div>
+            <div>${celdaMedida(m.pesoKg, 'kg')}</div>
+            <div><button class="borrar" data-borrar="${m.id}" aria-label="Borrar la medición del ${escaparHtml(m.fechaMedicion)}">&#10005;</button></div>
+          </div>
+        `).join('')}
+      </div>
+    ` : `
+      <div class="p">Todavía no tiene ninguna medición. Cargá la primera y a partir de la segunda vas a poder ver cuánto creció.</div>
+    `}
+
+    <div class="eyebrow">Agregar una medición</div>
+    <div class="campo">
+      <label for="in-fecha-medicion">Fecha</label>
+      <input id="in-fecha-medicion" type="date" max="${hoyLocal()}" value="${hoyLocal()}">
+    </div>
+    <div class="campos-par">
+      <div class="campo">
+        <label for="in-altura">Altura (cm)</label>
+        <input id="in-altura" type="text" inputmode="numeric" autocomplete="off" placeholder="—">
+      </div>
+      <div class="campo">
+        <label for="in-peso">Peso (kg)</label>
+        <input id="in-peso" type="text" inputmode="decimal" autocomplete="off" placeholder="—">
+      </div>
+    </div>
+    <div class="ayuda">Se puede cargar sólo una de las dos. Altura entre ${ALTURA_MIN_CM} y ${ALTURA_MAX_CM} cm, peso entre ${PESO_MIN_KG} y ${PESO_MAX_KG} kg.</div>
+    <div id="corporal-aviso"></div>
+    <button class="btn" id="btn-agregar-medicion">Agregar medición</button>
+  `;
+
+  cont.querySelectorAll('[data-borrar]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      if (b.disabled) return;
+      b.disabled = true;
+      try {
+        await borrarMedicionCorporal(clubId, b.dataset.borrar);
+      } catch (e) {
+        $('corporal-aviso').innerHTML = `<div class="al"><div class="tx">${
+          esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos.' : 'No se pudo borrar la medición.'
+        }</div></div>`;
+        b.disabled = false;
+        return;
+      }
+      await cargarCorporal(clubId, idJugador);
+    });
+  });
+
+  $('btn-agregar-medicion').addEventListener('click', async () => {
+    const boton = $('btn-agregar-medicion');
+    if (boton.disabled) return;
+    const aviso = $('corporal-aviso');
+
+    const { ok, errores, valores } = validarMedicion({
+      fechaMedicion: $('in-fecha-medicion').value,
+      altura: $('in-altura').value,
+      peso: $('in-peso').value,
+    });
+    if (!ok) {
+      aviso.innerHTML = `<div class="al"><div class="tx">${escaparHtml(errores.join(' '))}</div></div>`;
+      return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = 'Agregando...';
+    aviso.innerHTML = '';
+    try {
+      await crearMedicionCorporal({
+        clubId,
+        jugadorId: idJugador,
+        fechaMedicion: valores.fechaMedicion,
+        alturaCm: valores.alturaCm,
+        pesoKg: valores.pesoKg,
+      });
+    } catch (e) {
+      aviso.innerHTML = `<div class="al"><div class="tx">${
+        e?.message === 'MEDICION_DUPLICADA'
+          ? 'Ya hay una medición de este jugador en esa fecha. Borrá la que está o poné otra fecha.'
+          : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo agregar la medición.')
+      }</div></div>`;
+      boton.disabled = false;
+      boton.textContent = 'Agregar medición';
+      return;
+    }
+
+    toast('Medición agregada');
+    await cargarCorporal(clubId, idJugador);
+  });
 }

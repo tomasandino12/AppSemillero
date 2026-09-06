@@ -206,15 +206,18 @@ export async function importarPartido(payload) {
 }
 
 /**
- * Jugadores con pertenencia VIGENTE (hasta is null) al plantel dado, con sus
- * columnas de medición (0007). Distinta de obtenerJugadoresDelClub, que es la
- * que consume el flujo de import y no se toca.
+ * Jugadores con pertenencia VIGENTE (hasta is null) al plantel dado. Distinta
+ * de obtenerJugadoresDelClub, que es la que consume el flujo de import y no se
+ * toca.
+ *
+ * Altura y peso NO vienen acá: desde 0012 viven en medicion_corporal, con una
+ * fila por fecha. Quien las necesite usa obtenerMedicionesCorporales*.
  */
 export async function obtenerJugadoresDelPlantel(clubId, plantelId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('jugador')
-    .select('id, nombre_clave, nombre_limpio, talla_cm, peso_kg, fecha_medicion, pertenencia!inner(plantel_id, hasta)')
+    .select('id, nombre_clave, nombre_limpio, fecha_nacimiento, pertenencia!inner(plantel_id, hasta)')
     .eq('club_id', clubId)
     .eq('pertenencia.plantel_id', plantelId)
     .is('pertenencia.hasta', null);
@@ -223,9 +226,7 @@ export async function obtenerJugadoresDelPlantel(clubId, plantelId) {
     id: fila.id,
     nombreClave: fila.nombre_clave,
     nombreLimpio: fila.nombre_limpio,
-    tallaCm: fila.talla_cm,
-    pesoKg: fila.peso_kg,
-    fechaMedicion: fila.fecha_medicion,
+    fechaNacimiento: fila.fecha_nacimiento,
   }));
 }
 
@@ -427,4 +428,109 @@ export async function guardarRecurso(payload) {
   const { data, error } = await supabase.rpc('guardar_recurso', { payload });
   if (error) throw error;
   return data;
+}
+
+/* ---------- Altura, peso y fecha de nacimiento (0012) ---------- */
+
+/**
+ * Histórico corporal de un jugador, una fila por fecha de medición.
+ * Reemplaza a las columnas talla_cm/peso_kg/fecha_medicion que 0007 había
+ * puesto en `jugador`, y que sólo podían guardar la última.
+ */
+export async function obtenerMedicionesCorporalesDeJugador(clubId, jugadorId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('medicion_corporal')
+    .select('id, fecha_medicion, altura_cm, peso_kg')
+    .eq('club_id', clubId)
+    .eq('jugador_id', jugadorId)
+    .order('fecha_medicion', { ascending: false });
+  if (error) throw error;
+  return data.map((f) => ({
+    id: f.id,
+    jugadorId,
+    fechaMedicion: f.fecha_medicion,
+    alturaCm: f.altura_cm,
+    // numeric de Postgres llega como string por PostgREST; el null se preserva.
+    pesoKg: f.peso_kg == null ? null : Number(f.peso_kg),
+  }));
+}
+
+/**
+ * Todas las mediciones del club, paginadas. La lista de PLANTEL las usa para
+ * marcar quién está sin medir; filtrar por plantel exigiría un join de dos
+ * niveles (medicion → jugador → pertenencia) y el volumen real es de unas
+ * pocas filas por jugador por año.
+ */
+export async function obtenerMedicionesCorporalesDelClub(clubId) {
+  const supabase = obtenerCliente();
+  const data = [];
+  let desde = 0;
+  for (;;) {
+    const hasta = desde + TAMANIO_PAGINA - 1;
+    const { data: pagina, error } = await supabase
+      .from('medicion_corporal')
+      .select('id, jugador_id, fecha_medicion, altura_cm, peso_kg')
+      .eq('club_id', clubId)
+      .range(desde, hasta);
+    if (error) throw error;
+    data.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
+  return data.map((f) => ({
+    id: f.id,
+    jugadorId: f.jugador_id,
+    fechaMedicion: f.fecha_medicion,
+    alturaCm: f.altura_cm,
+    pesoKg: f.peso_kg == null ? null : Number(f.peso_kg),
+  }));
+}
+
+/**
+ * Una sola fila: llamada directa, sin RPC. La regla del proyecto exige una
+ * transacción sólo cuando se escribe más de una fila.
+ *
+ * Lanza un Error con message 'MEDICION_DUPLICADA' si ya hay una medición de
+ * ese jugador en esa fecha (unique (jugador_id, fecha_medicion) en 0012).
+ */
+export async function crearMedicionCorporal({ clubId, jugadorId, fechaMedicion, alturaCm, pesoKg }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('medicion_corporal')
+    .insert({
+      club_id: clubId,
+      jugador_id: jugadorId,
+      fecha_medicion: fechaMedicion,
+      altura_cm: alturaCm,
+      peso_kg: pesoKg,
+    })
+    .select('id')
+    .single();
+  if (error) {
+    if (error.code === '23505') throw new Error('MEDICION_DUPLICADA');
+    throw error;
+  }
+  return data.id;
+}
+
+export async function borrarMedicionCorporal(clubId, medicionId) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase
+    .from('medicion_corporal')
+    .delete()
+    .eq('club_id', clubId)
+    .eq('id', medicionId);
+  if (error) throw error;
+}
+
+/** `fechaNacimiento` puede ser null: significa "no se sabe", no se borra el jugador. */
+export async function actualizarFechaNacimiento(clubId, jugadorId, fechaNacimiento) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase
+    .from('jugador')
+    .update({ fecha_nacimiento: fechaNacimiento })
+    .eq('club_id', clubId)
+    .eq('id', jugadorId);
+  if (error) throw error;
 }

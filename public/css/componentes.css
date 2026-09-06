@@ -288,3 +288,12 @@ svg.g{width:100%;display:block;overflow:visible}
 /* Con el teclado abierto, las últimas filas de la lista quedarían debajo de
    él. Este hueco las deja alcanzables scrolleando. */
 .espacio-kb{height:17rem}
+
+/* Histórico de altura y peso en la ficha del jugador (0012) */
+.tabla-corporal{display:flex;flex-direction:column;margin:10px 0}
+.fila-corporal{display:grid;grid-template-columns:auto 1fr 1fr 2.5rem;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
+.fila-corporal .f{font-family:'IBM Plex Mono',monospace;color:var(--gris-cl)}
+.fila-corporal .sin{color:var(--gris-cl);font-size:var(--fs-125)}
+.fila-corporal.cab{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.fila-corporal .borrar{min-width:40px;min-height:40px;border:0;border-radius:8px;background:none;color:var(--gris-cl);font-size:var(--fs-145)}
+.campos-par{display:grid;grid-template-columns:1fr 1fr;gap:10px}
