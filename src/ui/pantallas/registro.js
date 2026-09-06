@@ -9,6 +9,7 @@ import { renderMedir } from './medir.js';
 import { renderBateria } from './medirBateria.js';
 import { renderVelocidad } from './medirVelocidad.js';
 import { renderRecursos } from './recursos.js';
+import { renderMetas } from './metas.js';
 
 /**
  * Punto único donde se registran las pantallas. Existe para que main.js no
@@ -27,6 +28,7 @@ export function registrarPantallas() {
   registrarPantalla('p-medir-bateria', { titulo: 'Batería de tiro', render: renderBateria });
   registrarPantalla('p-medir-velocidad', { titulo: 'Velocidad', render: renderVelocidad });
   registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });
+  registrarPantalla('p-metas', { titulo: 'Metas', render: renderMetas });
   setAbrirFicha(abrirFicha);
   iniciarDatos();
   iniciarHoja();

@@ -299,17 +299,47 @@ svg.g{width:100%;display:block;overflow:visible}
 .campos-par{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 /* Card de HOY: zonas ordenadas de peor a mejor, barra en escala 0-100 fija */
-.foco{margin:12px 0;padding:12px;border-radius:var(--r);background:var(--linea)}
-.foco .k{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.foco .v{font-size:var(--fs-220);font-weight:700;color:var(--tinta);margin:2px 0}
-.foco .d{font-size:var(--fs-135);color:var(--gris-cl)}
+/* Contexto: referencia, no protagonista. */
+.contexto{font-size:var(--fs-125);color:var(--gris-cl);margin-bottom:10px}
+
+/* El número que el entrenador se lleva de la card. Tiene que leerse a un
+   metro y con sol, así que es el elemento más grande de la pantalla. */
+.cabecera-tiro{margin:0 0 18px}
+.cabecera-tiro .k{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.cabecera-tiro .n{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--tinta)}
+.cabecera-tiro .n .u{font-size:var(--fs-190);color:var(--gris-cl)}
+.cabecera-tiro .frac{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-135);color:var(--gris-cl);margin-top:2px}
+.cabecera-tiro .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-top:6px}
+.metas-resumen{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--gris-cl)}
+
+/* La lectura de zonas flojas: una línea, no un bloque. Sigue diciendo la
+   verdad, incluso cuando la verdad es "no alcanza para elegir una". */
+.foco-linea{font-size:var(--fs-135);color:var(--gris-cl);margin:10px 0}
+.foco-linea b{color:var(--tinta)}
+
+.zona-pie{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-top:4px}
+.marca-meta{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
+.marca-meta.si{color:var(--tinta)}
+.marca-meta.no{color:var(--gris-cl)}
+.acciones-hoy{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+
+/* Edición de metas */
+.metas-lista{display:flex;flex-direction:column;margin:12px 0}
+.meta-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--linea)}
+.meta-fila .et{display:flex;flex-direction:column;min-width:0}
+.meta-fila .nom{font-size:var(--fs-145);color:var(--tinta)}
+.meta-fila .hoy{font-size:var(--fs-125);color:var(--gris-cl)}
+.campo-meta{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.campo-meta input{width:4.5rem;min-height:48px;text-align:right;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);padding:0 10px}
+.campo-meta .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-135);color:var(--gris-cl)}
 .zonas{display:flex;flex-direction:column;gap:14px;margin:10px 0}
 .zona-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:var(--fs-145);color:var(--tinta)}
 .zona-cab .frac{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-125);color:var(--gris-cl)}
 .zona-barra{display:grid;grid-template-columns:1fr 2.75rem;align-items:center;gap:8px;margin-top:4px}
 .zona-barra .pista{position:relative;height:16px;background:var(--linea);border-radius:8px;overflow:hidden}
 .zona-barra .relleno{height:100%;background:var(--rojo);border-radius:8px}
-.zona-barra .obj{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--negro)}
+.zona-barra .meta{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--negro)}
+.zona-barra .relleno.llego{background:var(--negro)}
 .zona-barra .pct{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-145);font-weight:600;color:var(--tinta);text-align:right}
 .var{display:inline-block;margin-top:4px;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
 .var.sube{color:var(--rojo)}

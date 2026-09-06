@@ -3,11 +3,11 @@ import {
   zonasDeSesion, zonasDelFoco, compararPorcentajes, jugadoresDeZona, contarPorDebajo,
   totalDeZonas,
 } from '../../data/estadisticas.js';
-import { objetivoDeZona } from '../../data/objetivosClub.js';
+import { metaDeZona, alcanzaMeta, resumenDeMetas } from '../../data/objetivosClub.js';
 import { ultimaMedicion, ultimaMedicionPorJugador } from '../../data/antropometria.js';
 import {
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel,
-  obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub,
+  obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub, obtenerMetasDelPlantel,
 } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta, textoPorcentaje } from '../nav.js';
@@ -65,6 +65,7 @@ function variacionHtml(variacion) {
  */
 function zonaHtml(zona) {
   const pct = zona.valor?.pct ?? null;
+  const llego = alcanzaMeta(zona.valor, zona.meta);
   return `
     <div class="zona">
       <div class="zona-cab">
@@ -73,13 +74,16 @@ function zonaHtml(zona) {
       </div>
       <div class="zona-barra">
         <div class="pista">
-          ${pct == null ? '' : `<div class="relleno" style="width:${pct}%"></div>`}
-          ${zona.objetivo == null ? '' : `<div class="obj" style="left:${zona.objetivo}%" title="Objetivo del club: ${zona.objetivo}%"></div>`}
+          ${pct == null ? '' : `<div class="relleno ${llego === true ? 'llego' : ''}" style="width:${pct}%"></div>`}
+          ${zona.meta == null ? '' : `<div class="meta" style="left:${zona.meta}%" title="Meta del cuerpo técnico: ${zona.meta}%"></div>`}
         </div>
         <span class="pct">${pct == null ? '—' : `${pct}%`}</span>
       </div>
-      ${zona.valor?.muestraChica ? '<div class="poco-tag">pocos datos</div>' : ''}
-      ${variacionHtml(zona.variacion)}
+      <div class="zona-pie">
+        ${zona.meta == null ? '' : `<span class="marca-meta ${llego === true ? 'si' : 'no'}">${llego === true ? '✓ llegó a la meta' : `meta ${zona.meta}%`}</span>`}
+        ${zona.valor?.muestraChica ? '<span class="poco-tag">pocos datos</span>' : ''}
+        ${variacionHtml(zona.variacion)}
+      </div>
     </div>
   `;
 }
@@ -93,26 +97,14 @@ function zonaHtml(zona) {
  */
 function focoHtml(foco, porId) {
   if (!foco) {
-    return `<div class="p">Todavía no hay suficientes zonas medidas como para señalar una más floja.</div>`;
+    return `<div class="foco-linea">Todavía no hay suficientes zonas medidas como para señalar una más floja.</div>`;
   }
   const nombres = foco.zonas.map((id) => porId.get(id)?.nombre ?? id);
   if (foco.concluyente) {
     const zona = porId.get(foco.zonas[0]);
-    return `
-      <div class="foco">
-        <div class="k">La zona más floja de la última batería</div>
-        <div class="v">${escaparHtml(zona.nombre)}</div>
-        <div class="d">${textoPorcentaje(zona.valor)}</div>
-      </div>
-    `;
+    return `<div class="foco-linea">Zona más floja: <b>${escaparHtml(zona.nombre)}</b>, ${textoPorcentaje(zona.valor)}.</div>`;
   }
-  return `
-    <div class="foco">
-      <div class="k">Las zonas más flojas de la última batería</div>
-      <div class="v">${escaparHtml(nombres.join(' · '))}</div>
-      <div class="d">Están empatadas dentro del margen de error: el dato no alcanza para elegir una.</div>
-    </div>
-  `;
+  return `<div class="foco-linea">Zonas más flojas: <b>${escaparHtml(nombres.join(' · '))}</b> — empatadas dentro del margen de error, el dato no alcanza para elegir una.</div>`;
 }
 
 /** Lista de jugadores por debajo del objetivo del club, en una hoja. */
@@ -120,7 +112,7 @@ function abrirListaDeZona(zona, jugadores, nombres) {
   abrirHoja({
     titulo: zona.nombre,
     cuerpo: `
-      <div class="p">Objetivo del club para esta zona: ${zona.objetivo}%. Cada uno con sus intentos: la diferencia entre 2 de 10 y 4 de 10 no significa nada.</div>
+      <div class="p">Meta del cuerpo técnico para esta zona: ${zona.meta}%. Cada uno con sus intentos: la diferencia entre 2 de 10 y 4 de 10 no significa nada.</div>
       <div class="lista-chk">
         ${jugadores.map((j) => `
           <div class="chk-fila">
@@ -168,16 +160,18 @@ export async function renderHoy() {
     </div>
   `;
 
-  let sesiones, mediciones, jugadores, corporales;
+  let sesiones, mediciones, jugadores, corporales, metas;
   try {
     // Las dos últimas son para el pie de la card y degradan solas: si fallan,
     // la card se dibuja igual sin el pie. Lo que no puede faltar es la
     // batería, que es de lo que trata la pantalla.
-    [sesiones, mediciones, jugadores, corporales] = await Promise.all([
+    [sesiones, mediciones, jugadores, corporales, metas] = await Promise.all([
       obtenerSesionesDeMedicion(club.id, plantel.id),
       obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
       obtenerJugadoresDelPlantel(club.id, plantel.id).catch(() => null),
       obtenerMedicionesCorporalesDelClub(club.id).catch(() => null),
+      // Sin metas la card funciona igual, así que degradan solas a "ninguna".
+      obtenerMetasDelPlantel(club.id, plantel.id).catch(() => ({})),
     ]);
   } catch (e) {
     $('hoy-estado').textContent = esErrorDeRed(e)
@@ -207,7 +201,7 @@ export async function renderHoy() {
     id: def.id,
     nombre: def.nombre,
     valor: porZona[def.id] ?? null,
-    objetivo: objetivoDeZona(def.id),
+    meta: metaDeZona(def.id, metas),
     // Sin batería anterior no hay variación: null, no un cero con flecha.
     variacion: compararPorcentajes(porZona[def.id] ?? null, zonasAnterior[def.id] ?? null),
   });
@@ -229,6 +223,7 @@ export async function renderHoy() {
   const idsArco = POSICIONES.map((z) => z.id);
   const totalActual = totalDeZonas(porZona, idsArco);
   const totalVariacion = compararPorcentajes(totalActual, totalDeZonas(zonasAnterior, idsArco));
+  const metasArco = resumenDeMetas(zonasArco);
 
   if (!zonasArco.some((z) => z.valor) && !zonaLibres.valor) {
     contenedor().innerHTML = `
@@ -260,41 +255,48 @@ export async function renderHoy() {
   // 2/10 y 4/10 no significa nada.
   const zonaDelFoco = foco?.concluyente ? porId.get(foco.zonas[0]) : null;
   const jugadoresDelFoco = zonaDelFoco ? jugadoresDeZona(mediciones, actual.id, zonaDelFoco.id) : [];
-  const porDebajo = zonaDelFoco ? contarPorDebajo(jugadoresDelFoco, zonaDelFoco.objetivo) : null;
+  const porDebajo = zonaDelFoco ? contarPorDebajo(jugadoresDelFoco, zonaDelFoco.meta) : null;
 
   contenedor().innerHTML = `
     <div class="pad">
-      <h2 class="h2">Buen día</h2>
-      <div class="p">${escaparHtml(plantel.categoria)} · batería del ${escaparHtml(formatearFechaCorta(actual.fecha))} · ${jugadoresQueMidieron} jugador${jugadoresQueMidieron === 1 ? '' : 'es'} midió${jugadoresQueMidieron === 1 ? '' : 'eron'}</div>
+      <div class="contexto">${escaparHtml(plantel.categoria)} · batería del ${escaparHtml(formatearFechaCorta(actual.fecha))} · ${jugadoresQueMidieron} jugador${jugadoresQueMidieron === 1 ? '' : 'es'} midió${jugadoresQueMidieron === 1 ? '' : 'eron'}</div>
 
       ${totalActual ? `
-        <div class="total-arco">
-          <span class="k">Tiro de campo, todo el arco</span>
-          <span class="v">${textoPorcentaje(totalActual)}</span>
-          ${variacionHtml(totalVariacion)}
+        <div class="cabecera-tiro">
+          <div class="k">Tiro de campo · todo el arco</div>
+          <div class="n">${totalActual.pct}<span class="u">%</span></div>
+          <div class="frac">${totalActual.anotados}/${totalActual.intentos} tiros</div>
+          <div class="sub">
+            ${variacionHtml(totalVariacion) || '<span class="var neutra">Primera batería: todavía no hay con qué comparar</span>'}
+            ${metasArco ? `<span class="metas-resumen">${metasArco.alcanzadas} de ${metasArco.conMeta} zona${metasArco.conMeta === 1 ? '' : 's'} llegó a su meta</span>` : ''}
+          </div>
         </div>
       ` : ''}
 
+      <div class="eyebrow">Por zona ${anterior ? `<span class="der">vs ${escaparHtml(formatearFechaCorta(anterior.fecha))}</span>` : ''}</div>
+      <div class="zonas">${zonasArco.map(zonaHtml).join('')}</div>
       ${focoHtml(foco, porId)}
+
       ${porDebajo == null ? '' : `
-        <div class="p">${porDebajo} de ${jugadoresDelFoco.length} está${porDebajo === 1 ? '' : 'n'} por debajo del objetivo del club.
+        <div class="foco-linea">${porDebajo} de ${jugadoresDelFoco.length} está${porDebajo === 1 ? '' : 'n'} por debajo de la meta del cuerpo técnico.
           <button class="btn sec chico" id="btn-ver-quienes">Ver quiénes</button>
         </div>
       `}
-
-      <div class="eyebrow">Por zona ${anterior ? `<span class="der">vs ${escaparHtml(formatearFechaCorta(anterior.fecha))}</span>` : ''}</div>
-      <div class="zonas">${zonasArco.map(zonaHtml).join('')}</div>
 
       <div class="sep"></div>
       <div class="eyebrow">Tiros libres</div>
       <div class="zonas">${zonaHtml(zonaLibres)}</div>
 
       ${pieHtml(corporal)}
-      <button class="btn sec" id="btn-hoy-medir">Cargar otra medición</button>
+      <div class="acciones-hoy">
+        <button class="btn sec" id="btn-hoy-medir">Cargar otra medición</button>
+        <button class="btn sec" id="btn-hoy-metas">${metasArco ? 'Editar las metas' : 'Fijar las metas'}</button>
+      </div>
     </div>
   `;
 
   $('btn-hoy-medir').addEventListener('click', () => ir('p-medir'));
   $('btn-hoy-plantel')?.addEventListener('click', () => ir('p-plantel'));
+  $('btn-hoy-metas').addEventListener('click', () => ir('p-metas', { push: true }));
   $('btn-ver-quienes')?.addEventListener('click', () => abrirListaDeZona(zonaDelFoco, jugadoresDelFoco, nombres));
 }
