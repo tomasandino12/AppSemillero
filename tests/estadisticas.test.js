@@ -4,6 +4,12 @@ import {
   UMBRAL_INTENTOS,
   esMuestraChica,
   porcentaje,
+  margenDeDiferencia,
+  compararPorcentajes,
+  zonasDeSesion,
+  zonasDelFoco,
+  jugadoresDeZona,
+  contarPorDebajo,
   repartoPorJugador,
   evolucionDeTiroDelEquipo,
   serieDeTiroDelJugador,
@@ -269,4 +275,126 @@ test('una sesión donde todos los jugadores están ausentes devuelve porPosicion
   assert.notEqual(p, null);
   assert.equal(p.fecha, '2026-05-01');
   assert.deepEqual(p.porPosicion, {});
+});
+
+/* ---------- Card de HOY ---------- */
+
+test('el margen de dos baterías grandes da los ~5 puntos esperados', () => {
+  // ~700 intentos al 35% cada una: error estándar 1,8 pp cada una, compuesto
+  // 2,5 pp, por 1,96 = 5 pp.
+  const margen = margenDeDiferencia(porcentaje(245, 700), porcentaje(252, 700));
+  assert.ok(margen > 4.5 && margen < 5.5, `margen fuera de rango: ${margen}`);
+});
+
+test('una diferencia dentro del ruido no es concluyente', () => {
+  const c = compararPorcentajes(porcentaje(252, 700), porcentaje(245, 700));
+  assert.equal(c.pp, 1);
+  assert.equal(c.concluyente, false);
+});
+
+test('una diferencia que supera el margen sí es concluyente', () => {
+  const c = compararPorcentajes(porcentaje(301, 700), porcentaje(245, 700));
+  assert.equal(c.pp, 8);
+  assert.equal(c.concluyente, true);
+});
+
+test('el signo de la variación dice para qué lado se movió', () => {
+  assert.ok(compararPorcentajes(porcentaje(200, 700), porcentaje(245, 700)).pp < 0);
+});
+
+test('sin batería anterior no hay variación: null, nunca un cero con flecha', () => {
+  assert.equal(compararPorcentajes(porcentaje(245, 700), null), null);
+  assert.equal(compararPorcentajes(null, porcentaje(245, 700)), null);
+  assert.equal(margenDeDiferencia(porcentaje(1, 10), null), null);
+});
+
+test('un 10 de 10 no vuelve concluyente a cualquier diferencia', () => {
+  // Sin el ajuste de Agresti-Caffo el error estándar de 10/10 sería cero y el
+  // margen daría cero, declarando concluyente hasta una diferencia mínima.
+  const margen = margenDeDiferencia(porcentaje(10, 10), porcentaje(9, 10));
+  assert.ok(margen > 15, `el margen tendría que ser grande con n=10, dio ${margen}`);
+  assert.equal(compararPorcentajes(porcentaje(10, 10), porcentaje(9, 10)).concluyente, false);
+});
+
+test('las zonas de una sesión suman sobre las filas reales, no sobre lo asumido', () => {
+  // 3 jugadores citados, uno ausente: el denominador es 20, no 30.
+  const mediciones = [
+    { sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: 4, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'b', posicion: 'frontal', anotados: 6, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'c', posicion: 'frontal', anotados: null, intentos: 10 },
+    { sesionId: 's2', jugadorId: 'a', posicion: 'frontal', anotados: 9, intentos: 10 },
+  ];
+  const r = zonasDeSesion(mediciones, 's1');
+  assert.equal(r.porZona.frontal.intentos, 20);
+  assert.equal(r.porZona.frontal.anotados, 10);
+  assert.equal(r.jugadoresQueMidieron, 2);
+});
+
+test('una sesión sin nadie medido no rompe ni inventa zonas', () => {
+  const r = zonasDeSesion([{ sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: null, intentos: 10 }], 's1');
+  assert.deepEqual(r.porZona, {});
+  assert.equal(r.jugadoresQueMidieron, 0);
+});
+
+test('el foco es una sola zona cuando se separa del resto', () => {
+  const zonas = [
+    { id: 'esq_izq', valor: porcentaje(140, 700) },   // 20%
+    { id: 'frontal', valor: porcentaje(280, 700) },   // 40%
+    { id: 'esq_der', valor: porcentaje(315, 700) },   // 45%
+  ];
+  const foco = zonasDelFoco(zonas);
+  assert.deepEqual(foco.zonas, ['esq_izq']);
+  assert.equal(foco.concluyente, true);
+});
+
+test('con empate técnico se dicen todas las zonas, sin elegir una', () => {
+  const zonas = [
+    { id: 'esq_izq', valor: porcentaje(210, 700) },   // 30%
+    { id: 'c45_izq', valor: porcentaje(217, 700) },   // 31%
+    { id: 'frontal', valor: porcentaje(350, 700) },   // 50%
+  ];
+  const foco = zonasDelFoco(zonas);
+  assert.deepEqual(foco.zonas, ['esq_izq', 'c45_izq']);
+  assert.equal(foco.concluyente, false);
+});
+
+test('las zonas de muestra chica quedan fuera del foco', () => {
+  const zonas = [
+    { id: 'esq_izq', valor: porcentaje(1, 5) },       // 20% con 5 intentos
+    { id: 'frontal', valor: porcentaje(280, 700) },
+  ];
+  assert.deepEqual(zonasDelFoco(zonas).zonas, ['frontal']);
+});
+
+test('sin ninguna zona con dato no hay foco', () => {
+  assert.equal(zonasDelFoco([]), null);
+  assert.equal(zonasDelFoco([{ id: 'x', valor: null }]), null);
+});
+
+test('los jugadores de una zona salen del más flojo al mejor', () => {
+  const mediciones = [
+    { sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: 7, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'b', posicion: 'frontal', anotados: 2, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'c', posicion: 'frontal', anotados: null, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'd', posicion: 'esq_izq', anotados: 5, intentos: 10 },
+  ];
+  const j = jugadoresDeZona(mediciones, 's1', 'frontal');
+  assert.deepEqual(j.map((x) => x.jugadorId), ['b', 'a']);
+  assert.equal(j.length, 2, 'el ausente no entra en la lista');
+});
+
+test('sin objetivo del club no se cuenta a nadie por debajo', () => {
+  const jugadores = [{ jugadorId: 'a', valor: porcentaje(2, 10) }];
+  assert.equal(contarPorDebajo(jugadores, null), null);
+  assert.equal(contarPorDebajo(jugadores, undefined), null);
+});
+
+test('con objetivo del club se cuentan los que están por debajo', () => {
+  const jugadores = [
+    { jugadorId: 'a', valor: porcentaje(2, 10) },   // 20%
+    { jugadorId: 'b', valor: porcentaje(4, 10) },   // 40%
+    { jugadorId: 'c', valor: porcentaje(5, 10) },   // 50%
+  ];
+  assert.equal(contarPorDebajo(jugadores, 40), 1);
+  assert.equal(contarPorDebajo(jugadores, 0), 0);
 });

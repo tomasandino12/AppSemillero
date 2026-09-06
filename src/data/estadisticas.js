@@ -284,3 +284,119 @@ export function promedioDeCanchaDelPlantel(sesiones, medicionesTiro) {
   }
   return { sesionId: sesion.id, fecha: sesion.fecha, porPosicion };
 }
+
+/* ---------- Card de HOY: comparaciones con su margen de error ---------- */
+
+/**
+ * Nivel de confianza de toda comparación de la card de HOY: 1,96 desviaciones
+ * estándar, o sea 95%.
+ *
+ * Conservador a propósito. En una app cuyo problema es que el entrenador lea
+ * ruido como si fuera señal, equivocarse hacia "no muestro flecha" cuesta
+ * mucho menos que hacia "le digo que el equipo mejoró".
+ */
+export const Z_CONFIANZA = 1.96;
+
+/**
+ * Margen de una diferencia entre dos porcentajes, en puntos porcentuales.
+ *
+ * Usa el ajuste de Agresti-Caffo (sumar un acierto y un error a cada muestra)
+ * en vez del error estándar crudo. Sin ese ajuste una zona con 10 de 10 daría
+ * error estándar cero, y CUALQUIER diferencia contra ella se declararía
+ * concluyente — justo la falsa precisión que hay que evitar.
+ *
+ * Con dos baterías de ~700 intentos al 35% da unos 5 puntos: por debajo de
+ * eso, la diferencia entre dos sesiones no se distingue del ruido.
+ */
+export function margenDeDiferencia(a, b) {
+  if (!a || !b) return null;
+  const ajustar = (anotados, intentos) => ({ p: (anotados + 1) / (intentos + 2), n: intentos + 2 });
+  const A = ajustar(a.anotados, a.intentos);
+  const B = ajustar(b.anotados, b.intentos);
+  const varianza = (A.p * (1 - A.p)) / A.n + (B.p * (1 - B.p)) / B.n;
+  return Z_CONFIANZA * Math.sqrt(varianza) * 100;
+}
+
+/**
+ * Compara dos porcentajes ya calculados por porcentaje().
+ *
+ * `pp` es la diferencia en puntos porcentuales, positiva cuando el primero es
+ * mayor. `concluyente` dice si supera el margen: SÓLO entonces la card puede
+ * pintar una flecha o un color. Cuando es false el número igual se muestra,
+ * en tono neutro y marcado como no concluyente.
+ *
+ * Devuelve null si falta cualquiera de los dos: sin batería anterior no se
+ * inventa un cero ni una flecha.
+ */
+export function compararPorcentajes(actual, anterior) {
+  if (!actual || !anterior) return null;
+  const pp = actual.pct - anterior.pct;
+  const margen = margenDeDiferencia(actual, anterior);
+  return { pp, margen, concluyente: Math.abs(pp) > margen };
+}
+
+/**
+ * Suma por zona las mediciones de UNA sesión, y cuenta cuántos jugadores
+ * midieron algo en ella.
+ *
+ * Los denominadores salen de las filas reales y nunca se asumen: un jugador
+ * ausente no suma intentos, así que 14 jugadores por 10 tiros no son 140 si
+ * dos faltaron.
+ */
+export function zonasDeSesion(medicionesTiro, sesionId) {
+  const acum = {};
+  const jugadores = new Set();
+  for (const m of medicionesTiro ?? []) {
+    if (m.sesionId !== sesionId || m.anotados == null) continue;
+    jugadores.add(m.jugadorId);
+    if (!acum[m.posicion]) acum[m.posicion] = { anotados: 0, intentos: 0 };
+    acum[m.posicion].anotados += m.anotados;
+    acum[m.posicion].intentos += m.intentos;
+  }
+  const porZona = {};
+  for (const [id, a] of Object.entries(acum)) porZona[id] = porcentaje(a.anotados, a.intentos);
+  return { porZona, jugadoresQueMidieron: jugadores.size };
+}
+
+/**
+ * Las zonas más flojas de una lista YA ordenada de peor a mejor.
+ *
+ * Devuelve más de una cuando están empatadas dentro del margen: presentar la
+ * última del ranking como "el problema" cuando está a un punto de otras tres
+ * es inventar una conclusión que el dato no sostiene.
+ *
+ * `concluyente` es true sólo cuando hay una sola zona y se separa del resto.
+ * Las zonas por debajo del umbral de muestra quedan afuera del foco.
+ */
+export function zonasDelFoco(zonasOrdenadas) {
+  const conDato = (zonasOrdenadas ?? []).filter((z) => z.valor && !z.valor.muestraChica);
+  if (!conDato.length) return null;
+
+  const peor = conDato[0];
+  const empatadas = [peor];
+  for (const z of conDato.slice(1)) {
+    const c = compararPorcentajes(z.valor, peor.valor);
+    if (c && c.concluyente) break;
+    empatadas.push(z);
+  }
+  return { zonas: empatadas.map((z) => z.id), concluyente: empatadas.length === 1 };
+}
+
+/** Los jugadores de una zona en una sesión, del más flojo al mejor. */
+export function jugadoresDeZona(medicionesTiro, sesionId, zonaId) {
+  return (medicionesTiro ?? [])
+    .filter((m) => m.sesionId === sesionId && m.posicion === zonaId && m.anotados != null)
+    .map((m) => ({ jugadorId: m.jugadorId, valor: porcentaje(m.anotados, m.intentos) }))
+    .filter((j) => j.valor != null)
+    .sort((a, b) => a.valor.pct - b.valor.pct);
+}
+
+/**
+ * Cuántos jugadores quedan por debajo del objetivo del club. null cuando no
+ * hay objetivo fijado — que es el estado por defecto, y entonces la card no
+ * habla del tema.
+ */
+export function contarPorDebajo(jugadores, objetivo) {
+  if (objetivo == null) return null;
+  return (jugadores ?? []).filter((j) => j.valor && j.valor.pct < objetivo).length;
+}
