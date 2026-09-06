@@ -534,3 +534,33 @@ export async function actualizarFechaNacimiento(clubId, jugadorId, fechaNacimien
     .eq('id', jugadorId);
   if (error) throw error;
 }
+
+/* ---------- Metas del cuerpo técnico por zona (0013/0014) ---------- */
+
+/**
+ * Metas del plantel, como mapa zona → porcentaje. La ausencia de una zona en
+ * el mapa significa "sin meta", que no es lo mismo que 0%.
+ */
+export async function obtenerMetasDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('meta_zona')
+    .select('zona, objetivo_pct')
+    .eq('club_id', clubId)
+    .eq('plantel_id', plantelId);
+  if (error) throw error;
+  const metas = {};
+  for (const fila of data) metas[fila.zona] = fila.objetivo_pct;
+  return metas;
+}
+
+/**
+ * Guarda hasta 6 metas en una sola transacción (0014_rpc_guardar_metas.sql).
+ * Una zona con `objetivoPct: null` borra su meta.
+ */
+export async function guardarMetasPlantel(payload) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('guardar_metas_plantel', { payload });
+  if (error) throw error;
+  return data;
+}
