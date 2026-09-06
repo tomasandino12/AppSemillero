@@ -10,13 +10,13 @@ import {
   zonasDelFoco,
   jugadoresDeZona,
   contarPorDebajo,
+  totalDeZonas,
   repartoPorJugador,
   evolucionDeTiroDelEquipo,
   serieDeTiroDelJugador,
   ultimaBateriaDeJugador,
   ultimaBateriaConDatosDeJugador,
   historialDePartidosDelJugador,
-  promedioDeCanchaDelPlantel,
 } from '../src/data/estadisticas.js';
 import { POSICIONES, POSICIONES_BATERIA, INTENTOS_POR_POSICION } from '../src/data/posiciones.js';
 
@@ -206,7 +206,6 @@ test('un jugador ausente tiene batería con la posición en null, no en cero', (
 
 test('sin ninguna batería devuelve null', () => {
   assert.equal(ultimaBateriaDeJugador([], [], 'j1'), null);
-  assert.equal(promedioDeCanchaDelPlantel([], []), null);
 });
 
 test('ultimaBateriaConDatosDeJugador salta una ausencia completa más reciente y trae la última con datos reales', () => {
@@ -253,29 +252,7 @@ test('el historial de partidos va del más reciente al más viejo', () => {
   assert.equal(h[1].libres.pct, 100);
 });
 
-test('el promedio del plantel usa la última sesión de tiro y saltea los ausentes', () => {
-  const p = promedioDeCanchaDelPlantel(SESIONES, MEDICIONES);
-  assert.equal(p.fecha, '2026-04-05');
-  assert.equal(p.porPosicion.libres.anotados, 6);
-  assert.equal(p.porPosicion.esq_izq, undefined);
-});
 
-test('una sesión donde todos los jugadores están ausentes devuelve porPosicion vacío, no null', () => {
-  // Cada ausente deja sus 6 filas en anotados: null (así está diseñado), así
-  // que la sesión existe y se guarda igual — pero ninguna posición tiene un
-  // solo dato real. Es el caso que hacía crashear a HOY: "hubo sesión" no es
-  // lo mismo que "nunca hubo sesión", así que esta función NO debe devolver
-  // null acá. El consumidor (hoy.js) es quien tiene que distinguir "hay
-  // batería pero sin mediciones" de "sí hay promedio para mostrar".
-  const sesiones = [{ id: 's9', fecha: '2026-05-01', tipo: 'tiro' }];
-  const mediciones = ['esq_izq', 'c45_izq', 'frontal', 'c45_der', 'esq_der', 'libres'].map((posicion) => (
-    { sesionId: 's9', jugadorId: 'j3', posicion, anotados: null, intentos: 10 }
-  ));
-  const p = promedioDeCanchaDelPlantel(sesiones, mediciones);
-  assert.notEqual(p, null);
-  assert.equal(p.fecha, '2026-05-01');
-  assert.deepEqual(p.porPosicion, {});
-});
 
 /* ---------- Card de HOY ---------- */
 
@@ -397,4 +374,34 @@ test('con objetivo del club se cuentan los que están por debajo', () => {
   ];
   assert.equal(contarPorDebajo(jugadores, 40), 1);
   assert.equal(contarPorDebajo(jugadores, 0), 0);
+});
+
+test('el total del arco suma las zonas pedidas y deja libres afuera', () => {
+  const porZona = {
+    esq_izq: porcentaje(28, 140),
+    frontal: porcentaje(56, 140),
+    libres: porcentaje(98, 140),
+  };
+  const total = totalDeZonas(porZona, ['esq_izq', 'frontal']);
+  assert.equal(total.anotados, 84);
+  assert.equal(total.intentos, 280);
+  assert.equal(total.pct, 30);
+});
+
+test('el total ignora las zonas sin medir en vez de contarlas como cero', () => {
+  const total = totalDeZonas({ esq_izq: porcentaje(28, 140) }, ['esq_izq', 'frontal']);
+  assert.equal(total.intentos, 140);
+});
+
+test('sin ninguna zona con dato el total es null, no cero', () => {
+  assert.equal(totalDeZonas({}, ['esq_izq']), null);
+  assert.equal(totalDeZonas(null, null), null);
+});
+
+test('la comparación del total sí puede ser concluyente con ~700 intentos', () => {
+  // Es la diferencia con la comparación por zona: con 140 intentos el margen
+  // ronda los 11 pp y casi nada se puede afirmar; con 700 baja a ~5 pp.
+  const actual = totalDeZonas({ a: porcentaje(266, 700) }, ['a']);     // 38%
+  const anterior = totalDeZonas({ a: porcentaje(210, 700) }, ['a']);   // 30%
+  assert.equal(compararPorcentajes(actual, anterior).concluyente, true);
 });

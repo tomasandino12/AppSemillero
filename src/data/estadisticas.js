@@ -259,31 +259,6 @@ export function historialDePartidosDelJugador(partidos, estadisticas, jugadorId)
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
 
-/**
- * Promedio del plantel por posición sobre la última sesión de tiro, para HOY.
- * Los ausentes (anotados null) no entran en el promedio.
- */
-export function promedioDeCanchaDelPlantel(sesiones, medicionesTiro) {
-  const sesionesTiro = sesiones
-    .filter((s) => s.tipo === 'tiro')
-    .sort((a, b) => b.fecha.localeCompare(a.fecha));
-  if (!sesionesTiro.length) return null;
-
-  const sesion = sesionesTiro[0];
-  const acum = {};
-  for (const m of medicionesTiro) {
-    if (m.sesionId !== sesion.id || m.anotados == null) continue;
-    if (!acum[m.posicion]) acum[m.posicion] = { anotados: 0, intentos: 0 };
-    acum[m.posicion].anotados += m.anotados;
-    acum[m.posicion].intentos += m.intentos;
-  }
-
-  const porPosicion = {};
-  for (const [posicion, a] of Object.entries(acum)) {
-    porPosicion[posicion] = porcentaje(a.anotados, a.intentos);
-  }
-  return { sesionId: sesion.id, fecha: sesion.fecha, porPosicion };
-}
 
 /* ---------- Card de HOY: comparaciones con su margen de error ---------- */
 
@@ -399,4 +374,29 @@ export function jugadoresDeZona(medicionesTiro, sesionId, zonaId) {
 export function contarPorDebajo(jugadores, objetivo) {
   if (objetivo == null) return null;
   return (jugadores ?? []).filter((j) => j.valor && j.valor.pct < objetivo).length;
+}
+
+/**
+ * Varias zonas sumadas en un solo porcentaje.
+ *
+ * La card lo usa para el total del arco: con ~700 intentos (5 zonas × 14
+ * jugadores × 10 tiros) es la única comparación entre baterías con
+ * resolución suficiente para encender una señal mes a mes. Zona por zona son
+ * 140 intentos y el margen ronda los 11 puntos, así que ahí casi nunca se
+ * puede afirmar nada.
+ *
+ * Los tiros libres quedan AFUERA a propósito: es otro tiro, con otro
+ * porcentaje, y promediarlo con los del arco da un número que no es ninguno
+ * de los dos.
+ */
+export function totalDeZonas(porZona, zonaIds) {
+  let anotados = 0;
+  let intentos = 0;
+  for (const id of zonaIds ?? []) {
+    const v = porZona?.[id];
+    if (!v) continue;
+    anotados += v.anotados;
+    intentos += v.intentos;
+  }
+  return porcentaje(anotados, intentos);
 }

@@ -1,6 +1,7 @@
 import { POSICIONES, LIBRES } from '../../data/posiciones.js';
 import {
   zonasDeSesion, zonasDelFoco, compararPorcentajes, jugadoresDeZona, contarPorDebajo,
+  totalDeZonas,
 } from '../../data/estadisticas.js';
 import { objetivoDeZona } from '../../data/objetivosClub.js';
 import { ultimaMedicion, ultimaMedicionPorJugador } from '../../data/antropometria.js';
@@ -222,6 +223,13 @@ export async function renderHoy() {
   const porId = new Map(zonasArco.map((z) => [z.id, z]));
   const foco = zonasDelFoco(zonasArco);
 
+  // Total del arco: las 5 zonas sumadas rondan los 700 intentos, y es la
+  // única comparación entre baterías con resolución para encender una señal
+  // mes a mes. Por zona son 140 y el margen ronda los 11 pp.
+  const idsArco = POSICIONES.map((z) => z.id);
+  const totalActual = totalDeZonas(porZona, idsArco);
+  const totalVariacion = compararPorcentajes(totalActual, totalDeZonas(zonasAnterior, idsArco));
+
   if (!zonasArco.some((z) => z.valor) && !zonaLibres.valor) {
     contenedor().innerHTML = `
       <div class="pad">
@@ -258,6 +266,14 @@ export async function renderHoy() {
     <div class="pad">
       <h2 class="h2">Buen día</h2>
       <div class="p">${escaparHtml(plantel.categoria)} · batería del ${escaparHtml(formatearFechaCorta(actual.fecha))} · ${jugadoresQueMidieron} jugador${jugadoresQueMidieron === 1 ? '' : 'es'} midió${jugadoresQueMidieron === 1 ? '' : 'eron'}</div>
+
+      ${totalActual ? `
+        <div class="total-arco">
+          <span class="k">Tiro de campo, todo el arco</span>
+          <span class="v">${textoPorcentaje(totalActual)}</span>
+          ${variacionHtml(totalVariacion)}
+        </div>
+      ` : ''}
 
       ${focoHtml(foco, porId)}
       ${porDebajo == null ? '' : `
