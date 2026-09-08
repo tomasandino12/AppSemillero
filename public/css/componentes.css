@@ -377,3 +377,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .ejercicio .probado{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--rojo)}
 .ejercicio .tit{font-size:var(--fs-160);color:var(--tinta);margin:2px 0}
 .ejercicio .autor{font-size:var(--fs-125);color:var(--gris-cl)}
+
+/* Etapa 5 — alta de ejercicio: plegado de detalles opcionales */
+#btn-mas-detalles{margin-bottom:var(--sp-3)}
+#ej-detalles{margin-bottom:var(--sp-2)}

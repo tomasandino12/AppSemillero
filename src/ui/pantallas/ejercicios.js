@@ -1,8 +1,9 @@
-import { obtenerEjercicios } from '../../data/repositorio.js';
+import { obtenerEjercicios, crearEjercicio, actualizarEjercicio } from '../../data/repositorio.js';
 import { TEMAS, nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
-import { escaparHtml, esErrorDeRed } from '../nav.js';
-import { cargarPerfiles, nombreDe } from '../perfil.js';
+import { escaparHtml, esErrorDeRed, toast } from '../nav.js';
+import { cargarPerfiles, nombreDe, asegurarNombre } from '../perfil.js';
+import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('recursos-ejercicios');
@@ -113,4 +114,132 @@ export async function renderSeccionEjercicios() {
 
   temaFiltro = null;
   pintarListaEjercicios(ejercicios);
+}
+
+/**
+ * Título y tema son los únicos dos campos obligatorios: el que carga un
+ * ejercicio no es quien recibe el beneficio (eso lo sienten el club y quien
+ * venga después), así que todo lo que no hace falta para guardar vive
+ * plegado y cerrado. Los chips reemplazan al elemento select nativo porque
+ * en celular ese control abre el picker del sistema: tres toques contra uno.
+ */
+function cuerpoDeAlta(previo) {
+  return `
+    <div class="campo">
+      <label for="in-ej-titulo">Título</label>
+      <input id="in-ej-titulo" type="text" autocomplete="off" value="${escaparHtml(previo?.titulo ?? '')}">
+    </div>
+    <div class="campo">
+      <label id="lbl-tema">Tema</label>
+      <div class="chips-tema" id="ej-chips-tema" role="group" aria-labelledby="lbl-tema">
+        ${TEMAS.map((t) => `<button type="button" class="chip-tema ${previo?.tema === t.id ? 'on' : ''}" data-tema="${t.id}">${escaparHtml(t.nombre)}</button>`).join('')}
+      </div>
+    </div>
+    <button class="btn sec" id="btn-mas-detalles" type="button">Agregar más detalles</button>
+    <div id="ej-detalles" hidden>
+      <div class="campo"><label for="in-ej-desc">Descripción</label><textarea id="in-ej-desc" rows="4">${escaparHtml(previo?.descripcion ?? '')}</textarea></div>
+      <div class="campo"><label for="in-ej-enlace">Enlace</label><input id="in-ej-enlace" type="url" inputmode="url" placeholder="https://" value="${escaparHtml(previo?.enlace ?? '')}"></div>
+      <div class="campo"><label for="in-ej-material">Material</label><input id="in-ej-material" type="text" placeholder="conos, dos pelotas" value="${escaparHtml(previo?.material ?? '')}"></div>
+      <div class="campo"><label for="in-ej-jugadores">Jugadores</label><input id="in-ej-jugadores" type="text" placeholder="6 a 12" value="${escaparHtml(previo?.jugadores ?? '')}"></div>
+      <div class="campo"><label for="in-ej-categorias">Categorías</label><input id="in-ej-categorias" type="text" placeholder="mini, sub-13" value="${escaparHtml(previo?.categorias ?? '')}"></div>
+    </div>
+    <div id="ej-aviso"></div>
+    <button class="btn" id="btn-guardar-ejercicio">${previo ? 'Guardar los cambios' : 'Guardar'}</button>
+  `;
+}
+
+/**
+ * Sirve para crear y para editar (Task 9): si `ejercicioExistente` viene con
+ * datos, precarga los campos y guarda con actualizarEjercicio; si no, crea
+ * con crearEjercicio. Una sola función para no duplicar el formulario.
+ */
+export function abrirAltaEjercicio(ejercicioExistente) {
+  const club = obtenerClubActual();
+  if (!club) return;
+
+  abrirHoja({
+    titulo: ejercicioExistente ? 'Editar ejercicio' : 'Cargar un ejercicio',
+    cuerpo: cuerpoDeAlta(ejercicioExistente),
+  });
+  $('in-ej-titulo').focus();
+
+  $('btn-mas-detalles').addEventListener('click', () => {
+    $('ej-detalles').hidden = false;
+    $('btn-mas-detalles').hidden = true;
+  });
+
+  // Los chips se comportan como radio: al tocar uno se apaga el resto.
+  $('ej-chips-tema').querySelectorAll('.chip-tema').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      $('ej-chips-tema').querySelectorAll('.chip-tema').forEach((c) => c.classList.remove('on'));
+      chip.classList.add('on');
+    });
+  });
+
+  $('btn-guardar-ejercicio').addEventListener('click', () => confirmarAltaEjercicio(ejercicioExistente));
+  // Enter en el título es la otra entrada al mismo submit que el click del
+  // botón; confirmarAltaEjercicio() cubre a las dos con su guarda.
+  $('in-ej-titulo').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') confirmarAltaEjercicio(ejercicioExistente);
+  });
+}
+
+async function confirmarAltaEjercicio(previo) {
+  const boton = $('btn-guardar-ejercicio');
+  // Misma guarda que altaJugador.js: click y Enter son dos entradas al mismo
+  // flujo, y ésta es la única que cubre a las dos contra un doble submit.
+  if (boton.disabled) return;
+
+  const club = obtenerClubActual();
+  const aviso = $('ej-aviso');
+  // El título se guarda tal cual se tipeó; el trim() de acá es sólo para
+  // validar que no esté vacío, nunca para lo que se manda a guardar.
+  const tituloCrudo = $('in-ej-titulo').value;
+  const tema = $('ej-chips-tema').querySelector('.chip-tema.on')?.dataset.tema ?? null;
+
+  if (!tituloCrudo.trim() || !tema) {
+    aviso.innerHTML = `<div class="al"><div class="tx">Elegí un título y un tema.</div></div>`;
+    return;
+  }
+
+  // asegurarNombre ANTES de deshabilitar el botón: si esta promesa quedara
+  // colgada por cualquier motivo, la pantalla no puede quedar muerta con el
+  // botón deshabilitado para siempre.
+  const hayNombre = await asegurarNombre(club.id);
+  if (!hayNombre) return;
+
+  boton.disabled = true;
+  boton.textContent = 'Guardando...';
+  aviso.innerHTML = '';
+
+  // El texto va tal cual: nada de trim() ni de normalizar saltos de línea
+  // sobre la descripción ni sobre el resto de los campos de texto libre.
+  const campos = {
+    titulo: tituloCrudo,
+    tema,
+    descripcion: $('in-ej-desc').value,
+    enlace: $('in-ej-enlace').value,
+    material: $('in-ej-material').value,
+    jugadores: $('in-ej-jugadores').value,
+    categorias: $('in-ej-categorias').value,
+  };
+
+  try {
+    if (previo) {
+      await actualizarEjercicio(club.id, previo.id, campos);
+    } else {
+      await crearEjercicio({ clubId: club.id, ...campos });
+    }
+  } catch (e) {
+    aviso.innerHTML = `<div class="al"><div class="tx">${
+      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar el ejercicio.'
+    }</div></div>`;
+    boton.disabled = false;
+    boton.textContent = previo ? 'Guardar los cambios' : 'Guardar';
+    return;
+  }
+
+  cerrarHoja();
+  toast(previo ? 'Ejercicio actualizado' : 'Ejercicio agregado');
+  await renderSeccionEjercicios();
 }
