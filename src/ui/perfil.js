@@ -62,14 +62,29 @@ export function asegurarNombre(clubId) {
     });
     $('in-nombre-perfil').focus();
 
-    // hoja.js también cierra con Escape, no sólo con el velo o un botón. Sin
-    // este botón, cerrar con Escape deja la promesa colgada para siempre y
-    // el await de quien llamó a asegurarNombre() no vuelve nunca. No lo saques
-    // por parecer redundante con el velo: cubre una salida que el velo no cubre.
-    const cancelar = () => resolver(false);
+    // hoja.js registra un keydown global para Escape que llama a
+    // cerrarHoja() directo (ver iniciarHoja() en hoja.js): no dispara ningún
+    // evento propio y no pasa por el velo ni por ningún botón de acá. Sin un
+    // listener propio de Escape, esa salida deja la promesa colgada para
+    // siempre y el await de quien llamó a asegurarNombre() no vuelve nunca.
+    // "Ahora no" es la salida visible para quien no usa el teclado; el
+    // listener de abajo cierra el agujero de Escape. finalizar() desregistra
+    // los tres (Escape, velo y a sí misma) apenas se resuelve por cualquiera
+    // de los caminos, para no dejar un listener global escuchando Escapes de
+    // otras pantallas.
+    const alEscape = (e) => { if (e.key === 'Escape') finalizar(false); };
+    const alVelo = () => finalizar(false);
+    function finalizar(resultado) {
+      document.removeEventListener('keydown', alEscape);
+      $('velo').removeEventListener('click', alVelo);
+      resolver(resultado);
+    }
+    document.addEventListener('keydown', alEscape, { once: true });
+    $('velo').addEventListener('click', alVelo, { once: true });
+
     $('btn-nombre-ahora-no').addEventListener('click', () => {
       cerrarHoja();
-      cancelar();
+      finalizar(false);
     });
 
     const guardar = async () => {
@@ -94,12 +109,10 @@ export function asegurarNombre(clubId) {
       }
       perfiles[usuarioActual] = nombre;
       cerrarHoja();
-      resolver(true);
+      finalizar(true);
     };
 
     $('btn-guardar-perfil').addEventListener('click', guardar);
     $('in-nombre-perfil').addEventListener('keydown', (e) => { if (e.key === 'Enter') guardar(); });
-    // Cerrar la hoja sin guardar cuenta como cancelar.
-    $('velo').addEventListener('click', () => resolver(false), { once: true });
   });
 }

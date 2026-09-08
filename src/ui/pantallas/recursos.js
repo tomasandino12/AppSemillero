@@ -157,7 +157,12 @@ async function confirmarEnvio(recursoId) {
   }
   cerrarHoja();
   toast('Envío registrado');
-  await renderRecursos();
+  // No renderRecursos(): eso reconstruye el armazón entero y con él los dos
+  // contenedores hermanos, no sólo el activo. Acá siempre estamos en la
+  // pestaña Jugadores (avisarPlantelVacio() y esta hoja sólo se abren desde
+  // ahí), así que alcanza con refrescar la suya sin tocar el estado de
+  // Ejercicios.
+  await renderSeccionJugadores();
 }
 
 const encabezado = `<div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>`;
