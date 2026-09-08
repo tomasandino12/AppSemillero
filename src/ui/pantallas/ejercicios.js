@@ -157,9 +157,17 @@ function cuerpoDeAlta(previo) {
  * ejercicio.js para repintar su detalle cuando esta hoja se cierra (guardado
  * o cancelado), sin que este módulo necesite saber nada de esa pantalla.
  */
-export function abrirAltaEjercicio(ejercicioExistente, alCerrar) {
+export async function abrirAltaEjercicio(ejercicioExistente, alCerrar) {
   const club = obtenerClubActual();
   if (!club) return;
+
+  // asegurarNombre ANTES de abrir la hoja del alta: #hoja es la única de toda
+  // la app (hoja.js), así que si se abriera primero y el profe recién ahí
+  // tuviera que poner su nombre, la hoja del nombre pisaría este mismo
+  // formulario con innerHTML y lo que haya tipeado se perdería sin aviso.
+  // Acá todavía no se abrió nada, así que no hay nada que perder.
+  const hayNombre = await asegurarNombre(club.id);
+  if (!hayNombre) return;
 
   abrirHoja({
     titulo: ejercicioExistente ? 'Editar ejercicio' : 'Cargar un ejercicio',
@@ -207,11 +215,16 @@ async function confirmarAltaEjercicio(previo) {
     return;
   }
 
-  // asegurarNombre ANTES de deshabilitar el botón: si esta promesa quedara
-  // colgada por cualquier motivo, la pantalla no puede quedar muerta con el
-  // botón deshabilitado para siempre.
-  const hayNombre = await asegurarNombre(club.id);
-  if (!hayNombre) return;
+  // Mismo guard que recursos.js (confirmarEnvio): escaparHtml evita romper
+  // el atributo href, pero no frena un "javascript:..." o cualquier otro
+  // esquema, y sin "https://" el navegador lo resuelve como ruta relativa de
+  // la app: el link queda roto para todo el club. El trim() es sólo para
+  // chequear, igual que con el título; lo que se guarda es lo tipeado.
+  const enlaceCrudo = $('in-ej-enlace').value;
+  if (enlaceCrudo.trim() && !/^https?:\/\//i.test(enlaceCrudo.trim())) {
+    aviso.innerHTML = `<div class="al"><div class="tx">El link tiene que empezar con http:// o https://.</div></div>`;
+    return;
+  }
 
   boton.disabled = true;
   boton.textContent = 'Guardando...';

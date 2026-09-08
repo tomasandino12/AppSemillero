@@ -201,7 +201,14 @@ export async function renderEjercicio() {
 
 /* ---------- Agregar una nota de uso ---------- */
 
-function abrirAgregarNota(club, ejercicio) {
+async function abrirAgregarNota(club, ejercicio) {
+  // asegurarNombre ANTES de abrir la hoja: mismo motivo que abrirAltaEjercicio
+  // en ejercicios.js — #hoja es única en toda la app (hoja.js), y si se
+  // abriera primero, la hoja del nombre pisaría este formulario con
+  // innerHTML apenas el profe empezara a escribir la nota.
+  const hayNombre = await asegurarNombre(club.id);
+  if (!hayNombre) return;
+
   abrirHoja({
     titulo: 'Agregar una nota',
     cuerpo: `
@@ -228,12 +235,6 @@ async function confirmarNota(club, ejercicio) {
     $('nota-aviso').innerHTML = `<div class="al"><div class="tx">Escribí qué pasó al usarlo.</div></div>`;
     return;
   }
-
-  // asegurarNombre ANTES de deshabilitar el botón: si esta promesa quedara
-  // colgada por cualquier motivo, la pantalla no puede quedar muerta con el
-  // botón deshabilitado para siempre (mismo criterio que confirmarAltaEjercicio).
-  const hayNombre = await asegurarNombre(club.id);
-  if (!hayNombre) return;
 
   boton.disabled = true;
   boton.textContent = 'Guardando...';
@@ -354,6 +355,12 @@ async function abrirEnvioAJugadores(club, ejercicio) {
     return;
   }
 
+  // asegurarNombre ANTES de abrir la hoja del envío: mismo motivo que en
+  // abrirAgregarNota — #hoja es única, y abrirla antes dejaría que la hoja
+  // del nombre pise esta lista de jugadores con los checks ya marcados.
+  const hayNombre = await asegurarNombre(club.id);
+  if (!hayNombre) return;
+
   abrirHoja({ titulo: 'Mandar a jugadores', cuerpo: cuerpoDeEnvio(jugadores) });
   $('btn-ej-todos').addEventListener('click', () => {
     document.querySelectorAll('.chk-jug-ej').forEach((c) => { c.checked = true; });
@@ -370,12 +377,6 @@ async function confirmarEnvio(club, ejercicio) {
     $('envio-ej-aviso').innerHTML = `<div class="al"><div class="tx">Elegí al menos un jugador.</div></div>`;
     return;
   }
-
-  // asegurarNombre ANTES de deshabilitar el botón: mismo criterio que
-  // confirmarNota() de acá arriba y que confirmarAltaEjercicio() de
-  // ejercicios.js. Si quedara colgada, el botón no puede quedar muerto.
-  const hayNombre = await asegurarNombre(club.id);
-  if (!hayNombre) return;
 
   boton.disabled = true;
   boton.textContent = 'Mandando...';
