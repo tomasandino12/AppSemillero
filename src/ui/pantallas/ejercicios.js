@@ -124,6 +124,11 @@ export async function renderSeccionEjercicios() {
  * en celular ese control abre el picker del sistema: tres toques contra uno.
  */
 function cuerpoDeAlta(previo) {
+  // Completar después es editar (spec): si el ejercicio ya trae algún campo
+  // opcional cargado, esconderlo detrás de "Agregar más detalles" simula que
+  // no hay nada ahí. Arranca plegado sólo cuando de verdad no hay nada que
+  // mostrar.
+  const tieneDetalles = Boolean(previo && (previo.descripcion || previo.enlace || previo.material || previo.jugadores || previo.categorias));
   return `
     <div class="campo">
       <label for="in-ej-titulo">Título</label>
@@ -135,8 +140,8 @@ function cuerpoDeAlta(previo) {
         ${TEMAS.map((t) => `<button type="button" class="chip-tema ${previo?.tema === t.id ? 'on' : ''}" data-tema="${t.id}">${escaparHtml(t.nombre)}</button>`).join('')}
       </div>
     </div>
-    <button class="btn sec" id="btn-mas-detalles" type="button">Agregar más detalles</button>
-    <div id="ej-detalles" hidden>
+    <button class="btn sec" id="btn-mas-detalles" type="button" ${tieneDetalles ? 'hidden' : ''}>${previo ? 'Agregar detalles' : 'Agregar más detalles'}</button>
+    <div id="ej-detalles" ${tieneDetalles ? '' : 'hidden'}>
       <div class="campo"><label for="in-ej-desc">Descripción</label><textarea id="in-ej-desc" rows="4">${escaparHtml(previo?.descripcion ?? '')}</textarea></div>
       <div class="campo"><label for="in-ej-enlace">Enlace</label><input id="in-ej-enlace" type="url" inputmode="url" placeholder="https://" value="${escaparHtml(previo?.enlace ?? '')}"></div>
       <div class="campo"><label for="in-ej-material">Material</label><input id="in-ej-material" type="text" placeholder="conos, dos pelotas" value="${escaparHtml(previo?.material ?? '')}"></div>
