@@ -35,13 +35,28 @@
 
   <main class="cuerpo" id="cuerpo">
 
+    <!-- Ingreso. La cabecera ya trae el escudo y el nombre de la app, así que
+         acá no va ni logo ni marca: es una pantalla más, no una portada.
+         El botón vive en un .pie-fijo como la acción principal de cualquier
+         otra pantalla, y #in-pass envía con Enter (ver login.js), que es el
+         camino real cuando el teclado del celular está abierto. -->
     <section class="pant" id="p-login">
-      <div class="pad">
-        <h2 class="h2">Ingresar</h2>
-        <div class="campo"><label for="in-email">Email</label><input id="in-email" type="email" autocomplete="username" inputmode="email"></div>
-        <div class="campo"><label for="in-pass">Contraseña</label><input id="in-pass" type="password" autocomplete="current-password"></div>
-        <div class="al" id="login-error" style="display:none"><div class="tx"></div></div>
-        <button class="btn" id="btn-login">Ingresar</button>
+      <div class="login">
+        <div class="pad">
+          <h2 class="h2">Ingresar</h2>
+          <div class="p">Con el mail y la contraseña que te dio el club.</div>
+          <div class="campo">
+            <label for="in-email">Email</label>
+            <input id="in-email" type="email" autocomplete="username" inputmode="email"
+                   autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next">
+          </div>
+          <div class="campo">
+            <label for="in-pass">Contraseña</label>
+            <input id="in-pass" type="password" autocomplete="current-password" enterkeyhint="go">
+          </div>
+          <div class="al" id="login-error" role="alert" style="display:none"><div class="tx"></div></div>
+        </div>
+        <div class="pie-fijo"><button class="btn" id="btn-login">Ingresar</button></div>
       </div>
     </section>
 
