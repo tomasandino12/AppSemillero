@@ -1,10 +1,11 @@
-import { obtenerEjercicio, obtenerNotas, crearNota } from '../../data/repositorio.js';
+import { obtenerEjercicio, obtenerNotas, crearNota, borrarNota, borrarEjercicio } from '../../data/repositorio.js';
 import { nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast, formatearFechaCorta } from '../nav.js';
-import { cargarPerfiles, nombreDe, asegurarNombre } from '../perfil.js';
+import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
+import { abrirAltaEjercicio } from './ejercicios.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
-import { ir } from '../main.js';
+import { ir, volver } from '../main.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('ejercicio-contenido');
@@ -38,6 +39,7 @@ function notaHtml(n) {
     <div class="nota">
       <div class="meta">
         <span>${escaparHtml(nombreDe(n.creadoPor))} · ${escaparHtml(formatearFechaCorta(n.creadoEn.slice(0, 10)))}</span>
+        ${esMio(n.creadoPor) ? `<button class="nota-borrar" data-nota="${n.id}" aria-label="Borrar esta nota">&#10005;</button>` : ''}
       </div>
       <div class="tx texto-libre">${escaparHtml(n.texto)}</div>
     </div>
@@ -75,6 +77,7 @@ function bloqueDetalleMenor(ejercicio) {
 }
 
 function pintarEjercicio(club, ejercicio, notas) {
+  const propio = esMio(ejercicio.creadoPor);
   contenedor().innerHTML = `
     <div class="ficha-top">
       <div class="nom">${escaparHtml(ejercicio.titulo)}</div>
@@ -88,10 +91,52 @@ function pintarEjercicio(club, ejercicio, notas) {
       <button class="btn sec" id="btn-ej-agregar-nota">Agregar una nota</button>
 
       ${bloqueDetalleMenor(ejercicio)}
+
+      ${propio ? `
+        <div class="acciones-hoy">
+          <button class="btn sec" id="btn-ej-editar">Editar</button>
+          <button class="btn sec" id="btn-ej-borrar">Borrar</button>
+        </div>
+      ` : ''}
     </div>
   `;
 
   $('btn-ej-agregar-nota').addEventListener('click', () => abrirAgregarNota(club, ejercicio));
+
+  // Las notas de otros no se pueden borrar: esMio() ya decide en notaHtml()
+  // si el botón existe, así que acá sólo hay botones sobre notas propias.
+  contenedor().querySelectorAll('[data-nota]').forEach((boton) => {
+    boton.addEventListener('click', async () => {
+      if (boton.disabled) return;
+      boton.disabled = true;
+      try {
+        await borrarNota(club.id, boton.dataset.nota);
+      } catch (e) {
+        // La garantía es la policy de 0015, no el esMio() de acá: si dos
+        // pestañas del mismo profe borran distinto, esto puede llegar igual.
+        toast(e?.message === 'NO_ES_TUYO'
+          ? 'Esta nota ya no es tuya: no se puede borrar.'
+          : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo borrar la nota.'));
+        boton.disabled = false;
+        return;
+      }
+      toast('Nota borrada');
+      await renderEjercicio();
+    });
+  });
+
+  // Comodidad, no garantía: la garantía de editar/borrar sólo lo propio es
+  // la policy RLS de 0015. Estos botones ni existen si no es tuyo.
+  if (propio) {
+    $('btn-ej-editar').addEventListener('click', () => {
+      abrirAltaEjercicio(ejercicio);
+      // abrirAltaEjercicio (ejercicios.js) siempre refresca SU lista al
+      // guardar, nunca este detalle: sin esto, después de editar quedarían
+      // el título y el tema viejos en pantalla hasta salir y volver a entrar.
+      observarCierreDeHoja(() => { renderEjercicio(); });
+    });
+    $('btn-ej-borrar').addEventListener('click', () => confirmarBorrado(club, ejercicio));
+  }
 }
 
 export async function renderEjercicio() {
@@ -180,4 +225,66 @@ async function confirmarNota(club, ejercicio) {
   cerrarHoja();
   toast('Nota agregada');
   await renderEjercicio();
+}
+
+/* ---------- Editar y borrar lo propio ---------- */
+
+/**
+ * No hay un callback de "se cerró la hoja" en hoja.js, y abrirAltaEjercicio
+ * (ejercicios.js) sólo refresca SU lista al guardar, nunca este detalle. Se
+ * observa el cierre de #hoja para repintar apenas se cierra, sea porque se
+ * guardó o porque se canceló: renderEjercicio() es sólo una relectura, así
+ * que dispararla de más no rompe nada.
+ */
+function observarCierreDeHoja(alCerrar) {
+  const hoja = document.getElementById('hoja');
+  const observer = new MutationObserver(() => {
+    if (!hoja.classList.contains('on')) {
+      observer.disconnect();
+      alCerrar();
+    }
+  });
+  observer.observe(hoja, { attributes: true, attributeFilter: ['class'] });
+}
+
+/**
+ * Borrar pide confirmación porque es irreversible y porque se lleva puestas
+ * las notas de OTROS profes por el `on delete cascade` de la FK de 0015: el
+ * texto lo tiene que decir, no alcanza con "¿seguro?".
+ */
+function confirmarBorrado(club, ejercicio) {
+  abrirHoja({
+    titulo: 'Borrar este ejercicio',
+    cuerpo: `
+      <div class="al"><div class="tx">Es para siempre: no se puede deshacer, y se borran con él todas las notas de uso que hayan cargado otros profes.</div></div>
+      <div id="borrado-ej-aviso"></div>
+      <button class="btn" id="btn-ej-confirmar-borrado">Borrar de todos modos</button>
+      <button class="btn sec" id="btn-ej-cancelar-borrado">Cancelar</button>
+    `,
+  });
+  $('btn-ej-cancelar-borrado').addEventListener('click', cerrarHoja);
+  $('btn-ej-confirmar-borrado').addEventListener('click', async () => {
+    const boton = $('btn-ej-confirmar-borrado');
+    if (boton.disabled) return;
+    boton.disabled = true;
+    boton.textContent = 'Borrando...';
+    try {
+      await borrarEjercicio(club.id, ejercicio.id);
+    } catch (e) {
+      // La garantía es la policy de 0015, no el esMio() que decide si este
+      // botón existe: si se editó desde otra sesión mientras tanto, esto
+      // puede llegar igual, y no puede mostrarse como un error crudo.
+      $('borrado-ej-aviso').innerHTML = `<div class="al"><div class="tx">${
+        e?.message === 'NO_ES_TUYO'
+          ? 'Este ejercicio ya no es tuyo: no se puede borrar.'
+          : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo borrar el ejercicio.')
+      }</div></div>`;
+      boton.disabled = false;
+      boton.textContent = 'Borrar de todos modos';
+      return;
+    }
+    cerrarHoja();
+    toast('Ejercicio borrado');
+    await volver();
+  });
 }
