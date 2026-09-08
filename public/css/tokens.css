@@ -72,6 +72,7 @@
 
   /* ---- layout ---- */
   --tap:2.75rem;          /* 44px: mínimo táctil del layout base */
-  --max-ancho:68.75rem;   /* 1100px de contenido legible en escritorio */
+  --max-ancho:46rem;      /* 736px: es UNA columna de lectura, no dos. A 1100
+                             las filas se estiraban en vez de leerse. */
   --lateral-w:14rem;      /* navegación lateral a partir de 1024px */
 }

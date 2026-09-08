@@ -97,6 +97,11 @@
 .login .h2{margin-top:0}
 .login .p{margin-bottom:var(--sp-5)}
 .login .al{margin-bottom:0}
+/* En escritorio el pie alinea su botón a la derecha y le da ancho propio, que
+   sirve para una acción al pie de una pantalla larga. Acá no: el botón cierra
+   un formulario de dos campos y tiene que medir lo mismo que ellos. */
+.login .pie-fijo{justify-content:stretch}
+.login .pie-fijo .btn{width:100%}
 
 /* ---- navegación ---- */
 .nav{
@@ -155,6 +160,24 @@
   .lista-2col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3)}
   .lista-2col > *{margin-bottom:0}
   .pie-fijo{padding-inline:var(--sp-6)}
+
+  /* ---- contención ----
+     Arriba de ~640px las reglas pensadas para 375px empiezan a trabajar en
+     contra: un space-between que separaba 200px pasa a separar 800, y una
+     barra a 1fr se vuelve una cinta. El criterio es que el blanco AL COSTADO
+     de la columna es margen de página y está bien, y el blanco ADENTRO de
+     una fila es un defecto. Esto saca el segundo.
+
+     A propósito NO hay dos columnas: reflowear el contenido es una decisión
+     aparte y hay que tomarla pantalla por pantalla.
+
+     El ".app" de más en las dos últimas no es decorativo: componentes.css se
+     carga DESPUÉS que este archivo, así que a igual especificidad gana él.
+     Son las primeras reglas de layout.css que pisan un selector suyo. */
+  .zona,.curva{max-width:40rem}
+  .p,.foco-linea{max-width:44rem}
+  .app .acciones-hoy{flex-direction:row;flex-wrap:wrap}
+  .app .acciones-hoy .btn{width:auto;min-width:14rem}
 }
 
 /* =====================================================================
@@ -182,6 +205,13 @@
   .nav button.on{background:var(--sup-1)}
   .nav svg{width:1.25rem;height:1.25rem}
   .nav span{font-size:var(--fs-135);letter-spacing:.08em}
+  /* Sin sesión la navegación no se dibuja, así que la columna lateral no se
+     reserva. Si no, el login queda empujado 224px a la derecha por una barra
+     que no existe — el grid guarda el lugar aunque .nav:empty esté oculto. */
+  .app:has(.nav:empty){
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"cabecera" "cats" "cuerpo";
+  }
   .cabecera{padding-top:var(--sp-4)}
   .cuerpo > .pant.on{margin-inline:auto;width:100%;max-width:var(--max-ancho)}
   .cabecera,.cats{padding-inline:max(var(--sp-4), calc((100% - var(--max-ancho)) / 2))}
