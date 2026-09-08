@@ -366,3 +366,14 @@ svg.g{width:100%;display:block;overflow:visible}
 .pestanas{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--linea)}
 .pest{min-height:48px;border:0;background:none;color:var(--gris-cl);font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid transparent}
 .pest.on{color:var(--tinta);border-bottom-color:var(--rojo)}
+
+/* Etapa 5 — lista de ejercicios */
+.chips-tema{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip-tema{min-height:40px;padding:0 12px;border:1px solid var(--linea);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
+.chip-tema.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.ejercicio{display:block;width:100%;text-align:left;padding:12px 0;border:0;border-bottom:1px solid var(--linea);background:none}
+.ejercicio .cab{display:flex;align-items:baseline;gap:8px}
+.ejercicio .tema{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.ejercicio .probado{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--rojo)}
+.ejercicio .tit{font-size:var(--fs-160);color:var(--tinta);margin:2px 0}
+.ejercicio .autor{font-size:var(--fs-125);color:var(--gris-cl)}
