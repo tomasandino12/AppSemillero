@@ -360,3 +360,9 @@ svg.g{width:100%;display:block;overflow:visible}
 .curva-pie .ver{color:var(--rojo);white-space:nowrap}
 .curva-zona{margin:16px 0}
 .btn-zona-recurso{border:0;background:none;padding:0;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--rojo)}
+
+/* Etapa 5 — pestañas internas de RECURSOS. No es navegación: no se agrega un
+   sexto ítem a la barra de abajo, que en celular ya está al límite. */
+.pestanas{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--linea)}
+.pest{min-height:48px;border:0;background:none;color:var(--gris-cl);font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid transparent}
+.pest.on{color:var(--tinta);border-bottom-color:var(--rojo)}

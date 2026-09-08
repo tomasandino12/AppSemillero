@@ -3,9 +3,11 @@ import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir } from '../main.js';
+import { renderSeccionEjercicios } from './ejercicios.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('recursos-contenido');
+const contenedorJugadores = () => $('recursos-jugadores');
 
 function hoyLocal() {
   // Fecha local, no UTC: después de las 21:00 en Argentina, toISOString() ya
@@ -160,15 +162,15 @@ async function confirmarEnvio(recursoId) {
 
 const encabezado = `<div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>`;
 
-export async function renderRecursos() {
+async function renderSeccionJugadores() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
   if (!club || !plantel) {
-    contenedor().innerHTML = `<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
+    contenedorJugadores().innerHTML = `<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
     return;
   }
 
-  contenedor().innerHTML = `
+  contenedorJugadores().innerHTML = `
     <div class="pad">
       ${encabezado}
       <div class="eyebrow">Ofrecidos</div>
@@ -193,12 +195,12 @@ export async function renderRecursos() {
       }</div></div>
       <button class="btn sec" id="btn-reintentar-recursos">Reintentar</button>
     `;
-    $('btn-reintentar-recursos').addEventListener('click', () => renderRecursos());
+    $('btn-reintentar-recursos').addEventListener('click', () => renderSeccionJugadores());
     return;
   }
 
   if (!recursos.length) {
-    contenedor().innerHTML = `
+    contenedorJugadores().innerHTML = `
       <div class="pad">
         ${encabezado}
         <div class="estado-vacio">
@@ -212,7 +214,7 @@ export async function renderRecursos() {
     return;
   }
 
-  contenedor().innerHTML = `
+  contenedorJugadores().innerHTML = `
     <div class="pad">
       ${encabezado}
       <div class="eyebrow">Ofrecidos</div>
@@ -221,7 +223,43 @@ export async function renderRecursos() {
     <div class="pie-fijo"><button class="btn sec" id="btn-ofrecer">Ofrecer un recurso</button></div>
   `;
   $('btn-ofrecer').addEventListener('click', () => abrirAltaDeRecurso(null, jugadores));
-  contenedor().querySelectorAll('[data-reenviar]').forEach((b) => {
+  contenedorJugadores().querySelectorAll('[data-reenviar]').forEach((b) => {
     b.addEventListener('click', () => abrirAltaDeRecurso(b.dataset.reenviar, jugadores));
   });
+}
+
+let seccionActiva = 'jugadores';
+
+/**
+ * El armazón: una tira de dos pestañas y dos contenedores hermanos. No es
+ * navegación de la app —no se agrega un sexto ítem a la barra de abajo—,
+ * es una división interna de RECURSOS entre lo que se ofrece a los
+ * jugadores y la biblioteca de ejercicios de la Etapa 5.
+ */
+export async function renderRecursos() {
+  const club = obtenerClubActual();
+  const plantel = obtenerPlantelActivo();
+  if (!club || !plantel) {
+    contenedor().innerHTML = `<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
+    return;
+  }
+
+  contenedor().innerHTML = `
+    <div class="pestanas" role="tablist">
+      <button class="pest ${seccionActiva === 'jugadores' ? 'on' : ''}" data-seccion="jugadores" role="tab" aria-selected="${seccionActiva === 'jugadores'}">Jugadores</button>
+      <button class="pest ${seccionActiva === 'ejercicios' ? 'on' : ''}" data-seccion="ejercicios" role="tab" aria-selected="${seccionActiva === 'ejercicios'}">Ejercicios</button>
+    </div>
+    <div id="recursos-jugadores" ${seccionActiva === 'jugadores' ? '' : 'hidden'}></div>
+    <div id="recursos-ejercicios" ${seccionActiva === 'ejercicios' ? '' : 'hidden'}></div>
+  `;
+
+  contenedor().querySelectorAll('[data-seccion]').forEach((b) => {
+    b.addEventListener('click', () => {
+      seccionActiva = b.dataset.seccion;
+      renderRecursos();
+    });
+  });
+
+  if (seccionActiva === 'jugadores') await renderSeccionJugadores();
+  else await renderSeccionEjercicios();
 }
