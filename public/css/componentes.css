@@ -381,3 +381,20 @@ svg.g{width:100%;display:block;overflow:visible}
 /* Etapa 5 — alta de ejercicio: plegado de detalles opcionales */
 #btn-mas-detalles{margin-bottom:var(--sp-3)}
 #ej-detalles{margin-bottom:var(--sp-2)}
+
+/* Etapa 5 — Task 8: detalle del ejercicio. Descripción y Notas de uso son
+   bloques hermanos: los dos usan .eyebrow (base.css), sin distinción de
+   peso entre uno y otro. */
+.texto-libre{white-space:pre-wrap}
+.nota{background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
+.nota .meta{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);font-size:var(--fs-125);color:var(--gris-cl)}
+.nota .tx{font-size:var(--fs-135);color:var(--tinta);line-height:1.4;margin-top:.1875rem}
+.nota .nota-borrar{min-width:40px;min-height:40px;border:0;background:none;color:var(--gris-cl);font-size:var(--fs-145);flex:0 0 auto}
+#btn-ej-agregar-nota{margin:var(--sp-2) 0 var(--sp-5)}
+
+/* Task 8: campos opcionales con valor, en un bloque menor que Descripción y Notas */
+.detalle-menor{margin-top:var(--sp-5);padding-top:var(--sp-3);border-top:1px solid var(--linea)}
+.fila-menor{display:flex;gap:var(--sp-3);padding:.25rem 0;font-size:var(--fs-125)}
+.fila-menor .k{flex:0 0 6rem;color:var(--gris-cl);text-transform:uppercase;letter-spacing:.05em;font-size:var(--fs-100)}
+.fila-menor .v{color:var(--tinta)}
+.fila-menor a{color:var(--rojo)}

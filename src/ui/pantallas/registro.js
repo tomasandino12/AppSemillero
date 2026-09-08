@@ -9,6 +9,8 @@ import { renderMedir } from './medir.js';
 import { renderBateria } from './medirBateria.js';
 import { renderVelocidad } from './medirVelocidad.js';
 import { renderRecursos } from './recursos.js';
+import { setAbrirEjercicio } from './ejercicios.js';
+import { renderEjercicio, abrirEjercicio } from './ejercicio.js';
 import { renderMetas } from './metas.js';
 
 /**
@@ -28,8 +30,10 @@ export function registrarPantallas() {
   registrarPantalla('p-medir-bateria', { titulo: 'Batería de tiro', render: renderBateria });
   registrarPantalla('p-medir-velocidad', { titulo: 'Velocidad', render: renderVelocidad });
   registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });
+  registrarPantalla('p-ejercicio', { titulo: 'Ejercicio', render: renderEjercicio });
   registrarPantalla('p-metas', { titulo: 'Metas', render: renderMetas });
   setAbrirFicha(abrirFicha);
+  setAbrirEjercicio(abrirEjercicio);
   iniciarDatos();
   iniciarHoja();
   setAbrirAltaManual(abrirAltaManual);
