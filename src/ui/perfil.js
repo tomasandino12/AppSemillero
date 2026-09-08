@@ -1,11 +1,17 @@
 import { obtenerPerfilesDelClub, obtenerUsuarioActual, guardarPerfilPropio } from '../data/repositorio.js';
 import { abrirHoja, cerrarHoja } from './componentes/hoja.js';
-import { esErrorDeRed } from './nav.js';
+import { esErrorDeRed, toast } from './nav.js';
 
 const $ = (id) => document.getElementById(id);
 
 let perfiles = {};
 let usuarioActual = null;
+// true si la última lectura de obtenerPerfilesDelClub falló. Sin esto,
+// nombreDe() no puede distinguir "este profe nunca cargó su nombre" (dato
+// real, ya leído) de "no sabemos, la lectura se cortó" (dato ausente): las
+// dos se mostraban igual como "Otro entrenador", afirmando algo que en
+// realidad no se sabe.
+let perfilesFallaron = false;
 
 /**
  * Trae los nombres de todos los del club y el id del usuario autenticado.
@@ -16,20 +22,31 @@ let usuarioActual = null;
  * la fila propia.
  */
 export async function cargarPerfiles(clubId) {
-  [perfiles, usuarioActual] = await Promise.all([
-    obtenerPerfilesDelClub(clubId).catch(() => ({})),
+  perfilesFallaron = false;
+  const [perfilesLeidos, usuarioLeido] = await Promise.all([
+    obtenerPerfilesDelClub(clubId).catch(() => {
+      perfilesFallaron = true;
+      return null;
+    }),
     obtenerUsuarioActual().catch(() => null),
   ]);
+  perfiles = perfilesLeidos ?? {};
+  usuarioActual = usuarioLeido;
 }
 
 export function esMio(userId) {
   return usuarioActual != null && userId === usuarioActual;
 }
 
-/** 'Vos' para lo propio; el nombre del otro; y un genérico si nunca lo cargó. */
+/**
+ * 'Vos' para lo propio; el nombre del otro; un guión si la última lectura de
+ * perfiles falló (no lo sabemos: no es lo mismo que "no cargó nombre"); y el
+ * genérico sólo cuando sí se pudo leer y ese profe nunca cargó el suyo.
+ */
 export function nombreDe(userId) {
   if (esMio(userId)) return 'Vos';
-  return perfiles[userId] ?? 'Otro entrenador';
+  if (typeof perfiles[userId] === 'string' && perfiles[userId].length > 0) return perfiles[userId];
+  return perfilesFallaron ? '—' : 'Otro entrenador';
 }
 
 export function tengoNombre() {
@@ -41,10 +58,21 @@ export function tengoNombre() {
  * primer ejercicio o su primera nota. Sin pantalla de configuración y sin un
  * ítem nuevo en la navegación: pedir el nombre no vale una pantalla propia.
  *
- * Devuelve true si al terminar hay nombre; false si canceló.
+ * Devuelve true si al terminar hay nombre; false si no se pudo (usuario no
+ * identificado) o si canceló. Todo camino que devuelve false ya avisó por
+ * toast acá adentro: quien llama sólo necesita cortar sin abrir nada más.
  */
 export function asegurarNombre(clubId) {
   if (tengoNombre()) return Promise.resolve(true);
+
+  if (usuarioActual == null) {
+    // guardarPerfilPropio necesita un user_id real: sin usuario identificado
+    // (obtenerUsuarioActual() falló, o directamente no hay sesión) no hay a
+    // quién asociarle el nombre, y la policy de 0015 va a rechazar el upsert
+    // igual. Mejor avisar acá que abrir una hoja para un guardado condenado.
+    toast('No se pudo identificar tu usuario. Cerrá sesión y volvé a entrar.');
+    return Promise.resolve(false);
+  }
 
   return new Promise((resolver) => {
     abrirHoja({
@@ -77,6 +105,12 @@ export function asegurarNombre(clubId) {
     function finalizar(resultado) {
       document.removeEventListener('keydown', alEscape);
       $('velo').removeEventListener('click', alVelo);
+      // Cancelar (Escape, velo o "Ahora no") no deja ningún rastro visible
+      // más que este toast: sin él, el profe no entiende por qué no pasó
+      // nada. El camino de éxito no lo necesita: guardar() ya cierra la hoja
+      // y quien llamó a asegurarNombre() sigue con su propio flujo (que va a
+      // mostrar su propio toast de éxito más adelante).
+      if (!resultado) toast('No se guardó nada: sin tu nombre no se sabe de quién es cada cosa que cargues.');
       resolver(resultado);
     }
     // No usamos { once: true } acá: queremos que se desregistre al detectar
