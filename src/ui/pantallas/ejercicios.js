@@ -152,14 +152,19 @@ function cuerpoDeAlta(previo) {
  * Sirve para crear y para editar (Task 9): si `ejercicioExistente` viene con
  * datos, precarga los campos y guarda con actualizarEjercicio; si no, crea
  * con crearEjercicio. Una sola función para no duplicar el formulario.
+ *
+ * `alCerrar` es opcional y se reenvía tal cual a abrirHoja: lo usa
+ * ejercicio.js para repintar su detalle cuando esta hoja se cierra (guardado
+ * o cancelado), sin que este módulo necesite saber nada de esa pantalla.
  */
-export function abrirAltaEjercicio(ejercicioExistente) {
+export function abrirAltaEjercicio(ejercicioExistente, alCerrar) {
   const club = obtenerClubActual();
   if (!club) return;
 
   abrirHoja({
     titulo: ejercicioExistente ? 'Editar ejercicio' : 'Cargar un ejercicio',
     cuerpo: cuerpoDeAlta(ejercicioExistente),
+    alCerrar,
   });
   $('in-ej-titulo').focus();
 
@@ -231,8 +236,15 @@ async function confirmarAltaEjercicio(previo) {
       await crearEjercicio({ clubId: club.id, ...campos });
     }
   } catch (e) {
+    // La garantía es la policy RLS de 0015, no lo que decidió esta pantalla
+    // al mostrar el botón Editar: si el ejercicio pasó a ser de otro club (o
+    // se editó desde otra sesión) mientras el formulario estaba abierto,
+    // actualizarEjercicio puede llegar filtrado por RLS igual. Mismo criterio
+    // que ejercicio.js usa para el borrado.
     aviso.innerHTML = `<div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar el ejercicio.'
+      e?.message === 'NO_ES_TUYO'
+        ? 'Este ejercicio ya no es tuyo: no se puede editar.'
+        : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar el ejercicio.')
     }</div></div>`;
     boton.disabled = false;
     boton.textContent = previo ? 'Guardar los cambios' : 'Guardar';

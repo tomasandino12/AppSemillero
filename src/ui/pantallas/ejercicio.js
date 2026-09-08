@@ -44,11 +44,24 @@ function bloqueDescripcion(ejercicio) {
   `;
 }
 
+/**
+ * creadoEn es un timestamptz: Supabase lo devuelve en UTC. Recortar los
+ * primeros 10 caracteres del string toma la fecha calendario UTC, no la de
+ * Argentina, y una nota cargada entre las 21:00 y las 23:59 hora local
+ * aparecería fechada al día siguiente (mismo problema que hoyLocal() evita
+ * del lado de la escritura). Por eso acá se arma el YYYY-MM-DD con los
+ * getters locales del Date, nunca con un slice() del string UTC.
+ */
+function fechaLocalDeTimestamp(timestamptz) {
+  const d = new Date(timestamptz);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function notaHtml(n) {
   return `
     <div class="nota">
       <div class="meta">
-        <span>${escaparHtml(nombreDe(n.creadoPor))} · ${escaparHtml(formatearFechaCorta(n.creadoEn.slice(0, 10)))}</span>
+        <span>${escaparHtml(nombreDe(n.creadoPor))} · ${escaparHtml(formatearFechaCorta(fechaLocalDeTimestamp(n.creadoEn)))}</span>
         ${esMio(n.creadoPor) ? `<button class="nota-borrar" data-nota="${n.id}" aria-label="Borrar esta nota">&#10005;</button>` : ''}
       </div>
       <div class="tx texto-libre">${escaparHtml(n.texto)}</div>
@@ -142,11 +155,12 @@ function pintarEjercicio(club, ejercicio, notas) {
   // la policy RLS de 0015. Estos botones ni existen si no es tuyo.
   if (propio) {
     $('btn-ej-editar').addEventListener('click', () => {
-      abrirAltaEjercicio(ejercicio);
       // abrirAltaEjercicio (ejercicios.js) siempre refresca SU lista al
-      // guardar, nunca este detalle: sin esto, después de editar quedarían
-      // el título y el tema viejos en pantalla hasta salir y volver a entrar.
-      observarCierreDeHoja(() => { renderEjercicio(); });
+      // guardar, nunca este detalle: sin el alCerrar de hoja.js, después de
+      // editar quedarían el título y el tema viejos en pantalla hasta salir
+      // y volver a entrar. renderEjercicio() es sólo una relectura, así que
+      // dispararla también al cancelar no rompe nada.
+      abrirAltaEjercicio(ejercicio, () => { renderEjercicio(); });
     });
     $('btn-ej-borrar').addEventListener('click', () => confirmarBorrado(club, ejercicio));
   }
@@ -241,24 +255,6 @@ async function confirmarNota(club, ejercicio) {
 }
 
 /* ---------- Editar y borrar lo propio ---------- */
-
-/**
- * No hay un callback de "se cerró la hoja" en hoja.js, y abrirAltaEjercicio
- * (ejercicios.js) sólo refresca SU lista al guardar, nunca este detalle. Se
- * observa el cierre de #hoja para repintar apenas se cierra, sea porque se
- * guardó o porque se canceló: renderEjercicio() es sólo una relectura, así
- * que dispararla de más no rompe nada.
- */
-function observarCierreDeHoja(alCerrar) {
-  const hoja = document.getElementById('hoja');
-  const observer = new MutationObserver(() => {
-    if (!hoja.classList.contains('on')) {
-      observer.disconnect();
-      alCerrar();
-    }
-  });
-  observer.observe(hoja, { attributes: true, attributeFilter: ['class'] });
-}
 
 /**
  * Borrar pide confirmación porque es irreversible y porque se lleva puestas
