@@ -79,7 +79,10 @@ export function asegurarNombre(clubId) {
       $('velo').removeEventListener('click', alVelo);
       resolver(resultado);
     }
-    document.addEventListener('keydown', alEscape, { once: true });
+    // No usamos { once: true } acá: queremos que se desregistre al detectar
+    // Escape, no después de la primera tecla. La limpieza la hace finalizar()
+    // llamando a removeEventListener() explícitamente.
+    document.addEventListener('keydown', alEscape);
     $('velo').addEventListener('click', alVelo, { once: true });
 
     $('btn-nombre-ahora-no').addEventListener('click', () => {
