@@ -171,12 +171,21 @@ fuente de ideas probadas y no sólo como archivo.
 
 ---
 
-## 7. Mandar un ejercicio a jugadores
+## 7. Mandar un ejercicio a jugadores — CONSTRUIDO Y REMOVIDO
 
-Desde el detalle, reusando la hoja de envío que ya existe. **Crea un `recurso`
-nuevo copiando título, descripción y enlace del ejercicio: es una foto del
-momento.** Si el ejercicio se edita después, lo ya enviado no cambia — lo que se
-mandó, se mandó.
+Esta sección se implementó y después se sacó, antes de mergear. Queda escrita
+para que nadie la vuelva a construir creyendo que es una omisión.
+
+**El error fue de dominio, no de código.** Un ejercicio es para la práctica en
+grupo, con el profe presente y la cancha disponible. Un recurso es para que el
+chico trabaje solo, por fuera de la práctica. **No existe el caso real de un
+profe mandándole un ejercicio de cancha a un chico para que lo haga en su
+casa**, así que el "puente natural entre las dos secciones" que este spec daba
+por obvio no tenía ningún uso detrás.
+
+Las dos secciones de RECURSOS siguen siendo Jugadores y Ejercicios, sin puente
+entre ellas. `guardar_recurso` (`0011`) se sigue usando desde la pestaña
+Jugadores, que es su caso legítimo.
 
 ---
 
@@ -232,8 +241,6 @@ con uno, con diez y con cien.
       descripción; no son un comentario al pie.
 - [ ] En la lista, los ejercicios con al menos una nota se distinguen, sin
       contador ni ranking.
-- [ ] Desde un ejercicio se lo envía como recurso a jugadores de un plantel,
-      reusando `guardar_recurso` sin modificarla.
 - [ ] El texto escrito por el profe se guarda tal cual.
 - [ ] Estado vacío claro y útil.
 - [ ] RLS activo y `GRANT` a `authenticated` en las tres tablas nuevas.

@@ -1,9 +1,9 @@
 import {
   obtenerEjercicio, obtenerNotas, crearNota, borrarNota,
-  borrarEjercicio, guardarRecurso, obtenerJugadoresDelPlantel,
+  borrarEjercicio,
 } from '../../data/repositorio.js';
 import { nombreDeTema } from '../../data/temas.js';
-import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
+import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast, formatearFechaCorta } from '../nav.js';
 import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
 import { abrirAltaEjercicio } from './ejercicios.js';
@@ -12,13 +12,6 @@ import { ir, volver } from '../main.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('ejercicio-contenido');
-
-function hoyLocal() {
-  // Fecha local, no UTC: después de las 21:00 en Argentina, toISOString() ya
-  // devuelve el día siguiente. Mismo helper que recursos.js.
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 let ejercicioId = null;
 
@@ -48,8 +41,9 @@ function bloqueDescripcion(ejercicio) {
  * creadoEn es un timestamptz: Supabase lo devuelve en UTC. Recortar los
  * primeros 10 caracteres del string toma la fecha calendario UTC, no la de
  * Argentina, y una nota cargada entre las 21:00 y las 23:59 hora local
- * aparecería fechada al día siguiente (mismo problema que hoyLocal() evita
- * del lado de la escritura). Por eso acá se arma el YYYY-MM-DD con los
+ * aparecería fechada al día siguiente (el mismo problema que del lado de la
+ * escritura se evita armando la fecha con getters locales). Por eso acá se
+ * arma el YYYY-MM-DD con los
  * getters locales del Date, nunca con un slice() del string UTC.
  */
 function fechaLocalDeTimestamp(timestamptz) {
@@ -116,7 +110,6 @@ function pintarEjercicio(club, ejercicio, notas) {
       ${bloqueDetalleMenor(ejercicio)}
 
       <div class="acciones-hoy">
-        <button class="btn" id="btn-ej-enviar">Mandar a jugadores</button>
         ${propio ? `
           <button class="btn sec" id="btn-ej-editar">Editar</button>
           <button class="btn sec" id="btn-ej-borrar">Borrar</button>
@@ -148,8 +141,6 @@ function pintarEjercicio(club, ejercicio, notas) {
       await renderEjercicio();
     });
   });
-
-  $('btn-ej-enviar').addEventListener('click', () => abrirEnvioAJugadores(club, ejercicio));
 
   // Comodidad, no garantía: la garantía de editar/borrar sólo lo propio es
   // la policy RLS de 0015. Estos botones ni existen si no es tuyo.
@@ -297,114 +288,4 @@ function confirmarBorrado(club, ejercicio) {
     toast('Ejercicio borrado');
     await volver();
   });
-}
-
-/* ---------- Mandar un ejercicio a jugadores ---------- */
-
-/**
- * Mismo aviso que recursos.js cuando el plantel está vacío: sin un jugador
- * a quien elegir, abrir el formulario lleva a un callejón sin salida.
- */
-function avisarPlantelVacio() {
-  const plantel = obtenerPlantelActivo();
-  const categoria = plantel?.categoria ? ` (${plantel.categoria})` : '';
-  abrirHoja({
-    titulo: 'Todavía no hay jugadores',
-    cuerpo: `
-      <div class="p">Para mandar este ejercicio hace falta elegir a quién, y este plantel${escaparHtml(categoria)} todavía no tiene jugadores cargados.</div>
-      <button class="btn" id="btn-ej-ir-plantel">Ir a PLANTEL</button>
-    `,
-  });
-  $('btn-ej-ir-plantel').addEventListener('click', () => {
-    cerrarHoja();
-    ir('p-plantel');
-  });
-}
-
-/** Misma lista con checkboxes y "Todo el plantel" que ya existe en recursos.js. */
-function cuerpoDeEnvio(jugadores) {
-  return `
-    <div class="eyebrow">A quién <button class="btn sec chico" id="btn-ej-todos" type="button">Todo el plantel</button></div>
-    <div class="lista-chk">
-      ${jugadores.map((j) => `
-        <label class="chk-fila">
-          <input type="checkbox" class="chk-jug-ej" value="${j.id}">
-          <span>${escaparHtml(j.nombreLimpio)}</span>
-        </label>
-      `).join('')}
-    </div>
-    <div id="envio-ej-aviso"></div>
-    <button class="btn" id="btn-ej-confirmar-envio">Mandar</button>
-  `;
-}
-
-async function abrirEnvioAJugadores(club, ejercicio) {
-  const plantel = obtenerPlantelActivo();
-  if (!plantel) return;
-
-  let jugadores;
-  try {
-    jugadores = await obtenerJugadoresDelPlantel(club.id, plantel.id);
-  } catch (e) {
-    toast(esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudieron cargar los jugadores.');
-    return;
-  }
-
-  if (!jugadores.length) {
-    avisarPlantelVacio();
-    return;
-  }
-
-  // asegurarNombre ANTES de abrir la hoja del envío: mismo motivo que en
-  // abrirAgregarNota — #hoja es única, y abrirla antes dejaría que la hoja
-  // del nombre pise esta lista de jugadores con los checks ya marcados.
-  const hayNombre = await asegurarNombre(club.id);
-  if (!hayNombre) return;
-
-  abrirHoja({ titulo: 'Mandar a jugadores', cuerpo: cuerpoDeEnvio(jugadores) });
-  $('btn-ej-todos').addEventListener('click', () => {
-    document.querySelectorAll('.chk-jug-ej').forEach((c) => { c.checked = true; });
-  });
-  $('btn-ej-confirmar-envio').addEventListener('click', () => confirmarEnvio(club, ejercicio));
-}
-
-async function confirmarEnvio(club, ejercicio) {
-  const boton = $('btn-ej-confirmar-envio');
-  if (boton.disabled) return;
-
-  const jugadorIds = [...document.querySelectorAll('.chk-jug-ej:checked')].map((c) => c.value);
-  if (!jugadorIds.length) {
-    $('envio-ej-aviso').innerHTML = `<div class="al"><div class="tx">Elegí al menos un jugador.</div></div>`;
-    return;
-  }
-
-  boton.disabled = true;
-  boton.textContent = 'Mandando...';
-  $('envio-ej-aviso').innerHTML = '';
-  try {
-    // Copia congelada: título, descripción y enlace del ejercicio TAL COMO
-    // ESTÁN AHORA. Si el ejercicio se edita después, lo ya enviado no
-    // cambia. guardar_recurso (0011) no se toca: se la llama con el mismo
-    // payload que ya acepta. descripcion es NOT NULL en recurso (0009) y acá
-    // es opcional, así que cae al título — sin inventar un texto de relleno.
-    await guardarRecurso({
-      clubId: club.id,
-      recursoId: null,
-      titulo: ejercicio.titulo,
-      descripcion: ejercicio.descripcion ?? ejercicio.titulo,
-      enlace: ejercicio.enlace ?? null,
-      fecha: hoyLocal(),
-      jugadorIds,
-    });
-  } catch (e) {
-    $('envio-ej-aviso').innerHTML = `<div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo mandar el ejercicio.'
-    }</div></div>`;
-    boton.disabled = false;
-    boton.textContent = 'Mandar';
-    return;
-  }
-
-  cerrarHoja();
-  toast('Ejercicio enviado');
 }
