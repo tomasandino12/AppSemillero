@@ -1,4 +1,4 @@
-import { obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub } from '../data/repositorio.js';
+import { obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion } from '../data/repositorio.js';
 import { mostrarPantalla, toast } from './nav.js';
 import { setClubActual, setPlanteles, limpiarSesion } from './sesion.js';
 import { iniciarChrome, renderChrome, TABS } from './chrome.js';
@@ -65,24 +65,45 @@ export async function volver() {
   if (def?.render) await def.render();
 }
 
+/**
+ * Deja la app en estado no autenticado. Lo usan el botón de salir y los
+ * dos caminos de error de entrarConSesion(), que repetían estas cuatro
+ * líneas cada uno.
+ */
+function volverAlLogin() {
+  limpiarSesion();
+  autenticado = false;
+  mostrarLogin();
+  sincronizarChrome();
+}
+
+/**
+ * Salir no pide confirmación: no se pierde nada. Lo del servidor queda
+ * guardado y el borrador de medición vive en localStorage, que signOut no
+ * toca. El criterio del proyecto reserva la hoja de confirmación para lo
+ * irreversible (ver confirmarBorrado en ejercicio.js).
+ */
+async function salir() {
+  try {
+    await cerrarSesion();
+  } catch {
+    toast('No se pudo avisar al servidor, pero saliste en este dispositivo.');
+  }
+  volverAlLogin();
+}
+
 async function entrarConSesion() {
   let clubes;
   try {
     clubes = await obtenerClubesDelEntrenador();
   } catch {
     toast('No se pudo cargar tu club. Revisá tu conexión.');
-    limpiarSesion();
-    autenticado = false;
-    mostrarLogin();
-    sincronizarChrome();
+    volverAlLogin();
     return;
   }
   if (!clubes.length) {
     toast('Tu usuario no está asociado a ningún club todavía.');
-    limpiarSesion();
-    autenticado = false;
-    mostrarLogin();
-    sincronizarChrome();
+    volverAlLogin();
     return;
   }
   setClubActual(clubes[0]);
@@ -107,6 +128,7 @@ async function iniciar() {
     onTab: (id) => ir(id),
     onPlantel: () => refrescar(),
     onVolver: () => volver(),
+    onSalir: () => salir(),
   });
 
   const { registrarPantallas } = await import('./pantallas/registro.js');

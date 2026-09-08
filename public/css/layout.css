@@ -20,11 +20,21 @@
   padding:calc(var(--sp-3) + env(safe-area-inset-top)) var(--sp-4) var(--sp-2);
   display:flex;align-items:center;gap:var(--sp-3);
 }
-.cabecera .escudo{
-  width:1.75rem;height:2rem;flex:0 0 auto;background:var(--rojo);
-  clip-path:polygon(0 0,100% 0,100% 62%,50% 100%,0 62%);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-115);padding-bottom:.375rem;
+
+/* El escudo real del club: el mismo archivo que usa el favicon. Antes era
+   un pentágono rojo dibujado con clip-path y las letras NOB encima, o sea
+   una marca genérica y no el escudo de Newell's. */
+.cabecera .escudo{width:2rem;height:2rem;flex:0 0 auto;object-fit:contain}
+
+/* Salir vive en el chrome, como el botón de volver: se llega desde
+   cualquier pantalla y ninguna lo repite. Gris sobre el negro de la
+   cabecera — es una salida, no la acción principal de nada. */
+.cabecera .salir{
+  margin-left:auto;flex:0 0 auto;
+  font-family:var(--ff-titulo);font-size:var(--fs-125);font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--gris-osc);
+  min-height:var(--tap);display:flex;align-items:center;
+  padding-inline:var(--sp-2);margin-right:calc(var(--sp-2) * -1);
 }
 .cabecera h1{font-size:var(--fs-190)}
 .cabecera .sub{
@@ -195,6 +205,7 @@
 /* Hover solo donde hay puntero fino: en táctil no debe ser señal de nada. */
 @media (hover:hover){
   .nav button:hover{color:#fff}
+  .cabecera .salir:hover{color:#fff}
   .cat:hover{background:var(--sup-2)}
   .cat.on:hover{background:var(--rojo-osc)}
 }

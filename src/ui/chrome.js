@@ -11,6 +11,11 @@ const ICONOS = {
   datos: '<path d="M3 17l5-6 4 4 4-7 5 5"/><path d="M3 21h18"/>',
 };
 
+// El escudo real del club. Hasta acá era un pentágono rojo dibujado con
+// clip-path y las letras NOB encima: una marca genérica, no el escudo de
+// Newell's. El archivo es el mismo que usa el favicon.
+const ESCUDO = `<img class="escudo" src="/public/escudo.png" alt="Newell's Old Boys">`;
+
 // Orden de la navegación. PLANTEL primero después de HOY, igual que el
 // prototipo; el landing por defecto es PLANTEL (ver main.js).
 export const TABS = [
@@ -24,18 +29,21 @@ export const TABS = [
 let alTocarTab = () => {};
 let alElegirPlantel = () => {};
 let alVolver = () => {};
+let alSalir = () => {};
 
-export function iniciarChrome({ onTab, onPlantel, onVolver }) {
+export function iniciarChrome({ onTab, onPlantel, onVolver, onSalir }) {
   alTocarTab = onTab;
   alElegirPlantel = onPlantel;
   alVolver = onVolver;
+  alSalir = onSalir;
 }
 
 /**
  * Dibuja cabecera, selector de categoría y navegación.
  * El botón de volver vive SOLO acá, en el chrome — el router nunca inyecta
  * botones de volver dentro del contenido de una pantalla (invariante de
- * navegación del spec, Decisión 8).
+ * navegación del spec, Decisión 8). Salir sigue la misma regla: está en el
+ * chrome, así que se llega desde cualquier pantalla y ninguna lo repite.
  */
 export function renderChrome({ pantallaId, titulo, mostrarAtras, autenticado }) {
   const cabecera = $('cabecera');
@@ -43,7 +51,7 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras, autenticado }) 
   const nav = $('nav');
 
   if (!autenticado) {
-    cabecera.innerHTML = `<div class="escudo">NOB</div><div><h1>Inferiores</h1><div class="sub">Seguimiento de jugadores</div></div>`;
+    cabecera.innerHTML = `${ESCUDO}<div><h1>Inferiores</h1><div class="sub">Seguimiento de jugadores</div></div>`;
     cats.innerHTML = '';
     nav.innerHTML = '';
     return;
@@ -51,16 +59,18 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras, autenticado }) 
 
   const club = obtenerClubActual();
   const izquierda = mostrarAtras
-    ? `<button class="atras" id="btn-atras" aria-label="Volver">‹</button>`
-    : `<div class="escudo">NOB</div>`;
+    ? `<button class="atras" id="btn-atras" aria-label="Volver">&lsaquo;</button>`
+    : ESCUDO;
   cabecera.innerHTML = `
     ${izquierda}
     <div>
       <h1>${escaparHtml(titulo ?? '')}</h1>
       <div class="sub">${escaparHtml(club?.nombre ?? '')}</div>
     </div>
+    <button class="salir" id="btn-salir">Salir</button>
   `;
   $('btn-atras')?.addEventListener('click', () => alVolver());
+  $('btn-salir').addEventListener('click', () => alSalir());
 
   const activo = obtenerPlantelActivo();
   cats.innerHTML = obtenerPlanteles().map((p) => `
