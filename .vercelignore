@@ -1,0 +1,14 @@
+# Lo que se despliega es la app y nada más.
+#
+# Esto NO es una regla de ruteo: los archivos de acá abajo no se suben al
+# deploy, así que no hay nada que bloquear ni que se pueda filtrar por una
+# ruta mal escrita. El navegador no necesita ninguno de estos, y no hay
+# motivo para publicar el esquema de la base ni las notas del proyecto.
+#
+# Al agregar algo acá, verificá que no lo pida public/index.html: lo único
+# que el navegador carga es /public/** y /src/**.
+
+docs/
+supabase/
+tests/
+*.md
