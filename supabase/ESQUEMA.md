@@ -1,4 +1,6 @@
-# ESQUEMA.md — Modelo de datos (Etapa 2A)
+# ESQUEMA.md — Modelo de datos
+
+Estado al día de la migración `0016_autorizacion_por_plantel.sql`.
 
 ## Diagrama en texto
 
@@ -12,7 +14,11 @@ club (1) ──< temporada (1) ──< plantel >── (N) pertenencia >── (
   │                                                      └── (referencia) jugador
   │
   ├──< miembro_club >── auth.users
+  │          │
+  │          └──< asignacion_plantel >── plantel
   └──< importacion ──(1:1)── partido
+
+categoria (catálogo global, sin club_id) ──< plantel
 ```
 
 - Un `club` tiene muchas `temporada`s, cada `temporada` tiene muchos `plantel`es (uno por categoría).
@@ -33,6 +39,7 @@ Una temporada de un club (p.ej. "2026"). `unique(club_id, nombre)`.
 Un plantel: una categoría dentro de una temporada de un club (p.ej. "U21M 2026").
 - `codigo_cabb`: mapeo sugerido desde la categoría que trae el título del parser (`U21M`, `U17M`, ...). Nunca se usa para asignar sola — si no matchea ningún plantel, el import (Etapa 2B) le pregunta al entrenador.
 - `unique(club_id, temporada_id, categoria)`.
+- `categoria_codigo` (0016): FK a `categoria`. **Es la fuente de verdad.** `categoria` quedó como columna espejo con los mismos valores: el `unique` de arriba cuelga de ella y la UI la lee en chips, títulos y toasts, así que sacarla requiere tocar `src/ui/` y es una tarea aparte.
 
 ### `jugador`
 **Decisión central del esquema:** único por `club_id` + `nombre_clave` + `desambiguador`, **nunca** por plantel/categoría.
@@ -45,7 +52,25 @@ El número de camiseta **no** vive acá — está verificado (Etapa 1) que cambi
 La membresía de un jugador a un plantel en una temporada, con rango `desde`/`hasta` (`hasta` NULL = vigente). Un jugador puede tener más de una pertenencia vigente a la vez (citado a dos categorías) — es el caso normal en inferiores, no una excepción.
 
 ### `miembro_club`
-`(user_id, club_id, rol)`, PK compuesta. Resuelve permisos: sólo el entrenador se autentica (Supabase Auth, email+contraseña); los jugadores no tienen cuenta en v1.
+`(user_id, club_id, rol)`, PK compuesta. Dice **a qué club** pertenece una cuenta; a qué categorías dentro de ese club lo dice `asignacion_plantel`. Los jugadores no tienen cuenta.
+
+`rol` tiene `check (rol in ('entrenador','coordinador'))` desde 0016. Sin la constraint, un `'Entrenador'` con mayúscula entra igual, no matchea ninguna policy, y el síntoma —esa cuenta no ve nada— aparece lejos de su causa.
+
+### `categoria`
+Catálogo global de categorías: `(codigo, nombre, orden)`. **No lleva `club_id`** y no es una tabla de dominio.
+
+Tabla y no un `enum` de Postgres: un `enum` obliga a una migración cada vez que alguien quiere agregar una categoría, y al replicar a otros clubes cada uno tiene su propia grilla. El `codigo` es interno (`U13M`, `U15M`, `U17M`, `U21M`, `MAY_M`, `MAY_F`); el matcheo contra los títulos de la CABB lo sigue haciendo `plantel.codigo_cabb`. `orden` va de 10 en 10 para poder intercalar sin renumerar.
+
+Lectura para cualquier autenticado, sin escritura: agregar una categoría es un acto administrativo.
+
+### `asignacion_plantel`
+Qué planteles ve y edita un entrenador: `(miembro_club_user_id, miembro_club_club_id, plantel_id)`, único.
+
+**Se asigna a un `plantel`, no a una `categoria`.** Un profe puede tener U15M una temporada y U17M la siguiente; asignar a categoría arrastraría el acceso entre temporadas, mientras que asignar a plantel hace que caduque con la temporada — que es el comportamiento correcto cuando se trata de datos de menores. El costo asumido es reasignar cada temporada.
+
+Apunta a la PK compuesta de `miembro_club` porque esa tabla no tiene un `id` de una sola columna. La segunda FK, `(club_id, plantel_id)`, obliga a que el club del plantel sea el mismo de la membresía.
+
+**Sin policy de insert/update/delete para el cliente autenticado**, igual que `miembro_club` y por el mismo motivo. Ver "Dar acceso a una categoría" abajo.
 
 ### `importacion`
 Un registro de "este archivo .xlsx se procesó". Guarda:
@@ -67,25 +92,76 @@ Todo lo que trae el parser para un jugador **propio** en un partido: minutos en 
 
 ## Políticas RLS
 
-Ver `migrations/0002_rls.sql`. Un usuario ve/edita únicamente filas cuyo `club_id` aparece en una fila de `miembro_club` con `user_id = auth.uid()`. Como toda tabla de dominio lleva `club_id` (decisión de la Etapa 2A), la política es literalmente la misma forma en las ocho tablas de dominio — todas menos `miembro_club`, que es la excepción descrita abajo.
+Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde `migrations/0016_autorizacion_por_plantel.sql` pasa por la asignación, y **lectura y escritura son ejes separados**.
 
-`miembro_club` es la única tabla sin esa forma de política: un usuario ve únicamente sus propias filas (`user_id = auth.uid()`), y **no existe política de insert/update/delete** para el cliente autenticado — dar de alta la membresía de un entrenador en un club es un acto administrativo, se hace desde el panel de Supabase o con un rol de servicio, nunca desde el cliente RLS-restringido. Para el piloto (un solo club, un puñado de entrenadores) esto es simple y suficiente; automatizar el alta de entrenadores es un problema de un estadio posterior del producto, no de esta etapa.
+Todo se decide con dos funciones `security definer`:
+
+| | `entrenador` | `coordinador` |
+|---|---|---|
+| `puede_ver_plantel(uuid)` | los planteles que tiene asignados | todos los de su club |
+| `puede_escribir_plantel(uuid)` | los planteles que tiene asignados | **nunca, ninguno** |
+
+El coordinador necesita la foto del club para controlar cómo va el trabajo, pero qué se entrena, qué recursos se mandan y qué metas se fijan es del cuerpo técnico. Por eso no escribe ni siquiera en lo que ve.
+
+Son `security definer` por obligación, no por comodidad: se llaman desde las policies de las tablas de dominio y consultan `plantel`, así que como `invoker` la consulta a `plantel` quedaría sujeta a la policy de `plantel`, que llama a esta función — recursión infinita.
+
+**Cómo llega cada tabla a su plantel:**
+
+| Camino | Tablas |
+|---|---|
+| `plantel_id` directo | `plantel`, `pertenencia`, `partido`, `sesion_medicion`, `meta_zona` |
+| vía `partido_id` | `estadistica_jugador_partido` |
+| vía `sesion_id` | `medicion_tiro`, `medicion_velocidad` |
+| vía `pertenencia` del jugador | `jugador`, `medicion_corporal`, `envio_recurso` |
+
+Un chico citado en dos categorías tiene dos pertenencias vigentes: con que **alguna** dé acceso alcanza.
+
+**Siguen siendo a nivel club, a propósito:** `club`, `temporada`, `importacion`, `recurso`, `ejercicio`, `nota_ejercicio`, `perfil_entrenador`. `importacion` porque se inserta **antes** que el partido y en ese momento no hay plantel contra el cual chequear (y no contiene datos de menores: hash, nombre de archivo y advertencias). La biblioteca de ejercicios porque el beneficio que justifica que un profe se tome el trabajo de cargar es que quede para todos: scoparla por plantel la vacía de sentido.
+
+**Dos formas que no siguen el patrón, y por qué:**
+
+- **`jugador` no chequea plantel en el `insert`**, sólo que quien inserta sea `entrenador` del club. No es una concesión sino una imposibilidad: en `importar_partido` el insert de `jugador` va **antes** que el de `pertenencia`, así que todavía no existe un plantel contra el cual chequear (`alta_jugador_manual` hace lo mismo). Queda expuesto crear filas huérfanas en el club propio; **no** colgarlas de un plantel ajeno —lo bloquea la policy de `pertenencia`— ni volver a leerlas.
+- **`jugadores_del_club_para_dedup(club_id)`** es la única excepción a que `jugador` esté scopeado. Con `jugador` por pertenencia, el dedup del import dejaría de ver a un chico citado desde otra categoría y crearía un **duplicado**, rompiendo la trazabilidad de por vida que es la razón de ser de la app. La función devuelve cuatro campos y nada más, rechaza clubes de los que quien llama no es miembro, y devuelve los planteles del jugador **filtrados** a los que puede ver: se aprende que el chico existe en el club y si está en una categoría propia, no en cuáles otras.
+
+`miembro_club` y `asignacion_plantel` sólo tienen policy de `select` de lo propio. **No existe policy de insert/update/delete** para el cliente autenticado en ninguna de las dos: quién entra a un club, y a qué categorías, lo decide una persona.
+
+### Dar acceso a una categoría
+
+Es manual y por SQL, desde el panel de Supabase o con rol de servicio:
+
+```sql
+insert into asignacion_plantel (miembro_club_user_id, miembro_club_club_id, plantel_id)
+values ('<user_id>', '<club_id>', '<plantel_id>');
+```
+
+`tests/verificarAutorizacionPlantel.sql` los imprime listos para pegar. **No se siembran solos a propósito:** sembrar "todos ven todo" reinstala justo el problema que 0016 arregla.
 
 ## Orden de persistencia de una importación
 
 `src/data/repositorio.js` expone una función por operación de base de datos, sin transacción que las envuelva. Persistir un partido importado requiere, en este orden:
 
-1. Resolver el `jugadorId` de cada jugador propio: `obtenerJugadoresDelClub` + la clasificación de `mapearImportacion` (creando `jugador`/`pertenencia` nuevos donde corresponda, vía `crearJugador`/`crearPertenencia`, para cualquier `jugadoresNuevos`/`sugerencias` confirmadas por el entrenador).
+1. Resolver el `jugadorId` de cada jugador propio: `obtenerJugadoresDelClub` + la clasificación de `mapearImportacion` (creando `jugador`/`pertenencia` nuevos donde corresponda, vía `crearJugador`/`crearPertenencia`, para cualquier `jugadoresNuevos`/`sugerencias` confirmadas por el entrenador). Desde 0016, `obtenerJugadoresDelClub` no lee la tabla: llama a `jugadores_del_club_para_dedup` (ver arriba). Su forma de retorno no cambió.
 2. `crearImportacion`.
 3. `crearPartido`.
 4. `crearEstadisticas` al final — requiere que **todos** los `jugadorId` ya estén resueltos (ver la guarda en `repositorio.js`; `estadistica_jugador_partido.jugador_id` es `not null`).
 
-**Gap de atomicidad conocido:** estas son llamadas separadas, no una transacción. Si un paso falla, lo persistido en los pasos anteriores queda en la base — y como `importacion` tiene `unique(club_id, hash_archivo)`, reintentar el mismo archivo falla como "duplicado" aunque los datos estén incompletos. Envolver el import completo en una única transacción de base de datos (por ejemplo, una función Postgres `security invoker`) es un ítem abierto deliberado para la próxima etapa del proyecto, no resuelto acá.
+**El gap de atomicidad está cerrado desde 0005.** Los cuatro pasos de arriba describen el orden lógico, pero la escritura ocurre en una sola llamada a la RPC `importar_partido` (`security invoker`, sujeta a RLS como cualquier cliente): o se guarda todo, o no se guarda nada. Antes eran llamadas sueltas y un fallo a mitad dejaba una `importacion` sin partido que, por el `unique(club_id, hash_archivo)`, hacía fallar el reintento como "duplicado" con los datos incompletos.
 
 ## Cómo probar localmente
 
 1. `supabase/migrations/0003_seed_dev.sql` no crea ninguna fila de `miembro_club` porque requiere un `auth.users.id` real.
-2. Levantar Supabase local (`npx supabase start`, requiere Docker corriendo), aplicar las 3 migraciones en orden.
+2. Levantar Supabase local (`npx supabase start`, requiere Docker corriendo) y aplicar todas las migraciones en orden.
 3. Crear un usuario de prueba (signup por la Auth API o el Studio local).
-4. Insertar a mano: `insert into miembro_club (user_id, club_id, rol) values ('<uuid del usuario creado>', '00000000-0000-0000-0000-000000000001', 'entrenador');`
-5. Con ese usuario autenticado, confirmar que sólo ve las filas del "Club de Prueba" sembrado.
+4. Darle el club:
+   ```sql
+   insert into miembro_club (user_id, club_id, rol)
+   values ('<uuid del usuario>', '00000000-0000-0000-0000-000000000001', 'entrenador');
+   ```
+5. **Y darle al menos una categoría**, o no va a ver nada — que es el comportamiento correcto desde 0016, no un error:
+   ```sql
+   insert into asignacion_plantel (miembro_club_user_id, miembro_club_club_id, plantel_id)
+   select '<uuid del usuario>', club_id, id from plantel
+   where club_id = '00000000-0000-0000-0000-000000000001' and categoria = 'U17M';
+   ```
+6. Con ese usuario autenticado, confirmar que ve U17M del "Club de Prueba" y **no** ve U21M.
+7. Para probar el otro rol, cambiar `rol` a `'coordinador'` y borrar sus asignaciones: tiene que ver las dos categorías y no poder escribir en ninguna.
