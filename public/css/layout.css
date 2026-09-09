@@ -232,6 +232,32 @@
   .toast{left:auto;right:var(--sp-6);bottom:var(--sp-6);max-width:24rem}
 }
 
+/* =====================================================================
+   ≥1280px — dos columnas de verdad. Recién acá sobra ancho: la lateral se
+   lleva 224px, así que a 1280 quedan ~1050 de contenido y dos columnas de
+   ~500 cada una, que es el ancho donde una fila de zona se lee bien.
+
+   Abajo de este corte .dos-col no existe como grid y sus hijos se apilan,
+   con lo cual el orden del markup es el orden de siempre. Por eso el .sep
+   vive al principio de la segunda columna: apilado separa el arco de los
+   libres como corresponde, y en dos columnas lo hace el gap.
+   ===================================================================== */
+@media (min-width:80rem){
+  :root{--max-ancho:var(--max-ancho-2col)}
+  .dos-col{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:0 var(--sp-8);align-items:start;
+  }
+  /* Las dos columnas tienen que arrancar a la misma altura: el primer hijo
+     de cada una trae su propio margen superior (.eyebrow, por ejemplo) y sin
+     esto una empieza 20px más abajo que la otra. */
+  .dos-col > .col{min-width:0}
+  .dos-col > .col > :first-child,
+  .dos-col > .col > .sep:first-child + *,
+  .dos-col > .col > :first-child > :first-child{margin-top:0}
+  .dos-col .sep{display:none}
+}
+
 /* Hover solo donde hay puntero fino: en táctil no debe ser señal de nada. */
 @media (hover:hover){
   .nav button:hover{color:#fff}

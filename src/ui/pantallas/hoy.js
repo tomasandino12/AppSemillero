@@ -269,41 +269,52 @@ export async function renderHoy() {
   const jugadoresDelFoco = zonaDelFoco ? jugadoresDeZona(mediciones, actual.id, zonaDelFoco.id) : [];
   const porDebajo = zonaDelFoco ? contarPorDebajo(jugadoresDelFoco, zonaDelFoco.meta) : null;
 
+  // Dos columnas a partir de 1280px (ver .dos-col en layout.css). El corte no
+  // es estético: separa el arco —el relato principal, con su porcentaje
+  // dominante y el detalle por zona— de lo que el proyecto trata como series
+  // aparte y nunca mezcla con él. Abajo de ese ancho las columnas se apilan y
+  // el orden queda idéntico al de siempre.
   contenedor().innerHTML = `
     <div class="pad">
       <div class="contexto">${escaparHtml(plantel.categoria)} · batería del ${escaparHtml(formatearFechaCorta(actual.fecha))} · ${jugadoresQueMidieron} jugador${jugadoresQueMidieron === 1 ? '' : 'es'} midió${jugadoresQueMidieron === 1 ? '' : 'eron'}</div>
 
-      ${totalActual ? `
-        <div class="cabecera-tiro">
-          <div class="k">Tiro de campo · todo el arco</div>
-          <div class="n">${totalActual.pct}<span class="u">%</span></div>
-          <div class="frac">${totalActual.anotados}/${totalActual.intentos} tiros</div>
-          <div class="sub">
-            ${variacionHtml(totalVariacion) || '<span class="var neutra">Primera batería: todavía no hay con qué comparar</span>'}
-            ${metasArco ? `<span class="metas-resumen">${metasArco.alcanzadas} de ${metasArco.conMeta} zona${metasArco.conMeta === 1 ? '' : 's'} llegó a su meta</span>` : ''}
+      <div class="dos-col">
+        <div class="col">
+          ${totalActual ? `
+            <div class="cabecera-tiro">
+              <div class="k">Tiro de campo · todo el arco</div>
+              <div class="n">${totalActual.pct}<span class="u">%</span></div>
+              <div class="frac">${totalActual.anotados}/${totalActual.intentos} tiros</div>
+              <div class="sub">
+                ${variacionHtml(totalVariacion) || '<span class="var neutra">Primera batería: todavía no hay con qué comparar</span>'}
+                ${metasArco ? `<span class="metas-resumen">${metasArco.alcanzadas} de ${metasArco.conMeta} zona${metasArco.conMeta === 1 ? '' : 's'} llegó a su meta</span>` : ''}
+              </div>
+              ${curvaHtml(serieArco)}
+            </div>
+          ` : ''}
+
+          <div class="eyebrow">Por zona ${anterior ? `<span class="der">vs ${escaparHtml(formatearFechaCorta(anterior.fecha))}</span>` : ''}</div>
+          <div class="zonas">${zonasArco.map(zonaHtml).join('')}</div>
+          ${focoHtml(foco, porId)}
+
+          ${porDebajo == null ? '' : `
+            <div class="foco-linea">${porDebajo} de ${jugadoresDelFoco.length} está${porDebajo === 1 ? '' : 'n'} por debajo de la meta del cuerpo técnico.
+              <button class="btn sec chico" id="btn-ver-quienes">Ver quiénes</button>
+            </div>
+          `}
+        </div>
+
+        <div class="col">
+          <div class="sep"></div>
+          <div class="eyebrow">Tiros libres</div>
+          <div class="zonas">${zonaHtml(zonaLibres)}</div>
+
+          ${pieHtml(corporal)}
+          <div class="acciones-hoy">
+            <button class="btn sec" id="btn-hoy-medir">Cargar otra medición</button>
+            <button class="btn sec" id="btn-hoy-metas">${metasArco ? 'Editar las metas' : 'Fijar las metas'}</button>
           </div>
-          ${curvaHtml(serieArco)}
         </div>
-      ` : ''}
-
-      <div class="eyebrow">Por zona ${anterior ? `<span class="der">vs ${escaparHtml(formatearFechaCorta(anterior.fecha))}</span>` : ''}</div>
-      <div class="zonas">${zonasArco.map(zonaHtml).join('')}</div>
-      ${focoHtml(foco, porId)}
-
-      ${porDebajo == null ? '' : `
-        <div class="foco-linea">${porDebajo} de ${jugadoresDelFoco.length} está${porDebajo === 1 ? '' : 'n'} por debajo de la meta del cuerpo técnico.
-          <button class="btn sec chico" id="btn-ver-quienes">Ver quiénes</button>
-        </div>
-      `}
-
-      <div class="sep"></div>
-      <div class="eyebrow">Tiros libres</div>
-      <div class="zonas">${zonaHtml(zonaLibres)}</div>
-
-      ${pieHtml(corporal)}
-      <div class="acciones-hoy">
-        <button class="btn sec" id="btn-hoy-medir">Cargar otra medición</button>
-        <button class="btn sec" id="btn-hoy-metas">${metasArco ? 'Editar las metas' : 'Fijar las metas'}</button>
       </div>
     </div>
   `;
