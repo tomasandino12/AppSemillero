@@ -8,6 +8,25 @@ function obtenerCliente() {
 
 const TAMANIO_PAGINA = 1000;
 
+/**
+ * Todos los jugadores del club, para el dedup del import y el del alta manual.
+ *
+ * Pasa por una función security definer (0016) y no por la tabla: desde esa
+ * migración `jugador` sólo deja ver a los que tienen pertenencia a un plantel
+ * propio, y el dedup necesita ver TODO el club. Si no, un chico citado desde
+ * otra categoría se cargaría de nuevo como jugador nuevo y se perdería su
+ * historial, que es la razón de ser de la app.
+ *
+ * La función expone cuatro campos y nada más, y `planteles_visibles` ya viene
+ * filtrado: se sabe que el chico existe en el club y si está en una categoría
+ * propia, no en cuáles otras.
+ *
+ * Se sigue paginando: el max-rows de PostgREST también se aplica a las
+ * funciones que devuelven conjuntos, y la función ordena por id para que
+ * paginar no saltee ni repita filas.
+ *
+ * La forma de retorno no cambia respecto de la versión que leía la tabla.
+ */
 export async function obtenerJugadoresDelClub(clubId) {
   const supabase = obtenerCliente();
   const data = [];
@@ -15,9 +34,7 @@ export async function obtenerJugadoresDelClub(clubId) {
   for (;;) {
     const hasta = desde + TAMANIO_PAGINA - 1;
     const { data: pagina, error } = await supabase
-      .from('jugador')
-      .select('id, nombre_clave, nombre_limpio, pertenencia(plantel_id, hasta)')
-      .eq('club_id', clubId)
+      .rpc('jugadores_del_club_para_dedup', { p_club_id: clubId })
       .range(desde, hasta);
     if (error) throw error;
     data.push(...pagina);
@@ -28,7 +45,7 @@ export async function obtenerJugadoresDelClub(clubId) {
     id: fila.id,
     nombreClave: fila.nombre_clave,
     nombreLimpio: fila.nombre_limpio,
-    plantelesActuales: fila.pertenencia.filter((p) => p.hasta === null).map((p) => p.plantel_id),
+    plantelesActuales: fila.planteles_visibles ?? [],
   }));
 }
 

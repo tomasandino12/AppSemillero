@@ -270,7 +270,11 @@ begin
      and p.hasta is null
      and public.puede_ver_plantel(p.plantel_id)
     where j.club_id = p_club_id
-    group by j.id, j.nombre_clave, j.nombre_limpio;
+    group by j.id, j.nombre_clave, j.nombre_limpio
+    -- Orden estable: quien consume esto pagina de a 1000 (el max-rows de
+    -- PostgREST también se aplica a las funciones que devuelven conjuntos), y
+    -- paginar sin un orden determinístico saltea y repite filas.
+    order by j.id;
 end;
 $fn$;
 
