@@ -165,6 +165,70 @@ export async function obtenerSesionActual() {
   if (error) throw error;
   return data.session;
 }
+/**
+ * A dónde vuelve el usuario después de un mail de recuperación o del redirect
+ * de Google. Es ESTA página y no la raíz a propósito: en producción la raíz
+ * es la landing, pero sirviendo local desde /public/ la raíz no es la app.
+ * Las dos URLs tienen que estar en la lista de redirects permitidos de
+ * Supabase (ver README de configuración).
+ */
+function urlDeRetorno() {
+  return window.location.origin + window.location.pathname;
+}
+
+/**
+ * Crear cuenta. Supabase devuelve sesión SOLO si el proyecto no exige
+ * confirmar el mail; si lo exige, devuelve el usuario sin sesión y hay que
+ * esperar a que haga clic en el link. Se devuelven las dos cosas para que la
+ * UI pueda decir cuál de los dos casos pasó, en vez de dejarlo esperando.
+ */
+export async function crearCuenta(email, password) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: urlDeRetorno() },
+  });
+  if (error) throw error;
+  return { sesion: data.session, usuario: data.user };
+}
+
+export async function enviarRecuperacionDeClave(email) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: urlDeRetorno() });
+  if (error) throw error;
+}
+
+/** Cambia la clave del usuario que ya tiene sesión de recuperación abierta. */
+export async function cambiarClave(password) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+}
+
+/**
+ * Redirige a Google. Si el proveedor no está habilitado en el dashboard de
+ * Supabase, esto tira en vez de navegar — la UI lo muestra como aviso.
+ */
+export async function entrarConGoogle() {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: urlDeRetorno() },
+  });
+  if (error) throw error;
+}
+
+/**
+ * Avisa de los cambios de sesión. Interesa un evento en particular:
+ * PASSWORD_RECOVERY, que es el que dispara Supabase cuando el usuario vuelve
+ * desde el link del mail, y es la única señal de que hay que pedirle una
+ * clave nueva.
+ */
+export function alCambiarAuth(fn) {
+  const supabase = obtenerCliente();
+  return supabase.auth.onAuthStateChange((evento, sesion) => fn(evento, sesion));
+}
 
 /**
  * RLS filtra `club` a únicamente los clubes donde el usuario autenticado

@@ -24,6 +24,7 @@
   /* ---- superficies sobre fondo oscuro ---- */
   --sup-1:#22222A;
   --sup-2:#2C2C34;
+  --linea-osc:#3A3A44;    /* borde sobre fondo oscuro: el par de --linea */
 
   /* ---- semántico ---- */
   --sube:#15794F;

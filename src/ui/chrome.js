@@ -45,17 +45,10 @@ export function iniciarChrome({ onTab, onPlantel, onVolver, onSalir }) {
  * navegación del spec, Decisión 8). Salir sigue la misma regla: está en el
  * chrome, así que se llega desde cualquier pantalla y ninguna lo repite.
  */
-export function renderChrome({ pantallaId, titulo, mostrarAtras, autenticado }) {
+export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
   const cabecera = $('cabecera');
   const cats = $('cats');
   const nav = $('nav');
-
-  if (!autenticado) {
-    cabecera.innerHTML = `${ESCUDO}<div><h1>Inferiores</h1><div class="sub">Seguimiento de jugadores</div></div>`;
-    cats.innerHTML = '';
-    nav.innerHTML = '';
-    return;
-  }
 
   const club = obtenerClubActual();
   const izquierda = mostrarAtras

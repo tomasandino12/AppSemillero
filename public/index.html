@@ -2,10 +2,11 @@
 <html lang="es-AR">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="/public/escudo.png" type="image/png">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#131316">
 <title>Inferiores · Seguimiento de jugadores</title>
-<link rel="icon" href="/public/escudo.png" type="image/png">
+<meta name="description" content="Seguimiento del desarrollo de jugadores en inferiores de básquet: partidos, mediciones y biblioteca de ejercicios.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -13,6 +14,7 @@
 <link rel="stylesheet" href="/public/css/base.css">
 <link rel="stylesheet" href="/public/css/layout.css">
 <link rel="stylesheet" href="/public/css/componentes.css">
+<link rel="stylesheet" href="/public/css/publico.css">
 <script type="importmap">
 {
   "imports": {
@@ -29,37 +31,223 @@
 </script>
 </head>
 <body>
-<div class="app" id="app">
+
+<!-- =====================================================================
+     SHELL PÚBLICO — landing y autenticación, en oscuro.
+     Arranca en v-cargando (sólo el escudo) y no en la landing: leer la
+     sesión es asíncrono, y quien ya entró no tiene que ver pasar la
+     landing por delante. Los dos shells empiezan ocultos; main.js decide
+     cuál se muestra.
+     ===================================================================== -->
+<div class="publico" id="publico" hidden>
+
+  <section class="vista on" id="v-cargando">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Seguimiento de jugadores</div></div></div>
+  </section>
+
+  <section class="vista" id="v-landing">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+
+    <div class="hero">
+      <h1>Lo que se trabaja en inferiores, <span class="r">queda</span></h1>
+      <div class="bajada">Partidos, mediciones y ejercicios de las formativas en un solo lugar, que sigue estando cuando cambia el cuerpo técnico.</div>
+    </div>
+
+    <div class="acciones-landing">
+      <button class="btn" id="btn-ir-crear">Crear cuenta</button>
+      <button class="btn sec" id="btn-ir-ingresar">Ya tengo cuenta</button>
+    </div>
+
+    <div class="beneficios">
+      <div class="ben">
+        <div class="t">El trabajo no se pierde</div>
+        <div class="d">El historial de cada jugador sobrevive a las temporadas, a los cambios de categoría y al cambio de entrenador. Lo que se midió hace dos años sigue estando.</div>
+      </div>
+      <div class="ben">
+        <div class="t">El plantel se arma solo</div>
+        <div class="d">Subís la planilla del partido de la CABB y los jugadores se crean solos. Un partido trae la enorme mayoría del plantel sin escribir un nombre a mano.</div>
+      </div>
+      <div class="ben">
+        <div class="t">Estadísticas con historia</div>
+        <div class="d">Reparto de minutos y de puntos, y cómo se mueve el tiro del equipo partido a partido a lo largo de la temporada.</div>
+      </div>
+      <div class="ben">
+        <div class="t">Mediciones en la cancha</div>
+        <div class="d">La batería de tiro y las velocidades se cargan durante la práctica, y queda la evolución de cada jugador y del equipo en el tiempo.</div>
+      </div>
+      <div class="ben">
+        <div class="t">Los ejercicios quedan en el club</div>
+        <div class="d">Una biblioteca compartida entre los profes, con notas de qué funcionó y qué no con cada categoría. Justo lo que hoy se pierde cuando alguien se va.</div>
+      </div>
+      <div class="ben">
+        <div class="t">Pensada para el celular</div>
+        <div class="d">Al aire libre, con una mano, durante la práctica. No es una planilla de escritorio adaptada a una pantalla chica.</div>
+      </div>
+    </div>
+
+    <div class="futuro">Piloto en curso. Todo lo que está listado acá arriba está construido y funcionando; lo que no está en esa lista, todavía no existe.</div>
+  </section>
+
+  <section class="vista" id="v-ingresar">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="caja">
+      <h2>Ingresar</h2>
+      <div class="sub">Con el mail y la contraseña de tu cuenta.</div>
+
+      <div class="campo-osc">
+        <label for="in-email">Email</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg>
+          <input id="in-email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="vos@club.com">
+        </span>
+      </div>
+      <div class="campo-osc">
+        <label for="in-pass">Contraseña</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="in-pass" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="••••••••">
+        </span>
+      </div>
+
+      <div class="al" id="ingresar-error" role="alert" style="display:none"><div class="tx"></div></div>
+      <button class="btn" id="btn-ingresar">Ingresar</button>
+
+      <div class="o">o</div>
+      <button class="btn-google" id="btn-google-ingresar">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.7 6.9l7.6 5.9c4.4-4.1 6.8-10.1 6.8-17.3z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.5 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.8 2.3-8.3 2.3-6.4 0-11.8-3.8-13.7-9.8l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
+        Continuar con Google
+      </button>
+
+      <div class="enlaces">
+        <button id="btn-ir-recuperar">Olvidé mi contraseña</button>
+        <button id="btn-ir-crear-2">¿No tenés cuenta?<b>Crear una</b></button>
+        <button id="btn-volver-landing">&lsaquo; Volver</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="vista" id="v-crear">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="caja">
+      <h2>Crear cuenta</h2>
+      <div class="sub">Crear la cuenta es el primer paso. Para ver los datos de un club, después alguien del club tiene que darte el acceso.</div>
+
+      <div class="campo-osc">
+        <label for="cr-email">Email</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg>
+          <input id="cr-email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="vos@club.com">
+        </span>
+      </div>
+      <div class="campo-osc">
+        <label for="cr-pass">Contraseña</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="cr-pass" type="password" autocomplete="new-password" enterkeyhint="next" placeholder="••••••••">
+        </span>
+        <div class="ayuda">Mínimo 8 caracteres.</div>
+      </div>
+      <div class="campo-osc">
+        <label for="cr-pass2">Repetir contraseña</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="cr-pass2" type="password" autocomplete="new-password" enterkeyhint="go" placeholder="••••••••">
+        </span>
+      </div>
+
+      <div class="al" id="crear-error" role="alert" style="display:none"><div class="tx"></div></div>
+      <button class="btn" id="btn-crear">Crear cuenta</button>
+
+      <div class="o">o</div>
+      <button class="btn-google" id="btn-google-crear">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.7 6.9l7.6 5.9c4.4-4.1 6.8-10.1 6.8-17.3z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.5 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.8 2.3-8.3 2.3-6.4 0-11.8-3.8-13.7-9.8l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
+        Continuar con Google
+      </button>
+
+      <div class="enlaces">
+        <button id="btn-ir-ingresar-2">¿Ya tenés cuenta?<b>Ingresar</b></button>
+        <button id="btn-volver-landing-2">&lsaquo; Volver</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="vista" id="v-recuperar">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="caja">
+      <h2>Recuperar la contraseña</h2>
+      <div class="sub">Te mandamos un link por mail para poner una nueva.</div>
+
+      <div class="campo-osc">
+        <label for="rec-email">Email</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg>
+          <input id="rec-email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" placeholder="vos@club.com">
+        </span>
+      </div>
+
+      <div class="al" id="recuperar-error" role="alert" style="display:none"><div class="tx"></div></div>
+      <button class="btn" id="btn-recuperar">Mandar el link</button>
+
+      <div class="enlaces">
+        <button id="btn-ir-ingresar-3">&lsaquo; Volver a ingresar</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="vista" id="v-nueva-clave">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="caja">
+      <h2>Contraseña nueva</h2>
+      <div class="sub">Elegí una contraseña nueva para tu cuenta.</div>
+
+      <div class="campo-osc">
+        <label for="nv-pass">Contraseña nueva</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="nv-pass" type="password" autocomplete="new-password" enterkeyhint="next" placeholder="••••••••">
+        </span>
+        <div class="ayuda">Mínimo 8 caracteres.</div>
+      </div>
+      <div class="campo-osc">
+        <label for="nv-pass2">Repetir contraseña</label>
+        <span class="env">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="nv-pass2" type="password" autocomplete="new-password" enterkeyhint="go" placeholder="••••••••">
+        </span>
+      </div>
+
+      <div class="al" id="nueva-clave-error" role="alert" style="display:none"><div class="tx"></div></div>
+      <button class="btn" id="btn-nueva-clave">Guardar la contraseña</button>
+    </div>
+  </section>
+
+  <section class="vista" id="v-sin-club">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="sin-club">
+      <div class="ico">!</div>
+      <h2>Tu cuenta está lista, falta el acceso</h2>
+      <div class="d">
+        La cuenta se creó bien y podés entrar con ella. Lo que todavía no tenés es
+        acceso a los datos de un club: eso lo habilita una persona del club, a mano,
+        y no se puede pedir desde acá.
+      </div>
+      <div class="d">Pasale este mail a quien te dio el link, para que te habilite:</div>
+      <div class="mail" id="sin-club-mail">—</div>
+      <button class="btn" id="btn-sin-club-reintentar">Ya me dieron el acceso, reintentar</button>
+      <div class="enlaces">
+        <button id="btn-sin-club-salir">Salir de esta cuenta</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="app" id="app" hidden>
 
   <header class="cabecera" id="cabecera"></header>
   <div class="cats" id="cats"></div>
 
   <main class="cuerpo" id="cuerpo">
-
-    <!-- Ingreso. La cabecera ya trae el escudo y el nombre de la app, así que
-         acá no va ni logo ni marca: es una pantalla más, no una portada.
-         El botón vive en un .pie-fijo como la acción principal de cualquier
-         otra pantalla, y #in-pass envía con Enter (ver login.js), que es el
-         camino real cuando el teclado del celular está abierto. -->
-    <section class="pant" id="p-login">
-      <div class="login">
-        <div class="pad">
-          <h2 class="h2">Ingresar</h2>
-          <div class="p">Con el mail y la contraseña que te dio el club.</div>
-          <div class="campo">
-            <label for="in-email">Email</label>
-            <input id="in-email" type="email" autocomplete="username" inputmode="email"
-                   autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next">
-          </div>
-          <div class="campo">
-            <label for="in-pass">Contraseña</label>
-            <input id="in-pass" type="password" autocomplete="current-password" enterkeyhint="go">
-          </div>
-          <div class="al" id="login-error" role="alert" style="display:none"><div class="tx"></div></div>
-        </div>
-        <div class="pie-fijo"><button class="btn" id="btn-login">Ingresar</button></div>
-      </div>
-    </section>
 
     <section class="pant" id="p-plantel"><div id="plantel-contenido"></div></section>
     <section class="pant" id="p-ficha"><div id="ficha-contenido"></div></section>

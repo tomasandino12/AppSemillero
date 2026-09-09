@@ -19,7 +19,6 @@ import { renderMetas } from './metas.js';
  * el router y las pantallas que lo usan para navegar).
  */
 export function registrarPantallas() {
-  registrarPantalla('p-login', { titulo: 'Ingresar' });
   registrarPantalla('p-plantel', { titulo: 'Plantel', render: renderPlantel });
   registrarPantalla('p-ficha', { titulo: 'Jugador', render: renderFicha });
   registrarPantalla('p-datos', { titulo: 'Datos', render: renderDatos });

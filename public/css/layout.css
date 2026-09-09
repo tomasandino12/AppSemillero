@@ -5,6 +5,10 @@
    se agregan con min-width, nunca al revés.
    ===================================================================== */
 
+/* display:grid le gana al [hidden] del user-agent, y main.js esconde el shell
+   de la app con ese atributo mientras manda el shell público. */
+.app[hidden]{display:none}
+
 .app{
   height:100dvh;
   min-height:100dvh;

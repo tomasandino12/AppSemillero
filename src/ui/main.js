@@ -2,11 +2,19 @@ import { obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClu
 import { mostrarPantalla, toast } from './nav.js';
 import { setClubActual, setPlanteles, limpiarSesion } from './sesion.js';
 import { iniciarChrome, renderChrome, TABS } from './chrome.js';
-import { iniciarLogin, mostrarLogin } from './pantallas/login.js';
+import { iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub } from './publico.js';
 
 const pantallas = new Map();
 const pila = [];
-let autenticado = false;
+
+/**
+ * Si el usuario llega desde el link de "recuperar contraseña", la URL trae el
+ * token en el hash. Hay que leerlo ACÁ, antes de tocar Supabase: el cliente
+ * detecta ese hash, abre sesión y lo borra, y a partir de ese momento esta
+ * visita es indistinguible de una entrada normal — lo mandaríamos derecho a
+ * la app en vez de pedirle la contraseña nueva.
+ */
+const VIENE_A_CAMBIAR_LA_CLAVE = /[#&]type=recovery/.test(window.location.hash);
 
 /**
  * Registra una pantalla. `render` puede ser async; se llama cada vez que se
@@ -28,7 +36,6 @@ export function sincronizarChrome() {
     pantallaId: id,
     titulo: pantallas.get(id)?.titulo ?? '',
     mostrarAtras: pila.length > 0,
-    autenticado,
   });
 }
 
@@ -65,16 +72,19 @@ export async function volver() {
   if (def?.render) await def.render();
 }
 
-/**
- * Deja la app en estado no autenticado. Lo usan el botón de salir y los
- * dos caminos de error de entrarConSesion(), que repetían estas cuatro
- * líneas cada uno.
- */
-function volverAlLogin() {
+/** Deja la app cerrada y vuelve al shell público. */
+function volverALaLanding() {
   limpiarSesion();
-  autenticado = false;
-  mostrarLogin();
-  sincronizarChrome();
+  pila.length = 0;
+  mostrarLanding();
+}
+
+async function sesionSilenciosa() {
+  try {
+    return await obtenerSesionActual();
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -89,21 +99,29 @@ async function salir() {
   } catch {
     toast('No se pudo avisar al servidor, pero saliste en este dispositivo.');
   }
-  volverAlLogin();
+  volverALaLanding();
 }
 
+/**
+ * Con sesión válida, decide entre la app y la pantalla de "todavía no tenés
+ * club". Una cuenta sin fila en miembro_club no es un error ni una app rota:
+ * es el estado normal de alguien que recién se registró. RLS ya garantiza que
+ * no ve absolutamente nada — lo único que falta es decírselo con todas las
+ * letras, porque vincular una cuenta a un club es un acto manual y no hay
+ * forma de pedirlo desde acá (ver ESQUEMA.md, miembro_club).
+ */
 async function entrarConSesion() {
   let clubes;
   try {
     clubes = await obtenerClubesDelEntrenador();
   } catch {
     toast('No se pudo cargar tu club. Revisá tu conexión.');
-    volverAlLogin();
+    volverALaLanding();
     return;
   }
   if (!clubes.length) {
-    toast('Tu usuario no está asociado a ningún club todavía.');
-    volverAlLogin();
+    const sesion = await sesionSilenciosa();
+    mostrarSinClub(sesion?.user?.email);
     return;
   }
   setClubActual(clubes[0]);
@@ -116,14 +134,14 @@ async function entrarConSesion() {
   }
   setPlanteles(planteles);
 
-  autenticado = true;
+  mostrarApp();
   // Landing en PLANTEL: es donde arranca el flujo del entrenador que empieza
-  // de cero, y es real — HOY son datos de ejemplo.
+  // de cero.
   await ir('p-plantel');
 }
 
 async function iniciar() {
-  iniciarLogin(entrarConSesion);
+  iniciarPublico({ onEntrar: entrarConSesion, onReintentarClub: entrarConSesion });
   iniciarChrome({
     onTab: (id) => ir(id),
     onPlantel: () => refrescar(),
@@ -134,23 +152,22 @@ async function iniciar() {
   const { registrarPantallas } = await import('./pantallas/registro.js');
   registrarPantallas();
 
-  // Pinta la cabecera no autenticada de una así la pantalla no queda en
-  // blanco durante el round trip de red de obtenerSesionActual().
-  sincronizarChrome();
+  // Splash oscuro mientras se resuelve la sesión. Los dos shells arrancan
+  // ocultos a propósito: quien ya entró no tiene que ver pasar la landing, y
+  // quien no entró no tiene que ver el chrome de la app.
+  mostrarPublico('v-cargando');
 
-  let sesion;
-  try {
-    sesion = await obtenerSesionActual();
-  } catch {
-    sesion = null;
+  if (VIENE_A_CAMBIAR_LA_CLAVE) {
+    // Fuerza la creación del cliente, que es lo que consume el token del hash
+    // y deja la sesión de recuperación abierta para updateUser().
+    await sesionSilenciosa();
+    mostrarPublico('v-nueva-clave');
+    return;
   }
 
-  if (sesion) {
-    await entrarConSesion();
-  } else {
-    mostrarLogin();
-    sincronizarChrome();
-  }
+  const sesion = await sesionSilenciosa();
+  if (sesion) await entrarConSesion();
+  else mostrarLanding();
 }
 
 iniciar();
