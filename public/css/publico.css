@@ -6,7 +6,8 @@
    No es una inconsistencia — es la separación entre la presentación
    pública y la herramienta de trabajo, que se usa al sol en una cancha.
    Todos los colores salen de tokens.css.
-   Mobile-first: acá abajo está el celular; lo grande se agrega al final.
+   Mobile-first. Las versiones de escritorio viven en layout.css, que es el
+   único lugar del proyecto con media queries de ancho.
    ===================================================================== */
 
 .publico{
@@ -123,20 +124,4 @@
   .publico .btn.sec:not(:disabled):hover{background:rgba(255,255,255,.08)}
   .btn-google:not(:disabled):hover{background:#EDEDED}
   .enlaces button:hover b{color:#fff}
-}
-
-/* =====================================================================
-   ≥640px — las tarjetas dejan de apilarse. En escritorio no es un
-   celular estirado: la landing gana columnas, no sólo ancho.
-   ===================================================================== */
-@media (min-width:40rem){
-  .marca{padding-top:var(--sp-8)}
-  .hero{padding:var(--sp-8) var(--sp-6) var(--sp-6)}
-  .beneficios{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-4);padding-inline:var(--sp-6);max-width:64rem;margin-inline:auto}
-  .acciones-landing{flex-direction:row;justify-content:center;max-width:30rem}
-  .futuro{padding-inline:var(--sp-6)}
-}
-
-@media (min-width:64rem){
-  .beneficios{grid-template-columns:repeat(3,minmax(0,1fr))}
 }

@@ -132,15 +132,9 @@ export async function renderDatos() {
     <div class="pad">
       <div class="eyebrow">Partidos de ${escaparHtml(plantel.categoria)}</div>
       <div class="p" id="datos-estado">Cargando partidos...</div>
-      <div class="dos-col">
-        <div class="col">
-          <div id="datos-lista"></div>
-          <div id="datos-equipo"></div>
-        </div>
-        <div class="col">
-          <div id="datos-curvas"></div>
-        </div>
-      </div>
+      <div id="datos-lista"></div>
+      <div id="datos-equipo"></div>
+      <div id="datos-curvas"></div>
     </div>
     <div class="pie-fijo"><button class="btn" id="btn-cargar-partido">Cargar partido</button></div>
   `;

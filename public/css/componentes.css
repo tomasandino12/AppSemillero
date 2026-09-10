@@ -16,8 +16,19 @@
 }
 .btn:active{background:var(--rojo-osc);transform:scale(.97)}
 .btn:disabled{background:#C9C5BE;color:#fff;transform:none}
-.btn.sec{background:transparent;color:var(--tinta);border:1.5px solid var(--negro);font-size:var(--fs-145)}
-.btn.osc{background:var(--negro)}
+/* El secundario: blanco con borde, en el mismo lenguaje que las tarjetas. Antes
+   era un contorno negro de 1.5px, y tres seguidos se leían como tres losas.
+   El borde es --gris-cl a propósito: 4.50:1 contra --papel y 5.08:1 contra el
+   blanco, arriba del 3:1 que pide WCAG 1.4.11 para el contorno de un control.
+   Tiene que alcanzar SOLO: la sombra es lo primero que se pierde al sol, así
+   que es un refuerzo, nunca la única señal de que ahí hay un botón. */
+.btn.sec{
+  background:var(--blanco);color:var(--tinta);
+  border:1px solid var(--gris-cl);box-shadow:var(--sombra);font-size:var(--fs-145);
+}
+/* Propio, para no heredar el --rojo-osc de .btn:active: sobre fondo blanco con
+   texto casi negro, apretar un secundario lo hacía destellar rojo oscuro. */
+.btn.sec:active{background:var(--papel)}
 @media (hover:hover){
   .btn:not(:disabled):hover{background:var(--rojo-osc)}
   .btn.sec:not(:disabled):hover{background:rgba(19,19,22,.06)}
@@ -205,7 +216,7 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Etapa 4 — acciones dentro de un aviso */
 .acciones-al{display:flex;gap:8px;margin-top:10px}
-.btn.chico{min-height:40px;padding:0 14px;font-size:var(--fs-135);width:auto}
+.btn.chico{min-height:var(--tap);padding:0 14px;font-size:var(--fs-135);width:auto}
 
 /* Etapa 4 — carga de la batería en cancha.
    Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
@@ -321,7 +332,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .marca-meta{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
 .marca-meta.si{color:var(--tinta)}
 .marca-meta.no{color:var(--gris-cl)}
-.acciones-hoy{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.acciones-hoy{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--linea)}
 
 /* Edición de metas */
 .metas-lista{display:flex;flex-direction:column;margin:12px 0}

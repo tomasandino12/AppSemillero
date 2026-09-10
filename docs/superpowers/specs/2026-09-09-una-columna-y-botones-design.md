@@ -77,11 +77,31 @@ como un control y no como un bloque, usando el mismo lenguaje que ya tienen las
 tarjetas del proyecto:
 
 ```
-.btn.sec  →  fondo --blanco, borde 1px --linea, sombra --sombra, texto --tinta
+.btn.sec  →  fondo --blanco, borde 1px --gris-cl, sombra --sombra, texto --tinta
 ```
 
-Se conserva el `min-height` de 44px, el `:active` que ya existe, y el hover
-adentro de `@media (hover:hover)`.
+**Corrección posterior a la aprobación.** La primera versión de este spec
+proponía el borde en `--linea`. Medido: **1.22:1 contra `--papel`**, muy lejos
+del 3:1 que pide WCAG 1.4.11 para el contorno de un control. Con ese borde, la
+sombra habría sido la única señal de que ahí hay un botón — y es lo primero que
+desaparece al sol. `--gris-cl` da **4.50:1 contra el papel y 5.08:1 contra el
+blanco**, ya es un token del proyecto, y se verificó sobre la captura que el
+borde de 1px se renderiza en exactamente ese color, sin antialiasing que lo
+aclare.
+
+Se conserva el `min-height` de 44px y el hover adentro de
+`@media (hover:hover)`. El `:active` **no** se hereda: `.btn:active` pinta
+`--rojo-osc`, y sobre fondo blanco con texto casi negro un secundario apretado
+destellaba rojo oscuro. Tiene el suyo, en `--papel`.
+
+**Dos arreglos que salieron al verificar**, fuera de lo que el spec preveía:
+
+- **`.btn.chico` tenía `min-height:40px`**, que viola el criterio 5 desde antes
+  de esta tanda. "Ver el plantel" es chico. Pasa a `--tap`.
+- **`publico.css` tenía dos media queries de ancho**, que violan el criterio 7.
+  Las introduje en la tanda de la landing. Se mueven a `layout.css` prefijadas
+  con `.publico`: sin el prefijo, las reglas base de `publico.css` —que se
+  carga después— les ganarían por orden de cascada.
 
 A `.acciones-hoy` se le suma un `border-top` como el de `.pie-hoy`, para que el
 par cierre la pantalla como grupo en vez de flotar.
