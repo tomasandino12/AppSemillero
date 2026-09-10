@@ -192,8 +192,35 @@ begin
   if exists (select 1 from plantel where categoria is null or categoria = '') then
     raise exception 'ROLLBACK ROTO: quedó algún plantel sin categoria.';
   end if;
-
-  raise notice 'Rollback completo. Las once policies originales están de vuelta y no se perdió ninguna fila.';
 end $$;
 
 commit;
+
+-- El resultado sale como tabla y no por RAISE NOTICE: el SQL Editor del
+-- dashboard no muestra los notices. Un fallo sí se ve, porque el bloque de
+-- arriba lanza una excepción y eso el editor lo muestra como error.
+select * from (values
+  ('Policies en public',
+   (select count(*) from pg_policies where schemaname = 'public')::text,
+   '25 = el estado previo a 0016'),
+  ('De ésas, las "_miembros"',
+   (select count(*) from pg_policies where schemaname = 'public' and policyname like '%\_miembros')::text,
+   '15 = las 11 restauradas + las 4 que nunca se tocaron'),
+  ('Tablas nuevas que quedaron',
+   coalesce((select string_agg(tablename, ', ') from pg_tables
+             where schemaname = 'public' and tablename in ('categoria','asignacion_plantel')), 'ninguna'),
+   'tiene que decir ninguna'),
+  ('Funciones que quedaron',
+   coalesce((select string_agg(proname, ', ') from pg_proc
+             where proname in ('puede_ver_plantel','puede_escribir_plantel','jugadores_del_club_para_dedup')), 'ninguna'),
+   'tiene que decir ninguna'),
+  ('Columna plantel.categoria_codigo',
+   coalesce((select 'TODAVÍA EXISTE' from information_schema.columns
+             where table_name = 'plantel' and column_name = 'categoria_codigo'), 'borrada'),
+   'tiene que decir borrada'),
+  ('Filas (plantel/jugador/pertenencia/partido/sesion)',
+   (select count(*) from plantel)::text || '/' || (select count(*) from jugador)::text || '/' ||
+   (select count(*) from pertenencia)::text || '/' || (select count(*) from partido)::text || '/' ||
+   (select count(*) from sesion_medicion)::text,
+   'iguales a antes, o el bloque de arriba habría abortado')
+) as t(que, valor, esperado);
