@@ -79,8 +79,18 @@
 .publico .al{background:var(--sup-1);color:#fff;box-shadow:none}
 .publico .al .mt{color:var(--gris-osc)}
 
-/* .btn.sec lleva borde negro y texto oscuro: invisible sobre este fondo. */
-.publico .btn.sec{border-color:var(--linea-osc);color:#fff}
+/* El secundario sobre el negro. La regla global de .btn.sec lo pinta blanco
+   con borde gris, para el papel de la app; acá eso dejaba texto blanco sobre
+   fondo blanco (1.00:1), un rectángulo vacío. Vuelve a fondo transparente.
+
+   El borde pasa a --gris-osc, el token pensado para fondo oscuro: 7.57:1
+   contra --negro. El que había, --linea-osc, daba 1.65:1: el botón se
+   reconocía sólo por el texto, y en este proyecto el borde tiene que alcanzar
+   solo. Sin sombra: --sombra está pensada para superficies claras. */
+.publico .btn.sec{background:transparent;border-color:var(--gris-osc);color:#fff;box-shadow:none}
+/* Tampoco hereda el :active global, que pinta --papel: con texto blanco, un
+   secundario apretado se volvía invisible justo mientras se lo toca. */
+.publico .btn.sec:active{background:rgba(255,255,255,.12)}
 
 .o{display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0;color:var(--gris-osc);font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;letter-spacing:.14em;text-transform:uppercase}
 .o::before,.o::after{content:"";flex:1;height:1px;background:var(--linea-osc)}
