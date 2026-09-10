@@ -17,13 +17,14 @@
 
 begin;
 
-create temporary table conteos_antes as
-select
-  (select count(*) from plantel)         as plantel,
-  (select count(*) from jugador)         as jugador,
-  (select count(*) from pertenencia)     as pertenencia,
-  (select count(*) from partido)         as partido,
-  (select count(*) from sesion_medicion) as sesion_medicion;
+-- Los conteos de antes van a GUCs de sesión y no a una tabla temporal: una
+-- temporal depende de que todas las sentencias compartan transacción, cosa que
+-- el editor de Supabase no garantiza, y ahí falla con 42P01.
+select set_config('verif.plantel',         (select count(*) from plantel)::text,         false),
+       set_config('verif.jugador',         (select count(*) from jugador)::text,         false),
+       set_config('verif.pertenencia',     (select count(*) from pertenencia)::text,     false),
+       set_config('verif.partido',         (select count(*) from partido)::text,         false),
+       set_config('verif.sesion_medicion', (select count(*) from sesion_medicion)::text, false);
 
 
 /* =====================================================================
@@ -174,30 +175,18 @@ drop table if exists categoria;
    ===================================================================== */
 
 do $$
-declare a conteos_antes%rowtype;
+declare
+  t text;
+  antes bigint;
+  ahora bigint;
 begin
-  select * into a from conteos_antes;
-
-  if (select count(*) from plantel) <> a.plantel then
-    raise exception 'ROLLBACK ROTO: plantel tenía % filas y ahora tiene %.',
-      a.plantel, (select count(*) from plantel);
-  end if;
-  if (select count(*) from jugador) <> a.jugador then
-    raise exception 'ROLLBACK ROTO: jugador tenía % filas y ahora tiene %.',
-      a.jugador, (select count(*) from jugador);
-  end if;
-  if (select count(*) from pertenencia) <> a.pertenencia then
-    raise exception 'ROLLBACK ROTO: pertenencia tenía % filas y ahora tiene %.',
-      a.pertenencia, (select count(*) from pertenencia);
-  end if;
-  if (select count(*) from partido) <> a.partido then
-    raise exception 'ROLLBACK ROTO: partido tenía % filas y ahora tiene %.',
-      a.partido, (select count(*) from partido);
-  end if;
-  if (select count(*) from sesion_medicion) <> a.sesion_medicion then
-    raise exception 'ROLLBACK ROTO: sesion_medicion tenía % filas y ahora tiene %.',
-      a.sesion_medicion, (select count(*) from sesion_medicion);
-  end if;
+  foreach t in array array['plantel','jugador','pertenencia','partido','sesion_medicion'] loop
+    antes := current_setting('verif.' || t)::bigint;
+    execute format('select count(*) from %I', t) into ahora;
+    if ahora <> antes then
+      raise exception 'ROLLBACK ROTO: % tenía % filas y ahora tiene %.', t, antes, ahora;
+    end if;
+  end loop;
 
   -- Y la categoría de cada plantel sigue siendo la de siempre.
   if exists (select 1 from plantel where categoria is null or categoria = '') then
@@ -206,7 +195,5 @@ begin
 
   raise notice 'Rollback completo. Las once policies originales están de vuelta y no se perdió ninguna fila.';
 end $$;
-
-drop table conteos_antes;
 
 commit;
