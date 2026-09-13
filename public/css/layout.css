@@ -283,7 +283,23 @@
   }
   .cabecera{padding-top:var(--sp-4)}
   .cuerpo > .pant.on{margin-inline:auto;width:100%;max-width:var(--max-ancho)}
-  .cabecera,.cats{padding-inline:max(var(--sp-4), calc((100% - var(--max-ancho)) / 2))}
+  /* Título y chips arrancan en el mismo margen izquierdo que el contenido: el
+     borde de la columna centrada (la misma cuenta que .pant.on) más el
+     padding de .pad. Antes centraban sin ese padding y el título, empujado
+     además por el lugar de volver, flotaba a la derecha del contenido.
+
+     El lugar de volver cuelga a la izquierda de ese margen, así el título
+     queda alineado con o sin flecha. Si no hay espacio para colgarlo (entre
+     1024 y ~1130px de ancho) el padding mínimo lo mantiene adentro de la
+     cabecera: ahí el título queda un poco a la derecha, siempre en la misma X.
+
+     scrollbar-gutter both-edges: la barra de scroll del cuerpo le come ancho
+     sólo al cuerpo y correría la columna centrada respecto de la cabecera,
+     que no tiene barra. Reservándola a los dos lados, las dos centran igual. */
+  .cuerpo{scrollbar-gutter:stable both-edges}
+  .cabecera,.cats{padding-inline:calc(max(0px, (100% - var(--max-ancho)) / 2) + var(--sp-6))}
+  .cabecera{padding-left:max(calc(var(--tap) + var(--sp-1) + var(--sp-3)), calc(max(0px, (100% - var(--max-ancho)) / 2) + var(--sp-6)))}
+  .cabecera .pantalla-actual{margin-left:calc(-1 * (var(--tap) + var(--sp-1)))}
   .cabecera{justify-content:flex-start}
   .pie-fijo{
     position:static;background:none;padding-inline:0;
