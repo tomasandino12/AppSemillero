@@ -1,7 +1,10 @@
-import { obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion } from '../data/repositorio.js';
+import {
+  obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion,
+  obtenerMisRoles, obtenerMisPlantelesAsignados,
+} from '../data/repositorio.js';
 import { mostrarPantalla, toast } from './nav.js';
-import { setClubActual, setPlanteles, limpiarSesion } from './sesion.js';
-import { iniciarChrome, renderChrome, TABS } from './chrome.js';
+import { setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo } from './sesion.js';
+import { iniciarChrome, renderChrome, pantallaInicialDelModo } from './chrome.js';
 import { iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub } from './publico.js';
 
 const pantallas = new Map();
@@ -65,7 +68,7 @@ export async function refrescar() {
 }
 
 export async function volver() {
-  const destino = pila.pop() ?? TABS[1].id;
+  const destino = pila.pop() ?? pantallaInicialDelModo();
   mostrarPantalla(destino);
   sincronizarChrome();
   const def = pantallas.get(destino);
@@ -126,18 +129,36 @@ async function entrarConSesion() {
   }
   setClubActual(clubes[0]);
 
-  let planteles = [];
   try {
-    planteles = await obtenerPlantelesDelClub(clubes[0].id);
+    setRoles(await obtenerMisRoles(clubes[0].id));
   } catch {
-    toast('No se pudieron cargar las categorías. Revisá tu conexión.');
+    toast('No se pudo cargar tu acceso. Revisá tu conexión.');
+    volverALaLanding();
+    return;
+  }
+
+  // Los chips del modo entrenar son SÓLO las categorías asignadas vigentes.
+  // Con RLS alcanzaba para un entrenador puro, pero quien además coordina ve
+  // todos los planteles del club (policy plantel_coordinador_ver, 0017): sin
+  // este filtro tendría chips de categorías cuyas pantallas le quedan vacías.
+  let planteles = [];
+  if (obtenerModo() === 'entrenar') {
+    try {
+      const [todos, asignados] = await Promise.all([
+        obtenerPlantelesDelClub(clubes[0].id),
+        obtenerMisPlantelesAsignados(clubes[0].id),
+      ]);
+      planteles = todos.filter((p) => asignados.has(p.id));
+    } catch {
+      toast('No se pudieron cargar las categorías. Revisá tu conexión.');
+    }
   }
   setPlanteles(planteles);
 
   mostrarApp();
-  // Landing en PLANTEL: es donde arranca el flujo del entrenador que empieza
-  // de cero.
-  await ir('p-plantel');
+  // Entrenando arranca en PLANTEL, donde empieza el flujo de quien arranca de
+  // cero; coordinando, en el Panorama.
+  await ir(pantallaInicialDelModo());
 }
 
 async function iniciar() {
@@ -147,6 +168,12 @@ async function iniciar() {
     onPlantel: () => refrescar(),
     onVolver: () => volver(),
     onSalir: () => salir(),
+    // Sólo existe para quien tiene los dos roles (ver chrome.js). Con los dos,
+    // siempre se entra entrenando, así que los chips ya están cargados.
+    onModo: () => {
+      setModo(obtenerModo() === 'coordinar' ? 'entrenar' : 'coordinar');
+      ir(pantallaInicialDelModo());
+    },
   });
 
   const { registrarPantallas } = await import('./pantallas/registro.js');

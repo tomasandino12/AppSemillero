@@ -1,6 +1,6 @@
 import { obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub } from '../../data/repositorio.js';
 import { ultimaMedicionPorJugador } from '../../data/antropometria.js';
-import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
+import { obtenerClubActual, obtenerPlantelActivo, obtenerPlanteles } from '../sesion.js';
 import { escaparHtml, esErrorDeRed } from '../nav.js';
 import { ir } from '../main.js';
 
@@ -70,7 +70,12 @@ export async function renderPlantel() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
   if (!club || !plantel) {
-    contenedor().innerHTML = `<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
+    // Sin ninguna categoría no es "no elegiste": es que todavía no le
+    // asignaron. Decírselo evita que piense que la app está rota.
+    const mensaje = obtenerPlanteles().length === 0
+      ? 'Todavía no tenés categorías asignadas. Pedíselas al coordinador del club.'
+      : 'No hay una categoría seleccionada.';
+    contenedor().innerHTML = `<div class="pad"><div class="p">${mensaje}</div></div>`;
     return;
   }
 

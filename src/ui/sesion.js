@@ -3,6 +3,8 @@
 let clubActual = null;
 let planteles = [];
 let plantelActivoId = null;
+let roles = { esEntrenador: false, esCoordinador: false };
+let modo = 'entrenar';
 
 export function setClubActual(club) {
   clubActual = club;
@@ -31,8 +33,33 @@ export function obtenerPlantelActivo() {
   return planteles.find((p) => p.id === plantelActivoId) ?? null;
 }
 
+/**
+ * Quien entrena arranca entrenando aunque también coordine: es el uso de
+ * todos los días. Quien sólo coordina no tiene otro modo.
+ */
+export function setRoles(nuevos) {
+  roles = { esEntrenador: nuevos.esEntrenador === true, esCoordinador: nuevos.esCoordinador === true };
+  modo = roles.esEntrenador ? 'entrenar' : 'coordinar';
+}
+
+export function obtenerRoles() {
+  return roles;
+}
+
+export function obtenerModo() {
+  return modo;
+}
+
+/** Ignora un modo que el rol no permite: la UI no puede quedar en un estado sin salida. */
+export function setModo(nuevo) {
+  if (nuevo === 'coordinar' && roles.esCoordinador) modo = 'coordinar';
+  if (nuevo === 'entrenar' && roles.esEntrenador) modo = 'entrenar';
+}
+
 export function limpiarSesion() {
   clubActual = null;
   planteles = [];
   plantelActivoId = null;
+  roles = { esEntrenador: false, esCoordinador: false };
+  modo = 'entrenar';
 }

@@ -259,16 +259,21 @@ export async function obtenerClubesDelEntrenador() {
   return data.map((fila) => ({ id: fila.id, nombre: fila.nombre }));
 }
 
+/**
+ * Un entrenador ve sus planteles asignados; un coordinador, todos los de su
+ * club (0017). El modo entrenar filtra a lo asignado: ver main.js.
+ */
 export async function obtenerPlantelesDelClub(clubId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('plantel')
-    .select('id, categoria, codigo_cabb, temporada_id')
+    .select('id, categoria, categoria_codigo, codigo_cabb, temporada_id')
     .eq('club_id', clubId);
   if (error) throw error;
   return data.map((fila) => ({
     id: fila.id,
     categoria: fila.categoria,
+    categoriaCodigo: fila.categoria_codigo,
     codigoCabb: fila.codigo_cabb,
     temporadaId: fila.temporada_id,
   }));
@@ -840,4 +845,133 @@ export async function borrarNota(clubId, notaId) {
     .select('id');
   if (error) throw error;
   if (!data.length) throw new Error('NO_ES_TUYO');
+}
+
+/* ---------- Coordinación (0017) ---------- */
+
+/**
+ * Los roles propios en el club. La policy miembro_club_propio deja leer la
+ * fila propia; un coordinador además ve las de todo el club, por eso el filtro
+ * por user_id no es opcional.
+ */
+export async function obtenerMisRoles(clubId) {
+  const supabase = obtenerCliente();
+  const userId = await obtenerUsuarioActual();
+  const { data, error } = await supabase
+    .from('miembro_club')
+    .select('es_entrenador, es_coordinador')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return { esEntrenador: data?.es_entrenador === true, esCoordinador: data?.es_coordinador === true };
+}
+
+/** Los planteles con asignación VIGENTE propia. Es lo que muestran los chips en modo entrenar. */
+export async function obtenerMisPlantelesAsignados(clubId) {
+  const supabase = obtenerCliente();
+  const userId = await obtenerUsuarioActual();
+  const { data, error } = await supabase
+    .from('asignacion_plantel')
+    .select('plantel_id')
+    .eq('miembro_club_club_id', clubId)
+    .eq('miembro_club_user_id', userId)
+    .is('hasta', null);
+  if (error) throw error;
+  return new Set(data.map((f) => f.plantel_id));
+}
+
+export async function obtenerCatalogoDeCategorias() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.from('categoria').select('codigo, nombre, orden');
+  if (error) throw error;
+  return data;
+}
+
+export async function obtenerTemporadasDelClub(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.from('temporada').select('id, nombre').eq('club_id', clubId);
+  if (error) throw error;
+  return data;
+}
+
+/** Cuentas con mail confirmado y sin club. Sólo coordinación (la función rechaza al resto). */
+export async function obtenerUsuariosPendientes() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('usuarios_pendientes');
+  if (error) throw error;
+  return data.map((f) => ({ userId: f.user_id, email: f.email, registradoEn: f.registrado_en }));
+}
+
+export async function obtenerMiembrosDelClub(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('miembros_del_club', { p_club_id: clubId });
+  if (error) throw error;
+  return data.map((f) => ({
+    userId: f.user_id,
+    email: f.email,
+    nombre: f.nombre,
+    esEntrenador: f.es_entrenador,
+    esCoordinador: f.es_coordinador,
+    habilitadoEn: f.habilitado_en,
+  }));
+}
+
+/** Asignaciones vigentes del club. Las cerradas quedan en la base; el panel no las lista. */
+export async function obtenerAsignacionesDelClub(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('asignacion_plantel')
+    .select('id, miembro_club_user_id, plantel_id, desde, hasta, origen')
+    .eq('miembro_club_club_id', clubId)
+    .is('hasta', null);
+  if (error) throw error;
+  return data.map((f) => ({
+    id: f.id,
+    userId: f.miembro_club_user_id,
+    plantelId: f.plantel_id,
+    desde: f.desde,
+    hasta: f.hasta,
+    origen: f.origen,
+  }));
+}
+
+/**
+ * Conteos y sumas por plantel, nunca filas de jugador (panorama_del_club,
+ * 0017). La forma ya viene en camelCase desde la base.
+ */
+export async function obtenerPanoramaDelClub(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('panorama_del_club', { p_club_id: clubId });
+  if (error) throw error;
+  return data;
+}
+
+/** Habilitar (si hace falta) y asignar varias categorías: una sola transacción. */
+export async function asignarPlanteles({ userId, clubId, plantelIds }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('asignar_planteles', {
+    p_user_id: userId,
+    p_club_id: clubId,
+    p_plantel_ids: plantelIds,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Cierra una asignación. La fecha que se manda es irrelevante: el trigger de
+ * 0017 la reemplaza por la del servidor y pone quién la cerró. Se pide la fila
+ * de vuelta porque un update que la RLS no deja pasar no da error, afecta
+ * cero filas — y eso no puede verse como éxito.
+ */
+export async function cerrarAsignacion(asignacionId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('asignacion_plantel')
+    .update({ hasta: new Date().toISOString() })
+    .eq('id', asignacionId)
+    .select('id');
+  if (error) throw error;
+  if (!data.length) throw new Error('NO_SE_PUDO_CERRAR');
 }

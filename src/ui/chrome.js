@@ -1,4 +1,4 @@
-import { obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo, setPlantelActivoId } from './sesion.js';
+import { obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo, setPlantelActivoId, obtenerModo, obtenerRoles } from './sesion.js';
 import { escaparHtml } from './nav.js';
 
 const $ = (id) => document.getElementById(id);
@@ -26,16 +26,30 @@ export const TABS = [
   { id: 'p-datos', texto: 'Datos', icono: ICONOS.datos },
 ];
 
+// Coordinación: dos pestañas y ningún chip de categoría. No hay "categoría
+// activa" porque el coordinador no entra a ninguna.
+export const TABS_COORDINACION = [
+  { id: 'p-coord-panorama', texto: 'Panorama', icono: ICONOS.datos },
+  { id: 'p-coord-profes', texto: 'Profes', icono: ICONOS.plantel },
+];
+
+/** Entrenando arranca en PLANTEL; coordinando, en el Panorama. */
+export function pantallaInicialDelModo() {
+  return obtenerModo() === 'coordinar' ? TABS_COORDINACION[0].id : TABS[1].id;
+}
+
 let alTocarTab = () => {};
 let alElegirPlantel = () => {};
 let alVolver = () => {};
 let alSalir = () => {};
+let alCambiarModo = () => {};
 
-export function iniciarChrome({ onTab, onPlantel, onVolver, onSalir }) {
+export function iniciarChrome({ onTab, onPlantel, onVolver, onSalir, onModo }) {
   alTocarTab = onTab;
   alElegirPlantel = onPlantel;
   alVolver = onVolver;
   alSalir = onSalir;
+  alCambiarModo = onModo ?? (() => {});
 }
 
 /**
@@ -43,7 +57,8 @@ export function iniciarChrome({ onTab, onPlantel, onVolver, onSalir }) {
  * El botón de volver vive SOLO acá, en el chrome — el router nunca inyecta
  * botones de volver dentro del contenido de una pantalla (invariante de
  * navegación del spec, Decisión 8). Salir sigue la misma regla: está en el
- * chrome, así que se llega desde cualquier pantalla y ninguna lo repite.
+ * chrome, así que se llega desde cualquier pantalla y ninguna lo repite. El
+ * cambio de modo, también.
  */
 export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
   const cabecera = $('cabecera');
@@ -51,34 +66,48 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
   const nav = $('nav');
 
   const club = obtenerClubActual();
+  const roles = obtenerRoles();
+  const coordinando = obtenerModo() === 'coordinar';
   const izquierda = mostrarAtras
     ? `<button class="atras" id="btn-atras" aria-label="Volver">&lsaquo;</button>`
     : ESCUDO;
+  // Sólo quien tiene los dos roles cambia de modo.
+  const botonModo = roles.esEntrenador && roles.esCoordinador
+    ? `<button class="salir modo" id="btn-modo">${coordinando ? 'Entrenar' : 'Coordinar'}</button>`
+    : '';
   cabecera.innerHTML = `
     ${izquierda}
     <div>
       <h1>${escaparHtml(titulo ?? '')}</h1>
       <div class="sub">${escaparHtml(club?.nombre ?? '')}</div>
     </div>
+    ${botonModo}
     <button class="salir" id="btn-salir">Salir</button>
   `;
   $('btn-atras')?.addEventListener('click', () => alVolver());
+  $('btn-modo')?.addEventListener('click', () => alCambiarModo());
   $('btn-salir').addEventListener('click', () => alSalir());
 
-  const activo = obtenerPlantelActivo();
-  cats.innerHTML = obtenerPlanteles().map((p) => `
-    <button class="cat ${p.id === activo?.id ? 'on' : ''}" data-plantel="${p.id}">
-      <div><div class="sig">${escaparHtml(p.categoria)}</div></div>
-    </button>
-  `).join('');
-  cats.querySelectorAll('.cat').forEach((boton) => {
-    boton.addEventListener('click', () => {
-      setPlantelActivoId(boton.dataset.plantel);
-      alElegirPlantel();
+  if (coordinando) {
+    // Vacío se oculta solo (.cats:empty en layout.css).
+    cats.innerHTML = '';
+  } else {
+    const activo = obtenerPlantelActivo();
+    cats.innerHTML = obtenerPlanteles().map((p) => `
+      <button class="cat ${p.id === activo?.id ? 'on' : ''}" data-plantel="${p.id}">
+        <div><div class="sig">${escaparHtml(p.categoria)}</div></div>
+      </button>
+    `).join('');
+    cats.querySelectorAll('.cat').forEach((boton) => {
+      boton.addEventListener('click', () => {
+        setPlantelActivoId(boton.dataset.plantel);
+        alElegirPlantel();
+      });
     });
-  });
+  }
 
-  nav.innerHTML = TABS.map((t) => `
+  const tabs = coordinando ? TABS_COORDINACION : TABS;
+  nav.innerHTML = tabs.map((t) => `
     <button class="${pantallaId === t.id ? 'on' : ''}" data-ir="${t.id}">
       <svg viewBox="0 0 24 24">${t.icono}</svg><span>${t.texto}</span>
     </button>

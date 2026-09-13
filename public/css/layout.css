@@ -40,6 +40,11 @@
   min-height:var(--tap);display:flex;align-items:center;
   padding-inline:var(--sp-2);margin-right:calc(var(--sp-2) * -1);
 }
+/* Con los dos roles hay un segundo botón de texto. Los dos llevan
+   margin-left:auto: sin esto el espacio libre se reparte entre ellos y
+   quedan separados por medio encabezado. */
+.cabecera .modo{margin-right:0}
+.cabecera .modo + .salir{margin-left:0}
 .cabecera h1{font-size:var(--fs-190)}
 .cabecera .sub{
   font-size:var(--fs-100);color:var(--gris-osc);letter-spacing:.07em;
