@@ -83,3 +83,22 @@ test('una serie con huecos (null) no rompe cuando el resto de puntos alcanza par
   // (30 y 70) separados por un null, la línea igual se dibuja entre esos dos.
   assert.ok(svg.innerHTML.includes('<polyline'));
 });
+
+test('con min y max la escala queda fija, sin depender de los datos', () => {
+  const svg = svgFalso();
+  grafico(svg, {
+    etiquetas: ['01/03', '01/04'],
+    series: [{ nombre: 'triples', c: '#D9122E', d: [40, 45] }],
+  }, { min: 0, max: 100 });
+  assert.match(svg.innerHTML, />0<\/text>/);
+  assert.match(svg.innerHTML, />100<\/text>/);
+});
+
+test('sin min y max la escala sigue saliendo de los datos', () => {
+  const svg = svgFalso();
+  grafico(svg, {
+    etiquetas: ['01/03', '01/04'],
+    series: [{ nombre: 'triples', c: '#D9122E', d: [40, 45] }],
+  });
+  assert.doesNotMatch(svg.innerHTML, />100<\/text>/);
+});

@@ -12,6 +12,7 @@ import {
   contarPorDebajo,
   totalDeZonas,
   serieDeZonas,
+  serieDeZonasAgregada,
   repartoPorJugador,
   evolucionDeTiroDelEquipo,
   serieDeTiroDelJugador,
@@ -458,4 +459,54 @@ test('una batería sin mediciones reales no deja un punto en cero', () => {
 
 test('sin ninguna batería la serie es vacía, no null', () => {
   assert.deepEqual(serieDeZonas([], [], ['frontal']), []);
+});
+
+test('la serie agregada da lo mismo que serieDeZonas con filas por jugador', () => {
+  const ses = [
+    { id: 's1', fecha: '2026-03-01', tipo: 'tiro' },
+    { id: 's2', fecha: '2026-04-01', tipo: 'tiro' },
+  ];
+  const med = [
+    { sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: 3, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'b', posicion: 'frontal', anotados: 5, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'a', posicion: 'esq_izq', anotados: 2, intentos: 10 },
+    { sesionId: 's1', jugadorId: 'a', posicion: 'libres', anotados: 9, intentos: 10 },
+    { sesionId: 's2', jugadorId: 'a', posicion: 'frontal', anotados: 6, intentos: 10 },
+  ];
+  // Lo mismo, como lo devuelve panorama_del_club: sumado por sesión y posición.
+  const agregadas = [
+    { sesionId: 's1', fecha: '2026-03-01', posicion: 'frontal', anotados: 8, intentos: 20, jugadoresQueMidieron: 2 },
+    { sesionId: 's1', fecha: '2026-03-01', posicion: 'esq_izq', anotados: 2, intentos: 10, jugadoresQueMidieron: 2 },
+    { sesionId: 's1', fecha: '2026-03-01', posicion: 'libres', anotados: 9, intentos: 10, jugadoresQueMidieron: 2 },
+    { sesionId: 's2', fecha: '2026-04-01', posicion: 'frontal', anotados: 6, intentos: 10, jugadoresQueMidieron: 1 },
+  ];
+  const triples = POSICIONES.map((z) => z.id);
+  const individual = serieDeZonas(ses, med, triples);
+  const agregada = serieDeZonasAgregada(agregadas, triples);
+  assert.deepEqual(agregada.map((p) => p.valor), individual.map((p) => p.valor));
+  assert.deepEqual(agregada.map((p) => p.fecha), ['2026-03-01', '2026-04-01']);
+  assert.deepEqual(agregada.map((p) => p.jugadoresQueMidieron), [2, 1]);
+
+  // Y libres por su lado, sin mezclarse con triples.
+  assert.deepEqual(
+    serieDeZonasAgregada(agregadas, ['libres']).map((p) => p.valor),
+    serieDeZonas(ses, med, ['libres']).map((p) => p.valor),
+  );
+});
+
+test('la serie agregada no mezcla libres con triples y no inventa puntos', () => {
+  const filas = [
+    { sesionId: 's1', fecha: '2026-03-01', posicion: 'libres', anotados: 9, intentos: 10, jugadoresQueMidieron: 1 },
+  ];
+  assert.deepEqual(serieDeZonasAgregada(filas, POSICIONES.map((z) => z.id)), []);
+  assert.deepEqual(serieDeZonasAgregada([], ['frontal']), []);
+  assert.deepEqual(serieDeZonasAgregada(null, ['frontal']), []);
+});
+
+test('la serie agregada marca la muestra chica con el umbral único', () => {
+  const filas = [
+    { sesionId: 's1', fecha: '2026-03-01', posicion: 'frontal', anotados: 1, intentos: UMBRAL_INTENTOS - 1, jugadoresQueMidieron: 1 },
+  ];
+  const [p] = serieDeZonasAgregada(filas, ['frontal']);
+  assert.equal(p.valor.muestraChica, true);
 });

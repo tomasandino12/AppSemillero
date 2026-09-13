@@ -428,3 +428,45 @@ export function serieDeZonas(sesiones, medicionesTiro, zonaIds) {
     }))
     .filter((p) => p.valor != null);
 }
+
+/**
+ * La misma serie que serieDeZonas, pero a partir de SUMAS por sesión y
+ * posición en vez de filas por jugador.
+ *
+ * Existe para el panorama de coordinación: el coordinador no tiene acceso a
+ * mediciones individuales, y la base le devuelve anotados e intentos ya
+ * sumados entre jugadores (panorama_del_club, 0017). El porcentaje, el umbral
+ * y la muestra chica salen de porcentaje(), igual que en todo el proyecto.
+ *
+ * Con `zonaIds` = las 5 posiciones da triples; con ['libres'], libres. Nunca
+ * se piden juntas: son dos tiros distintos.
+ *
+ * filas: [{ sesionId, fecha, posicion, anotados, intentos, jugadoresQueMidieron }]
+ */
+export function serieDeZonasAgregada(filas, zonaIds) {
+  const porSesion = new Map();
+  for (const f of filas ?? []) {
+    if (!zonaIds.includes(f.posicion)) continue;
+    if (!porSesion.has(f.sesionId)) {
+      porSesion.set(f.sesionId, {
+        sesionId: f.sesionId,
+        fecha: f.fecha,
+        jugadoresQueMidieron: f.jugadoresQueMidieron,
+        anotados: 0,
+        intentos: 0,
+      });
+    }
+    const acum = porSesion.get(f.sesionId);
+    acum.anotados += f.anotados;
+    acum.intentos += f.intentos;
+  }
+  return [...porSesion.values()]
+    .sort((a, b) => a.fecha.localeCompare(b.fecha))
+    .map((s) => ({
+      sesionId: s.sesionId,
+      fecha: s.fecha,
+      jugadoresQueMidieron: s.jugadoresQueMidieron,
+      valor: porcentaje(s.anotados, s.intentos),
+    }))
+    .filter((p) => p.valor != null);
+}

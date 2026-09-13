@@ -58,10 +58,14 @@ export function cancha(svg, valores, { alto = 200 } = {}) {
  *   punteado. Es opcional — quien no lo pase se dibuja como siempre.
  *   Cada `d` tiene el mismo largo que `etiquetas`. Los null son huecos.
  *
+ * `min` y `max`, si vienen los dos, fijan la escala del eje Y. El panorama de
+ * coordinación los usa en 0–100 para que dos tarjetas lado a lado no se lean
+ * como comparables por tener escalas distintas.
+ *
  * Devuelve false si no había nada que dibujar, para que la pantalla muestre
  * su estado vacío en vez de un cuadro en blanco.
  */
-export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec = 0 } = {}) {
+export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec = 0, min: minFijo = null, max: maxFijo = null } = {}) {
   const n = etiquetas?.length ?? 0;
   const todos = (series ?? []).flatMap((s) => s.d).filter((v) => v != null);
   if (n === 0 || todos.length === 0) {
@@ -72,10 +76,17 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
   }
 
   const W = 320, H = alto, ml = 30, mr = 8, mt = 12, mb = 24;
-  let min = Math.min(...todos), max = Math.max(...todos);
-  const pad = (max - min) * 0.25 || 1;
-  min = min - pad; max = max + pad;
-  if (u === '%') min = Math.max(0, min);
+  let min, max;
+  if (minFijo != null && maxFijo != null) {
+    min = minFijo;
+    max = maxFijo;
+  } else {
+    min = Math.min(...todos);
+    max = Math.max(...todos);
+    const pad = (max - min) * 0.25 || 1;
+    min = min - pad; max = max + pad;
+    if (u === '%') min = Math.max(0, min);
+  }
 
   // Con un solo punto no hay eje que repartir: se centra. La versión vieja
   // dividía por (n - 1) y se rompía acá.
