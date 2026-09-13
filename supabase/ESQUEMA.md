@@ -1,6 +1,6 @@
 # ESQUEMA.md — Modelo de datos
 
-Estado al día de la migración `0018_endurecer_coordinador.sql`.
+Estado al día de la migración `0019_nombre_y_categorias.sql`.
 
 ## Diagrama en texto
 
@@ -39,6 +39,7 @@ Una temporada de un club (p.ej. "2026"). `unique(club_id, nombre)`.
 Un plantel: una categoría dentro de una temporada de un club (p.ej. "U21M 2026").
 - `codigo_cabb`: mapeo sugerido desde la categoría que trae el título del parser (`U21M`, `U17M`, ...). Nunca se usa para asignar sola — si no matchea ningún plantel, el import (Etapa 2B) le pregunta al entrenador.
 - `unique(club_id, temporada_id, categoria)`.
+- Newell's tiene sus seis categorías en la temporada 2026 desde 0019: `U13M`, `U15M`, `U17M`, `U21M`, `MAY_M`, `MAY_F`. Las cuatro agregadas en 0019 tienen `codigo_cabb` en NULL porque no se conoce el texto exacto de sus planillas; el import pregunta a qué categoría va el partido. No hay flujo en la app para crear categorías: se hace por SQL.
 - `categoria_codigo` (0016): FK a `categoria`. **Es la fuente de verdad.** `categoria` quedó como columna espejo con los mismos valores: el `unique` de arriba cuelga de ella y la UI la lee en chips, títulos y toasts, así que sacarla requiere tocar `src/ui/` y es una tarea aparte.
 
 ### `jugador`
@@ -56,6 +57,16 @@ La membresía de un jugador a un plantel en una temporada, con rango `desde`/`ha
 
 - `es_entrenador`, `es_coordinador` (0017), con `check (es_entrenador or es_coordinador)`. Una persona puede tener los dos. Son dos booleanos y no un rol de texto porque son exactamente dos roles fijos: se leen en una policy sin join, y el check hace imposible una membresía sin rol. La columna `rol` de 0016 se eliminó en 0017.
 - `habilitado_por`, `habilitado_en`: quién y cuándo, cuando se habilita desde el panel. Null = a mano por SQL, o antes de 0017.
+
+### El nombre de cada persona (0019)
+
+**No vive en ninguna tabla de `public`:** está en los metadatos del usuario de Supabase Auth, `auth.users.raw_user_meta_data->>'nombre'`.
+
+- Se escribe al crear la cuenta (`signUp` con `options.data`). En ese momento no hay sesión si el proyecto exige confirmar el mail, así que ninguna tabla podía recibirlo: una tabla propia sólo sumaba un trigger sobre `auth.users`, policies y una copia más.
+- La persona lo edita con `auth.updateUser` desde Mi perfil. No puede tocar el de otro.
+- Los demás lo leen sólo por `nombres_del_club`, `miembros_del_club` y `usuarios_pendientes`, que exigen ser del club o coordinación.
+- Toda cuenta nueva sin nombre (en la práctica, la primera entrada con Google) pasa por un paso único antes de entrar. Las cuentas que existían antes de 0019 y no tenían nombre quedaron con `cuenta_anterior_al_nombre: true` y no se las frena.
+- `perfil_entrenador` (0015) quedó **obsoleta**: 0019 copió sus nombres a los metadatos y la app ya no la lee ni la escribe. Se conserva para no perder datos.
 
 ### `categoria`
 Catálogo global de categorías: `(codigo, nombre, orden)`. **No lleva `club_id`** y no es una tabla de dominio.
@@ -119,8 +130,9 @@ Las funciones, todas `security definer` con `set search_path = ''`:
 | `puede_ver_plantel(uuid)` | entrenador con asignación vigente a ese plantel (0018; en 0017 también el coordinador) |
 | `puede_escribir_plantel(uuid)` | entrenador con asignación vigente a ese plantel |
 | `es_coordinador_de(club)`, `es_entrenador_de(club)` | el rol de quien llama en ese club |
-| `usuarios_pendientes()` | cuentas con mail confirmado y sin club; sólo coordinación |
+| `usuarios_pendientes()` | cuentas con mail confirmado y sin club, con su nombre; sólo coordinación |
 | `miembros_del_club(club)` | membresías con mail y nombre; sólo coordinación de ese club |
+| `nombres_del_club(club)` | el nombre de cada miembro, para la autoría de ejercicios y notas; cualquier miembro de ese club (0019) |
 | `panorama_del_club(club)` | por plantel: jugadores, partidos, última medición; y tiro sumado por (sesión, posición). Sin porcentajes: los calcula `estadisticas.js` |
 
 **Límite conocido:** `usuarios_pendientes()` muestra a cualquier coordinador todas las cuentas sin club de la plataforma. Con un solo club (hoy) es exacto. Ver `docs/COORDINACION.md`.

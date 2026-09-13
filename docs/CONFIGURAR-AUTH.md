@@ -111,10 +111,10 @@ Google devuelve `redirect_uri_mismatch`.
 
 | Qué | Cómo | Qué tiene que pasar |
 |---|---|---|
-| Crear cuenta | Landing → Crear cuenta | Llega el mail (o entra directo, según el paso 2) |
+| Crear cuenta | Landing → Crear cuenta | Sin nombre y apellido no deja seguir. Llega el mail (o entra directo, según el paso 2) |
 | Cuenta sin club | Entrar con esa cuenta nueva | Pantalla "Tu cuenta está lista, falta el acceso" — **no** una app vacía |
 | Recuperar | Ingresar → Olvidé mi contraseña | Llega el mail; el link abre la pantalla de contraseña nueva |
-| Google | Continuar con Google | Va a Google y vuelve a la app |
+| Google | Continuar con Google | Va a Google y vuelve. La primera vez muestra "¿Cómo te llamás?" con el nombre de Google escrito, y no entra hasta confirmarlo |
 | Google sin configurar | Antes de hacer los pasos 3 y 4 | Aviso "todavía no está habilitado", **sin** romper la pantalla |
 
 ---

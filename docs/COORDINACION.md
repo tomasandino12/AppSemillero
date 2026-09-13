@@ -54,10 +54,18 @@ order by m.club_id, u.email;
 (Después de 0017 la columna `rol` ya no existe: la consulta equivalente usa
 `m.es_entrenador, m.es_coordinador`.)
 
-### 2. Aplicar 0017
+### 2. Aplicar 0017 y 0019
 
-`npx supabase db push` (aplica lo que falte, cada migración en su transacción).
+`npx supabase db push` aplica lo que falte, cada migración en su transacción.
 Conviene hacerlo cuando nadie esté usando la app.
+
+0019 (nombre en los metadatos de Auth y las cuatro categorías que faltaban)
+depende sólo de 0017, y **tiene que estar antes del deploy del frontend**: sin
+ella la biblioteca no muestra autores y a las cuentas viejas sin nombre (Nacho)
+se les pediría el nombre antes de entrar, en vez de dejarlas pasar.
+
+Si `db push` quiere aplicar también 0018 en el mismo paso, aplicar 0017 y 0019
+a mano desde el SQL Editor y dejar 0018 para el paso 7.
 
 Correr `tests/verificarCoordinacion.sql` en el SQL Editor: todo `OK`, salvo los
 casos 10 y 11 en `PENDIENTE`.
