@@ -65,18 +65,31 @@
 .cabecera .perfil svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:2}
 .cabecera .perfil.on{background:var(--rojo)}
 
+/* La pantalla actual es un bloque aparte del escudo, separado por una línea:
+   la flecha de volver pertenece al título, no a la marca. */
+.cabecera .pantalla-actual{
+  flex:0 1 auto;min-width:0;
+  display:flex;align-items:center;gap:var(--sp-1);
+  border-left:1px solid var(--linea-osc);padding-left:var(--sp-1);
+}
+/* El lugar de volver existe siempre, con o sin flecha: el título arranca en
+   la misma X en todas las pantallas y la flecha no desplaza nada al aparecer. */
+.cabecera .lugar-volver{flex:0 0 var(--tap);width:var(--tap);height:var(--tap);display:flex}
+
 /* Con escudo, volver, modo y perfil, el título es lo que cede espacio. */
 .cabecera .titulo{min-width:0}
-.cabecera h1{font-size:var(--fs-190);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cabecera h1{font-size:var(--fs-220);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cabecera .sub{
   font-size:var(--fs-100);color:var(--gris-osc);letter-spacing:.07em;
   text-transform:uppercase;margin-top:.1875rem;font-weight:500;
 }
 .cabecera .atras{
-  font-family:var(--ff-titulo);font-size:var(--fs-230);font-weight:600;color:#fff;
-  min-width:var(--tap);min-height:var(--tap);display:flex;align-items:center;
-  margin-left:calc(var(--sp-2) * -1);
+  font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:600;color:#fff;
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
 }
+
+/* La marca de la navegación lateral sólo existe en escritorio (ver ≥1024px). */
+.nav .marca-nav{display:none}
 
 /* ---- barra de categorías ---- */
 .cats{
@@ -243,6 +256,24 @@
   .nav button.on{background:var(--sup-1)}
   .nav svg{width:1.25rem;height:1.25rem}
   .nav span{font-size:var(--fs-135);letter-spacing:.08em}
+
+  /* Escudo y club arriba de la navegación, fijos en todas las pantallas. En
+     la cabecera ya no van: ahí quedan volver y el título de la pantalla. */
+  .nav .marca-nav{
+    display:flex;flex-direction:row;align-items:center;gap:var(--sp-3);
+    padding:var(--sp-2) var(--sp-3) var(--sp-4);margin-bottom:var(--sp-3);
+    border-bottom:1px solid var(--linea-osc);border-radius:0;
+    text-align:left;color:#fff;
+  }
+  .nav .marca-nav .escudo{width:2.5rem;height:2.5rem;flex:0 0 auto;object-fit:contain}
+  .nav .marca-nav .club{
+    font-family:var(--ff-titulo);font-size:var(--fs-145);font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase;line-height:1.1;color:#fff;
+  }
+  .cabecera .inicio{display:none}
+  .cabecera .pantalla-actual{border-left:0;padding-left:0}
+  .cabecera h1{font-size:var(--fs-260)}
+  .cabecera .sub{display:none}
   /* Sin sesión la navegación no se dibuja, así que la columna lateral no se
      reserva. Si no, el login queda empujado 224px a la derecha por una barra
      que no existe — el grid guarda el lugar aunque .nav:empty esté oculto. */

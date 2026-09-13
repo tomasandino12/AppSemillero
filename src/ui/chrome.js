@@ -102,12 +102,20 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
     ? escaparHtml(iniciales)
     : `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONOS.persona}</svg>`;
 
+  // El escudo es marca, no un control compuesto: siempre el mismo elemento en
+  // el mismo lugar, y nunca con la flecha de volver al lado. Volver vive en
+  // el bloque de la pantalla actual, en un lugar reservado aunque no haya
+  // flecha: así el título arranca siempre en la misma posición.
+  // En escritorio este escudo se oculta y aparece arriba de la navegación
+  // lateral (ver más abajo y layout.css).
   cabecera.innerHTML = `
     <button class="inicio" id="btn-inicio" aria-label="Ir al inicio">${ESCUDO}</button>
-    ${atras}
-    <div class="titulo">
-      <h1>${escaparHtml(titulo ?? '')}</h1>
-      <div class="sub">${escaparHtml(club?.nombre ?? '')}</div>
+    <div class="pantalla-actual">
+      <span class="lugar-volver">${atras}</span>
+      <div class="titulo">
+        <h1>${escaparHtml(titulo ?? '')}</h1>
+        <div class="sub">${escaparHtml(club?.nombre ?? '')}</div>
+      </div>
     </div>
     ${botonModo}
     <button class="perfil ${pantallaId === PANTALLA_PERFIL ? 'on' : ''}" id="btn-perfil" aria-label="Mi perfil">${contenidoPerfil}</button>
@@ -135,13 +143,23 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
     });
   }
 
+  // La marca encabeza la navegación lateral en escritorio: escudo y club fijos
+  // arriba de los ítems, en todas las pantallas. En celular la barra de abajo
+  // no la muestra (layout.css): ahí el escudo está en la cabecera.
   const tabs = coordinando ? TABS_COORDINACION : TABS;
-  nav.innerHTML = tabs.map((t) => `
-    <button class="${pantallaId === t.id ? 'on' : ''}" data-ir="${t.id}">
-      <svg viewBox="0 0 24 24">${t.icono}</svg><span>${t.texto}</span>
+  nav.innerHTML = `
+    <button class="marca-nav" id="btn-inicio-nav" aria-label="Ir al inicio">
+      ${ESCUDO}
+      <span class="club">${escaparHtml(club?.nombre ?? '')}</span>
     </button>
-  `).join('');
-  nav.querySelectorAll('button').forEach((boton) => {
+    ${tabs.map((t) => `
+      <button class="${pantallaId === t.id ? 'on' : ''}" data-ir="${t.id}">
+        <svg viewBox="0 0 24 24">${t.icono}</svg><span>${t.texto}</span>
+      </button>
+    `).join('')}
+  `;
+  $('btn-inicio-nav').addEventListener('click', () => alIrAlInicio());
+  nav.querySelectorAll('[data-ir]').forEach((boton) => {
     boton.addEventListener('click', () => alTocarTab(boton.dataset.ir));
   });
 }
