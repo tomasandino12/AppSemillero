@@ -1,6 +1,6 @@
 # ESQUEMA.md — Modelo de datos
 
-Estado al día de la migración `0016_autorizacion_por_plantel.sql`.
+Estado al día de la migración `0018_endurecer_coordinador.sql`.
 
 ## Diagrama en texto
 
@@ -52,9 +52,10 @@ El número de camiseta **no** vive acá — está verificado (Etapa 1) que cambi
 La membresía de un jugador a un plantel en una temporada, con rango `desde`/`hasta` (`hasta` NULL = vigente). Un jugador puede tener más de una pertenencia vigente a la vez (citado a dos categorías) — es el caso normal en inferiores, no una excepción.
 
 ### `miembro_club`
-`(user_id, club_id, rol)`, PK compuesta. Dice **a qué club** pertenece una cuenta; a qué categorías dentro de ese club lo dice `asignacion_plantel`. Los jugadores no tienen cuenta.
+`(user_id, club_id)`, PK compuesta. Dice **a qué club** pertenece una cuenta y **con qué rol**; a qué categorías dentro de ese club lo dice `asignacion_plantel`. Los jugadores no tienen cuenta.
 
-`rol` tiene `check (rol in ('entrenador','coordinador'))` desde 0016. Sin la constraint, un `'Entrenador'` con mayúscula entra igual, no matchea ninguna policy, y el síntoma —esa cuenta no ve nada— aparece lejos de su causa.
+- `es_entrenador`, `es_coordinador` (0017), con `check (es_entrenador or es_coordinador)`. Una persona puede tener los dos. Son dos booleanos y no un rol de texto porque son exactamente dos roles fijos: se leen en una policy sin join, y el check hace imposible una membresía sin rol. La columna `rol` de 0016 se eliminó en 0017.
+- `habilitado_por`, `habilitado_en`: quién y cuándo, cuando se habilita desde el panel. Null = a mano por SQL, o antes de 0017.
 
 ### `categoria`
 Catálogo global de categorías: `(codigo, nombre, orden)`. **No lleva `club_id`** y no es una tabla de dominio.
@@ -64,13 +65,19 @@ Tabla y no un `enum` de Postgres: un `enum` obliga a una migración cada vez que
 Lectura para cualquier autenticado, sin escritura: agregar una categoría es un acto administrativo.
 
 ### `asignacion_plantel`
-Qué planteles ve y edita un entrenador: `(miembro_club_user_id, miembro_club_club_id, plantel_id)`, único.
+Qué planteles ve y edita un entrenador: `(miembro_club_user_id, miembro_club_club_id, plantel_id)`, con historia (0017):
+
+- `desde`, `hasta` (null = vigente). **Única vigente** por persona y plantel (índice único parcial `where hasta is null`); las cerradas pueden repetirse, así alguien que vuelve a una categoría que ya tuvo suma una fila.
+- `asignado_por`, `cerrado_por`, `origen` (`panel` | `manual` | `migracion`).
+- **No se borran, se cierran.** Es memoria institucional: dentro de dos años tiene que poder saberse quién estuvo a cargo de una categoría. Estructuralmente: sin policy ni grant de `delete`; `insert` sólo de `(miembro_club_user_id, miembro_club_club_id, plantel_id)`, así `desde` no se puede antedatar; `update` sólo de `hasta`, y el trigger `asignacion_sellar_cierre` pone `hasta = now()` y `cerrado_por = auth.uid()` sin importar lo que mande el cliente, y rechaza tocar una fila ya cerrada.
+- Las dos FK son `on delete restrict` desde 0017 (antes cascade): borrar una membresía por SQL no puede llevarse la historia.
+- Al cerrar una asignación, lo que esa persona cargó queda en el club: ninguna tabla de datos referencia a la asignación.
 
 **Se asigna a un `plantel`, no a una `categoria`.** Un profe puede tener U15M una temporada y U17M la siguiente; asignar a categoría arrastraría el acceso entre temporadas, mientras que asignar a plantel hace que caduque con la temporada — que es el comportamiento correcto cuando se trata de datos de menores. El costo asumido es reasignar cada temporada.
 
 Apunta a la PK compuesta de `miembro_club` porque esa tabla no tiene un `id` de una sola columna. La segunda FK, `(club_id, plantel_id)`, obliga a que el club del plantel sea el mismo de la membresía.
 
-**Sin policy de insert/update/delete para el cliente autenticado**, igual que `miembro_club` y por el mismo motivo. Ver "Dar acceso a una categoría" abajo.
+Sólo un coordinador escribe acá, y nunca sobre sí mismo. Ver "Policies del coordinador" abajo.
 
 ### `importacion`
 Un registro de "este archivo .xlsx se procesó". Guarda:
@@ -92,16 +99,31 @@ Todo lo que trae el parser para un jugador **propio** en un partido: minutos en 
 
 ## Políticas RLS
 
-Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde `migrations/0016_autorizacion_por_plantel.sql` pasa por la asignación, y **lectura y escritura son ejes separados**.
+Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde 0016 pasa por la asignación, y **lectura y escritura son ejes separados**. Desde 0018 el coordinador no lee datos individuales.
 
-Todo se decide con dos funciones `security definer`:
+| | Entrenador | Coordinador (sólo) | Los dos roles |
+|---|---|---|---|
+| `plantel` (nombre de la categoría) | sus asignadas vigentes | todos los de su club | la unión |
+| `jugador`, `pertenencia`, `partido`, `estadistica_*`, `sesion_medicion`, `medicion_*`, `medicion_corporal`, `envio_recurso`, `meta_zona` | sus asignadas vigentes | **nada** | sus asignadas vigentes |
+| `jugadores_del_club_para_dedup` | sí | **rechaza** | sí |
+| `ejercicio`, `nota_ejercicio`, `recurso`, `perfil_entrenador` | todo el club | todo el club (la UI de coordinación no lo muestra) | todo el club |
+| Panel: pendientes, miembros, asignaciones, panorama | **rechaza** | su club | su club |
+| Habilitar, asignar, cerrar | **nunca** | a otros, en su club | a otros, en su club |
 
-| | `entrenador` | `coordinador` |
-|---|---|---|
-| `puede_ver_plantel(uuid)` | los planteles que tiene asignados | todos los de su club |
-| `puede_escribir_plantel(uuid)` | los planteles que tiene asignados | **nunca, ninguno** |
+El coordinador ve el panorama agregado (`panorama_del_club`), que devuelve sólo conteos y sumas, nunca una fila de jugador. Menos gente con acceso a datos de menores, y la coordinación no lo necesita para su función.
 
-El coordinador necesita la foto del club para controlar cómo va el trabajo, pero qué se entrena, qué recursos se mandan y qué metas se fijan es del cuerpo técnico. Por eso no escribe ni siquiera en lo que ve.
+Las funciones, todas `security definer` con `set search_path = ''`:
+
+| Función | Qué decide |
+|---|---|
+| `puede_ver_plantel(uuid)` | entrenador con asignación vigente a ese plantel (0018; en 0017 también el coordinador) |
+| `puede_escribir_plantel(uuid)` | entrenador con asignación vigente a ese plantel |
+| `es_coordinador_de(club)`, `es_entrenador_de(club)` | el rol de quien llama en ese club |
+| `usuarios_pendientes()` | cuentas con mail confirmado y sin club; sólo coordinación |
+| `miembros_del_club(club)` | membresías con mail y nombre; sólo coordinación de ese club |
+| `panorama_del_club(club)` | por plantel: jugadores, partidos, última medición; y tiro sumado por (sesión, posición). Sin porcentajes: los calcula `estadisticas.js` |
+
+**Límite conocido:** `usuarios_pendientes()` muestra a cualquier coordinador todas las cuentas sin club de la plataforma. Con un solo club (hoy) es exacto. Ver `docs/COORDINACION.md`.
 
 Son `security definer` por obligación, no por comodidad: se llaman desde las policies de las tablas de dominio y consultan `plantel`, así que como `invoker` la consulta a `plantel` quedaría sujeta a la policy de `plantel`, que llama a esta función — recursión infinita.
 
@@ -121,20 +143,23 @@ Un chico citado en dos categorías tiene dos pertenencias vigentes: con que **al
 **Dos formas que no siguen el patrón, y por qué:**
 
 - **`jugador` no chequea plantel en el `insert`**, sólo que quien inserta sea `entrenador` del club. No es una concesión sino una imposibilidad: en `importar_partido` el insert de `jugador` va **antes** que el de `pertenencia`, así que todavía no existe un plantel contra el cual chequear (`alta_jugador_manual` hace lo mismo). Queda expuesto crear filas huérfanas en el club propio; **no** colgarlas de un plantel ajeno —lo bloquea la policy de `pertenencia`— ni volver a leerlas.
-- **`jugadores_del_club_para_dedup(club_id)`** es la única excepción a que `jugador` esté scopeado. Con `jugador` por pertenencia, el dedup del import dejaría de ver a un chico citado desde otra categoría y crearía un **duplicado**, rompiendo la trazabilidad de por vida que es la razón de ser de la app. La función devuelve cuatro campos y nada más, rechaza clubes de los que quien llama no es miembro, y devuelve los planteles del jugador **filtrados** a los que puede ver: se aprende que el chico existe en el club y si está en una categoría propia, no en cuáles otras.
+- **`jugadores_del_club_para_dedup(club_id)`** es la única excepción a que `jugador` esté scopeado. Con `jugador` por pertenencia, el dedup del import dejaría de ver a un chico citado desde otra categoría y crearía un **duplicado**, rompiendo la trazabilidad de por vida que es la razón de ser de la app. La función devuelve cuatro campos y nada más, rechaza clubes de los que quien llama no es miembro, y devuelve los planteles del jugador **filtrados** a los que puede ver: se aprende que el chico existe en el club y si está en una categoría propia, no en cuáles otras. Desde 0018 exige `es_entrenador`: un coordinador no importa partidos ni da de alta jugadores, y la función expone nombres de chicos.
 
-`miembro_club` y `asignacion_plantel` sólo tienen policy de `select` de lo propio. **No existe policy de insert/update/delete** para el cliente autenticado en ninguna de las dos: quién entra a un club, y a qué categorías, lo decide una persona.
+### Policies del coordinador (0017)
 
-### Dar acceso a una categoría
+Quién entra a un club, y a qué categorías, lo decide el coordinador. **Un entrenador no tiene ninguna vía**: no hay policy de escritura que lo incluya.
 
-Es manual y por SQL, desde el panel de Supabase o con rol de servicio:
+- `plantel_coordinador_ver`: ve los planteles de su club.
+- `miembro_club`: además de la fila propia, ve las de su club. **Insert** sólo de entrenadores (`es_entrenador and not es_coordinador`), nunca de sí mismo. Sin update ni delete. Grant de insert sólo por columna `(user_id, club_id, es_entrenador)`.
+- `asignacion_plantel`: ve las de su club. **Insert** a otro entrenador del club, nunca a sí mismo. **Update** sólo para cerrar una vigente de otro.
 
-```sql
-insert into asignacion_plantel (miembro_club_user_id, miembro_club_club_id, plantel_id)
-values ('<user_id>', '<club_id>', '<plantel_id>');
-```
+Que el coordinador no pueda asignarse a sí mismo es a propósito: si pudiera, "el coordinador no accede a datos individuales" se saltearía con dos toques. Crear un coordinador, o darle además el rol de entrenador, es SQL (`docs/COORDINACION.md`).
 
-`tests/verificarAutorizacionPlantel.sql` los imprime listos para pegar. **No se siembran solos a propósito:** sembrar "todos ven todo" reinstala justo el problema que 0016 arregla.
+### RPC `asignar_planteles(user, club, plantel_ids[])`
+
+`security invoker`. En una sola transacción: si la persona no tiene membresía en el club, la crea como entrenador (habilitar); si es un coordinador puro, falla con `NO_ES_ENTRENADOR`; asigna cada plantel que no tenga ya vigente. Sin categorías, `SIN_CATEGORIAS`. Si algo falla —RLS, un plantel de otro club— no queda nada, tampoco la membresía. Verificado en `tests/verificarCoordinacion.sql`, caso 8.
+
+Cerrar una asignación es un update de una fila y va directo, sin RPC.
 
 ## Orden de persistencia de una importación
 
@@ -154,8 +179,8 @@ values ('<user_id>', '<club_id>', '<plantel_id>');
 3. Crear un usuario de prueba (signup por la Auth API o el Studio local).
 4. Darle el club:
    ```sql
-   insert into miembro_club (user_id, club_id, rol)
-   values ('<uuid del usuario>', '00000000-0000-0000-0000-000000000001', 'entrenador');
+   insert into miembro_club (user_id, club_id, es_entrenador)
+   values ('<uuid del usuario>', '00000000-0000-0000-0000-000000000001', true);
    ```
 5. **Y darle al menos una categoría**, o no va a ver nada — que es el comportamiento correcto desde 0016, no un error:
    ```sql
@@ -164,4 +189,5 @@ values ('<user_id>', '<club_id>', '<plantel_id>');
    where club_id = '00000000-0000-0000-0000-000000000001' and categoria = 'U17M';
    ```
 6. Con ese usuario autenticado, confirmar que ve U17M del "Club de Prueba" y **no** ve U21M.
-7. Para probar el otro rol, cambiar `rol` a `'coordinador'` y borrar sus asignaciones: tiene que ver las dos categorías y no poder escribir en ninguna.
+7. Para probar coordinación, crear otro usuario con `es_coordinador = true` (y `es_entrenador = false`): tiene que entrar al Panorama y a Profes, poder habilitar al primero, y leer cero filas en las tablas de jugador.
+8. La verificación completa, con usuarios sintéticos, es `tests/verificarCoordinacion.sql`.

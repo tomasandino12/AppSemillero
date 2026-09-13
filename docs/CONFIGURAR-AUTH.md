@@ -119,22 +119,15 @@ Google devuelve `redirect_uri_mismatch`.
 
 ---
 
-## 6. Dar acceso a un club (sigue siendo a mano, a propósito)
+## 6. Dar acceso a un club
 
-`miembro_club` **no tiene policy de insert** para el cliente autenticado
-(ver `supabase/ESQUEMA.md`). Ninguna cuenta puede darse acceso a sí misma, ni
-aunque alguien manipule el frontend. Es deliberado: la app maneja datos de
-menores y quién entra lo decide una persona.
+Desde la app: el coordinador del club lo ve en **Profes → Esperando acceso**,
+toca **Habilitar** y elige las categorías. Ninguna cuenta puede darse acceso a
+sí misma, ni un entrenador dárselo a otro: lo impide la base, no la pantalla
+(ver `supabase/ESQUEMA.md`). Sólo aparecen las cuentas que ya confirmaron el
+mail (paso 2).
 
-**Dashboard de Supabase → SQL Editor:**
+Lo que sigue siendo a mano, por SQL, está en `docs/COORDINACION.md`: crear un
+coordinador y darle además el rol de entrenador a un coordinador.
 
-```sql
-insert into miembro_club (user_id, club_id, rol)
-values ('<uuid del usuario>', '<uuid del club>', 'entrenador');
-```
-
-El `user_id` se saca de **Authentication → Users** (es el mail que la persona
-te pasa desde la pantalla de "falta el acceso"). El `club_id`, de la tabla
-`club`.
-
-Después de eso, el usuario toca **"Ya me dieron el acceso, reintentar"** y entra.
+La persona, una vez habilitada, toca **"Ya me dieron el acceso, reintentar"** y entra.

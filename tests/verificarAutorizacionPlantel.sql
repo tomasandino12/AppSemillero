@@ -1,3 +1,7 @@
+-- OBSOLETO desde 0017: usa miembro_club.rol, que ya no existe. Sirve sólo para
+-- una base en el estado exacto de 0016. Para 0017/0018 usar
+-- tests/verificarCoordinacion.sql.
+--
 -- Verificación de la migración 0016 (autorización por plantel).
 --
 -- CÓMO SE CORRE: pegado entero en el SQL Editor de Supabase, DESPUÉS de
