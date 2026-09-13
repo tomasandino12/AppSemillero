@@ -38,6 +38,7 @@ declare
 
   v_j17 uuid; v_j17b uuid; v_j21 uuid;
   v_imp uuid; v_par uuid; v_ses21 uuid; v_sesvel uuid; v_ses17 uuid; v_ses_p uuid;
+  v_imp17 uuid; v_par17 uuid; q integer;
   v_ej uuid; v_asig_b uuid;
   v_hasta timestamptz; v_cerrado uuid;
   v_json jsonb; v_res jsonb;
@@ -130,6 +131,18 @@ begin
       (v_club, v_ses17, v_j17b, 'frontal', 5),
       (v_club, v_ses17, v_j17,  'libres',  7),
       (v_club, v_ses17, v_j17b, 'esq_izq', null);
+
+    -- Partido de U17M para el panorama (0022): triples 2/5 + 1/4 = 3/9; libres
+    -- 3/4 y un par con intentados en null, que NO tiene que sumar: 3/4.
+    insert into importacion (club_id, hash_archivo, nombre_archivo)
+      values (v_club, 'zztest-coord17-' || gen_random_uuid(), 'zztest17.xlsx') returning id into v_imp17;
+    insert into partido (club_id, plantel_id, importacion_id, fecha, condicion_propia, rival_nombre)
+      values (v_club, v_u17, v_imp17, '2020-01-02', 'local', 'ZZTEST RIVAL') returning id into v_par17;
+    insert into estadistica_jugador_partido
+      (club_id, partido_id, jugador_id, nombre_crudo, tres_anotados, tres_intentados, libres_anotados, libres_intentados)
+    values
+      (v_club, v_par17, v_j17,  'ZZTEST', 2, 5, 3, 4),
+      (v_club, v_par17, v_j17b, 'ZZTEST', 1, 4, 2, null);
 
     insert into ejercicio (club_id, titulo, tema, creado_por)
       values (v_club, 'ZZTEST ejercicio', 'tiro', v_b) returning id into v_ej;
@@ -368,14 +381,34 @@ begin
                  where e->>'sesionId' = v_ses17::text and e->>'posicion' = 'esq_izq') then
         txt := txt || 'trae una posición sin medir; ';
       end if;
+      -- 0022: tiro en partidos, sumado de a pares.
+      select (e->>'tresAnotados')::int, (e->>'tresIntentados')::int,
+             (e->>'libresAnotados')::int, (e->>'libresIntentados')::int
+        into n, m, k, q
+        from jsonb_array_elements(v_json->'partidos') e
+       where e->>'partidoId' = v_par17::text;
+      if n is distinct from 3 or m is distinct from 9 or k is distinct from 3 or q is distinct from 4 then
+        txt := txt || format('partido U17M triples %s/%s libres %s/%s, esperaba 3/9 y 3/4; ', n, m, k, q);
+      end if;
+      select count(*) into n
+        from jsonb_array_elements(v_json->'partidos') e
+       where e->>'partidoId' = v_par::text
+         and e->'tresIntentados' = 'null'::jsonb and e->'libresIntentados' = 'null'::jsonb;
+      if n <> 1 then
+        txt := txt || 'el partido sin estadísticas no aparece con sumas null; ';
+      end if;
       if exists (select 1 from jsonb_array_elements(v_json->'tiro') e, jsonb_object_keys(e) clave
                  where clave not in ('plantelId','sesionId','fecha','posicion','anotados','intentos','jugadoresQueMidieron'))
       or exists (select 1 from jsonb_array_elements(v_json->'planteles') e, jsonb_object_keys(e) clave
-                 where clave not in ('plantelId','jugadores','partidos','ultimaMedicion','ultimoPartido')) then
+                 where clave not in ('plantelId','jugadores','partidos','ultimaMedicion','ultimoPartido'))
+      or exists (select 1 from jsonb_array_elements(v_json->'partidos') e, jsonb_object_keys(e) clave
+                 where clave not in ('plantelId','partidoId','fecha','rival','tresAnotados','tresIntentados','libresAnotados','libresIntentados'))
+      or exists (select 1 from jsonb_object_keys(v_json) clave
+                 where clave not in ('planteles','tiro','partidos')) then
         txt := txt || 'trae claves fuera de la lista; ';
       end if;
       if txt = '' then
-        estados[9] := 'OK'; detalles[9] := 'Frontal 8/20 con 2 jugadores, libres 7/10; sin posiciones vacías; sólo claves permitidas.';
+        estados[9] := 'OK'; detalles[9] := 'Batería frontal 8/20 (2 jug.), libres 7/10; partido 3/9 y 3/4 por pares; partido sin datos en null; sólo claves permitidas.';
       else
         estados[9] := 'FALLA'; detalles[9] := txt;
       end if;
@@ -387,7 +420,7 @@ begin
     select (select count(*) from jugador where id in (v_j17, v_j17b, v_j21))
          + (select count(*) from pertenencia where plantel_id in (v_u17, v_u21))
          + (select count(*) from partido where plantel_id in (v_u17, v_u21))
-         + (select count(*) from estadistica_jugador_partido where partido_id = v_par)
+         + (select count(*) from estadistica_jugador_partido where partido_id in (v_par, v_par17))
          + (select count(*) from sesion_medicion where plantel_id in (v_u17, v_u21))
          + (select count(*) from medicion_tiro where sesion_id in (v_ses17, v_ses21))
          + (select count(*) from medicion_velocidad where sesion_id = v_sesvel)
