@@ -12,6 +12,8 @@ import { renderRecursos } from './recursos.js';
 import { setAbrirEjercicio } from './ejercicios.js';
 import { renderEjercicio, abrirEjercicio } from './ejercicio.js';
 import { renderMetas } from './metas.js';
+import { renderPanorama } from './coordPanorama.js';
+import { renderProfes } from './coordProfes.js';
 
 /**
  * Punto único donde se registran las pantallas. Existe para que main.js no
@@ -31,6 +33,8 @@ export function registrarPantallas() {
   registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });
   registrarPantalla('p-ejercicio', { titulo: 'Ejercicio', render: renderEjercicio });
   registrarPantalla('p-metas', { titulo: 'Metas', render: renderMetas });
+  registrarPantalla('p-coord-panorama', { titulo: 'Panorama', render: renderPanorama });
+  registrarPantalla('p-coord-profes', { titulo: 'Profes', render: renderProfes });
   setAbrirFicha(abrirFicha);
   setAbrirEjercicio(abrirEjercicio);
   iniciarDatos();

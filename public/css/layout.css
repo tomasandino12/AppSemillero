@@ -169,6 +169,9 @@
   .lista-2col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3)}
   .lista-2col > *{margin-bottom:0}
   .pie-fijo{padding-inline:var(--sp-6)}
+  /* Las categorías una al lado de la otra. Todas iguales en tamaño y en orden
+     de catálogo: la grilla no sugiere que una importe más. */
+  .panorama{grid-template-columns:repeat(auto-fill,minmax(18rem,1fr))}
 
   /* ---- contención ----
      Arriba de ~640px las reglas pensadas para 375px empiezan a trabajar en

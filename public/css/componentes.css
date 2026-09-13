@@ -409,3 +409,21 @@ svg.g{width:100%;display:block;overflow:visible}
 .fila-menor .k{flex:0 0 6rem;color:var(--gris-cl);text-transform:uppercase;letter-spacing:.05em;font-size:var(--fs-100)}
 .fila-menor .v{color:var(--tinta)}
 .fila-menor a{color:var(--rojo)}
+
+/* ---- coordinación ---- */
+.panorama{display:grid;gap:var(--sp-4)}
+.tarjeta-cat{background:var(--blanco);border-radius:var(--r);box-shadow:var(--sombra);padding:var(--sp-4);min-width:0}
+.tarjeta-cat .nom{font-family:var(--ff-titulo);font-size:var(--fs-190);font-weight:600;margin-bottom:var(--sp-1)}
+.tarjeta-cat .det{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
+.tarjeta-cat .nom .det{font-family:inherit;font-weight:500;margin-left:var(--sp-2)}
+.tarjeta-cat .chip.sin{display:inline-block;margin-top:var(--sp-2)}
+.serie-cat{border-top:1px solid var(--linea);margin-top:var(--sp-3);padding-top:var(--sp-3)}
+.serie-cat .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.serie-cat .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.fila-ev.tres{grid-template-columns:auto 1fr auto}
+.profe{background:var(--blanco);border-radius:var(--r);box-shadow:var(--sombra);padding:var(--sp-3);margin-bottom:var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-2);min-width:0}
+.profe .nom{font-weight:600;font-size:var(--fs-145)}
+.profe .det{font-size:var(--fs-115);color:var(--gris)}
+.profe-cat{display:flex;align-items:center;gap:var(--sp-3);border-top:1px solid var(--linea);padding-top:var(--sp-2)}
+.profe .btn.chico{align-self:flex-start}
+.casilla{width:100%;text-align:left;cursor:pointer}
