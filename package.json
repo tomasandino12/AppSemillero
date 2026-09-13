@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/parserCabb.test.js tests/mapearImportacion.test.js tests/prepararPayloadImportacion.test.js tests/navegacionInvariante.test.js tests/estadisticas.test.js tests/prepararPayloadMedicion.test.js tests/borradorMedicion.test.js tests/sinDatosDeEjemplo.test.js tests/graficos.test.js tests/nav.test.js tests/antropometria.test.js tests/metas.test.js tests/importsResueltos.test.js tests/temas.test.js tests/coordinacion.test.js tests/coordinacionSinDatosIndividuales.test.js"
+    "test": "node --test tests/parserCabb.test.js tests/mapearImportacion.test.js tests/prepararPayloadImportacion.test.js tests/navegacionInvariante.test.js tests/estadisticas.test.js tests/prepararPayloadMedicion.test.js tests/borradorMedicion.test.js tests/sinDatosDeEjemplo.test.js tests/graficos.test.js tests/nav.test.js tests/antropometria.test.js tests/metas.test.js tests/importsResueltos.test.js tests/temas.test.js tests/coordinacion.test.js tests/coordinacionSinDatosIndividuales.test.js tests/cuenta.test.js"
   },
   "dependencies": {
     "xlsx": "^0.18.5",

@@ -33,7 +33,7 @@ export function plantelesEnOrdenDeCatalogo(planteles, catalogo, temporadaId) {
     .sort((a, b) => (orden.get(a.categoriaCodigo) ?? Infinity) - (orden.get(b.categoriaCodigo) ?? Infinity));
 }
 
-/** El nombre si lo cargó (perfil_entrenador), el mail si no. */
+/** El nombre que cargó la persona (metadatos de Auth, 0019), el mail si no. */
 export function etiquetaDeMiembro(miembro) {
   return miembro?.nombre || miembro?.email || 'Cuenta sin nombre';
 }

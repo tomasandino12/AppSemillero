@@ -44,8 +44,30 @@
    margin-left:auto: sin esto el espacio libre se reparte entre ellos y
    quedan separados por medio encabezado. */
 .cabecera .modo{margin-right:0}
-.cabecera .modo + .salir{margin-left:0}
-.cabecera h1{font-size:var(--fs-190)}
+.cabecera .modo + .perfil{margin-left:0}
+
+/* El escudo lleva al inicio desde cualquier pantalla. Botón del tamaño de un
+   dedo, con el escudo del mismo tamaño de siempre adentro. */
+.cabecera .inicio{
+  flex:0 0 auto;min-width:var(--tap);min-height:var(--tap);
+  display:flex;align-items:center;justify-content:center;
+  margin-left:calc(var(--sp-2) * -1);
+}
+
+/* Mi perfil: las iniciales en un círculo, a la derecha de todo. */
+.cabecera .perfil{
+  margin-left:auto;flex:0 0 auto;
+  width:var(--tap);height:var(--tap);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--sup-2);color:#fff;border:2px solid var(--rojo);
+  font-family:var(--ff-titulo);font-size:var(--fs-145);font-weight:600;letter-spacing:.04em;
+}
+.cabecera .perfil svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:2}
+.cabecera .perfil.on{background:var(--rojo)}
+
+/* Con escudo, volver, modo y perfil, el título es lo que cede espacio. */
+.cabecera .titulo{min-width:0}
+.cabecera h1{font-size:var(--fs-190);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cabecera .sub{
   font-size:var(--fs-100);color:var(--gris-osc);letter-spacing:.07em;
   text-transform:uppercase;margin-top:.1875rem;font-weight:500;

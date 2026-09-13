@@ -38,8 +38,8 @@ function pendientesHtml(pendientes) {
   return pendientes.map((u) => `
     <div class="jug-fila">
       <div style="flex:1;min-width:0">
-        <div class="nom">${escaparHtml(u.email)}</div>
-        <div class="det">Se registró el ${escaparHtml(formatearFechaCorta(u.registradoEn.slice(0, 10)))}</div>
+        <div class="nom">${escaparHtml(u.nombre || u.email)}</div>
+        <div class="det">${u.nombre ? `${escaparHtml(u.email)} · ` : ''}Se registró el ${escaparHtml(formatearFechaCorta(u.registradoEn.slice(0, 10)))}</div>
       </div>
       <button class="btn chico" data-habilitar="${u.userId}">Habilitar</button>
     </div>
@@ -139,14 +139,15 @@ function abrirElegirCategorias({ titulo, texto, planteles, textoBoton, alConfirm
 
 function abrirHabilitar(pendiente) {
   const club = obtenerClubActual();
+  const quien = pendiente.nombre || pendiente.email;
   abrirElegirCategorias({
     titulo: 'Habilitar',
-    texto: `${escaparHtml(pendiente.email)} va a poder entrar como entrenador y ver sólo las categorías que marques. La biblioteca de ejercicios la ve entera.`,
+    texto: `${escaparHtml(quien)} va a poder entrar como entrenador y ver sólo las categorías que marques. La biblioteca de ejercicios la ve entera.`,
     planteles: vista.plantelesDeLaTemporada,
     textoBoton: 'Habilitar y asignar',
     alConfirmar: async (plantelIds) => {
       const r = await asignarPlanteles({ userId: pendiente.userId, clubId: club.id, plantelIds });
-      toast(`Listo: ${pendiente.email} ya puede entrar, con ${r.asignadas} categoría${r.asignadas === 1 ? '' : 's'}.`);
+      toast(`Listo: ${quien} ya puede entrar, con ${r.asignadas} categoría${r.asignadas === 1 ? '' : 's'}.`);
     },
   });
 }
@@ -244,6 +245,7 @@ export async function renderProfes() {
   if (!club) return;
   contenedor().innerHTML = '<div class="pad"><div class="p">Cargando...</div></div>';
 
+  let notaCodigos = '';
   try {
     const [planteles, catalogo, temporadas, miembros, asignaciones, pendientes, usuarioActualId] = await Promise.all([
       obtenerPlantelesDelClub(club.id),
@@ -255,6 +257,15 @@ export async function renderProfes() {
       obtenerUsuarioActual(),
     ]);
     vista = armarProfes({ planteles, catalogo, temporadas, miembros, asignaciones, pendientes, usuarioActualId });
+
+    // Los códigos de Mayores no se leen solos. Se aclaran una vez, acá arriba,
+    // y no en cada lugar donde aparecen. Salen del catálogo, no escritos a mano.
+    const mayores = catalogo.filter((c) => c.codigo.startsWith('MAY_')
+      && vista.plantelesDeLaTemporada.some((p) => p.categoriaCodigo === c.codigo));
+    if (mayores.length) {
+      const verbo = mayores.length === 1 ? 'es' : 'son';
+      notaCodigos = `${mayores.map((c) => c.codigo).join(' y ')} ${verbo} ${mayores.map((c) => c.nombre).join(' y ')}.`;
+    }
   } catch (e) {
     const mensaje = esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar la lista de profes.';
     contenedor().innerHTML = `<div class="pad"><div class="p">${mensaje}</div></div>`;
@@ -263,6 +274,7 @@ export async function renderProfes() {
 
   contenedor().innerHTML = `
     <div class="pad">
+      ${notaCodigos ? `<div class="p nota-codigos">${escaparHtml(notaCodigos)}</div>` : ''}
       <div class="eyebrow">Esperando acceso <span class="der">${vista.pendientes.length}</span></div>
       ${pendientesHtml(vista.pendientes)}
 

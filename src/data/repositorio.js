@@ -199,12 +199,15 @@ function urlDeRetorno() {
  * esperar a que haga clic en el link. Se devuelven las dos cosas para que la
  * UI pueda decir cuál de los dos casos pasó, en vez de dejarlo esperando.
  */
-export async function crearCuenta(email, password) {
+export async function crearCuenta(email, password, nombre) {
   const supabase = obtenerCliente();
+  // El nombre viaja como metadato: en este momento no hay sesión (si el
+  // proyecto exige confirmar el mail) y no se podría escribir en ninguna
+  // tabla. Ver 0019.
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: urlDeRetorno() },
+    options: { emailRedirectTo: urlDeRetorno(), data: { nombre } },
   });
   if (error) throw error;
   return { sesion: data.session, usuario: data.user };
@@ -651,19 +654,42 @@ export async function guardarMetasPlantel(payload) {
   return data;
 }
 
-/* ---------- Etapa 5: perfil del entrenador ---------- */
+/* ---------- Nombre de cada persona (0019) ---------- */
 
-/** Mapa userId → nombre, de todos los del club. Sin él no hay autoría que mostrar. */
+/**
+ * Mapa userId → nombre, de todos los del club. Sin él no hay autoría que
+ * mostrar. Desde 0019 el nombre vive en los metadatos de Auth, que el cliente
+ * no puede leer de otros: pasa por nombres_del_club, que exige ser del club.
+ * Quien no cargó nombre no aparece en el mapa.
+ */
 export async function obtenerPerfilesDelClub(clubId) {
   const supabase = obtenerCliente();
-  const { data, error } = await supabase
-    .from('perfil_entrenador')
-    .select('user_id, nombre')
-    .eq('club_id', clubId);
+  const { data, error } = await supabase.rpc('nombres_del_club', { p_club_id: clubId });
   if (error) throw error;
   const porUsuario = {};
-  for (const f of data) porUsuario[f.user_id] = f.nombre;
+  for (const f of data) {
+    if (f.nombre) porUsuario[f.user_id] = f.nombre;
+  }
   return porUsuario;
+}
+
+/** El usuario de Auth completo (id, email, user_metadata), o null sin sesión. */
+export async function obtenerMiUsuario() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  return data.user ?? null;
+}
+
+/**
+ * Guarda el nombre propio en los metadatos de Auth. Sólo puede tocar el del
+ * usuario de la sesión: no hay forma de pisar el de otro.
+ */
+export async function guardarMiNombre(nombre) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.auth.updateUser({ data: { nombre } });
+  if (error) throw error;
+  return data.user;
 }
 
 /** El id del usuario autenticado, para saber qué es propio y qué ajeno. */
@@ -672,18 +698,6 @@ export async function obtenerUsuarioActual() {
   const { data, error } = await supabase.auth.getUser();
   if (error) throw error;
   return data.user?.id ?? null;
-}
-
-/**
- * Guarda el nombre propio. La policy de 0015 sólo deja escribir la fila propia,
- * así que esto no puede pisar el nombre de otro ni por error de programación.
- */
-export async function guardarPerfilPropio(clubId, userId, nombre) {
-  const supabase = obtenerCliente();
-  const { error } = await supabase
-    .from('perfil_entrenador')
-    .upsert({ club_id: clubId, user_id: userId, nombre }, { onConflict: 'club_id,user_id' });
-  if (error) throw error;
 }
 
 /* ---------- Etapa 5: ejercicios y notas ---------- */
@@ -900,7 +914,7 @@ export async function obtenerUsuariosPendientes() {
   const supabase = obtenerCliente();
   const { data, error } = await supabase.rpc('usuarios_pendientes');
   if (error) throw error;
-  return data.map((f) => ({ userId: f.user_id, email: f.email, registradoEn: f.registrado_en }));
+  return data.map((f) => ({ userId: f.user_id, email: f.email, nombre: f.nombre, registradoEn: f.registrado_en }));
 }
 
 export async function obtenerMiembrosDelClub(clubId) {

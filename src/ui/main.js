@@ -1,11 +1,18 @@
 import {
   obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion,
-  obtenerMisRoles, obtenerMisPlantelesAsignados,
+  obtenerMisRoles, obtenerMisPlantelesAsignados, obtenerMiUsuario,
 } from '../data/repositorio.js';
+import { necesitaNombre, nombreSugerido, nombreDeUsuario } from '../data/cuenta.js';
 import { mostrarPantalla, toast } from './nav.js';
-import { setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo } from './sesion.js';
-import { iniciarChrome, renderChrome, pantallaInicialDelModo } from './chrome.js';
-import { iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub } from './publico.js';
+import {
+  setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo, setCuenta,
+} from './sesion.js';
+import {
+  iniciarChrome, renderChrome, pantallaInicialDelModo, pantallaDeInicio, PANTALLA_PERFIL,
+} from './chrome.js';
+import {
+  iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub, mostrarPedirNombre,
+} from './publico.js';
 
 const pantallas = new Map();
 const pila = [];
@@ -96,7 +103,7 @@ async function sesionSilenciosa() {
  * toca. El criterio del proyecto reserva la hoja de confirmación para lo
  * irreversible (ver confirmarBorrado en ejercicio.js).
  */
-async function salir() {
+export async function salir() {
   try {
     await cerrarSesion();
   } catch {
@@ -114,6 +121,28 @@ async function salir() {
  * forma de pedirlo desde acá (ver ESQUEMA.md, miembro_club).
  */
 async function entrarConSesion() {
+  // El nombre va ANTES que el club: una cuenta nueva sin nombre no pasa, ni
+  // siquiera a la pantalla de "falta el acceso", porque el coordinador
+  // necesita saber a quién está habilitando. En la práctica esto sólo frena
+  // la primera entrada con Google: por mail, el nombre se pide al registrarse.
+  let usuario;
+  try {
+    usuario = await obtenerMiUsuario();
+  } catch {
+    toast('No se pudo cargar tu cuenta. Revisá tu conexión.');
+    volverALaLanding();
+    return;
+  }
+  if (!usuario) {
+    volverALaLanding();
+    return;
+  }
+  if (necesitaNombre(usuario)) {
+    mostrarPedirNombre({ sugerido: nombreSugerido(usuario) });
+    return;
+  }
+  setCuenta({ id: usuario.id, email: usuario.email, nombre: nombreDeUsuario(usuario) });
+
   let clubes;
   try {
     clubes = await obtenerClubesDelEntrenador();
@@ -167,7 +196,9 @@ async function iniciar() {
     onTab: (id) => ir(id),
     onPlantel: () => refrescar(),
     onVolver: () => volver(),
-    onSalir: () => salir(),
+    onInicio: () => ir(pantallaDeInicio()),
+    // push: Mi perfil se abre encima de donde estaba, y volver regresa ahí.
+    onPerfil: () => ir(PANTALLA_PERFIL, { push: true }),
     // Sólo existe para quien tiene los dos roles (ver chrome.js). Con los dos,
     // siempre se entra entrenando, así que los chips ya están cargados.
     onModo: () => {

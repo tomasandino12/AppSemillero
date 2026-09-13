@@ -1,6 +1,9 @@
-import { obtenerPerfilesDelClub, obtenerUsuarioActual, guardarPerfilPropio } from '../data/repositorio.js';
+import { obtenerPerfilesDelClub, obtenerUsuarioActual, guardarMiNombre } from '../data/repositorio.js';
+import { normalizarNombre } from '../data/cuenta.js';
 import { abrirHoja, cerrarHoja } from './componentes/hoja.js';
 import { esErrorDeRed, toast } from './nav.js';
+import { obtenerCuenta, setNombreDeCuenta } from './sesion.js';
+import { sincronizarChrome } from './main.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,10 +19,8 @@ let perfilesFallaron = false;
 /**
  * Trae los nombres de todos los del club y el id del usuario autenticado.
  *
- * Sin esto la autoría es un UUID. La policy de `perfil_entrenador` (0015) deja
- * que los del club se lean entre sí justamente para que "quién lo cargó"
- * signifique algo; `miembro_club` no serviría, porque su policy sólo deja ver
- * la fila propia.
+ * Sin esto la autoría es un UUID. Desde 0019 el nombre vive en los metadatos
+ * de Auth y se lee con nombres_del_club, que sólo responde a los del club.
  */
 export async function cargarPerfiles(clubId) {
   perfilesFallaron = false;
@@ -50,13 +51,14 @@ export function nombreDe(userId) {
 }
 
 export function tengoNombre() {
-  return usuarioActual != null && typeof perfiles[usuarioActual] === 'string' && perfiles[usuarioActual].length > 0;
+  return Boolean(obtenerCuenta()?.nombre);
 }
 
 /**
- * Se pide una sola vez, en la misma hoja donde el profe está por cargar su
- * primer ejercicio o su primera nota. Sin pantalla de configuración y sin un
- * ítem nuevo en la navegación: pedir el nombre no vale una pantalla propia.
+ * Las cuentas nuevas ya entran con nombre (se pide al registrarse, ver
+ * main.js). Esto queda para las anteriores a 0019 que todavía no lo cargaron:
+ * se pide en la misma hoja donde el profe está por cargar su primer ejercicio
+ * o su primera nota, y también se puede cargar desde Mi perfil.
  *
  * Devuelve true si al terminar hay nombre; false si no se pudo (usuario no
  * identificado) o si canceló. Todo camino que devuelve false ya avisó por
@@ -66,10 +68,9 @@ export function asegurarNombre(clubId) {
   if (tengoNombre()) return Promise.resolve(true);
 
   if (usuarioActual == null) {
-    // guardarPerfilPropio necesita un user_id real: sin usuario identificado
-    // (obtenerUsuarioActual() falló, o directamente no hay sesión) no hay a
-    // quién asociarle el nombre, y la policy de 0015 va a rechazar el upsert
-    // igual. Mejor avisar acá que abrir una hoja para un guardado condenado.
+    // Sin usuario identificado (obtenerUsuarioActual() falló, o directamente
+    // no hay sesión) no hay a quién guardarle el nombre. Mejor avisar acá que
+    // abrir una hoja para un guardado condenado.
     toast('No se pudo identificar tu usuario. Cerrá sesión y volvé a entrar.');
     return Promise.resolve(false);
   }
@@ -78,10 +79,10 @@ export function asegurarNombre(clubId) {
     abrirHoja({
       titulo: '¿Cómo te llamás?',
       cuerpo: `
-        <div class="p">Se muestra al lado de los ejercicios y las notas que cargues, para que los demás profes sepan de quién es cada cosa. Se pide una sola vez.</div>
+        <div class="p">Se muestra al lado de los ejercicios y las notas que cargues, para que los demás profes sepan de quién es cada cosa. Después lo podés cambiar desde Mi perfil.</div>
         <div class="campo">
-          <label for="in-nombre-perfil">Tu nombre</label>
-          <input id="in-nombre-perfil" type="text" autocomplete="name" spellcheck="false">
+          <label for="in-nombre-perfil">Nombre y apellido</label>
+          <input id="in-nombre-perfil" type="text" autocomplete="name" spellcheck="false" maxlength="80">
         </div>
         <div id="perfil-aviso"></div>
         <button class="btn" id="btn-guardar-perfil">Guardar</button>
@@ -127,7 +128,7 @@ export function asegurarNombre(clubId) {
     const guardar = async () => {
       const boton = $('btn-guardar-perfil');
       if (boton.disabled) return;
-      const nombre = $('in-nombre-perfil').value.trim();
+      const nombre = normalizarNombre($('in-nombre-perfil').value);
       if (!nombre) {
         $('perfil-aviso').innerHTML = `<div class="al"><div class="tx">Escribí tu nombre.</div></div>`;
         return;
@@ -135,7 +136,7 @@ export function asegurarNombre(clubId) {
       boton.disabled = true;
       boton.textContent = 'Guardando...';
       try {
-        await guardarPerfilPropio(clubId, usuarioActual, nombre);
+        await guardarMiNombre(nombre);
       } catch (e) {
         $('perfil-aviso').innerHTML = `<div class="al"><div class="tx">${
           esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar tu nombre.'
@@ -145,6 +146,9 @@ export function asegurarNombre(clubId) {
         return;
       }
       perfiles[usuarioActual] = nombre;
+      setNombreDeCuenta(nombre);
+      // Las iniciales de la cabecera salen del nombre.
+      sincronizarChrome();
       cerrarHoja();
       finalizar(true);
     };

@@ -1,7 +1,8 @@
 import {
   iniciarSesion, crearCuenta, enviarRecuperacionDeClave, cambiarClave,
-  entrarConGoogle, cerrarSesion, alCambiarAuth,
+  entrarConGoogle, cerrarSesion, alCambiarAuth, guardarMiNombre,
 } from '../data/repositorio.js';
+import { normalizarNombre } from '../data/cuenta.js';
 import { esErrorDeRed } from './nav.js';
 
 /**
@@ -46,9 +47,24 @@ export function mostrarSinClub(email) {
   mostrarPublico('v-sin-club');
 }
 
+/**
+ * La cuenta existe pero no tiene nombre: la primera entrada con Google, o
+ * una cuenta de mail creada sin él. Es un paso único y no se saltea: el
+ * nombre es lo que ven los demás profes y la coordinación.
+ *
+ * Lo que trae Google aparece escrito en el campo, pero no se guarda hasta que
+ * la persona toca Continuar.
+ */
+export function mostrarPedirNombre({ sugerido } = {}) {
+  limpiarErrores();
+  $('nm-nombre').value = sugerido ?? '';
+  mostrarPublico('v-nombre');
+  $('nm-nombre').focus();
+}
+
 /* ---------- avisos ---------- */
 
-const ERRORES = ['ingresar-error', 'crear-error', 'recuperar-error', 'nueva-clave-error'];
+const ERRORES = ['ingresar-error', 'crear-error', 'recuperar-error', 'nueva-clave-error', 'nombre-error'];
 
 function limpiarErrores() {
   ERRORES.forEach((id) => { $(id).style.display = 'none'; $(id).classList.remove('ok'); });
@@ -129,17 +145,19 @@ async function ingresar() {
 }
 
 async function crear() {
+  const nombre = normalizarNombre($('cr-nombre').value);
   const email = $('cr-email').value.trim();
   const clave = $('cr-pass').value;
   const repetida = $('cr-pass2').value;
   limpiarErrores();
+  if (!nombre) return avisar('crear-error', 'Escribí tu nombre y apellido.');
   if (!PARECE_EMAIL.test(email)) return avisar('crear-error', 'Escribí un mail válido.');
   const problema = problemaDeClave(clave, repetida);
   if (problema) return avisar('crear-error', problema);
 
   await conBoton($('btn-crear'), 'Creando...', async () => {
     try {
-      const { sesion } = await crearCuenta(email, clave);
+      const { sesion } = await crearCuenta(email, clave, nombre);
       if (sesion) {
         // El proyecto no exige confirmar el mail: ya está adentro.
         await alEntrar();
@@ -205,6 +223,22 @@ async function guardarClaveNueva() {
   });
 }
 
+async function guardarNombre() {
+  const nombre = normalizarNombre($('nm-nombre').value);
+  limpiarErrores();
+  if (!nombre) return avisar('nombre-error', 'Escribí tu nombre y apellido.');
+  await conBoton($('btn-nombre-guardar'), 'Guardando...', async () => {
+    try {
+      await guardarMiNombre(nombre);
+      await alEntrar();
+    } catch (e) {
+      avisar('nombre-error', esErrorDeRed(e)
+        ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
+        : 'No se pudo guardar tu nombre. Intentá de nuevo.');
+    }
+  });
+}
+
 async function google(idError) {
   limpiarErrores();
   try {
@@ -253,6 +287,10 @@ export function iniciarPublico({ onEntrar, onReintentarClub }) {
   alApretarEnter('cr-pass2', crear);
   alApretarEnter('rec-email', recuperar);
   alApretarEnter('nv-pass2', guardarClaveNueva);
+
+  $('btn-nombre-guardar').addEventListener('click', guardarNombre);
+  alApretarEnter('nm-nombre', guardarNombre);
+  $('btn-nombre-salir').addEventListener('click', salirDeLaCuenta);
 
   $('btn-sin-club-reintentar').addEventListener('click', () => onReintentarClub());
   $('btn-sin-club-salir').addEventListener('click', salirDeLaCuenta);

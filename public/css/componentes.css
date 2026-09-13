@@ -427,3 +427,22 @@ svg.g{width:100%;display:block;overflow:visible}
 .profe-cat{display:flex;align-items:center;gap:var(--sp-3);border-top:1px solid var(--linea);padding-top:var(--sp-2)}
 .profe .btn.chico{align-self:flex-start}
 .casilla{width:100%;text-align:left;cursor:pointer}
+
+/* ---- mi perfil ---- */
+.perfil-cab{display:flex;align-items:center;gap:var(--sp-4);background:var(--negro);color:#fff;border-radius:var(--r);padding:var(--sp-5) var(--sp-4);margin-bottom:var(--sp-3)}
+.perfil-avatar{flex:0 0 auto;width:4.5rem;height:4.5rem;border-radius:50%;border:3px solid var(--rojo);background:var(--sup-2);display:flex;align-items:center;justify-content:center;font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;color:#fff}
+.perfil-id{min-width:0}
+.perfil-roles{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
+.perfil-rol{font-family:var(--ff-titulo);font-size:var(--fs-100);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;border:1px solid var(--rojo);border-radius:999px;padding:.125rem .5rem}
+.perfil-nombre{font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;text-transform:uppercase;line-height:1.05;margin-top:var(--sp-2);overflow-wrap:anywhere}
+.perfil-cab .sin{color:var(--gris-osc);font-style:italic;text-transform:none;font-weight:500;font-size:var(--fs-190)}
+.perfil-cab .det{color:var(--gris-osc);font-size:var(--fs-125);margin-top:var(--sp-1)}
+.perfil-datos{background:var(--blanco);border-radius:var(--r);box-shadow:var(--sombra);padding:0 var(--sp-4);margin-bottom:var(--sp-4)}
+.perfil-fila{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) 0;border-top:1px solid var(--linea)}
+.perfil-fila:first-child{border-top:0}
+.perfil-fila > div{flex:1;min-width:0}
+.perfil-fila .k{font-family:var(--ff-titulo);font-size:var(--fs-100);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)}
+.perfil-fila .v{font-size:var(--fs-145);margin-top:.125rem;overflow-wrap:anywhere}
+.perfil-fila .v .sin{color:var(--gris);font-style:italic}
+.perfil-cats{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)}
+.nota-codigos{font-size:var(--fs-125);color:var(--gris)}

@@ -1,5 +1,9 @@
-import { obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo, setPlantelActivoId, obtenerModo, obtenerRoles } from './sesion.js';
+import {
+  obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo, setPlantelActivoId,
+  obtenerModo, obtenerRoles, obtenerCuenta,
+} from './sesion.js';
 import { escaparHtml } from './nav.js';
+import { inicialesDeNombre } from '../data/cuenta.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -9,12 +13,14 @@ const ICONOS = {
   medir: '<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/>',
   recursos: '<path d="M4 5h16v14H4z"/><path d="M10 9l5 3-5 3z"/>',
   datos: '<path d="M3 17l5-6 4 4 4-7 5 5"/><path d="M3 21h18"/>',
+  persona: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
 };
 
 // El escudo real del club. Hasta acá era un pentágono rojo dibujado con
 // clip-path y las letras NOB encima: una marca genérica, no el escudo de
-// Newell's. El archivo es el mismo que usa el favicon.
-const ESCUDO = `<img class="escudo" src="/public/escudo.png" alt="Newell's Old Boys">`;
+// Newell's. El archivo es el mismo que usa el favicon. Va dentro de un botón
+// que lleva al inicio, así que el nombre lo dice el botón y no la imagen.
+const ESCUDO = `<img class="escudo" src="/public/escudo.png" alt="">`;
 
 // Orden de la navegación. PLANTEL primero después de HOY, igual que el
 // prototipo; el landing por defecto es PLANTEL (ver main.js).
@@ -33,32 +39,46 @@ export const TABS_COORDINACION = [
   { id: 'p-coord-profes', texto: 'Profes', icono: ICONOS.plantel },
 ];
 
+export const PANTALLA_PERFIL = 'p-mi-perfil';
+
 /** Entrenando arranca en PLANTEL; coordinando, en el Panorama. */
 export function pantallaInicialDelModo() {
   return obtenerModo() === 'coordinar' ? TABS_COORDINACION[0].id : TABS[1].id;
 }
 
+/**
+ * A dónde lleva el escudo: HOY. Coordinando, al Panorama: HOY es el resumen
+ * de una categoría, y coordinación no entra a ninguna.
+ */
+export function pantallaDeInicio() {
+  return obtenerModo() === 'coordinar' ? TABS_COORDINACION[0].id : TABS[0].id;
+}
+
 let alTocarTab = () => {};
 let alElegirPlantel = () => {};
 let alVolver = () => {};
-let alSalir = () => {};
+let alIrAlInicio = () => {};
+let alAbrirPerfil = () => {};
 let alCambiarModo = () => {};
 
-export function iniciarChrome({ onTab, onPlantel, onVolver, onSalir, onModo }) {
+export function iniciarChrome({ onTab, onPlantel, onVolver, onInicio, onPerfil, onModo }) {
   alTocarTab = onTab;
   alElegirPlantel = onPlantel;
   alVolver = onVolver;
-  alSalir = onSalir;
+  alIrAlInicio = onInicio ?? (() => {});
+  alAbrirPerfil = onPerfil ?? (() => {});
   alCambiarModo = onModo ?? (() => {});
 }
 
 /**
  * Dibuja cabecera, selector de categoría y navegación.
+ *
  * El botón de volver vive SOLO acá, en el chrome — el router nunca inyecta
  * botones de volver dentro del contenido de una pantalla (invariante de
- * navegación del spec, Decisión 8). Salir sigue la misma regla: está en el
- * chrome, así que se llega desde cualquier pantalla y ninguna lo repite. El
- * cambio de modo, también.
+ * navegación del spec, Decisión 8). Lo mismo el escudo (al inicio), el cambio
+ * de modo y Mi perfil: se llega desde cualquier pantalla y ninguna los repite.
+ * Cerrar sesión vive en Mi perfil: con el escudo, volver, modo y perfil, un
+ * quinto botón no entra en la cabecera a 375px.
  */
 export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
   const cabecera = $('cabecera');
@@ -68,25 +88,34 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
   const club = obtenerClubActual();
   const roles = obtenerRoles();
   const coordinando = obtenerModo() === 'coordinar';
-  const izquierda = mostrarAtras
+  const iniciales = inicialesDeNombre(obtenerCuenta()?.nombre ?? '');
+
+  const atras = mostrarAtras
     ? `<button class="atras" id="btn-atras" aria-label="Volver">&lsaquo;</button>`
-    : ESCUDO;
+    : '';
   // Sólo quien tiene los dos roles cambia de modo.
   const botonModo = roles.esEntrenador && roles.esCoordinador
     ? `<button class="salir modo" id="btn-modo">${coordinando ? 'Entrenar' : 'Coordinar'}</button>`
     : '';
+  // Sin nombre cargado (cuentas anteriores a 0019) va el ícono de persona.
+  const contenidoPerfil = iniciales
+    ? escaparHtml(iniciales)
+    : `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONOS.persona}</svg>`;
+
   cabecera.innerHTML = `
-    ${izquierda}
-    <div>
+    <button class="inicio" id="btn-inicio" aria-label="Ir al inicio">${ESCUDO}</button>
+    ${atras}
+    <div class="titulo">
       <h1>${escaparHtml(titulo ?? '')}</h1>
       <div class="sub">${escaparHtml(club?.nombre ?? '')}</div>
     </div>
     ${botonModo}
-    <button class="salir" id="btn-salir">Salir</button>
+    <button class="perfil ${pantallaId === PANTALLA_PERFIL ? 'on' : ''}" id="btn-perfil" aria-label="Mi perfil">${contenidoPerfil}</button>
   `;
+  $('btn-inicio').addEventListener('click', () => alIrAlInicio());
   $('btn-atras')?.addEventListener('click', () => alVolver());
   $('btn-modo')?.addEventListener('click', () => alCambiarModo());
-  $('btn-salir').addEventListener('click', () => alSalir());
+  $('btn-perfil').addEventListener('click', () => alAbrirPerfil());
 
   if (coordinando) {
     // Vacío se oculta solo (.cats:empty en layout.css).

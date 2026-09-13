@@ -5,6 +5,20 @@ let planteles = [];
 let plantelActivoId = null;
 let roles = { esEntrenador: false, esCoordinador: false };
 let modo = 'entrenar';
+let cuenta = null;
+
+/** { id, email, nombre } de quien usa la app. nombre puede ser null (cuentas anteriores a 0019). */
+export function setCuenta(nueva) {
+  cuenta = nueva ? { ...nueva } : null;
+}
+
+export function obtenerCuenta() {
+  return cuenta;
+}
+
+export function setNombreDeCuenta(nombre) {
+  if (cuenta) cuenta = { ...cuenta, nombre };
+}
 
 export function setClubActual(club) {
   clubActual = club;
@@ -62,4 +76,5 @@ export function limpiarSesion() {
   plantelActivoId = null;
   roles = { esEntrenador: false, esCoordinador: false };
   modo = 'entrenar';
+  cuenta = null;
 }
