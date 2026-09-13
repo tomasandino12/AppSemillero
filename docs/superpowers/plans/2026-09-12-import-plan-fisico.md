@@ -5,7 +5,7 @@
 **Goal:** que el profe suba el `.xlsx` de fuerza, resuelva los nombres que no
 matchearon y quede guardado para un plantel, de punta a punta o nada.
 
-**Arquitectura:** dos migraciones (`0017` tablas y RLS, `0018` la RPC
+**Arquitectura:** dos migraciones (`0020` tablas y RLS, `0021` la RPC
 transaccional), una función pura en `src/data/` que arma el payload, dos
 funciones en `repositorio.js` y una pantalla nueva con el punto de entrada en
 DATOS.
@@ -25,9 +25,9 @@ DATOS.
 
 ---
 
-### Tarea 1 — Migración `0017`: tablas, RLS y rollback
+### Tarea 1 — Migración `0020`: tablas, RLS y rollback
 
-**Archivos:** crear `supabase/migrations/0017_plan_fisico.sql` y
+**Archivos:** crear `supabase/migrations/0020_plan_fisico.sql` y
 `tests/rollbackPlanFisico.sql`.
 
 - [ ] **Paso 1: las cuatro tablas**
@@ -138,7 +138,8 @@ alter table ejercicio_asignado enable row level security;
 
 -- La biblioteca es del club, no de un plantel: el beneficio de cargarla es que
 -- quede para todos (mismo criterio que `ejercicio` en 0015). Crear es sólo del
--- entrenador — el coordinador nunca escribe (0016).
+-- entrenador — el coordinador nunca escribe (0016). Desde 0017 el rol es
+-- miembro_club.es_entrenador: la columna `rol` ya no existe.
 create policy ejercicio_fuerza_leer on ejercicio_fuerza
   for select using (exists (
     select 1 from miembro_club m
@@ -147,7 +148,7 @@ create policy ejercicio_fuerza_crear on ejercicio_fuerza
   for insert with check (exists (
     select 1 from miembro_club m
     where m.club_id = ejercicio_fuerza.club_id and m.user_id = auth.uid()
-      and m.rol = 'entrenador'));
+      and m.es_entrenador));
 
 create policy plan_fisico_ver on plan_fisico
   for select using (puede_ver_plantel(plan_fisico.plantel_id));
@@ -201,7 +202,7 @@ grant select, insert, update, delete on ejercicio_asignado to authenticated;
 - [ ] **Paso 3: `tests/rollbackPlanFisico.sql`**
 
 ```sql
--- Deshace 0017 y 0018 para poder reintentar en local. NUNCA contra producción.
+-- Deshace 0020 y 0021 para poder reintentar en local. NUNCA contra producción.
 drop function if exists importar_plan_fisico(jsonb);
 drop table if exists ejercicio_asignado;
 drop table if exists sesion_fisico;
@@ -211,7 +212,7 @@ drop table if exists ejercicio_fuerza;
 
 - [ ] **Paso 4: aplicarla en el Docker local y verificar**
 
-`npx supabase db reset` (aplica las 17 en orden) y comprobar con
+`npx supabase db reset` (aplica las 20 en orden) y comprobar con
 `\d ejercicio_asignado` que las FK compuestas están, y que
 `insert into ejercicio_asignado ... ejercicio_fuerza_id = null` entra.
 
@@ -219,9 +220,9 @@ drop table if exists ejercicio_fuerza;
 
 ---
 
-### Tarea 2 — Migración `0018`: la RPC transaccional
+### Tarea 2 — Migración `0021`: la RPC transaccional
 
-**Archivo:** crear `supabase/migrations/0018_rpc_importar_plan_fisico.sql`.
+**Archivo:** crear `supabase/migrations/0021_rpc_importar_plan_fisico.sql`.
 
 - [ ] **Paso 1: la función**
 
@@ -384,7 +385,7 @@ import { clavearNombre } from '../parser/parserCabb.js';
  * Puro: sin red, sin cliente de base, sin generar ids. Toma lo que devolvió
  * parsearPlanFisico, la biblioteca de fuerza del club y las decisiones del
  * profe, y arma el payload exacto que espera importar_plan_fisico
- * (0018_rpc_importar_plan_fisico.sql).
+ * (0021_rpc_importar_plan_fisico.sql).
  *
  * Dos pasos, en este orden:
  * 1. La biblioteca del ARCHIVO (la hoja "Ejercicios") se reconcilia contra la
@@ -440,7 +441,7 @@ export async function obtenerEjerciciosFuerza(clubId) {
 
 /**
  * Única llamada transaccional del import de plan físico: o entran el plan, sus
- * sesiones y sus ejercicios, o no entra nada (0018).
+ * sesiones y sus ejercicios, o no entra nada (0021).
  */
 export async function importarPlanFisico(payload) {
   const supabase = obtenerCliente();

@@ -45,7 +45,7 @@ ejercicios que el archivo ya traía con nombre y link.
 
 ---
 
-## 3. Esquema — `0017_plan_fisico.sql`
+## 3. Esquema — `0020_plan_fisico.sql`
 
 Cuatro tablas. Todas llevan `club_id` y FK compuestas contra `(club_id, id)`,
 que es la decisión de 0001 que no se reabre.
@@ -131,7 +131,7 @@ Mismo patrón que 0016, sin excepciones nuevas.
 | `plan_fisico` | `plantel_id` directo | `puede_ver_plantel` | `puede_escribir_plantel` |
 | `sesion_fisico` | vía `plan_id` | la del plan | la del plan |
 | `ejercicio_asignado` | vía `sesion_id` → `plan_id` | la del plan | la del plan |
-| `ejercicio_fuerza` | — (nivel club) | cualquier miembro del club | sólo `rol = 'entrenador'` |
+| `ejercicio_fuerza` | — (nivel club) | cualquier miembro del club | sólo `es_entrenador` (desde 0017; la columna `rol` ya no existe) |
 
 La biblioteca queda a nivel club por la misma razón que `ejercicio` en 0015: el
 beneficio de cargarla es que quede para todos. El coordinador la lee y no la
@@ -144,7 +144,7 @@ los usa, y se agregan cuando haya quién.
 
 ---
 
-## 5. La RPC — `0018_rpc_importar_plan_fisico.sql`
+## 5. La RPC — `0021_rpc_importar_plan_fisico.sql`
 
 `importar_plan_fisico(payload jsonb)`, `security invoker`, mismo molde que
 `importar_partido`: una llamada RPC vía PostgREST es una transacción, y
@@ -272,7 +272,7 @@ guardado desde la app. El layout de PLANTEL y DATOS más allá del botón nuevo.
   roto a propósito (un `ejercicioFuerzaId` inexistente) para confirmar que no
   queda ninguna fila parcial, y una segunda importación del mismo archivo para
   confirmar `PLAN_DUPLICADO`.
-- `tests/rollbackPlanFisico.sql`: deshace 0017 y 0018 para poder reintentar en
+- `tests/rollbackPlanFisico.sql`: deshace 0020 y 0021 para poder reintentar en
   local.
 - Import del `Físico.xlsx` real de punta a punta, contando las filas en la base.
 - La pantalla mirada a 375px con el banco de pruebas.
