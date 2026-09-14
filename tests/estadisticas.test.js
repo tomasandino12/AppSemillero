@@ -13,6 +13,8 @@ import {
   totalDeZonas,
   serieDeZonas,
   serieDeZonasAgregada,
+  serieDePartidosAgregada,
+  ejeComun,
   repartoPorJugador,
   evolucionDeTiroDelEquipo,
   serieDeTiroDelJugador,
@@ -509,4 +511,44 @@ test('la serie agregada marca la muestra chica con el umbral único', () => {
   ];
   const [p] = serieDeZonasAgregada(filas, ['frontal']);
   assert.equal(p.valor.muestraChica, true);
+});
+
+test('la serie de partidos sale de las sumas de cada partido, ordenada por fecha', () => {
+  const filas = [
+    { partidoId: 'p2', fecha: '2026-05-10', rival: 'B', tresAnotados: 8, tresIntentados: 30, libresAnotados: 10, libresIntentados: 14 },
+    { partidoId: 'p1', fecha: '2026-05-03', rival: 'A', tresAnotados: 6, tresIntentados: 25, libresAnotados: 7, libresIntentados: 12 },
+  ];
+  const tres = serieDePartidosAgregada(filas, 'tres');
+  assert.deepEqual(tres.map((p) => p.partidoId), ['p1', 'p2']);
+  assert.deepEqual(tres.map((p) => [p.valor.anotados, p.valor.intentos]), [[6, 25], [8, 30]]);
+  assert.equal(tres[0].rival, 'A');
+  const libres = serieDePartidosAgregada(filas, 'libres');
+  assert.deepEqual(libres.map((p) => [p.valor.anotados, p.valor.intentos]), [[7, 12], [10, 14]]);
+});
+
+test('un partido sin intentos o sin estadísticas no genera punto: un hueco no es un cero', () => {
+  const filas = [
+    { partidoId: 'p1', fecha: '2026-05-03', rival: 'A', tresAnotados: 0, tresIntentados: 0, libresAnotados: 4, libresIntentados: 6 },
+    { partidoId: 'p2', fecha: '2026-05-10', rival: 'B', tresAnotados: null, tresIntentados: null, libresAnotados: null, libresIntentados: null },
+  ];
+  assert.deepEqual(serieDePartidosAgregada(filas, 'tres'), []);
+  assert.deepEqual(serieDePartidosAgregada(filas, 'libres').map((p) => p.partidoId), ['p1']);
+  assert.deepEqual(serieDePartidosAgregada(null, 'tres'), []);
+  assert.deepEqual(serieDePartidosAgregada(filas, 'dos'), []);
+});
+
+test('un partido con pocos intentos queda marcado con el umbral único', () => {
+  const [p] = serieDePartidosAgregada(
+    [{ partidoId: 'p1', fecha: '2026-05-03', tresAnotados: 2, tresIntentados: UMBRAL_INTENTOS - 1 }], 'tres');
+  assert.equal(p.valor.muestraChica, true);
+});
+
+test('ejeComun une las fechas y alinea cada serie con huecos', () => {
+  const a = [{ fecha: '2026-05-01', valor: porcentaje(3, 10) }, { fecha: '2026-05-20', valor: porcentaje(5, 10) }];
+  const b = [{ fecha: '2026-05-10', valor: porcentaje(2, 8) }];
+  const eje = ejeComun(a, b);
+  assert.deepEqual(eje.fechas, ['2026-05-01', '2026-05-10', '2026-05-20']);
+  assert.deepEqual(eje.a.map((v) => v?.pct ?? null), [30, null, 50]);
+  assert.deepEqual(eje.b.map((v) => v?.pct ?? null), [null, 25, null]);
+  assert.equal(eje.b[1].anotados, 2);
 });

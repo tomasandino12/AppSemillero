@@ -470,3 +470,50 @@ export function serieDeZonasAgregada(filas, zonaIds) {
     }))
     .filter((p) => p.valor != null);
 }
+
+const CAMPOS_DE_PARTIDO = {
+  tres: ['tresAnotados', 'tresIntentados'],
+  libres: ['libresAnotados', 'libresIntentados'],
+};
+
+/**
+ * La serie de tiro en partidos de una categoría, un punto por partido, a
+ * partir de las SUMAS que devuelve panorama_del_club (0022). Es lo que ve
+ * coordinación, que no tiene acceso a las filas de cada jugador.
+ *
+ * Un partido sin intentos de ese tipo, o sin estadísticas leídas, no genera
+ * punto: un hueco no es un cero. Nunca se mezcla con la serie de batería.
+ */
+export function serieDePartidosAgregada(filas, tipo) {
+  const campos = CAMPOS_DE_PARTIDO[tipo];
+  if (!campos) return [];
+  const [anotados, intentados] = campos;
+  return [...(filas ?? [])]
+    .sort((x, y) => x.fecha.localeCompare(y.fecha))
+    .map((f) => ({
+      partidoId: f.partidoId,
+      fecha: f.fecha,
+      rival: f.rival ?? null,
+      valor: porcentaje(f[anotados], f[intentados]),
+    }))
+    .filter((p) => p.valor != null);
+}
+
+/**
+ * Une las fechas de dos series en un solo eje y devuelve cada una alineada a
+ * ese eje, con null donde no tiene punto. Práctica y partido pasan en días
+ * distintos: sin esto, el punto 3 de una caería sobre el punto 3 de la otra
+ * aunque sean de meses distintos.
+ *
+ * Devuelve el objeto `valor` completo (no sólo el porcentaje) para que quien
+ * dibuja pueda marcar la muestra chica. Si una serie tiene dos puntos en la
+ * misma fecha, queda el último.
+ */
+export function ejeComun(serieA, serieB) {
+  const fechas = [...new Set([...serieA.map((p) => p.fecha), ...serieB.map((p) => p.fecha)])].sort();
+  const alinear = (serie) => {
+    const porFecha = new Map(serie.map((p) => [p.fecha, p.valor]));
+    return fechas.map((f) => porFecha.get(f) ?? null);
+  };
+  return { fechas, a: alinear(serieA), b: alinear(serieB) };
+}

@@ -5,7 +5,9 @@ import {
   obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
   actualizarFechaNacimiento,
 } from '../../data/repositorio.js';
-import { serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador } from '../../data/estadisticas.js';
+import {
+  serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador, ejeComun,
+} from '../../data/estadisticas.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
   ALTURA_MIN_CM, ALTURA_MAX_CM, PESO_MIN_KG, PESO_MAX_KG,
@@ -33,22 +35,6 @@ function dato(k, valor, unidad) {
       <div class="v ${sin ? 'sin' : ''}">${sin ? 'sin medir' : escaparHtml(String(valor)) + (unidad ? `<small> ${unidad}</small>` : '')}</div>
     </div>
   `;
-}
-
-/**
- * Une las fechas de las dos series en un solo eje, y devuelve cada serie
- * alineada a ese eje con null en las fechas donde no tiene punto.
- *
- * Práctica y partido pasan en días distintos: sin esto, el punto 3 de una
- * serie caería sobre el punto 3 de la otra aunque sean de meses distintos.
- */
-function ejeComun(serieA, serieB) {
-  const fechas = [...new Set([...serieA.map((p) => p.fecha), ...serieB.map((p) => p.fecha)])].sort();
-  const alinear = (serie) => {
-    const porFecha = new Map(serie.map((p) => [p.fecha, p.valor.pct]));
-    return fechas.map((f) => porFecha.get(f) ?? null);
-  };
-  return { fechas, a: alinear(serieA), b: alinear(serieB) };
 }
 
 /**
@@ -99,12 +85,14 @@ function bloqueDeSerie(id, titulo, serie, ayuda) {
 function dibujarSerie(id, serie) {
   const svg = document.getElementById(id);
   if (!svg) return;
+  // ejeComun vive en estadisticas.js y devuelve el objeto valor completo; la
+  // ficha dibuja sólo el porcentaje, igual que antes de moverla.
   const { fechas, a, b } = ejeComun(serie.practica, serie.partido);
   grafico(svg, {
     etiquetas: fechas.map(formatearFechaCorta),
     series: [
-      { nombre: 'Práctica', c: '#131316', d: a },
-      { nombre: 'Partido', c: '#D9122E', dash: true, d: b },
+      { nombre: 'Práctica', c: '#131316', d: a.map((v) => v?.pct ?? null) },
+      { nombre: 'Partido', c: '#D9122E', dash: true, d: b.map((v) => v?.pct ?? null) },
     ],
   });
 }
