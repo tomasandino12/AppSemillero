@@ -109,7 +109,11 @@ esto.
 
 Los dos bloques de serie —**Tiro de tres** y **Tiro libre**— pasan a:
 
-1. Título (`.eyebrow`), gráfico y leyenda: **igual que hoy**.
+1. Título (`.eyebrow`) y gráfico: **igual que hoy**. **La leyenda aparte
+   desaparece:** cada línea del resumen lleva la marca de su curva (raya llena
+   para práctica, punteada roja para partido). Con leyenda arriba y resumen
+   abajo, "Práctica" quedaba dicho dos veces seguidas — el mismo defecto que
+   esta tarea vino a sacar, con otro texto.
 2. **Resumen nuevo, siempre visible:** una línea por fuente con la fecha del
    último punto y su fracción. Reemplaza a la tabla completa como "lo que se ve
    sin tocar nada".

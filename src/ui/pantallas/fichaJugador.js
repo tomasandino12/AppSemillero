@@ -65,13 +65,13 @@ function filaDePunto(p) {
  * número se muestra igual; la afirmación no se hace. Es la misma regla que el
  * Panorama, y el día que un jugador acumule una diferencia real, se ve.
  */
-function resumenDeFuente(nombre, serie) {
+function resumenDeFuente(nombre, clase, serie) {
   if (!serie.length) return '';
   const ultimo = serie[serie.length - 1];
   const anterior = serie.length >= 2 ? serie[serie.length - 2] : null;
   return `
     <div class="resumen-fuente">
-      <span class="k">${nombre} · ${escaparHtml(formatearFechaCorta(ultimo.fecha))}</span>
+      <span class="k ${clase}">${nombre} · ${escaparHtml(formatearFechaCorta(ultimo.fecha))}</span>
       <span>${textoPorcentaje(ultimo.valor)}</span>
       ${anterior
         ? `${variacionHtml(compararPorcentajes(ultimo.valor, anterior.valor))} <span class="det">vs ${escaparHtml(formatearFechaCorta(anterior.fecha))}</span>`
@@ -97,13 +97,13 @@ function bloqueDeSerie(id, titulo, serie, ayuda) {
   return `
     <div class="eyebrow">${titulo}</div>
     <svg class="g" id="${id}"></svg>
-    <div class="leyenda">
-      ${serie.practica.length ? '<span class="linea-practica">Práctica</span>' : ''}
-      ${serie.partido.length ? '<span class="linea-partido">Partido</span>' : ''}
-    </div>
+    <!-- Sin leyenda aparte: cada línea del resumen lleva la marca de su curva
+         (raya llena para práctica, punteada roja para partido) y dice el
+         nombre una sola vez. Con leyenda arriba, "Práctica" aparecía dos
+         veces seguidas debajo del gráfico. -->
     <div class="resumen-serie">
-      ${resumenDeFuente('Práctica', serie.practica)}
-      ${resumenDeFuente('Partido', serie.partido)}
+      ${resumenDeFuente('Práctica', 'linea-practica', serie.practica)}
+      ${resumenDeFuente('Partido', 'linea-partido', serie.partido)}
     </div>
     ${detalleColapsableHtml([
       { nombre: 'Práctica', html: tabla(serie.practica) },

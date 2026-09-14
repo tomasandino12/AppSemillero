@@ -277,6 +277,11 @@ svg.g{width:100%;display:block;overflow:visible}
 .resumen-serie{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-3)}
 .resumen-fuente{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--sp-2)}
 .resumen-fuente .k{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+/* La etiqueta es también la leyenda de su curva: misma marca que en .leyenda,
+   dicha una sola vez. */
+.resumen-fuente .k.linea-practica,.resumen-fuente .k.linea-partido{display:inline-flex;align-items:center;gap:.375rem}
+.resumen-fuente .k.linea-practica::before,.resumen-fuente .k.linea-partido::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--negro)}
+.resumen-fuente .k.linea-partido::before{border-top-color:var(--rojo);border-top-style:dashed}
 
 /* Etapa 4 — ficha del jugador: partido a partido */
 .tabla-part{display:flex;flex-direction:column;gap:8px;margin-top:10px}
