@@ -255,7 +255,24 @@ begin
     raise exception 'PLAN_VACIO' using errcode = 'P0001';
   end if;
 
-  -- Primero la biblioteca: los ejercicios de las sesiones la referencian.
+  -- EL PLAN PRIMERO (corregido el 2026-09-14; ver el spec, sección 5): con la
+  -- biblioteca primero, reimportar el mismo archivo devolvía
+  -- EJERCICIO_DUPLICADO en vez de PLAN_DUPLICADO.
+  begin
+    insert into plan_fisico (club_id, plantel_id, nombre_archivo, hash_archivo, advertencias)
+    values (
+      v_club_id,
+      (payload->>'plantelId')::uuid,
+      payload->>'nombreArchivo',
+      payload->>'hashArchivo',
+      coalesce(payload->'advertencias', '[]'::jsonb)
+    )
+    returning id into v_plan_id;
+  exception when unique_violation then
+    raise exception 'PLAN_DUPLICADO' using errcode = 'P0001';
+  end;
+
+  -- Después la biblioteca: los ejercicios de las sesiones la referencian.
   create temporary table ejercicios_nuevos_resueltos (
     clave text primary key,
     ejercicio_id uuid not null
@@ -272,20 +289,6 @@ begin
     end;
     insert into ejercicios_nuevos_resueltos values (e->>'clave', v_ejercicio_id);
   end loop;
-
-  begin
-    insert into plan_fisico (club_id, plantel_id, nombre_archivo, hash_archivo, advertencias)
-    values (
-      v_club_id,
-      (payload->>'plantelId')::uuid,
-      payload->>'nombreArchivo',
-      payload->>'hashArchivo',
-      coalesce(payload->'advertencias', '[]'::jsonb)
-    )
-    returning id into v_plan_id;
-  exception when unique_violation then
-    raise exception 'PLAN_DUPLICADO' using errcode = 'P0001';
-  end;
 
   for s in select * from jsonb_array_elements(payload->'sesiones')
   loop

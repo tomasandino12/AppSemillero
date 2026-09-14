@@ -150,10 +150,19 @@ los usa, y se agregan cuando haya quién.
 `importar_partido`: una llamada RPC vía PostgREST es una transacción, y
 cualquier excepción aborta todo.
 
-Orden adentro: primero las entradas nuevas de biblioteca (las referencian los
-ejercicios), después el plan, después las sesiones y sus ejercicios. Las claves
-nuevas se resuelven con una tabla temporal `on commit drop`, igual que
+Orden adentro: **primero el plan**, después las entradas nuevas de biblioteca
+(las referencian los ejercicios), después las sesiones y sus ejercicios. Las
+claves nuevas se resuelven con una tabla temporal `on commit drop`, igual que
 `jugadores_resueltos` en 0005.
+
+**Por qué el plan va primero, y no se revierte** (corregido el 2026-09-14, al
+verificar la RPC contra la base local): con la biblioteca primero, reimportar el
+mismo archivo choca antes con una clave de ejercicio ya cargada y devuelve
+`EJERCICIO_DUPLICADO` — un mensaje que habla de un ejercicio cuando lo que pasó
+es que el archivo ya estaba importado. El plan no depende de la biblioteca (sólo
+`ejercicio_asignado` la necesita, y va después), así que invertir el orden no
+rompe nada y hace que la colisión que salta primero sea la que describe el
+problema real.
 
 ```
 {
