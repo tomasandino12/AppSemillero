@@ -118,7 +118,7 @@ function tablaBateriaHtml(serie) {
 
 function tablaPartidosHtml(serie) {
   return [...serie].reverse().map((p) => `
-    <div class="fila-ev tres">
+    <div class="fila-ev partido">
       <div class="f">${fecha(p.fecha)}</div>
       <div>${textoPorcentaje(p.valor)}</div>
       <div class="rival">${p.rival ? `vs ${escaparHtml(p.rival)}` : ''}</div>

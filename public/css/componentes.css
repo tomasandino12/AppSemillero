@@ -478,3 +478,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .detalle-tipo .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 .detalle-tipo .sub-fuente{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl);margin-top:var(--sp-3)}
 .fila-ev .rival{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris-cl)}
+/* En la fila de un partido cede el rival, nunca la fracción: un nombre largo
+   se corta con puntos suspensivos y "31% · 12/39" queda en una línea. */
+.fila-ev.partido{grid-template-columns:auto auto minmax(0,1fr)}
+.fila-ev.partido .rival{text-align:right}
