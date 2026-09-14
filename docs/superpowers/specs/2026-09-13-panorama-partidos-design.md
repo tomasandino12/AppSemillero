@@ -14,9 +14,12 @@ Tres cambios pedidos por Tomás después de ver la pantalla en producción:
 1. **Tiro en partidos.** Por categoría, una serie de triples y una de libres
    calculadas desde los partidos importados, **al lado** de las de batería,
    nunca mezcladas ni promediadas con ellas.
-2. **Detalle colapsado.** Por defecto la tarjeta muestra sólo el resumen
-   (último valor y su variación). Los gráficos y las tablas fecha por fecha
-   quedan detrás de "Ver detalles", que se abre en la misma tarjeta.
+2. **Detalle colapsado.** Siempre visibles: último valor, fracción, variación
+   y el gráfico de evolución de cada tipo. Detrás de "Ver detalles", que se
+   abre en la misma tarjeta, van sólo las tablas fecha por fecha.
+   *(Cambiado el 2026-09-14 a pedido de Tomás: la primera versión escondía
+   también el gráfico. Donde este spec dice que el gráfico está en el detalle
+   — wireframes de §4, §4.3 y §5 — rige esto.)*
 3. **Jerarquía del número principal.** Más grande, más peso, un color de
    acento fijo. El color no dice si mejoró: eso lo sigue diciendo sólo
    `variacionHtml`.

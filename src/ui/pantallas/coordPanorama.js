@@ -24,10 +24,10 @@ const contenedor = () => $('coord-panorama-contenido');
  * no trabajo; y un ranking de categorías es un ranking de entrenadores. Se
  * muestran las series; la lectura la hace la persona.
  *
- * Cerrada, la tarjeta muestra sólo el resumen. Los gráficos y las tablas
- * fecha por fecha van detrás de "Ver detalles". Todas las curvas usan el eje
- * 0–100: con la escala automática una categoría que se movió 3 puntos se
- * vería igual de dramática que una que se movió 20.
+ * Siempre visible: número, fracción, variación y el gráfico de evolución de
+ * cada tipo. Detrás de "Ver detalles" van sólo las tablas fecha por fecha.
+ * Todas las curvas usan el eje 0–100: con la escala automática una categoría
+ * que se movió 3 puntos se vería igual de dramática que una que se movió 20.
  */
 
 const TIPOS = [
@@ -95,16 +95,34 @@ function resumenFuenteHtml(t, tipo, fuente) {
     </div>`;
 }
 
+function idSvg(t, tipo) {
+  return `svg-panorama-${tipo.clave}-${t.plantelId}`;
+}
+
+/**
+ * El gráfico de evolución va siempre visible, debajo de los dos números: a
+ * 375px no entra al costado. Una sola curva por fuente, en el mismo eje de
+ * fechas. Sin ningún punto en el tipo, no hay gráfico.
+ */
+function graficoTipoHtml(t, tipo) {
+  const bateria = t[tipo.clave].bateria.serie;
+  const partido = t[tipo.clave].partido.serie;
+  if (!bateria.length && !partido.length) return '';
+  return `
+    <svg class="g" id="${idSvg(t, tipo)}"></svg>
+    <div class="leyenda">
+      ${bateria.length ? '<span class="linea-practica">Batería</span>' : ''}
+      ${partido.length ? '<span class="linea-partido">Partidos</span>' : ''}
+    </div>`;
+}
+
 function resumenTipoHtml(t, tipo) {
   return `
     <div class="serie-cat">
       <div class="k">${tipo.titulo}</div>
       <div class="fuentes">${FUENTES.map((f) => resumenFuenteHtml(t, tipo, f)).join('')}</div>
+      ${graficoTipoHtml(t, tipo)}
     </div>`;
-}
-
-function idSvg(t, tipo) {
-  return `svg-panorama-${tipo.clave}-${t.plantelId}`;
 }
 
 function tablaBateriaHtml(serie) {
@@ -125,18 +143,14 @@ function tablaPartidosHtml(serie) {
     </div>`).join('');
 }
 
+/** Sólo las tablas fecha por fecha: el gráfico ya está a la vista, arriba. */
 function detalleTipoHtml(t, tipo) {
   const bateria = t[tipo.clave].bateria.serie;
   const partido = t[tipo.clave].partido.serie;
   if (!bateria.length && !partido.length) return '';
   return `
     <div class="detalle-tipo">
-      <div class="k">${tipo.titulo} · batería por batería y partido a partido</div>
-      <svg class="g" id="${idSvg(t, tipo)}"></svg>
-      <div class="leyenda">
-        ${bateria.length ? '<span class="linea-practica">Batería</span>' : ''}
-        ${partido.length ? '<span class="linea-partido">Partidos</span>' : ''}
-      </div>
+      <div class="k">${tipo.titulo} · fecha por fecha</div>
       ${bateria.length ? `<div class="sub-fuente">Batería</div><div class="tabla-ev">${tablaBateriaHtml(bateria)}</div>` : ''}
       ${partido.length ? `<div class="sub-fuente">Partidos</div><div class="tabla-ev">${tablaPartidosHtml(partido)}</div>` : ''}
     </div>`;
@@ -144,8 +158,8 @@ function detalleTipoHtml(t, tipo) {
 
 /**
  * <details> nativo: se abre sin JS, con teclado y con lector de pantalla, y no
- * hay estado que sincronizar. Sin `open`: cada visita arranca en resumen. El
- * texto del botón cambia sólo con CSS (details[open]).
+ * hay estado que sincronizar. Sin `open`: cada visita arranca con las tablas
+ * cerradas. El texto del botón cambia sólo con CSS (details[open]).
  */
 function detallesHtml(t) {
   return `
@@ -207,8 +221,6 @@ export async function renderPanorama() {
     </div>
   `;
 
-  // Los gráficos se dibujan aunque el <details> esté cerrado: grafico() usa
-  // un viewBox fijo y no mide el DOM, así que al abrir ya están.
   for (const t of vista.tarjetas) {
     for (const tipo of TIPOS) {
       const svg = $(idSvg(t, tipo));

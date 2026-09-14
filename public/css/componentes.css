@@ -482,3 +482,5 @@ svg.g{width:100%;display:block;overflow:visible}
    se corta con puntos suspensivos y "31% · 12/39" queda en una línea. */
 .fila-ev.partido{grid-template-columns:auto auto minmax(0,1fr)}
 .fila-ev.partido .rival{text-align:right}
+/* El gráfico de evolución, siempre visible debajo de los dos números. */
+.serie-cat .g{margin-top:var(--sp-3)}
