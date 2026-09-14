@@ -1,4 +1,8 @@
-import { obtenerPartidosDelPlantel, obtenerEstadisticasDelPlantel, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
+import {
+  obtenerPartidosDelPlantel, obtenerEstadisticasDelPlantel,
+  obtenerJugadoresDelPlantel, obtenerSesionesDeMedicion,
+  obtenerMedicionesTiroDelPlantel,
+} from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, nombreCorto, formatearFechaCorta } from '../nav.js';
 import { ir } from '../main.js';
