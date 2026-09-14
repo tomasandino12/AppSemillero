@@ -208,7 +208,10 @@ async function renderCurvasDeTiro(club, plantel) {
       obtenerSesionesDeMedicion(club.id, plantel.id),
       obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
     ]);
-  } catch {
+  } catch (e) {
+    // El cartel dice lo mismo para cualquier falla; sin esto, el error real
+    // (Postgres, PostgREST o red) se perdía y DevTools no mostraba nada.
+    console.error('No se pudieron cargar las mediciones de tiro:', e);
     cont.innerHTML = `<div class="eyebrow">Tiro por zona</div><div class="p">No se pudieron cargar las mediciones de tiro.</div>`;
     return;
   }
