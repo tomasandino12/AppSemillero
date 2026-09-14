@@ -1,4 +1,4 @@
-import { serieDeZonasAgregada, compararPorcentajes } from './estadisticas.js';
+import { serieDeZonasAgregada, serieDePartidosAgregada, compararPorcentajes } from './estadisticas.js';
 import { POSICIONES, LIBRES } from './posiciones.js';
 
 /**
@@ -11,8 +11,8 @@ import { POSICIONES, LIBRES } from './posiciones.js';
  *    Ordenar por porcentaje sería un ranking de categorías, y con eso de
  *    entrenadores.
  *  - Cada categoría se compara sólo consigo misma: la variación es entre su
- *    última batería y la anterior. Comparar U13 con U17 compara edades, no
- *    trabajo.
+ *    último punto y el anterior de la misma fuente (batería con batería,
+ *    partido con partido). Comparar U13 con U17 compara edades, no trabajo.
  */
 
 /** Las 5 posiciones de la batería caen sobre la línea de tres (posiciones.js). */
@@ -49,9 +49,8 @@ function entrenadoresACargo(plantelId, asignacionesVigentes, miembrosPorId) {
     .filter((m) => m?.esEntrenador);
 }
 
-/** Una serie de la categoría y su última batería contra la anterior. */
-function serieConVariacion(filasDelPlantel, zonaIds) {
-  const serie = serieDeZonasAgregada(filasDelPlantel, zonaIds);
+/** Una serie y su último punto contra el anterior de la MISMA serie. */
+function conVariacion(serie) {
   const variacion = serie.length >= 2
     ? compararPorcentajes(serie[serie.length - 1].valor, serie[serie.length - 2].valor)
     : null;
@@ -69,7 +68,9 @@ export function armarPanorama({ planteles, catalogo, temporadas, panorama, miemb
 
   const tarjetas = plantelesEnOrdenDeCatalogo(planteles, catalogo, temporada.id).map((p) => {
     const resumen = resumenPorPlantel.get(p.id) ?? {};
-    const filas = (panorama?.tiro ?? []).filter((t) => t.plantelId === p.id);
+    const filasTiro = (panorama?.tiro ?? []).filter((t) => t.plantelId === p.id);
+    // Antes de 0022 panorama_del_club no trae 'partidos': lista vacía.
+    const filasPartidos = (panorama?.partidos ?? []).filter((t) => t.plantelId === p.id);
     return {
       plantelId: p.id,
       categoria: p.categoria,
@@ -78,8 +79,17 @@ export function armarPanorama({ planteles, catalogo, temporadas, panorama, miemb
       partidos: resumen.partidos ?? 0,
       ultimaMedicion: resumen.ultimaMedicion ?? null,
       aCargo: entrenadoresACargo(p.id, asignacionesVigentes, miembrosPorId).map(etiquetaDeMiembro),
-      triples: serieConVariacion(filas, IDS_TRIPLES),
-      libres: serieConVariacion(filas, IDS_LIBRES),
+      // Por tipo de tiro, las dos fuentes lado a lado y nunca mezcladas: la
+      // comparación práctica-partido sólo es legítima a nivel triples totales
+      // y libres, porque el boxscore no dice desde dónde se tiró.
+      triples: {
+        bateria: conVariacion(serieDeZonasAgregada(filasTiro, IDS_TRIPLES)),
+        partido: conVariacion(serieDePartidosAgregada(filasPartidos, 'tres')),
+      },
+      libres: {
+        bateria: conVariacion(serieDeZonasAgregada(filasTiro, IDS_LIBRES)),
+        partido: conVariacion(serieDePartidosAgregada(filasPartidos, 'libres')),
+      },
     };
   });
 
@@ -122,4 +132,21 @@ export function armarProfes({ planteles, catalogo, temporadas, miembros, asignac
     .filter((p) => entrenadoresACargo(p.id, asignacionesVigentes, miembrosPorId).length === 0);
 
   return { temporada, plantelesDeLaTemporada, pendientes: pendientes ?? [], profes, sinProfe };
+}
+
+/**
+ * Qué decir en el lugar del número cuando una fuente no tiene puntos. Nunca
+ * un 0%: "sin partidos importados" y "partidos sin triples intentados" son
+ * hechos distintos, y los dos son distintos de cero.
+ */
+export function textoSinDatos({ fuente, tipo, partidosImportados }) {
+  if (fuente === 'bateria') return 'Sin baterías';
+  if (!partidosImportados) return 'Sin partidos importados';
+  return `Ningún partido con ${tipo === 'libres' ? 'libres' : 'triples'} intentados`;
+}
+
+/** Si la tarjeta tiene al menos un punto en alguna de sus cuatro series. */
+export function hayAlgoParaMostrar(tarjeta) {
+  return ['triples', 'libres'].some((tipo) =>
+    ['bateria', 'partido'].some((fuente) => (tarjeta?.[tipo]?.[fuente]?.serie?.length ?? 0) > 0));
 }
