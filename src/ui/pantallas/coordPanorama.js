@@ -2,7 +2,8 @@ import {
   obtenerPlantelesDelClub, obtenerCatalogoDeCategorias, obtenerTemporadasDelClub,
   obtenerPanoramaDelClub, obtenerMiembrosDelClub, obtenerAsignacionesDelClub,
 } from '../../data/repositorio.js';
-import { armarPanorama } from '../../data/coordinacion.js';
+import { armarPanorama, textoSinDatos, hayAlgoParaMostrar } from '../../data/coordinacion.js';
+import { ejeComun } from '../../data/estadisticas.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta } from '../nav.js';
 import { grafico } from '../componentes/graficos.js';
@@ -13,8 +14,9 @@ const contenedor = () => $('coord-panorama-contenido');
 
 /**
  * El panorama del club para coordinación: una tarjeta por categoría, cada una
- * contra sí misma a lo largo de la temporada, con triples y libres como dos
- * series separadas (igual que HOY, que nunca las mezcla).
+ * contra sí misma a lo largo de la temporada. Por tipo de tiro (triples y
+ * libres) dos fuentes lado a lado, batería y partidos, nunca mezcladas ni
+ * restadas.
  *
  * Lo que esta pantalla NO hace, a propósito: ordenar por ningún valor, poner
  * una categoría contra otra, promediar el club, etiquetar con juicios ni
@@ -22,17 +24,30 @@ const contenedor = () => $('coord-panorama-contenido');
  * no trabajo; y un ranking de categorías es un ranking de entrenadores. Se
  * muestran las series; la lectura la hace la persona.
  *
- * Todas las curvas usan el eje 0–100: con la escala automática una categoría
- * que se movió 3 puntos se vería igual de dramática que una que se movió 20.
+ * Cerrada, la tarjeta muestra sólo el resumen. Los gráficos y las tablas
+ * fecha por fecha van detrás de "Ver detalles". Todas las curvas usan el eje
+ * 0–100: con la escala automática una categoría que se movió 3 puntos se
+ * vería igual de dramática que una que se movió 20.
  */
 
-const SERIES = [
-  { clave: 'triples', titulo: 'Triples', vacio: 'Todavía no hay baterías de triples' },
-  { clave: 'libres', titulo: 'Libres', vacio: 'Todavía no hay baterías de libres' },
+const TIPOS = [
+  { clave: 'triples', titulo: 'Triples' },
+  { clave: 'libres', titulo: 'Libres' },
+];
+
+// Siempre en este orden, en el resumen, la leyenda y las tablas: el ojo
+// aprende dónde está cada cosa.
+const FUENTES = [
+  { clave: 'bateria', etiqueta: 'Batería', unPunto: 'Una sola batería: todavía no hay con qué comparar' },
+  { clave: 'partido', etiqueta: 'Partidos', unPunto: 'Un solo partido: todavía no hay con qué comparar' },
 ];
 
 function plural(n, uno, varios) {
   return `${n} ${n === 1 ? uno : varios}`;
+}
+
+function fecha(iso) {
+  return escaparHtml(formatearFechaCorta(iso));
 }
 
 function operativosHtml(t) {
@@ -46,46 +61,113 @@ function aCargoHtml(t) {
     : '<span class="chip sin">Sin profe asignado</span>';
 }
 
-function idSvg(t, clave) {
-  return `svg-panorama-${clave}-${t.plantelId}`;
-}
-
-function serieHtml(t, { clave, titulo, vacio }) {
-  const { serie, variacion } = t[clave];
+/**
+ * El resumen de una fuente: último valor grande, su fracción al lado, y la
+ * variación contra el punto anterior de la MISMA fuente y categoría.
+ *
+ * El número va en --rojo SIEMPRE, con cualquier valor: es jerarquía, no una
+ * señal. La única señal de mejora sigue siendo variacionHtml, con su flecha.
+ * Un estado vacío nunca usa el estilo del número.
+ */
+function resumenFuenteHtml(t, tipo, fuente) {
+  const { serie, variacion } = t[tipo.clave][fuente.clave];
   if (!serie.length) {
+    const texto = textoSinDatos({ fuente: fuente.clave, tipo: tipo.clave, partidosImportados: t.partidos });
     return `
-      <div class="k">${titulo}</div>
-      <div class="det">${vacio} en ${escaparHtml(t.categoria)}.</div>
-    `;
+      <div class="fuente">
+        <div class="k">${fuente.etiqueta}</div>
+        <div class="vacio">${escaparHtml(texto)}</div>
+      </div>`;
   }
+  const ultimo = serie[serie.length - 1];
   const anterior = serie.length >= 2 ? serie[serie.length - 2] : null;
   return `
-    <div class="k">${titulo} · batería por batería</div>
-    <div class="sub">
-      ${anterior
-        ? `${variacionHtml(variacion)} <span class="det">última contra la del ${escaparHtml(formatearFechaCorta(anterior.fecha))}</span>`
-        : '<span class="var neutra">Una sola batería: todavía no hay con qué comparar</span>'}
-    </div>
-    <svg class="g" id="${idSvg(t, clave)}"></svg>
-    <div class="tabla-ev">
-      ${[...serie].reverse().map((p) => `
-        <div class="fila-ev tres">
-          <div class="f">${escaparHtml(formatearFechaCorta(p.fecha))}</div>
-          <div>${textoPorcentaje(p.valor)}</div>
-          <div class="f">${plural(p.jugadoresQueMidieron, 'jugador', 'jugadores')}</div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+    <div class="fuente">
+      <div class="k">${fuente.etiqueta} · ${fecha(ultimo.fecha)}</div>
+      <div class="numero">
+        <span class="n">${ultimo.valor.pct}<span class="u">%</span></span>
+        <span class="frac">${ultimo.valor.anotados}/${ultimo.valor.intentos}</span>
+      </div>
+      ${ultimo.valor.muestraChica ? '<span class="poco-tag">pocos datos</span>' : ''}
+      <div>${anterior
+        ? `${variacionHtml(variacion)} <span class="det">vs ${fecha(anterior.fecha)}</span>`
+        : `<span class="var neutra">${fuente.unPunto}</span>`}</div>
+    </div>`;
+}
+
+function resumenTipoHtml(t, tipo) {
+  return `
+    <div class="serie-cat">
+      <div class="k">${tipo.titulo}</div>
+      <div class="fuentes">${FUENTES.map((f) => resumenFuenteHtml(t, tipo, f)).join('')}</div>
+    </div>`;
+}
+
+function idSvg(t, tipo) {
+  return `svg-panorama-${tipo.clave}-${t.plantelId}`;
+}
+
+function tablaBateriaHtml(serie) {
+  return [...serie].reverse().map((p) => `
+    <div class="fila-ev tres">
+      <div class="f">${fecha(p.fecha)}</div>
+      <div>${textoPorcentaje(p.valor)}</div>
+      <div class="f">${plural(p.jugadoresQueMidieron, 'jugador', 'jugadores')}</div>
+    </div>`).join('');
+}
+
+function tablaPartidosHtml(serie) {
+  return [...serie].reverse().map((p) => `
+    <div class="fila-ev tres">
+      <div class="f">${fecha(p.fecha)}</div>
+      <div>${textoPorcentaje(p.valor)}</div>
+      <div class="rival">${p.rival ? `vs ${escaparHtml(p.rival)}` : ''}</div>
+    </div>`).join('');
+}
+
+function detalleTipoHtml(t, tipo) {
+  const bateria = t[tipo.clave].bateria.serie;
+  const partido = t[tipo.clave].partido.serie;
+  if (!bateria.length && !partido.length) return '';
+  return `
+    <div class="detalle-tipo">
+      <div class="k">${tipo.titulo} · batería por batería y partido a partido</div>
+      <svg class="g" id="${idSvg(t, tipo)}"></svg>
+      <div class="leyenda">
+        ${bateria.length ? '<span class="linea-practica">Batería</span>' : ''}
+        ${partido.length ? '<span class="linea-partido">Partidos</span>' : ''}
+      </div>
+      ${bateria.length ? `<div class="sub-fuente">Batería</div><div class="tabla-ev">${tablaBateriaHtml(bateria)}</div>` : ''}
+      ${partido.length ? `<div class="sub-fuente">Partidos</div><div class="tabla-ev">${tablaPartidosHtml(partido)}</div>` : ''}
+    </div>`;
+}
+
+/**
+ * <details> nativo: se abre sin JS, con teclado y con lector de pantalla, y no
+ * hay estado que sincronizar. Sin `open`: cada visita arranca en resumen. El
+ * texto del botón cambia sólo con CSS (details[open]).
+ */
+function detallesHtml(t) {
+  return `
+    <details class="detalles-cat">
+      <summary>
+        <span class="ver">Ver detalles</span><span class="ocultar">Ocultar detalles</span>
+        <span class="flecha" aria-hidden="true">▾</span>
+      </summary>
+      ${TIPOS.map((tipo) => detalleTipoHtml(t, tipo)).join('')}
+    </details>`;
 }
 
 function tarjetaHtml(t) {
+  const cuerpo = hayAlgoParaMostrar(t)
+    ? `${TIPOS.map((tipo) => resumenTipoHtml(t, tipo)).join('')}${detallesHtml(t)}`
+    : `<div class="det sin-tiros">Todavía no hay baterías ni partidos con tiros en ${escaparHtml(t.categoria)}.</div>`;
   return `
     <article class="tarjeta-cat">
       <h2 class="nom">${escaparHtml(t.categoria)} <span class="det">${escaparHtml(t.nombreCategoria)}</span></h2>
       ${operativosHtml(t)}
       ${aCargoHtml(t)}
-      ${SERIES.map((s) => `<div class="serie-cat">${serieHtml(t, s)}</div>`).join('')}
+      ${cuerpo}
     </article>
   `;
 }
@@ -125,19 +207,22 @@ export async function renderPanorama() {
     </div>
   `;
 
+  // Los gráficos se dibujan aunque el <details> esté cerrado: grafico() usa
+  // un viewBox fijo y no mide el DOM, así que al abrir ya están.
   for (const t of vista.tarjetas) {
-    for (const { clave, titulo } of SERIES) {
-      const { serie } = t[clave];
-      if (!serie.length) continue;
-      grafico($(idSvg(t, clave)), {
-        etiquetas: serie.map((p) => formatearFechaCorta(p.fecha)),
-        series: [{
-          nombre: titulo,
-          c: '#D9122E',
-          d: serie.map((p) => p.valor.pct),
-          chico: serie.map((p) => p.valor.muestraChica),
-        }],
-      }, { alto: 120, min: 0, max: 100 });
+    for (const tipo of TIPOS) {
+      const svg = $(idSvg(t, tipo));
+      if (!svg) continue;
+      // Mismo lenguaje que la ficha del jugador: batería sólida, partidos
+      // punteada y roja. Eje fijo 0–100 en todas las tarjetas.
+      const { fechas, a, b } = ejeComun(t[tipo.clave].bateria.serie, t[tipo.clave].partido.serie);
+      grafico(svg, {
+        etiquetas: fechas.map(formatearFechaCorta),
+        series: [
+          { nombre: 'Batería', c: '#131316', d: a.map((v) => v?.pct ?? null), chico: a.map((v) => v?.muestraChica === true) },
+          { nombre: 'Partidos', c: '#D9122E', dash: true, d: b.map((v) => v?.pct ?? null), chico: b.map((v) => v?.muestraChica === true) },
+        ],
+      }, { alto: 140, min: 0, max: 100 });
     }
   }
 }

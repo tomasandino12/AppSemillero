@@ -446,3 +446,35 @@ svg.g{width:100%;display:block;overflow:visible}
 .perfil-fila .v .sin{color:var(--gris);font-style:italic}
 .perfil-cats{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)}
 .nota-codigos{font-size:var(--fs-125);color:var(--gris)}
+
+/* ---- panorama: batería y partidos (spec 2026-09-13) ---- */
+/* Abrir una tarjeta no estira a las vecinas de la grilla (escritorio). */
+.panorama{align-items:start}
+
+.serie-cat .fuentes{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);margin-top:var(--sp-2)}
+.fuente{min-width:0}
+.fuente .k{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.fuente .numero{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--sp-2);margin-top:.125rem}
+/* Jerarquía, no señal: el mismo rojo con cualquier valor (spec §6). */
+.fuente .n{font-family:var(--ff-mono);font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--rojo)}
+.fuente .n .u{font-size:var(--fs-190);color:var(--gris-cl)}
+.fuente .frac{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--gris-cl)}
+.fuente .vacio{font-size:var(--fs-135);color:var(--gris-cl);margin-top:var(--sp-1)}
+
+.detalles-cat{border-top:1px solid var(--linea);margin-top:var(--sp-3)}
+.detalles-cat > summary{
+  list-style:none;min-height:var(--tap);cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);
+  font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--tinta);
+}
+.detalles-cat > summary::-webkit-details-marker{display:none}
+.detalles-cat .ocultar{display:none}
+.detalles-cat[open] .ver{display:none}
+.detalles-cat[open] .ocultar{display:inline}
+.detalles-cat .flecha{transition:transform .15s}
+.detalles-cat[open] .flecha{transform:rotate(180deg)}
+.detalle-tipo{padding-top:var(--sp-3)}
+.detalle-tipo .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.detalle-tipo .sub-fuente{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl);margin-top:var(--sp-3)}
+.fila-ev .rival{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris-cl)}
