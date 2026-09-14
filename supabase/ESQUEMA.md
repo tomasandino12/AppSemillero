@@ -133,7 +133,7 @@ Las funciones, todas `security definer` con `set search_path = ''`:
 | `usuarios_pendientes()` | cuentas con mail confirmado y sin club, con su nombre; sólo coordinación |
 | `miembros_del_club(club)` | membresías con mail y nombre; sólo coordinación de ese club |
 | `nombres_del_club(club)` | el nombre de cada miembro, para la autoría de ejercicios y notas; cualquier miembro de ese club (0019) |
-| `panorama_del_club(club)` | por plantel: jugadores, partidos, última medición; y tiro sumado por (sesión, posición). Sin porcentajes: los calcula `estadisticas.js` |
+| `panorama_del_club(club)` | por plantel: jugadores, partidos, última medición; tiro de batería sumado por (sesión, posición); y desde 0022, tiro en partidos sumado por partido (triples y libres, anotados e intentados de a pares, con el rival). Sin porcentajes: los calcula `estadisticas.js` |
 
 **Límite conocido:** `usuarios_pendientes()` muestra a cualquier coordinador todas las cuentas sin club de la plataforma. Con un solo club (hoy) es exacto. Ver `docs/COORDINACION.md`.
 

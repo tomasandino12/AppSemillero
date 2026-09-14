@@ -67,6 +67,12 @@ se les pediría el nombre antes de entrar, en vez de dejarlas pasar.
 Si `db push` quiere aplicar también 0018 en el mismo paso, aplicar 0017 y 0019
 a mano desde el SQL Editor y dejar 0018 para el paso 7.
 
+**0022 (tiro en partidos en el Panorama)** depende sólo de 0017 y también va
+antes del frontend que la usa. Sin ella la pantalla no se rompe, pero en las
+categorías con partidos dice "Ningún partido con triples intentados", que es
+falso. Verificación: `tests/verificarCoordinacion.sql`, caso 9. Rollback:
+`tests/rollback0022.sql`.
+
 Correr `tests/verificarCoordinacion.sql` en el SQL Editor: todo `OK`, salvo los
 casos 10 y 11 en `PENDIENTE`.
 
