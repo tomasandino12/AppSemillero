@@ -6,7 +6,8 @@ import {
   actualizarFechaNacimiento,
 } from '../../data/repositorio.js';
 import {
-  serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador, ejeComun,
+  serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador,
+  ejeComun, compararPorcentajes,
 } from '../../data/estadisticas.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
@@ -16,6 +17,8 @@ import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast } from '../nav.js';
 import { ir } from '../main.js';
 import { cancha, grafico } from '../componentes/graficos.js';
+import { variacionHtml } from '../componentes/variacion.js';
+import { detalleColapsableHtml } from '../componentes/detalleColapsable.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('ficha-contenido');
@@ -53,6 +56,36 @@ function filaDePunto(p) {
   `;
 }
 
+/**
+ * El último punto de una fuente, siempre visible: fecha, porcentaje con su
+ * fracción, y la variación contra el punto anterior de la MISMA fuente.
+ *
+ * La variación va aunque casi siempre diga "sin diferencia clara": una batería
+ * individual son ~50 tiros de arco y ~10 libres, así que el margen es ancho. El
+ * número se muestra igual; la afirmación no se hace. Es la misma regla que el
+ * Panorama, y el día que un jugador acumule una diferencia real, se ve.
+ */
+function resumenDeFuente(nombre, serie) {
+  if (!serie.length) return '';
+  const ultimo = serie[serie.length - 1];
+  const anterior = serie.length >= 2 ? serie[serie.length - 2] : null;
+  return `
+    <div class="resumen-fuente">
+      <span class="k">${nombre} · ${escaparHtml(formatearFechaCorta(ultimo.fecha))}</span>
+      <span>${textoPorcentaje(ultimo.valor)}</span>
+      ${anterior
+        ? `${variacionHtml(compararPorcentajes(ultimo.valor, anterior.valor))} <span class="det">vs ${escaparHtml(formatearFechaCorta(anterior.fecha))}</span>`
+        : '<span class="var neutra">Una sola medición: todavía no hay con qué comparar</span>'}
+    </div>
+  `;
+}
+
+/**
+ * Gráfico y último dato a la vista; el historial fecha por fecha, detrás de
+ * "Ver detalles" (el mismo componente que usa el Panorama). Antes las dos
+ * tablas estaban siempre desplegadas, y el encabezado "Práctica" de la primera
+ * caía justo debajo de la leyenda del gráfico: se leía repetido.
+ */
 function bloqueDeSerie(id, titulo, serie, ayuda) {
   const total = serie.practica.length + serie.partido.length;
   if (total === 0) {
@@ -60,25 +93,22 @@ function bloqueDeSerie(id, titulo, serie, ayuda) {
   }
   // Más reciente primero, igual que el resto de las tablas de la ficha
   // (partidos, velocidad).
-  const practicaDesc = [...serie.practica].reverse();
-  const partidoDesc = [...serie.partido].reverse();
+  const tabla = (s) => (s.length ? `<div class="tabla-ev">${[...s].reverse().map(filaDePunto).join('')}</div>` : '');
   return `
     <div class="eyebrow">${titulo}</div>
     <svg class="g" id="${id}"></svg>
     <div class="leyenda">
-      <span class="linea-practica">Práctica</span>
-      <span class="linea-partido">Partido</span>
+      ${serie.practica.length ? '<span class="linea-practica">Práctica</span>' : ''}
+      ${serie.partido.length ? '<span class="linea-partido">Partido</span>' : ''}
     </div>
-    <div class="detalle-serie">
-      ${practicaDesc.length ? `
-        <div class="leyenda"><span class="linea-practica">Práctica</span></div>
-        <div class="tabla-ev">${practicaDesc.map(filaDePunto).join('')}</div>
-      ` : ''}
-      ${partidoDesc.length ? `
-        <div class="leyenda"><span class="linea-partido">Partido</span></div>
-        <div class="tabla-ev">${partidoDesc.map(filaDePunto).join('')}</div>
-      ` : ''}
+    <div class="resumen-serie">
+      ${resumenDeFuente('Práctica', serie.practica)}
+      ${resumenDeFuente('Partido', serie.partido)}
     </div>
+    ${detalleColapsableHtml([
+      { nombre: 'Práctica', html: tabla(serie.practica) },
+      { nombre: 'Partido', html: tabla(serie.partido) },
+    ])}
   `;
 }
 

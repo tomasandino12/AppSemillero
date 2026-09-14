@@ -273,7 +273,10 @@ svg.g{width:100%;display:block;overflow:visible}
 .leyenda .linea-practica,.leyenda .linea-partido{display:inline-flex;align-items:center;gap:.375rem}
 .leyenda .linea-practica::before,.leyenda .linea-partido::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--negro)}
 .leyenda .linea-partido::before{border-top-color:var(--rojo);border-top-style:dashed}
-.detalle-serie{display:flex;flex-direction:column;gap:2px;margin-top:8px;font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
+/* El último dato de cada fuente, a la vista; el historial va en el colapsable. */
+.resumen-serie{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-3)}
+.resumen-fuente{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--sp-2)}
+.resumen-fuente .k{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 
 /* Etapa 4 — ficha del jugador: partido a partido */
 .tabla-part{display:flex;flex-direction:column;gap:8px;margin-top:10px}
@@ -461,22 +464,23 @@ svg.g{width:100%;display:block;overflow:visible}
 .fuente .frac{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--gris-cl)}
 .fuente .vacio{font-size:var(--fs-135);color:var(--gris-cl);margin-top:var(--sp-1)}
 
-.detalles-cat{border-top:1px solid var(--linea);margin-top:var(--sp-3)}
-.detalles-cat > summary{
+/* El detalle colapsable, compartido por el panorama y la ficha del jugador
+   (src/ui/componentes/detalleColapsable.js). */
+.detalle-colapsable{border-top:1px solid var(--linea);margin-top:var(--sp-3)}
+.detalle-colapsable > summary{
   list-style:none;min-height:var(--tap);cursor:pointer;
   display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);
   font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;
   letter-spacing:.06em;text-transform:uppercase;color:var(--tinta);
 }
-.detalles-cat > summary::-webkit-details-marker{display:none}
-.detalles-cat .ocultar{display:none}
-.detalles-cat[open] .ver{display:none}
-.detalles-cat[open] .ocultar{display:inline}
-.detalles-cat .flecha{transition:transform .15s}
-.detalles-cat[open] .flecha{transform:rotate(180deg)}
-.detalle-tipo{padding-top:var(--sp-3)}
-.detalle-tipo .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.detalle-tipo .sub-fuente{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl);margin-top:var(--sp-3)}
+.detalle-colapsable > summary::-webkit-details-marker{display:none}
+.detalle-colapsable .ocultar{display:none}
+.detalle-colapsable[open] .ver{display:none}
+.detalle-colapsable[open] .ocultar{display:inline}
+.detalle-colapsable .flecha{transition:transform .15s}
+.detalle-colapsable[open] .flecha{transform:rotate(180deg)}
+.detalle-colapsable .tabla-nombrada{padding-top:var(--sp-3)}
+.detalle-colapsable .sub-fuente{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 .fila-ev .rival{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris-cl)}
 /* En la fila de un partido cede el rival, nunca la fracción: un nombre largo
    se corta con puntos suspensivos y "31% · 12/39" queda en una línea. */

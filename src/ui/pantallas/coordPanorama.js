@@ -8,6 +8,7 @@ import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta } from '../nav.js';
 import { grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
+import { detalleColapsableHtml } from '../componentes/detalleColapsable.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('coord-panorama-contenido');
@@ -143,38 +144,29 @@ function tablaPartidosHtml(serie) {
     </div>`).join('');
 }
 
-/** Sólo las tablas fecha por fecha: el gráfico ya está a la vista, arriba. */
-function detalleTipoHtml(t, tipo) {
-  const bateria = t[tipo.clave].bateria.serie;
-  const partido = t[tipo.clave].partido.serie;
-  if (!bateria.length && !partido.length) return '';
-  return `
-    <div class="detalle-tipo">
-      <div class="k">${tipo.titulo} · fecha por fecha</div>
-      ${bateria.length ? `<div class="sub-fuente">Batería</div><div class="tabla-ev">${tablaBateriaHtml(bateria)}</div>` : ''}
-      ${partido.length ? `<div class="sub-fuente">Partidos</div><div class="tabla-ev">${tablaPartidosHtml(partido)}</div>` : ''}
-    </div>`;
-}
-
 /**
- * <details> nativo: se abre sin JS, con teclado y con lector de pantalla, y no
- * hay estado que sincronizar. Sin `open`: cada visita arranca con las tablas
- * cerradas. El texto del botón cambia sólo con CSS (details[open]).
+ * Las cuatro tablas de la tarjeta, cada una con su nombre completo: el detalle
+ * ya no agrupa por tipo con un subtítulo, lo dice el nombre de cada tabla.
+ * El gráfico queda afuera, siempre visible.
  */
-function detallesHtml(t) {
-  return `
-    <details class="detalles-cat">
-      <summary>
-        <span class="ver">Ver detalles</span><span class="ocultar">Ocultar detalles</span>
-        <span class="flecha" aria-hidden="true">▾</span>
-      </summary>
-      ${TIPOS.map((tipo) => detalleTipoHtml(t, tipo)).join('')}
-    </details>`;
+function tablasDeTarjeta(t) {
+  const tablas = [];
+  for (const tipo of TIPOS) {
+    const bateria = t[tipo.clave].bateria.serie;
+    const partido = t[tipo.clave].partido.serie;
+    if (bateria.length) {
+      tablas.push({ nombre: `${tipo.titulo} · Batería`, html: `<div class="tabla-ev">${tablaBateriaHtml(bateria)}</div>` });
+    }
+    if (partido.length) {
+      tablas.push({ nombre: `${tipo.titulo} · Partidos`, html: `<div class="tabla-ev">${tablaPartidosHtml(partido)}</div>` });
+    }
+  }
+  return tablas;
 }
 
 function tarjetaHtml(t) {
   const cuerpo = hayAlgoParaMostrar(t)
-    ? `${TIPOS.map((tipo) => resumenTipoHtml(t, tipo)).join('')}${detallesHtml(t)}`
+    ? `${TIPOS.map((tipo) => resumenTipoHtml(t, tipo)).join('')}${detalleColapsableHtml(tablasDeTarjeta(t))}`
     : `<div class="det sin-tiros">Todavía no hay baterías ni partidos con tiros en ${escaparHtml(t.categoria)}.</div>`;
   return `
     <article class="tarjeta-cat">
