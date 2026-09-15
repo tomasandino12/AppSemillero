@@ -245,8 +245,12 @@ Una sola pantalla nueva, `p-plan-fisico` (`src/ui/pantallas/planFisico.js`), con
 pasos que se renderizan en el mismo contenedor y un objeto de estado — igual que
 `confirmacionImport.js`.
 
-1. **Archivo y categoría.** Punto de entrada en DATOS, al lado de "Cargar
-   partido", con su propio `<input type="file">`. La categoría arranca en la del
+1. **Archivo y categoría.** Punto de entrada en la pestaña FÍSICO (entre
+   MEDIR y RECURSOS), con su propio `<input type="file">`. Al principio estuvo
+   en DATOS, al lado de "Cargar partido"; se movió el 2026-09-15 porque un
+   partido es un evento cerrado que se mira y el plan físico es trabajo
+   continuo. Sus "Volver" usan `retornoPlanFisico.js` y terminan en FÍSICO; el
+   import de partido sigue con `retornoImport.js` y vuelve a DATOS. La categoría arranca en la del
    chip del chrome y se muestra con todas las letras ("se guarda en U17M"), con
    opción de cambiarla: importar escribe, y escribir en la categoría equivocada
    no se deshace desde la app. **La opción de cambiarla es el mismo chip del
