@@ -13,9 +13,11 @@ import { clavearNombre } from '../parser/parserCabb.js';
  *    del club por nombre normalizado. Lo que ya está se reusa; lo que no, se
  *    crea. Sin esto, el profe tendría que dar de alta a mano ejercicios que el
  *    archivo ya traía con nombre y link.
- * 2. Los que el parser no pudo referenciar se resuelven con las decisiones,
- *    que son por nombre normalizado y no por ocurrencia: resolver "Press
- *    Plano" una vez resuelve sus 6 apariciones.
+ * 2. Cada ejercicio de sesión se resuelve solo si su nombre normalizado
+ *    coincide exacto en la hoja del archivo o en la biblioteca del club (ver
+ *    resolucionAutomatica). El resto, con las decisiones, que son por nombre
+ *    normalizado y no por ocurrencia: resolver "Press Plano" una vez resuelve
+ *    sus 6 apariciones.
  *
  * `decisiones.porClave[nombreClave]` es
  *   { tipo: 'existente', ejercicioId } | { tipo: 'nueva', nombre, bloque, link }
@@ -104,11 +106,12 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
     return fallar('las decisiones tienen que venir en decisiones.porClave, por nombre normalizado');
   }
 
-  // Paso 2: las decisiones, una vez por nombre y no por aparición.
+  // Paso 2: lo que no se resolvió solo va por las decisiones, una vez por
+  // nombre y no por aparición.
   const resueltasPorDecision = new Map();
   for (const s of sesiones) {
     for (const e of s.ejercicios) {
-      if (referenciaDeArchivo(e, idPorClave, nuevosPorClave) !== null) continue;
+      if (resolucionAutomatica(e, idPorClave, nuevosPorClave) !== null) continue;
       const clave = claveDe(e);
       if (clave === null || resueltasPorDecision.has(clave)) continue;
       const decision = porClave[clave];
@@ -151,9 +154,9 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
   const sesionesPayload = sesiones.map((s) => ({
     fecha: s.fecha,
     ejercicios: s.ejercicios.map((e) => {
-      const deArchivo = referenciaDeArchivo(e, idPorClave, nuevosPorClave);
+      const automatica = resolucionAutomatica(e, idPorClave, nuevosPorClave);
       const clave = claveDe(e);
-      const resuelto = deArchivo
+      const resuelto = automatica
         ?? (clave === null ? null : resueltasPorDecision.get(clave))
         ?? { ejercicioFuerzaId: null, claveNueva: null };
       ejercicios += 1;
@@ -203,14 +206,29 @@ function claveDe(ejercicio) {
   return texto(ejercicio?.nombreClave) ?? texto(clavearNombre(ejercicio?.nombreOriginal ?? ''));
 }
 
-// Lo que el parser ya resolvió contra la hoja "Ejercicios" del archivo. Si el
-// parser dejó la referencia en null —no coincidía, o el nombre estaba repetido
-// en la hoja y era ambiguo— acá tampoco se adivina: lo decide el profe.
-function referenciaDeArchivo(ejercicio, idPorClave, nuevosPorClave) {
-  const clave = texto(ejercicio?.referencia?.clave);
-  if (clave === null) return null;
-  const id = idPorClave.get(clave);
-  if (id !== undefined) return { ejercicioFuerzaId: id, claveNueva: null };
-  if (nuevosPorClave.has(clave)) return { ejercicioFuerzaId: null, claveNueva: clave };
+// Lo que se resuelve sin preguntarle a nadie, con un único criterio aplicado
+// parejo a las dos fuentes: coincidencia exacta sobre el nombre normalizado.
+//
+// 1. Contra la hoja "Ejercicios" del archivo: es lo que ya resolvió el parser
+//    (`referencia`), llevado a su id o a su alta nueva.
+// 2. Contra la biblioteca del club: un nombre que la hoja del archivo no trae
+//    puede estar igual en el club, cargado por un import anterior o a mano.
+//    Que falte en una fuente no lo vuelve dudoso en la otra; exigirle al profe
+//    que confirme a mano una coincidencia exacta sería tratar peor a la base
+//    que al archivo.
+//
+// Lo que no coincide exacto en ninguna de las dos no se aproxima: lo decide el
+// profe. En el club no hay ambigüedad posible, porque la clave es única por
+// club (0020).
+function resolucionAutomatica(ejercicio, idPorClave, nuevosPorClave) {
+  const claveDeArchivo = texto(ejercicio?.referencia?.clave);
+  if (claveDeArchivo !== null) {
+    const id = idPorClave.get(claveDeArchivo);
+    if (id !== undefined) return { ejercicioFuerzaId: id, claveNueva: null };
+    if (nuevosPorClave.has(claveDeArchivo)) return { ejercicioFuerzaId: null, claveNueva: claveDeArchivo };
+  }
+  const clave = claveDe(ejercicio);
+  const idEnElClub = clave === null ? undefined : idPorClave.get(clave);
+  if (idEnElClub !== undefined) return { ejercicioFuerzaId: idEnElClub, claveNueva: null };
   return null;
 }

@@ -134,12 +134,63 @@ test('la biblioteca del archivo se reconcilia por nombre normalizado, no por tex
   assert.equal(ejerciciosDel(payload)[0].ejercicioFuerzaId, 'ej-bulgara');
 });
 
+/* ---------- el ejercicio de sesión contra la biblioteca del club ---------- */
+
+test('un nombre que la hoja del archivo no trae pero el club sí, coincidiendo exacto, se resuelve solo', () => {
+  // Mismo criterio que contra la hoja del archivo: coincidencia exacta sobre el
+  // nombre normalizado, sin decisión del profe.
+  const r = resultado({
+    sesiones: [sesion('2026-04-06', [ejercicio('press  PLANO'), ejercicio('Press Plano', { orden: 2 })])],
+  });
+  const club = [{ id: 'ej-press', clave: clavearNombre('Press Plano'), nombre: 'Press Plano', bloque: 'FUERZA', link: null }];
+
+  const { error, payload, resumen } = prepararPayloadPlanFisico(r, club, {}, CONTEXTO);
+
+  assert.equal(error, null);
+  for (const e of ejerciciosDel(payload)) {
+    assert.equal(e.ejercicioFuerzaId, 'ej-press');
+    assert.equal(e.claveNueva, null);
+  }
+  assert.deepEqual(payload.ejerciciosNuevos, []);
+  assert.equal(resumen.pendientes, 0);
+});
+
+test('contra la biblioteca del club no hay parecidos: un nombre que no coincide exacto queda pendiente', () => {
+  const r = resultado({
+    sesiones: [sesion('2026-04-06', [ejercicio('Press Plano Inclinado'), ejercicio('Pres Plano', { orden: 2 })])],
+  });
+  const club = [{ id: 'ej-press', clave: clavearNombre('Press Plano'), nombre: 'Press Plano', bloque: 'FUERZA', link: null }];
+
+  const { error, payload, resumen } = prepararPayloadPlanFisico(r, club, {}, CONTEXTO);
+
+  assert.equal(error, null);
+  for (const e of ejerciciosDel(payload)) assert.equal(e.ejercicioFuerzaId, null);
+  assert.equal(resumen.pendientes, 2);
+});
+
+test('un nombre repetido en la hoja del archivo (ambiguo para el parser) se resuelve si coincide exacto en el club', () => {
+  // El parser deja la referencia en null porque en la hoja hay dos filas con
+  // esa clave; en el club la clave es única, así que ahí no hay duda.
+  const r = resultado({
+    biblioteca: [enBiblioteca('Remo', { fila: 2 }), enBiblioteca('REMO', { fila: 9 })],
+    sesiones: [sesion('2026-04-06', [ejercicio('Remo')])],
+  });
+  const club = [{ id: 'ej-remo', clave: clavearNombre('Remo'), nombre: 'Remo', bloque: 'FUERZA', link: null }];
+
+  const { error, payload } = prepararPayloadPlanFisico(r, club, {}, CONTEXTO);
+
+  assert.equal(error, null);
+  assert.equal(ejerciciosDel(payload)[0].ejercicioFuerzaId, 'ej-remo');
+  assert.deepEqual(payload.ejerciciosNuevos, []);
+});
+
 /* ---------- las decisiones del profe ---------- */
 
 test('una decisión "existente" resuelve todas las apariciones del mismo nombre', () => {
   const filas = [1, 2, 3, 4, 5, 6].map((orden) => ejercicio('Press Plano', { orden }));
   const r = resultado({ sesiones: [sesion('2026-04-06', filas)] });
-  const club = [{ id: 'ej-press', clave: clavearNombre('Press Plano'), nombre: 'Press Plano', bloque: 'FUERZA', link: null }];
+  // En el club está con otro nombre: sin la decisión, no coincidiría.
+  const club = [{ id: 'ej-press', clave: clavearNombre('Press Plano con Mancuernas'), nombre: 'Press Plano con Mancuernas', bloque: 'FUERZA', link: null }];
   const decisiones = { porClave: { [clavearNombre('Press Plano')]: { tipo: 'existente', ejercicioId: 'ej-press' } } };
 
   const { error, payload, resumen } = prepararPayloadPlanFisico(r, club, decisiones, CONTEXTO);
@@ -187,15 +238,17 @@ test('sin decisión, el ejercicio queda pendiente y conserva su nombre original'
 });
 
 test('un alta nueva que choca con una de la biblioteca del club es error: hay que elegir la existente', () => {
-  const r = resultado({ sesiones: [sesion('2026-04-06', [ejercicio('Press plano')])] });
+  // El nombre del archivo no coincide con nada; el que escribe el profe para el
+  // alta, sí.
+  const r = resultado({ sesiones: [sesion('2026-04-06', [ejercicio('Press Pl. Manc')])] });
   const club = [{ id: 'ej-press', clave: clavearNombre('Press Plano'), nombre: 'Press Plano', bloque: 'FUERZA', link: null }];
   const decisiones = {
-    porClave: { [clavearNombre('Press plano')]: { tipo: 'nueva', nombre: 'Press Plano', bloque: 'FUERZA', link: null } },
+    porClave: { [clavearNombre('Press Pl. Manc')]: { tipo: 'nueva', nombre: 'press plano', bloque: 'FUERZA', link: null } },
   };
 
   const { error, payload } = prepararPayloadPlanFisico(r, club, decisiones, CONTEXTO);
 
-  assert.match(error, /Press Plano/);
+  assert.match(error, /press plano/i);
   assert.equal(payload, null);
 });
 
