@@ -114,11 +114,12 @@ async function main() {
 
     const { data: asignados } = await supabase
       .from('ejercicio_asignado')
-      .select('nombre_original, reps, carga_sugerida, pausa, escalon_kg, ejercicio_fuerza_id')
+      .select('nombre_original, reps, carga_sugerida, pausa, ejercicio_fuerza_id')
       .in('sesion_id', (sesiones ?? []).map((s) => s.id));
-    const conEscalon = (asignados ?? []).filter((a) => a.escalon_kg != null);
-    if (conEscalon.length) falla('escalon_kg se escribió, y la RPC no debe escribirla nunca');
-    else ok('escalon_kg quedó en null aunque el payload la traía');
+    // Desde 0023 escalon_kg no existe. El payload la sigue trayendo a propósito
+    // (escalonKg: 40) y el import tiene que entrar igual, sin rastro del valor.
+    if ((asignados ?? []).length === 2) ok('el import entra aunque el payload traiga escalonKg (la columna ya no existe)');
+    else falla(`hay ${asignados?.length ?? 0} líneas guardadas, esperaba 2`);
 
     const pendiente = (asignados ?? []).find((a) => a.nombre_original === 'Plancha');
     if (pendiente && pendiente.ejercicio_fuerza_id === null) ok('el ejercicio sin resolver quedó pendiente, con su nombre original');
