@@ -145,12 +145,16 @@ function repintarFila(jugadorId) {
 /** Guarda en el momento. Mientras escribe, la fila no responde; si falla, vuelve a lo que estaba. */
 async function mover(jugadorId, kg) {
   const club = obtenerClubActual();
+  const vistaAlPedir = vista;
+  const escaleraId = vista.escalera.id;
   const fila = contenedor().querySelector(`[data-jugador="${CSS.escape(jugadorId)}"]`);
   fila?.querySelectorAll('button').forEach((b) => { b.disabled = true; });
   try {
-    const escalon = await moverEscalon({ clubId: club.id, jugadorId, escaleraId: vista.escalera.id, kg });
+    const escalon = await moverEscalon({ clubId: club.id, jugadorId, escaleraId, kg });
+    if (vista !== vistaAlPedir || obtenerPlantelActivo()?.id !== actual.plantelId) return;
     vista.escalonPorJugador.set(jugadorId, escalon);
   } catch (e) {
+    if (vista !== vistaAlPedir || obtenerPlantelActivo()?.id !== actual.plantelId) return;
     if (!esErrorDeRed(e)) console.error('No se pudo guardar el escalón:', e);
     toast(esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo guardar el escalón. Intentá de nuevo.');
   }
