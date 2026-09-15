@@ -260,7 +260,11 @@ function textoBotonGuardar() {
 
 function abrirElegir(i) {
   const n = estado.sinVideo[i];
-  const opciones = bibliotecaParaElegir(estado.resultadoParser, estado.biblioteca, { porClave: decisionesSin(n.nombreClave) });
+  // Sólo lo que tiene link: una entrada sin link no es un video para elegir.
+  // El filtro es de esta lista y nada más; la detección de nombres repetidos al
+  // cargar un link nuevo mira la biblioteca entera (abrirCargar).
+  const opciones = bibliotecaParaElegir(estado.resultadoParser, estado.biblioteca, { porClave: decisionesSin(n.nombreClave) })
+    .filter((o) => typeof o.link === 'string' && o.link.trim() !== '');
 
   abrirHoja({
     titulo: 'Elegir un video',
@@ -326,7 +330,6 @@ function abrirCargar(i) {
       <div class="campo">
         <label for="pf-link">Link al video</label>
         <input id="pf-link" type="url" autocomplete="off" inputmode="url" value="${escaparHtml(previa?.link ?? '')}">
-        <div class="ayuda">Opcional.</div>
       </div>
       <div id="pf-aviso"></div>
       <div class="acciones-bateria">
@@ -339,22 +342,31 @@ function abrirCargar(i) {
   const confirmar = () => {
     const nombre = $('pf-nombre').value;
     const aviso = (texto) => { $('pf-aviso').innerHTML = `<div class="al"><div class="tx">${escaparHtml(texto)}</div></div>`; };
+    const link = $('pf-link').value.trim();
     if (!nombre.trim()) {
       aviso('Poné un nombre.');
       return;
     }
+    // Obligatorio: una entrada sin link no le da video a nadie.
+    if (!link) {
+      aviso('Poné el link del video.');
+      return;
+    }
     // Un nombre que ya existe no se da de alta de nuevo: se elige. Es el mismo
-    // criterio que la RPC, dicho antes de guardar y no después.
+    // criterio que la RPC, dicho antes de guardar y no después, y mira la
+    // biblioteca entera, con o sin link: el filtro de "Elegir video" no aplica.
     const existente = opciones.find((o) => o.clave === clavearNombre(nombre));
     if (existente) {
-      aviso(`"${existente.nombre}" ya está en la biblioteca. Elegilo desde Elegir video.`);
+      aviso(existente.link
+        ? `"${existente.nombre}" ya está en la biblioteca. Elegilo desde Elegir video.`
+        : `"${existente.nombre}" ya está en la biblioteca, sin link, y desde acá no se le puede agregar uno. Usá otro nombre o dejalo sin video.`);
       return;
     }
     estado.decisiones[n.nombreClave] = {
       tipo: 'nueva',
       nombre,
       bloque: $('pf-bloque').value.trim() || null,
-      link: $('pf-link').value.trim() || null,
+      link,
     };
     estado.via[n.nombreClave] = 'cargar';
     cerrarHoja();
@@ -363,9 +375,12 @@ function abrirCargar(i) {
   };
 
   $('pf-confirmar-crear').addEventListener('click', confirmar);
-  $('pf-nombre').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmar(); });
+  for (const campo of ['pf-nombre', 'pf-link']) {
+    $(campo).addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmar(); });
+  }
   $('pf-cancelar-crear').addEventListener('click', () => cerrarHoja());
-  $('pf-nombre').focus();
+  // El nombre ya viene del archivo; lo que falta es el link.
+  $('pf-link').focus();
 }
 
 // Las decisiones de los demás nombres: lo que eligió esta misma fila no cuenta
