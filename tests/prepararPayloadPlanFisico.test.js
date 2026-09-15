@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { prepararPayloadPlanFisico } from '../src/data/prepararPayloadPlanFisico.js';
+import { readFileSync } from 'node:fs';
+import {
+  prepararPayloadPlanFisico,
+  nombresPorResolver,
+  bibliotecaParaElegir,
+  decisionDesdeOpcion,
+} from '../src/data/prepararPayloadPlanFisico.js';
 import { clavearNombre } from '../src/parser/parserCabb.js';
 
 /*
@@ -379,4 +385,105 @@ test('con entradas basura devuelve error, no excepción', () => {
     assert.ok(r.error, 'tendría que devolver error');
     assert.equal(r.payload, null);
   }
+});
+
+/* ---------- lo que la pantalla le muestra al profe ---------- */
+
+test('nombresPorResolver deja afuera lo que se resolvió solo, en el archivo o en el club', () => {
+  const press = enBiblioteca('Press Plano');
+  const r = resultado({
+    biblioteca: [press],
+    sesiones: [
+      sesion('2026-04-06', [
+        ejercicio('Press Plano', { referencia: press }),   // resuelto por la hoja
+        ejercicio('Remo', { orden: 2 }),                    // resuelto por el club
+        ejercicio('Hip thrust', { orden: 3 }),              // sin resolver
+      ]),
+    ],
+  });
+  const club = [{ id: 'ej-remo', clave: clavearNombre('Remo'), nombre: 'Remo', bloque: 'FUERZA', link: null }];
+
+  assert.deepEqual(nombresPorResolver(r, club).map((n) => n.nombreClave), [clavearNombre('Hip thrust')]);
+});
+
+test('nombresPorResolver agrupa por nombre normalizado, cuenta apariciones y respeta el orden del archivo', () => {
+  const r = resultado({
+    sesiones: [
+      sesion('2026-04-06', [ejercicio('Hip thrust'), ejercicio('Plancha', { orden: 2 })]),
+      sesion('2026-04-09', [ejercicio('HIP  Thrust'), ejercicio('Hip thrust', { orden: 2 })]),
+    ],
+  });
+
+  assert.deepEqual(nombresPorResolver(r, []), [
+    { nombreClave: clavearNombre('Hip thrust'), nombresOriginales: ['Hip thrust', 'HIP  Thrust'], apariciones: 3 },
+    { nombreClave: clavearNombre('Plancha'), nombresOriginales: ['Plancha'], apariciones: 1 },
+  ]);
+});
+
+test('nombresPorResolver con entradas basura devuelve una lista vacía, no una excepción', () => {
+  for (const r of [null, undefined, 'x', resultado({ sesiones: 'x' }), resultado({ sesiones: [null, { ejercicios: null }] })]) {
+    assert.deepEqual(nombresPorResolver(r, null), []);
+  }
+});
+
+test('bibliotecaParaElegir ofrece el club y las altas que trae el archivo, sin repetir y en orden alfabético', () => {
+  const r = resultado({
+    biblioteca: [enBiblioteca('Remo'), enBiblioteca('Sentadilla Búlgara')],
+    sesiones: [sesion('2026-04-06', [ejercicio('X')])],
+  });
+  const club = [
+    { id: 'ej-remo', clave: clavearNombre('Remo'), nombre: 'Remo', bloque: 'FUERZA', link: null },
+    { id: 'ej-banco', clave: clavearNombre('Banco Plano'), nombre: 'Banco Plano', bloque: 'FUERZA', link: null },
+  ];
+
+  const opciones = bibliotecaParaElegir(r, club, {});
+
+  assert.deepEqual(opciones.map((o) => [o.nombre, o.id]), [
+    ['Banco Plano', 'ej-banco'],
+    ['Remo', 'ej-remo'],                 // el del club gana: ya tiene id
+    ['Sentadilla Búlgara', null],        // todavía no está en la base
+  ]);
+});
+
+test('bibliotecaParaElegir suma las altas nuevas que ya decidió el profe', () => {
+  const r = resultado({ sesiones: [sesion('2026-04-06', [ejercicio('Hip thrust')])] });
+  const decisiones = { porClave: { [clavearNombre('Hip thrust')]: { tipo: 'nueva', nombre: 'Hip Thrust', bloque: 'POTENCIA', link: null } } };
+
+  assert.deepEqual(bibliotecaParaElegir(r, [], decisiones).map((o) => o.nombre), ['Hip Thrust']);
+});
+
+test('elegir una alta que todavía no está en la base la reusa: no se da de alta dos veces', () => {
+  const bulgara = enBiblioteca('Sentadilla Búlgara');
+  const r = resultado({
+    biblioteca: [bulgara],
+    sesiones: [sesion('2026-04-06', [
+      ejercicio('Sentadilla Búlgara', { referencia: bulgara }),
+      ejercicio('Búlgara c/ manc', { orden: 2 }),
+    ])],
+  });
+  const opcion = bibliotecaParaElegir(r, [], {}).find((o) => o.clave === bulgara.clave);
+  const decisiones = { porClave: { [clavearNombre('Búlgara c/ manc')]: decisionDesdeOpcion(opcion) } };
+
+  const { error, payload, resumen } = prepararPayloadPlanFisico(r, [], decisiones, CONTEXTO);
+
+  assert.equal(error, null);
+  assert.equal(payload.ejerciciosNuevos.length, 1);
+  for (const e of ejerciciosDel(payload)) assert.equal(e.claveNueva, bulgara.clave);
+  assert.equal(resumen.pendientes, 0);
+});
+
+test('decisionDesdeOpcion: con id es "existente"; sin id, "nueva" con los datos de la opción', () => {
+  assert.deepEqual(
+    decisionDesdeOpcion({ id: 'ej-remo', clave: 'REMO', nombre: 'Remo', bloque: 'FUERZA', link: null }),
+    { tipo: 'existente', ejercicioId: 'ej-remo' });
+  assert.deepEqual(
+    decisionDesdeOpcion({ id: null, clave: 'REMO', nombre: 'Remo', bloque: 'FUERZA', link: 'https://x' }),
+    { tipo: 'nueva', nombre: 'Remo', bloque: 'FUERZA', link: 'https://x' });
+});
+
+test('la pantalla lista los pendientes con nombresPorResolver, no con sinMatchear crudo del parser', () => {
+  const fuente = readFileSync(new URL('../src/ui/pantallas/planFisico.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(fuente, /\.sinMatchear\b/,
+    'sinMatchear sólo sabe del archivo: listaría como pendientes nombres que el club ya tiene');
+  assert.match(fuente, /nombresPorResolver\(/);
 });

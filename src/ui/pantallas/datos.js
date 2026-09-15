@@ -7,6 +7,7 @@ import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, nombreCorto, formatearFechaCorta } from '../nav.js';
 import { ir } from '../main.js';
 import { iniciarConfirmacion } from './confirmacionImport.js';
+import { iniciarPlanFisico } from './planFisico.js';
 import { setRetornoImport } from './retornoImport.js';
 import { repartoPorJugador, evolucionDeTiroDelEquipo, serieDeZonas } from '../../data/estadisticas.js';
 import { POSICIONES_BATERIA } from '../../data/posiciones.js';
@@ -140,9 +141,13 @@ export async function renderDatos() {
       <div id="datos-equipo"></div>
       <div id="datos-curvas"></div>
     </div>
-    <div class="pie-fijo"><button class="btn" id="btn-cargar-partido">Cargar partido</button></div>
+    <div class="pie-fijo">
+      <button class="btn" id="btn-cargar-partido">Cargar partido</button>
+      <button class="btn sec" id="btn-cargar-plan-fisico">Cargar plan físico</button>
+    </div>
   `;
   $('btn-cargar-partido').addEventListener('click', () => $('input-archivo').click());
+  $('btn-cargar-plan-fisico').addEventListener('click', () => $('input-plan-fisico').click());
 
   // Las baterías de tiro no dependen de que haya partidos cargados, así que
   // la curva por zona se dibuja antes de las dos ramas que retornan: un club
@@ -183,6 +188,15 @@ export function iniciarDatos() {
     if (!archivo) return;
     await ir('p-confirmacion', { push: true });
     await iniciarConfirmacion(archivo);
+  });
+
+  // Mismo patrón, input propio: el plan físico es otro flujo con otra pantalla.
+  $('input-plan-fisico').addEventListener('change', async (e) => {
+    const archivo = e.target.files[0];
+    e.target.value = '';
+    if (!archivo) return;
+    await ir('p-plan-fisico', { push: true });
+    await iniciarPlanFisico(archivo);
   });
 
   // Punto único de retorno del import: vuelve a DATOS y releé la lista, así

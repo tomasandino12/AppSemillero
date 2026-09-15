@@ -303,6 +303,10 @@
     <section class="pant" id="p-confirmacion"><div class="pad" id="confirmacion-contenido"></div></section>
     <section class="pant" id="p-resultado"><div class="pad" id="resultado-contenido"></div></section>
 
+    <!-- Import del plan físico (Etapa 6): una sola pantalla, los pasos se
+         renderizan en el mismo contenedor. -->
+    <section class="pant" id="p-plan-fisico"><div class="pad" id="plan-fisico-contenido"></div></section>
+
   </main>
 
   <nav class="nav" id="nav" aria-label="Navegación principal"></nav>
@@ -313,6 +317,9 @@
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-tx"></span></div>
 
 <input type="file" id="input-archivo" accept=".xlsx" class="sr" tabindex="-1" aria-hidden="true">
+<!-- Input propio y no #input-archivo: ése manda derecho a la confirmación de
+     partido, y compartirlo obligaría a llevar estado de qué flujo lo abrió. -->
+<input type="file" id="input-plan-fisico" accept=".xlsx" class="sr" tabindex="-1" aria-hidden="true">
 
 <script type="module" src="/src/ui/main.js"></script>
 </body>

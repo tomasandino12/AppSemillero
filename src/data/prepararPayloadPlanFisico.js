@@ -75,31 +75,8 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
   if (!Array.isArray(bibliotecaDelClub)) {
     return fallar('falta la biblioteca de fuerza del club para reconciliar la del archivo');
   }
-  const idPorClave = new Map();
-  const idsDelClub = new Set();
-  for (const f of bibliotecaDelClub) {
-    const clave = texto(f?.clave);
-    const id = texto(f?.id);
-    if (clave === null || id === null) continue;
-    idsDelClub.add(id);
-    if (!idPorClave.has(clave)) idPorClave.set(clave, id);
-  }
-
-  // Paso 1: la biblioteca del archivo. Lo que ya está en el club se reusa; lo
-  // que no, va como alta. Una clave repetida en la hoja es una sola entrada:
-  // dos filas con el mismo nombre normalizado son el mismo ejercicio, y la RPC
-  // rechazaría el duplicado (EJERCICIO_DUPLICADO).
-  const nuevosPorClave = new Map();
-  for (const entrada of Array.isArray(resultadoParser.biblioteca) ? resultadoParser.biblioteca : []) {
-    const clave = texto(entrada?.clave);
-    if (clave === null || idPorClave.has(clave) || nuevosPorClave.has(clave)) continue;
-    nuevosPorClave.set(clave, {
-      clave,
-      nombre: entrada.nombre ?? null,
-      bloque: entrada.bloque ?? null,
-      link: entrada.link ?? null,
-    });
-  }
+  // Paso 1: la biblioteca del archivo contra la del club.
+  const { idPorClave, idsDelClub, nuevosPorClave } = indexarBibliotecas(resultadoParser, bibliotecaDelClub);
 
   const porClave = decisiones?.porClave ?? {};
   if (typeof porClave !== 'object' || porClave === null || Array.isArray(porClave)) {
@@ -198,6 +175,118 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
       ejerciciosNuevos: ejerciciosNuevos.length,
     },
   };
+}
+
+/* ---------- lo que la pantalla le muestra al profe ---------- */
+
+/**
+ * Los nombres que quedan para el profe: los que no se resolvieron solos ni
+ * contra la hoja del archivo ni contra la biblioteca del club. No sale de
+ * `sinMatchear` del parser, que sólo sabe del archivo y listaría nombres que
+ * el club ya tiene.
+ *
+ * Uno por nombre normalizado, en el orden en que aparece por primera vez en el
+ * archivo: [{ nombreClave, nombresOriginales, apariciones }]. Nunca lanza; con
+ * una entrada inválida devuelve [].
+ */
+export function nombresPorResolver(resultadoParser, bibliotecaDelClub) {
+  try {
+    const sesiones = Array.isArray(resultadoParser?.sesiones) ? resultadoParser.sesiones : [];
+    const { idPorClave, nuevosPorClave } = indexarBibliotecas(resultadoParser, bibliotecaDelClub);
+    const porClave = new Map();
+    for (const s of sesiones) {
+      for (const e of Array.isArray(s?.ejercicios) ? s.ejercicios : []) {
+        if (resolucionAutomatica(e, idPorClave, nuevosPorClave) !== null) continue;
+        const clave = claveDe(e);
+        if (clave === null) continue;
+        if (!porClave.has(clave)) porClave.set(clave, { nombreClave: clave, nombresOriginales: [], apariciones: 0 });
+        const n = porClave.get(clave);
+        n.apariciones += 1;
+        const original = typeof e.nombreOriginal === 'string' ? e.nombreOriginal.trim() : '';
+        if (original && !n.nombresOriginales.includes(original)) n.nombresOriginales.push(original);
+      }
+    }
+    return [...porClave.values()];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Lo que el buscador ofrece para resolver un nombre: la biblioteca del club
+ * (con id), las altas que trae la hoja del archivo y las que ya decidió el
+ * profe (sin id todavía: entran recién con el import). Una entrada por clave,
+ * y si está en el club gana esa. Orden alfabético.
+ *
+ * El filtro por texto lo hace la pantalla sobre esta lista, a pedido del profe:
+ * acá no se sugiere ni se ordena por parecido.
+ */
+export function bibliotecaParaElegir(resultadoParser, bibliotecaDelClub, decisiones) {
+  try {
+    const porClave = new Map();
+    for (const f of Array.isArray(bibliotecaDelClub) ? bibliotecaDelClub : []) {
+      const clave = texto(f?.clave);
+      const id = texto(f?.id);
+      if (clave === null || id === null || porClave.has(clave)) continue;
+      porClave.set(clave, { id, clave, nombre: f.nombre ?? clave, bloque: f.bloque ?? null, link: f.link ?? null });
+    }
+    const { nuevosPorClave } = indexarBibliotecas(resultadoParser, bibliotecaDelClub);
+    for (const n of nuevosPorClave.values()) {
+      if (!porClave.has(n.clave)) porClave.set(n.clave, { id: null, ...n, nombre: n.nombre ?? n.clave });
+    }
+    const elegidas = decisiones?.porClave && typeof decisiones.porClave === 'object' ? Object.values(decisiones.porClave) : [];
+    for (const d of elegidas) {
+      const nombre = d?.tipo === 'nueva' ? texto(d.nombre) : null;
+      if (nombre === null) continue;
+      const clave = clavearNombre(nombre);
+      if (!porClave.has(clave)) porClave.set(clave, { id: null, clave, nombre, bloque: d.bloque ?? null, link: d.link ?? null });
+    }
+    return [...porClave.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * La decisión que corresponde a una opción de bibliotecaParaElegir. Una opción
+ * sin id es un alta que todavía no está en la base: se expresa como "nueva"
+ * con sus mismos datos, y prepararPayloadPlanFisico la reusa por clave en vez
+ * de darla de alta dos veces.
+ */
+export function decisionDesdeOpcion(opcion) {
+  if (opcion?.id) return { tipo: 'existente', ejercicioId: opcion.id };
+  return { tipo: 'nueva', nombre: opcion?.nombre ?? null, bloque: opcion?.bloque ?? null, link: opcion?.link ?? null };
+}
+
+/* ---------- compartido ---------- */
+
+// La biblioteca del club indexada por clave, y las altas que salen de la hoja
+// del archivo. Lo que ya está en el club se reusa; lo que no, va como alta. Una
+// clave repetida en la hoja es una sola entrada: dos filas con el mismo nombre
+// normalizado son el mismo ejercicio, y la RPC rechazaría el duplicado
+// (EJERCICIO_DUPLICADO).
+function indexarBibliotecas(resultadoParser, bibliotecaDelClub) {
+  const idPorClave = new Map();
+  const idsDelClub = new Set();
+  for (const f of Array.isArray(bibliotecaDelClub) ? bibliotecaDelClub : []) {
+    const clave = texto(f?.clave);
+    const id = texto(f?.id);
+    if (clave === null || id === null) continue;
+    idsDelClub.add(id);
+    if (!idPorClave.has(clave)) idPorClave.set(clave, id);
+  }
+  const nuevosPorClave = new Map();
+  for (const entrada of Array.isArray(resultadoParser?.biblioteca) ? resultadoParser.biblioteca : []) {
+    const clave = texto(entrada?.clave);
+    if (clave === null || idPorClave.has(clave) || nuevosPorClave.has(clave)) continue;
+    nuevosPorClave.set(clave, {
+      clave,
+      nombre: entrada.nombre ?? null,
+      bloque: entrada.bloque ?? null,
+      link: entrada.link ?? null,
+    });
+  }
+  return { idPorClave, idsDelClub, nuevosPorClave };
 }
 
 // El nombre normalizado con el que el ejercicio se busca en la biblioteca. El
