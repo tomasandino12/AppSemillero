@@ -35,13 +35,33 @@ Esto no estaba en el prompt y cambia el diseño, así que va primero.
    Las que ya están se reusan; las que no, se crean. Es automático y no adivina
    nada: la coincidencia es exacta sobre el nombre normalizado, el mismo
    criterio del parser.
-2. **Resolver a mano lo que quedó afuera.** Los ejercicios de sesión que el
-   parser no pudo referenciar (57 de 135 en el archivo real, 43 nombres
-   distintos) los resuelve el profe contra la biblioteca del club — que para ese
-   momento ya tiene las 39 del paso 1.
+2. **Buscar en la biblioteca del club lo que la hoja no trae.** Un ejercicio de
+   sesión que el parser no pudo referenciar se busca también en
+   `ejercicio_fuerza`, con el mismo criterio: coincidencia exacta sobre el
+   nombre normalizado. Si está, se resuelve solo.
+3. **Resolver a mano lo que quedó afuera.** Lo que no coincide exacto en
+   ninguna de las dos fuentes (57 de 135 en el archivo real, 43 nombres
+   distintos, la primera vez que se importa) lo resuelve el profe contra la
+   biblioteca del club — que para ese momento ya tiene las 39 del paso 1.
 
 El orden importa: sin el paso 1, el profe tendría que dar de alta a mano
 ejercicios que el archivo ya traía con nombre y link.
+
+**Por qué las dos fuentes se tratan igual** (agregado el 2026-09-14): la
+primera versión de esta spec resolvía sola la coincidencia exacta contra la
+hoja del archivo pero mandaba a mano la misma coincidencia exacta contra la
+biblioteca del club. No hay razón para esa diferencia. El criterio es uno —
+exacto sobre el nombre normalizado, sin parecidos — y se aplica parejo: que un
+nombre falte en la hoja del archivo no lo vuelve dudoso en la base. No se baja
+el estándar; se deja de pedirle al profe que confirme a mano algo que ya es
+seguro. Tampoco abre ambigüedad: la `clave` es única por club, así que en la
+base una coincidencia exacta tiene un solo candidato. Un nombre repetido en la
+hoja del archivo, que el parser deja sin referencia por ambiguo, se resuelve
+igual si coincide exacto en el club. Lo que se nota en la práctica: desde el
+segundo import, un nombre que ya está en el club con esa misma escritura
+normalizada deja de aparecer como pendiente. Uno que el profe resolvió eligiendo
+un ejercicio con otro nombre sí vuelve a aparecer: la decisión no se guarda como
+alias, y eso no cambia con esta regla.
 
 ---
 
@@ -203,7 +223,9 @@ prepararPayloadPlanFisico(resultadoParser, bibliotecaDelClub, decisiones, contex
 ```
 
 - Reconcilia la biblioteca del archivo contra `bibliotecaDelClub` por `clave`.
-- Aplica las decisiones del profe, que son **por nombre normalizado, no por
+- Resuelve solo cada ejercicio de sesión cuyo nombre normalizado coincide
+  exacto en la hoja del archivo o, si no, en `bibliotecaDelClub` (sección 2).
+- Aplica las decisiones del profe a lo que queda, que son **por nombre normalizado, no por
   ocurrencia**: resolver "Press Plano" una vez resuelve las 6 apariciones.
 - Una decisión puede ser `existente` (id de la biblioteca), `nueva` (bloque +
   nombre + link) o ausente, que significa pendiente.

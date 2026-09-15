@@ -368,6 +368,7 @@ inicia sesión, y corre tres casos contra el Docker local:
 |---|---|
 | biblioteca del archivo ya cargada | Las 39 entradas que ya están en la base no se duplican: `ejerciciosNuevos` queda vacío y los ejercicios apuntan a los ids existentes. |
 | biblioteca del archivo nueva | Las que no están van a `ejerciciosNuevos` una sola vez, aunque aparezcan en varias sesiones. |
+| nombre exacto en el club | Un ejercicio que la hoja del archivo no trae pero el club sí (nombre normalizado exacto) se resuelve sin decisión; uno parecido pero no exacto queda pendiente. Lo mismo para un nombre ambiguo en la hoja. |
 | decisión `existente` | Las 6 apariciones de "Press Plano" quedan con el mismo `ejercicioFuerzaId`. |
 | decisión `nueva` | Suma una entrada a `ejerciciosNuevos` con su clave normalizada, y los ejercicios la referencian por `claveNueva`. |
 | sin decisión | Queda pendiente: `ejercicioFuerzaId` y `claveNueva` en null, y `nombreOriginal` intacto. |
