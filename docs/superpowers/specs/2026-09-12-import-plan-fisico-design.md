@@ -39,10 +39,22 @@ Esto no estaba en el prompt y cambia el diseño, así que va primero.
    sesión que el parser no pudo referenciar se busca también en
    `ejercicio_fuerza`, con el mismo criterio: coincidencia exacta sobre el
    nombre normalizado. Si está, se resuelve solo.
-3. **Resolver a mano lo que quedó afuera.** Lo que no coincide exacto en
-   ninguna de las dos fuentes (57 de 135 en el archivo real, 43 nombres
-   distintos, la primera vez que se importa) lo resuelve el profe contra la
-   biblioteca del club — que para ese momento ya tiene las 39 del paso 1.
+3. **Lo que queda afuera es un ejercicio sin video, y está bien.** Lo que no
+   coincide exacto en ninguna de las dos fuentes (57 de 135 en el archivo real,
+   43 nombres distintos, la primera vez que se importa) se guarda igual, sin
+   video. Si el profe quiere, le elige un video de la biblioteca o carga el
+   link; es opcional (sección 7).
+
+**La hoja "Ejercicios" es un anexo de videos, no un catálogo** (corregido el
+2026-09-15): el profe le puso link a los movimientos que le parecieron difíciles
+de entender o de ejecutar bien. Un ejercicio que no aparece ahí no es un caso
+sin resolver: es un ejercicio común que no necesitaba video. La primera versión
+de la pantalla lo trataba como una deuda —un contador, "pendiente", un paso
+intermedio antes de guardar— y convertía un import de segundos en media hora de
+trabajo a mano. El matcheo no cambia y sigue siendo exacto: "Press Plano",
+"Press Plano (Manc)" y "Press Plano Alternado" pueden ser tres movimientos
+distintos, y pegarle el video equivocado a un ejercicio es peor que no tener
+video.
 
 El orden importa: sin el paso 1, el profe tendría que dar de alta a mano
 ejercicios que el archivo ya traía con nombre y link.
@@ -59,9 +71,9 @@ base una coincidencia exacta tiene un solo candidato. Un nombre repetido en la
 hoja del archivo, que el parser deja sin referencia por ambiguo, se resuelve
 igual si coincide exacto en el club. Lo que se nota en la práctica: desde el
 segundo import, un nombre que ya está en el club con esa misma escritura
-normalizada deja de aparecer como pendiente. Uno que el profe resolvió eligiendo
-un ejercicio con otro nombre sí vuelve a aparecer: la decisión no se guarda como
-alias, y eso no cambia con esta regla.
+normalizada toma su video solo. Uno al que el profe le eligió el video de un
+ejercicio con otro nombre vuelve a aparecer sin video: la elección no se guarda
+como alias, y eso no cambia con esta regla.
 
 ---
 
@@ -258,41 +270,50 @@ pasos que se renderizan en el mismo contenedor y un objeto de estado — igual q
    verla a 375px): con los dos visibles se podían contradecir — el chip marcaba
    una categoría y el import guardaba en otra. El destino se repite con todas
    las letras al lado del chip y en el botón ("Guardar en U17M"), y cambiar de
-   chip en medio del import no pierde lo resuelto.
-2. **Preview.** Cuántas sesiones y de qué fechas, cuántos ejercicios, las
-   advertencias del parser tal cual las devuelve, y cuántos nombres hay para
-   resolver.
-3. **Resolución.** Un grupo colapsable (`.grupo`, el de `confirmacionImport`)
-   con una fila por nombre sin resolver — lo que queda después de la resolución
+   chip en medio del import no pierde los videos elegidos.
+2. **Resumen, y se guarda desde acá.** Cuántas sesiones y de qué fechas,
+   cuántos ejercicios, cuántos con video y cuántos sin video, cuántos videos
+   nuevos entran a la biblioteca, y las advertencias del parser tal cual las
+   devuelve. El botón principal es "Guardar en U17M": no hay ningún paso
+   obligatorio en el medio.
+3. **Agregar videos, opcional** (rehecho el 2026-09-15, ver sección 2). Se
+   llega desde un botón secundario dentro del resumen, "Agregar videos". Una
+   fila por nombre sin video — lo que queda después de la coincidencia
    automática de la sección 2 (`nombresPorResolver`), no `sinMatchear` del
    parser, que sólo sabe del archivo y listaría nombres que el club ya tiene.
-   Cada fila: buscar en la biblioteca,
-   crear nuevo, o dejar pendiente (que es el default). Un contador arriba dice
-   cuántos quedan.
-4. **Confirmación y resultado.** "Se guardaron N sesiones y M ejercicios; K
-   quedaron sin link."
+   Cada fila dice "sin video" o "video de X" y ofrece "Elegir video" y "Cargar
+   link"; "Quitar" aparece sólo si hay un video que sacar. Sin video es el
+   estado normal: no es un botón ni se cuenta como deuda, y el contador sólo
+   informa ("51 ejercicios sin video"). En toda la pantalla no se dice
+   "pendiente", "resolver" ni "conflicto", y un test lo fija.
+   - **Elegir un video** lista sólo entradas con link: una entrada sin link no
+     es un video. El filtro es de esa lista y de nada más.
+   - **Cargar link** exige el link. La detección de nombre repetido mira la
+     biblioteca entera, con o sin link; si el nombre ya está sin link, el aviso
+     lo dice, porque desde acá no se le puede agregar uno.
+4. **Resultado.** "Se guardaron N sesiones y M ejercicios en U17M, K con
+   video." No se nombra lo que no tiene video.
 
-Reusa `.grupo`, `.jug-sugerencia`, `.campo`, `.al`, `.pie-fijo` y `.btn`. CSS
+Reusa `.jug-sugerencia`, `.campo`, `.al`, `.pie-fijo` y `.btn`. CSS
 nuevo sólo si algo no existe, y cualquier breakpoint va en `layout.css` (regla
 del proyecto). Todo lo táctil ya llega a 44px porque `--tap` es el `min-height`
 de `.btn`, `.opt` y `.campo`; nada depende de `hover`.
 
 ---
 
-## 8. Consecuencias de "permitir guardar con pendientes"
+## 8. Guardar sin video
 
-Elegimos que el profe pueda guardar sin resolver los 43. Hay que decir qué
-implica, porque no es gratis:
+Un ejercicio sin video se guarda completo (nombre, series, reps, carga, pausa,
+notas); lo único que no tiene es `ejercicio_fuerza_id`, y por lo tanto link. Es
+el caso normal, no una deuda (sección 2). Lo que sí conviene saber:
 
-- **Esta etapa no construye la pantalla para resolverlos después.** El plan
-  queda guardado y completo (nombres, series, reps, pausas); lo que falta en
-  esos 57 ejercicios es el link al video.
-- **Y no se arregla reimportando:** el mismo archivo en la misma categoría choca
-  con el hash. Hasta que exista esa pantalla, un pendiente se resuelve por SQL.
-- **El arreglo más barato sigue siendo el archivo.** Si el club completa la hoja
-  "Ejercicios" del `.xlsx` con los 43 nombres que faltan, el import siguiente
-  entra con cero pendientes y sin escribir una línea de código. La pantalla de
-  resolución es la red, no el plan A.
+- **Ponerle video a un ejercicio ya guardado no tiene pantalla todavía.** Si
+  hace falta, hoy es por SQL; esta etapa no construye esa pantalla.
+- **Y no se hace reimportando:** el mismo archivo en la misma categoría choca
+  con el hash.
+- **Si el club quiere más videos, lo más barato es el archivo.** Un nombre que
+  se agrega con su link a la hoja "Ejercicios" del `.xlsx` entra con video en el
+  import siguiente, sin tocar la app.
 
 ---
 
