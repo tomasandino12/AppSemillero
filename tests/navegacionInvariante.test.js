@@ -66,3 +66,22 @@ test('el plan físico vuelve por su propio retorno; el import de partido sigue c
     assert.match(fuente(`src/ui/pantallas/${archivo}`), /from '\.\/retornoImport\.js'/);
   }
 });
+
+test('FÍSICO pregunta a la base si hay un plan antes de mostrar el estado vacío', () => {
+  const src = fuente('src/ui/pantallas/fisico.js');
+  assert.match(src, /obtenerPlanesFisicos\(/);
+  assert.match(src, /elegirPlanVisible\(/);
+});
+
+test('sesión y escalones vuelven a FÍSICO si cambia la categoría: lo que se veía es de otro plantel', () => {
+  for (const archivo of ['fisicoSesion.js', 'fisicoEscalones.js']) {
+    const src = fuente(`src/ui/pantallas/${archivo}`);
+    assert.match(src, /plantel\.id !== actual\.plantelId/, archivo);
+    assert.match(src, /ir\('p-fisico'\)/, archivo);
+  }
+});
+
+test('la sesión no dice nada de los ejercicios sin video', () => {
+  const src = fuente('src/ui/pantallas/fisicoSesion.js');
+  assert.doesNotMatch(src, /sin video/i);
+});

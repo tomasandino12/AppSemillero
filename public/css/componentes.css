@@ -493,3 +493,22 @@ svg.g{width:100%;display:block;overflow:visible}
 .fila-ev.partido .rival{text-align:right}
 /* El gráfico de evolución, siempre visible debajo de los dos números. */
 .serie-cat .g{margin-top:var(--sp-3)}
+
+
+/* Etapa 7 — plan físico y escalones. Sin breakpoints: a 375px ya entra. */
+.linea-fisico{cursor:pointer}
+.linea-fisico .nom{font-weight:600;font-size:var(--fs-145);line-height:1.2;flex:1}
+.linea-fisico .det{font-size:var(--fs-125);color:var(--gris);margin-top:.25rem}
+.linea-fisico .pie-linea{display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--sp-3)}
+.linea-fisico .escalera{font-size:var(--fs-125);color:var(--gris)}
+.linea-fisico a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.escalon-fila{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:var(--sp-2);
+  background:var(--blanco);padding:var(--sp-3);border-radius:var(--r);margin-bottom:var(--sp-2);box-shadow:var(--sombra);
+}
+.escalon-fila.sin-escalon{grid-template-columns:minmax(0,1fr) auto}
+.escalon-fila .nom{font-weight:600;font-size:var(--fs-145);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.escalon-fila .det{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
+.escalon-fila .kg{min-width:4.5rem;text-align:center;font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600}
+.escalon-fila .btn.chico{min-width:var(--tap);padding:0}
+.acciones-escalera{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin:var(--sp-3) 0}
