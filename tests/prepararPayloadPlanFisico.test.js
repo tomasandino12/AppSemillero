@@ -487,3 +487,14 @@ test('la pantalla lista los pendientes con nombresPorResolver, no con sinMatchea
     'sinMatchear sólo sabe del archivo: listaría como pendientes nombres que el club ya tiene');
   assert.match(fuente, /nombresPorResolver\(/);
 });
+
+test('la pantalla del plan físico no habla de deuda: un ejercicio sin video es un ejercicio normal', () => {
+  // La hoja "Ejercicios" del archivo es un anexo de videos, no un catálogo:
+  // lo que no está ahí no es un problema a arreglar. Se descuentan el nombre de
+  // la función pura y la clave `pendientes` del resumen y de la RPC (0021):
+  // son contratos de la capa de datos, no texto que lea el profe.
+  const fuente = readFileSync(new URL('../src/ui/pantallas/planFisico.js', import.meta.url), 'utf8')
+    .replace(/nombresPorResolver/g, '')
+    .replace(/\.pendientes\b/g, '');
+  assert.doesNotMatch(fuente, /pendiente|resolver|conflicto/i);
+});

@@ -14,18 +14,23 @@ import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { retornarDePlanFisico } from './retornoPlanFisico.js';
 
 /*
- * Import del plan físico (Etapa 6). Una sola pantalla con tres pasos que se
- * renderizan en el mismo contenedor, igual que confirmacionImport.js:
+ * Import del plan físico (Etapa 6). Una sola pantalla, con los pasos
+ * renderizados en el mismo contenedor, igual que confirmacionImport.js:
  *
- * 1. Categoría y preview: qué trae el archivo y dónde se va a guardar.
- * 2. Resolución: los nombres que no se resolvieron solos. Dejarlos pendientes
- *    es válido y es el default.
+ * 1. Resumen: dónde se guarda y qué trae el archivo. Se guarda desde acá.
+ * 2. Agregar videos, opcional: sólo si el profe quiere ponerle video a algún
+ *    ejercicio que no lo tiene.
  * 3. Resultado.
  *
- * La resolución automática —exacta sobre el nombre normalizado, contra la hoja
- * del archivo y contra la biblioteca del club— no vive acá: la hace
- * prepararPayloadPlanFisico.js, y la lista de lo que queda sale de ahí mismo
- * (nombresPorResolver), no de `sinMatchear` del parser.
+ * La hoja "Ejercicios" del archivo es un anexo de videos, no un catálogo: el
+ * profe le puso link a los movimientos que le parecieron difíciles. Un
+ * ejercicio que no está ahí es un ejercicio normal, sin video, y la pantalla lo
+ * trata así: nada que arreglar antes de guardar.
+ *
+ * Qué ejercicio tiene video lo decide la coincidencia exacta sobre el nombre
+ * normalizado, contra la hoja del archivo y contra la biblioteca del club, y no
+ * vive acá: la hace prepararPayloadPlanFisico.js. La lista de los que no tienen
+ * video sale de ahí mismo (nombresPorResolver), no de `sinMatchear` del parser.
  */
 
 const $ = (id) => document.getElementById(id);
@@ -44,9 +49,9 @@ export async function iniciarPlanFisico(archivo) {
     hashArchivo: null,
     planteles,
     biblioteca: [],
-    porResolver: [],
-    decisiones: {},     // nombreClave -> decisión (ver prepararPayloadPlanFisico)
-    via: {},            // nombreClave -> 'buscar' | 'crear': sólo para marcar el botón
+    sinVideo: [],       // un nombre por fila: los ejercicios que no tienen video
+    decisiones: {},     // nombreClave -> video elegido (ver prepararPayloadPlanFisico)
+    via: {},            // nombreClave -> 'elegir' | 'cargar': sólo para marcar el botón
     guardando: false,
   };
   estado = propio;
@@ -97,27 +102,27 @@ export async function iniciarPlanFisico(archivo) {
   if (!vigente()) return;
 
   // Un archivo que no se puede importar (sin sesiones, sesiones sin fecha) se
-  // frena acá, antes de que el profe resuelva nombres para nada.
+  // frena acá, antes de mostrarle al profe un resumen que no va a poder guardar.
   const prueba = armarPayload();
   if (prueba.error) {
     cartel(`Este archivo no se puede importar: ${prueba.error}.`);
     return;
   }
 
-  propio.porResolver = nombresPorResolver(resultadoParser, propio.biblioteca);
-  renderPreview();
+  propio.sinVideo = nombresPorResolver(resultadoParser, propio.biblioteca);
+  renderResumen();
 }
 
-/* ---------- paso 1: categoría y preview ---------- */
+/* ---------- paso 1: resumen, y se guarda desde acá ---------- */
 
-function renderPreview() {
-  const { resultadoParser, archivo, porResolver } = estado;
+function renderResumen() {
+  const { resultadoParser, archivo, sinVideo } = estado;
   const { resumen } = armarPayload();
   const fechas = resultadoParser.sesiones.map((s) => s.fecha).sort();
   const rango = fechas.length > 1
     ? `del ${formatearFechaCorta(fechas[0])} al ${formatearFechaCorta(fechas[fechas.length - 1])}`
     : formatearFechaCorta(fechas[0]);
-  const apariciones = porResolver.reduce((n, p) => n + p.apariciones, 0);
+  const conVideo = resumen.ejercicios - resumen.pendientes;
 
   contenedor().innerHTML = `
     <div class="eyebrow">Se guarda en</div>
@@ -128,25 +133,25 @@ function renderPreview() {
       <div class="fila-menor"><span class="k">Archivo</span><span class="v">${escaparHtml(archivo.name)}</span></div>
       <div class="fila-menor"><span class="k">Sesiones</span><span class="v">${resumen.sesiones}, ${escaparHtml(rango)}</span></div>
       <div class="fila-menor"><span class="k">Ejercicios</span><span class="v">${resumen.ejercicios}</span></div>
-      <div class="fila-menor"><span class="k">A la biblioteca</span><span class="v">${resumen.ejerciciosNuevos} ${resumen.ejerciciosNuevos === 1 ? 'ejercicio nuevo' : 'ejercicios nuevos'}</span></div>
-      <div class="fila-menor"><span class="k">Sin resolver</span><span class="v">${porResolver.length
-        ? `${porResolver.length} ${porResolver.length === 1 ? 'nombre' : 'nombres'}, en ${apariciones} ${apariciones === 1 ? 'ejercicio' : 'ejercicios'}`
-        : 'ninguno'}</span></div>
+      <div class="fila-menor"><span class="k">Con video</span><span class="v">${conVideo}</span></div>
+      <div class="fila-menor"><span class="k">Sin video</span><span class="v">${resumen.pendientes}</span></div>
+      <div class="fila-menor"><span class="k">Videos nuevos</span><span class="v">${resumen.ejerciciosNuevos} a la biblioteca</span></div>
+      ${sinVideo.length
+        ? '<div class="acciones-al"><button class="btn sec chico" id="pf-agregar-videos">Agregar videos</button></div>'
+        : ''}
     </div>
 
     ${advertenciasHtml(resultadoParser.advertencias)}
 
     <div class="pie-fijo">
-      ${porResolver.length
-        ? '<button class="btn" id="pf-seguir">Resolver nombres</button>'
-        : `<button class="btn" id="pf-guardar">${escaparHtml(textoBotonGuardar())}</button>`}
+      <button class="btn" id="pf-guardar">${escaparHtml(textoBotonGuardar())}</button>
       <button class="btn sec" id="pf-volver">Volver</button>
     </div>
   `;
 
   actualizarDestino();
-  $('pf-seguir')?.addEventListener('click', renderResolucion);
-  $('pf-guardar')?.addEventListener('click', guardar);
+  $('pf-agregar-videos')?.addEventListener('click', renderVideos);
+  $('pf-guardar').addEventListener('click', guardar);
   ligarVolver();
 }
 
@@ -162,8 +167,8 @@ function actualizarDestino() {
 
 /**
  * Lo que corre el router al entrar y al tocar un chip de categoría estando en
- * esta pantalla. No relee el archivo ni pierde lo resuelto: actualiza sólo lo
- * que depende de la categoría, que es el destino y el botón de guardar.
+ * esta pantalla. No relee el archivo ni pierde los videos elegidos: actualiza
+ * sólo lo que depende de la categoría, que es el destino y el botón de guardar.
  */
 export function refrescarPlanFisico() {
   if (!estado) return;
@@ -172,55 +177,53 @@ export function refrescarPlanFisico() {
   if (boton && !estado.guardando) boton.textContent = textoBotonGuardar();
 }
 
-/* ---------- paso 2: resolución ---------- */
+/* ---------- paso 2, opcional: agregar videos ---------- */
 
-function renderResolucion() {
-  const { porResolver } = estado;
+function renderVideos() {
+  const { sinVideo } = estado;
   contenedor().innerHTML = `
-    <div class="eyebrow">Nombres sin resolver</div>
-    <div class="p">No están en la hoja "Ejercicios" del archivo ni en la biblioteca del club. Sin resolver también se guardan: el ejercicio queda completo, sin link al video.</div>
-    <div class="al"><div class="tx" id="pf-contador"></div></div>
+    <div class="eyebrow">Agregar videos · opcional</div>
+    <div class="p">Estos ejercicios no tienen video en la hoja "Ejercicios" del archivo, y no hace falta: se guardan igual. Si alguno lo necesita, elegí un video de la biblioteca o cargá el link.</div>
+    <div class="p" id="pf-contador" style="margin-top:.5rem"></div>
 
-    <div class="grupo abierto" id="pf-grupo">
-      <div class="grupo-h"><div class="t">Para resolver</div><div class="n">${porResolver.length}</div></div>
-      <div class="grupo-cuerpo">
-        ${porResolver.map((_, i) => `<div class="jug-sugerencia" data-i="${i}"></div>`).join('')}
-      </div>
+    <div id="pf-lista">
+      ${sinVideo.map((_, i) => `<div class="jug-sugerencia" data-i="${i}"></div>`).join('')}
     </div>
 
     <div class="pie-fijo">
       <button class="btn" id="pf-guardar"></button>
-      <button class="btn sec" id="pf-atras">Volver</button>
+      <button class="btn sec" id="pf-atras">Volver al resumen</button>
     </div>
   `;
 
-  $('pf-grupo').querySelector('.grupo-h').addEventListener('click', () => $('pf-grupo').classList.toggle('abierto'));
-  porResolver.forEach((_, i) => renderFila(i));
+  sinVideo.forEach((_, i) => renderFila(i));
   actualizarContador();
   $('pf-guardar').addEventListener('click', guardar);
-  $('pf-atras').addEventListener('click', renderPreview);
+  $('pf-atras').addEventListener('click', renderResumen);
 }
 
 // Cada fila se repinta sola, no la lista entera: así el profe no pierde el
-// lugar en una lista de 40 nombres cada vez que resuelve uno.
+// lugar en una lista de 40 nombres cada vez que le pone video a uno.
 function renderFila(i) {
-  const n = estado.porResolver[i];
+  const n = estado.sinVideo[i];
   const fila = contenedor().querySelector(`.jug-sugerencia[data-i="${i}"]`);
   const decision = estado.decisiones[n.nombreClave];
-  const via = decision ? estado.via[n.nombreClave] : 'pendiente';
+  const via = decision ? estado.via[n.nombreClave] : null;
 
+  // Sin video es el estado normal: se dice en el texto, no es un botón. "Quitar"
+  // aparece sólo cuando hay un video que sacar.
   fila.innerHTML = `
     <div class="nom">${escaparHtml(n.nombresOriginales.join(' / '))}</div>
-    <div class="det">${n.apariciones} ${n.apariciones === 1 ? 'vez' : 'veces'} en el plan · ${escaparHtml(textoDeDecision(decision))}</div>
+    <div class="det">${n.apariciones} ${n.apariciones === 1 ? 'vez' : 'veces'} en el plan · ${escaparHtml(textoDeVideo(decision))}</div>
     <div class="decision">
-      <button data-accion="buscar" class="${via === 'buscar' ? 'on' : ''}">Buscar</button>
-      <button data-accion="crear" class="${via === 'crear' ? 'on' : ''}">Crear</button>
-      <button data-accion="pendiente" class="${via === 'pendiente' ? 'on' : ''}">Pendiente</button>
+      <button data-accion="elegir" class="${via === 'elegir' ? 'on' : ''}">Elegir video</button>
+      <button data-accion="cargar" class="${via === 'cargar' ? 'on' : ''}">Cargar link</button>
+      ${decision ? '<button data-accion="quitar">Quitar</button>' : ''}
     </div>
   `;
-  fila.querySelector('[data-accion="buscar"]').addEventListener('click', () => abrirBuscar(i));
-  fila.querySelector('[data-accion="crear"]').addEventListener('click', () => abrirCrear(i));
-  fila.querySelector('[data-accion="pendiente"]').addEventListener('click', () => {
+  fila.querySelector('[data-accion="elegir"]').addEventListener('click', () => abrirElegir(i));
+  fila.querySelector('[data-accion="cargar"]').addEventListener('click', () => abrirCargar(i));
+  fila.querySelector('[data-accion="quitar"]')?.addEventListener('click', () => {
     delete estado.decisiones[n.nombreClave];
     delete estado.via[n.nombreClave];
     renderFila(i);
@@ -228,40 +231,39 @@ function renderFila(i) {
   });
 }
 
-function textoDeDecision(decision) {
-  if (!decision) return 'queda pendiente';
+function textoDeVideo(decision) {
+  if (!decision) return 'sin video';
   if (decision.tipo === 'existente') {
     const elegido = estado.biblioteca.find((f) => f.id === decision.ejercicioId);
-    return `es ${elegido?.nombre ?? 'un ejercicio de la biblioteca'}`;
+    return `video de ${elegido?.nombre ?? 'un ejercicio de la biblioteca'}`;
   }
-  return `es ${decision.nombre}`;
+  return `video de ${decision.nombre}`;
 }
 
+// Informa, no reclama: cuántos ejercicios de esta lista siguen sin video.
 function actualizarContador() {
-  const quedan = estado.porResolver.filter((n) => !estado.decisiones[n.nombreClave]);
-  const ejercicios = quedan.reduce((s, n) => s + n.apariciones, 0);
-  const total = estado.porResolver.length;
-  $('pf-contador').textContent = quedan.length
-    ? `Quedan ${quedan.length} de ${total} sin resolver (${ejercicios} ${ejercicios === 1 ? 'ejercicio' : 'ejercicios'}).`
-    : `Resolviste los ${total}.`;
+  const ejercicios = estado.sinVideo
+    .filter((n) => !estado.decisiones[n.nombreClave])
+    .reduce((s, n) => s + n.apariciones, 0);
+  $('pf-contador').textContent = ejercicios
+    ? `${ejercicios} ${ejercicios === 1 ? 'ejercicio' : 'ejercicios'} sin video.`
+    : 'Todos los ejercicios de esta lista tienen video.';
   if (!estado.guardando) $('pf-guardar').textContent = textoBotonGuardar();
 }
 
 function textoBotonGuardar() {
   // El botón nombra la categoría: es lo último que se lee antes de escribir.
-  // Cuántos quedan lo dice el contador; en el botón, a 375px, partía el texto
-  // en dos líneas.
   return `Guardar en ${plantelElegido()?.categoria ?? ''}`;
 }
 
-/* ---------- hojas: buscar y crear ---------- */
+/* ---------- hojas: elegir un video y cargar un link ---------- */
 
-function abrirBuscar(i) {
-  const n = estado.porResolver[i];
+function abrirElegir(i) {
+  const n = estado.sinVideo[i];
   const opciones = bibliotecaParaElegir(estado.resultadoParser, estado.biblioteca, { porClave: decisionesSin(n.nombreClave) });
 
   abrirHoja({
-    titulo: 'Elegir de la biblioteca',
+    titulo: 'Elegir un video',
     cuerpo: `
       <div class="p">Para <b>${escaparHtml(n.nombresOriginales[0])}</b></div>
       <div class="campo">
@@ -285,12 +287,12 @@ function abrirBuscar(i) {
             </div>
           </button>
         `).join('')
-      : `<div class="p">${opciones.length ? 'Ninguno con ese nombre. Podés crearlo desde la fila.' : 'La biblioteca está vacía. Podés crearlo desde la fila.'}</div>`;
+      : `<div class="p">${opciones.length ? 'Ninguno con ese nombre. Si no está, podés cargar el link desde la fila.' : 'Todavía no hay videos en la biblioteca. Podés cargar el link desde la fila.'}</div>`;
     $('pf-opciones').querySelectorAll('[data-clave]').forEach((boton) => {
       boton.addEventListener('click', () => {
         const opcion = opciones.find((o) => o.clave === boton.dataset.clave);
         estado.decisiones[n.nombreClave] = decisionDesdeOpcion(opcion);
-        estado.via[n.nombreClave] = 'buscar';
+        estado.via[n.nombreClave] = 'elegir';
         cerrarHoja();
         renderFila(i);
         actualizarContador();
@@ -303,14 +305,14 @@ function abrirBuscar(i) {
   pintar();
 }
 
-function abrirCrear(i) {
-  const n = estado.porResolver[i];
-  const previa = estado.via[n.nombreClave] === 'crear' ? estado.decisiones[n.nombreClave] : null;
+function abrirCargar(i) {
+  const n = estado.sinVideo[i];
+  const previa = estado.via[n.nombreClave] === 'cargar' ? estado.decisiones[n.nombreClave] : null;
   const opciones = bibliotecaParaElegir(estado.resultadoParser, estado.biblioteca, { porClave: decisionesSin(n.nombreClave) });
   const bloques = [...new Set(opciones.map((o) => o.bloque).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
 
   abrirHoja({
-    titulo: 'Crear en la biblioteca',
+    titulo: 'Cargar link de video',
     cuerpo: `
       <div class="campo">
         <label for="pf-nombre">Nombre</label>
@@ -345,7 +347,7 @@ function abrirCrear(i) {
     // criterio que la RPC, dicho antes de guardar y no después.
     const existente = opciones.find((o) => o.clave === clavearNombre(nombre));
     if (existente) {
-      aviso(`"${existente.nombre}" ya está en la biblioteca. Elegilo desde Buscar.`);
+      aviso(`"${existente.nombre}" ya está en la biblioteca. Elegilo desde Elegir video.`);
       return;
     }
     estado.decisiones[n.nombreClave] = {
@@ -354,7 +356,7 @@ function abrirCrear(i) {
       bloque: $('pf-bloque').value.trim() || null,
       link: $('pf-link').value.trim() || null,
     };
-    estado.via[n.nombreClave] = 'crear';
+    estado.via[n.nombreClave] = 'cargar';
     cerrarHoja();
     renderFila(i);
     actualizarContador();
@@ -366,8 +368,8 @@ function abrirCrear(i) {
   $('pf-nombre').focus();
 }
 
-// Las decisiones de los demás nombres: lo que decidió esta misma fila no
-// cuenta como "ya existe" cuando se la está cambiando.
+// Las decisiones de los demás nombres: lo que eligió esta misma fila no cuenta
+// como "ya existe" cuando se la está cambiando.
 function decisionesSin(nombreClave) {
   const resto = { ...estado.decisiones };
   delete resto[nombreClave];
@@ -425,11 +427,11 @@ function mensajeDeError(e, plantel) {
 
 function renderResultado(r, plantel) {
   const categoria = plantel?.categoria ?? '';
+  // La RPC devuelve cuántas líneas quedaron sin ejercicio de la biblioteca
+  // (contrato de 0021); acá sólo se nombra lo que tiene video.
+  const conVideo = r.ejercicios - r.pendientes;
   contenedor().innerHTML = `
-    <div class="al ok"><div class="tx">Se guardaron ${r.sesiones} ${r.sesiones === 1 ? 'sesión' : 'sesiones'} y ${r.ejercicios} ${r.ejercicios === 1 ? 'ejercicio' : 'ejercicios'} en ${escaparHtml(categoria)}.</div></div>
-    ${r.pendientes
-      ? `<div class="p">${r.pendientes} ${r.pendientes === 1 ? 'ejercicio quedó pendiente' : 'ejercicios quedaron pendientes'}: sin ejercicio de la biblioteca asignado, y por eso sin link al video.</div>`
-      : ''}
+    <div class="al ok"><div class="tx">Se guardaron ${r.sesiones} ${r.sesiones === 1 ? 'sesión' : 'sesiones'} y ${r.ejercicios} ${r.ejercicios === 1 ? 'ejercicio' : 'ejercicios'} en ${escaparHtml(categoria)}${conVideo > 0 ? `, ${conVideo} con video` : ''}.</div></div>
     ${advertenciasHtml(estado.resultadoParser.advertencias)}
     <div class="pie-fijo"><button class="btn" id="pf-volver">Volver a Físico</button></div>
   `;
