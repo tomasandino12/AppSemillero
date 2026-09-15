@@ -11,6 +11,8 @@ const ICONOS = {
   hoy: '<path d="M4 13h5v7H4zM10 8h5v12h-5zM16 4h4v16h-4z"/>',
   plantel: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 8.5a3 3 0 100-5"/><path d="M17.5 14.5c2 .7 3.5 2.6 3.5 5.5"/>',
   medir: '<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.5"/>',
+  // Una mancuerna: dos discos por lado y la barra.
+  fisico: '<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
   recursos: '<path d="M4 5h16v14H4z"/><path d="M10 9l5 3-5 3z"/>',
   datos: '<path d="M3 17l5-6 4 4 4-7 5 5"/><path d="M3 21h18"/>',
   persona: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
@@ -28,6 +30,9 @@ export const TABS = [
   { id: 'p-hoy', texto: 'Hoy', icono: ICONOS.hoy },
   { id: 'p-plantel', texto: 'Plantel', icono: ICONOS.plantel },
   { id: 'p-medir', texto: 'Medir', icono: ICONOS.medir },
+  // MEDIR y FÍSICO juntas: las dos son sobre el cuerpo del jugador, medirlo de
+  // un lado y trabajarlo del otro.
+  { id: 'p-fisico', texto: 'Físico', icono: ICONOS.fisico },
   { id: 'p-recursos', texto: 'Recursos', icono: ICONOS.recursos },
   { id: 'p-datos', texto: 'Datos', icono: ICONOS.datos },
 ];

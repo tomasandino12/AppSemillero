@@ -16,6 +16,7 @@ import { renderPanorama } from './coordPanorama.js';
 import { renderProfes } from './coordProfes.js';
 import { renderMiPerfil } from './miPerfil.js';
 import { refrescarPlanFisico } from './planFisico.js';
+import { renderFisico, iniciarFisico } from './fisico.js';
 
 /**
  * Punto único donde se registran las pantallas. Existe para que main.js no
@@ -33,6 +34,7 @@ export function registrarPantallas() {
   registrarPantalla('p-medir', { titulo: 'Medir', render: renderMedir });
   registrarPantalla('p-medir-bateria', { titulo: 'Batería de tiro', render: renderBateria });
   registrarPantalla('p-medir-velocidad', { titulo: 'Velocidad', render: renderVelocidad });
+  registrarPantalla('p-fisico', { titulo: 'Físico', render: renderFisico });
   registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });
   registrarPantalla('p-ejercicio', { titulo: 'Ejercicio', render: renderEjercicio });
   registrarPantalla('p-metas', { titulo: 'Metas', render: renderMetas });
@@ -42,6 +44,7 @@ export function registrarPantallas() {
   setAbrirFicha(abrirFicha);
   setAbrirEjercicio(abrirEjercicio);
   iniciarDatos();
+  iniciarFisico();
   iniciarHoja();
   setAbrirAltaManual(abrirAltaManual);
 }

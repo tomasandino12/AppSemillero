@@ -42,3 +42,27 @@ test('el router no conoce ni toca el botón de volver del contenido', () => {
     'un solo dueño por afordancia: la vuelta del chrome es del router, la del contenido es de la pantalla',
   );
 });
+
+test('DATOS no tiene ningún rastro del plan físico: vive en la pestaña FÍSICO', () => {
+  const src = fuente('src/ui/pantallas/datos.js');
+  assert.doesNotMatch(src, /plan.?f[ií]sico|planFisico|plan-fisico/i);
+});
+
+test('FÍSICO va entre MEDIR y RECURSOS, con un ícono que no repite el de otra pestaña', async () => {
+  const { TABS } = await import('../src/ui/chrome.js');
+  const ids = TABS.map((t) => t.id);
+  assert.ok(ids.includes('p-fisico'), 'falta la pestaña FÍSICO');
+  assert.equal(ids.indexOf('p-fisico'), ids.indexOf('p-medir') + 1);
+  assert.equal(ids.indexOf('p-recursos'), ids.indexOf('p-fisico') + 1);
+  const iconos = TABS.map((t) => t.icono);
+  assert.equal(new Set(iconos).size, iconos.length);
+});
+
+test('el plan físico vuelve por su propio retorno; el import de partido sigue con el suyo', () => {
+  const plan = fuente('src/ui/pantallas/planFisico.js');
+  assert.match(plan, /from '\.\/retornoPlanFisico\.js'/);
+  assert.doesNotMatch(plan, /retornoImport\.js/);
+  for (const archivo of ['confirmacionImport.js', 'resultadoImport.js']) {
+    assert.match(fuente(`src/ui/pantallas/${archivo}`), /from '\.\/retornoImport\.js'/);
+  }
+});

@@ -11,7 +11,7 @@ import {
 import { obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo } from '../sesion.js';
 import { mostrarPantalla, toast, esErrorDeRed, escaparHtml, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
-import { retornarDeImport } from './retornoImport.js';
+import { retornarDePlanFisico } from './retornoPlanFisico.js';
 
 /*
  * Import del plan físico (Etapa 6). Una sola pantalla con tres pasos que se
@@ -431,7 +431,7 @@ function renderResultado(r, plantel) {
       ? `<div class="p">${r.pendientes} ${r.pendientes === 1 ? 'ejercicio quedó pendiente' : 'ejercicios quedaron pendientes'}: sin ejercicio de la biblioteca asignado, y por eso sin link al video.</div>`
       : ''}
     ${advertenciasHtml(estado.resultadoParser.advertencias)}
-    <div class="pie-fijo"><button class="btn" id="pf-volver">Volver a Datos</button></div>
+    <div class="pie-fijo"><button class="btn" id="pf-volver">Volver a Físico</button></div>
   `;
   ligarVolver();
 }
@@ -477,5 +477,5 @@ function pieVolver() {
 }
 
 function ligarVolver() {
-  $('pf-volver')?.addEventListener('click', retornarDeImport);
+  $('pf-volver')?.addEventListener('click', retornarDePlanFisico);
 }
