@@ -249,12 +249,20 @@ pasos que se renderizan en el mismo contenedor y un objeto de estado — igual q
    partido", con su propio `<input type="file">`. La categoría arranca en la del
    chip del chrome y se muestra con todas las letras ("se guarda en U17M"), con
    opción de cambiarla: importar escribe, y escribir en la categoría equivocada
-   no se deshace desde la app.
+   no se deshace desde la app. **La opción de cambiarla es el mismo chip del
+   chrome**, no un segundo selector en la pantalla (aclarado el 2026-09-15, al
+   verla a 375px): con los dos visibles se podían contradecir — el chip marcaba
+   una categoría y el import guardaba en otra. El destino se repite con todas
+   las letras al lado del chip y en el botón ("Guardar en U17M"), y cambiar de
+   chip en medio del import no pierde lo resuelto.
 2. **Preview.** Cuántas sesiones y de qué fechas, cuántos ejercicios, las
    advertencias del parser tal cual las devuelve, y cuántos nombres hay para
    resolver.
 3. **Resolución.** Un grupo colapsable (`.grupo`, el de `confirmacionImport`)
-   con una fila por nombre sin resolver. Cada fila: buscar en la biblioteca,
+   con una fila por nombre sin resolver — lo que queda después de la resolución
+   automática de la sección 2 (`nombresPorResolver`), no `sinMatchear` del
+   parser, que sólo sabe del archivo y listaría nombres que el club ya tiene.
+   Cada fila: buscar en la biblioteca,
    crear nuevo, o dejar pendiente (que es el default). Un contador arriba dice
    cuántos quedan.
 4. **Confirmación y resultado.** "Se guardaron N sesiones y M ejercicios; K
