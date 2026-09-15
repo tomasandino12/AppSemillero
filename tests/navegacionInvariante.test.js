@@ -85,3 +85,21 @@ test('la sesión no dice nada de los ejercicios sin video', () => {
   const src = fuente('src/ui/pantallas/fisicoSesion.js');
   assert.doesNotMatch(src, /sin video/i);
 });
+
+test('los escalones no proponen pesos: ningún placeholder con números', () => {
+  const src = fuente('src/ui/pantallas/fisicoEscalones.js');
+  assert.doesNotMatch(src, /placeholder=/);
+});
+
+test('un peso que ya no está en la escalera se informa como dato, no como alerta', () => {
+  const src = fuente('src/ui/pantallas/fisicoEscalones.js');
+  assert.match(src, /este peso ya no está en la escalera actual/);
+  assert.doesNotMatch(src, /class="al"[^`]*este peso ya no está/);
+  assert.doesNotMatch(src, /class="al"[^`]*no está en esta escalera/);
+});
+
+test('ubicar a un chico es un toque sobre un valor de la escalera, nunca un valor inicial', () => {
+  const src = fuente('src/ui/pantallas/fisicoEscalones.js');
+  assert.match(src, /data-accion="ubicar"/);
+  assert.doesNotMatch(src, /pesos\[0\]/);
+});
