@@ -1018,3 +1018,154 @@ export async function importarPlanFisico(payload) {
   if (error) throw error;
   return data;
 }
+
+/* ---------- Etapa 7: plan físico visible y escalones ---------- */
+
+/**
+ * Los planes de una categoría con las fechas de sus sesiones, para elegir cuál
+ * se muestra (elegirPlanVisible). Dos consultas y no un embed: evita depender
+ * de cómo PostgREST resuelve las FK compuestas de 0020.
+ */
+export async function obtenerPlanesFisicos(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data: planes, error } = await supabase
+    .from('plan_fisico')
+    .select('id, nombre_archivo, creado_en')
+    .eq('club_id', clubId)
+    .eq('plantel_id', plantelId);
+  if (error) throw error;
+  if (!planes.length) return [];
+  const { data: sesiones, error: errorSesiones } = await supabase
+    .from('sesion_fisico')
+    .select('plan_id, fecha')
+    .in('plan_id', planes.map((p) => p.id));
+  if (errorSesiones) throw errorSesiones;
+  return planes.map((p) => ({
+    id: p.id,
+    nombreArchivo: p.nombre_archivo,
+    creadoEn: p.creado_en,
+    fechas: sesiones.filter((s) => s.plan_id === p.id).map((s) => s.fecha),
+  }));
+}
+
+/**
+ * Un plan entero: sesiones por fecha, líneas en el orden del archivo, y el link
+ * de video de las líneas que lo tienen. Una línea sin video trae video: null,
+ * que es el caso normal.
+ */
+export async function obtenerPlanFisico(planId) {
+  const supabase = obtenerCliente();
+  const { data: sesiones, error } = await supabase
+    .from('sesion_fisico')
+    .select('id, fecha')
+    .eq('plan_id', planId)
+    .order('fecha');
+  if (error) throw error;
+  if (!sesiones.length) return [];
+
+  const { data: lineas, error: errorLineas } = await supabase
+    .from('ejercicio_asignado')
+    .select('id, sesion_id, ejercicio_fuerza_id, orden, bloque, nombre_original, series, reps, carga_sugerida, pausa, notas')
+    .in('sesion_id', sesiones.map((s) => s.id))
+    .order('orden', { ascending: true, nullsFirst: false });
+  if (errorLineas) throw errorLineas;
+
+  const idsConVideo = [...new Set(lineas.map((l) => l.ejercicio_fuerza_id).filter(Boolean))];
+  let videos = [];
+  if (idsConVideo.length) {
+    const { data, error: errorVideos } = await supabase
+      .from('ejercicio_fuerza')
+      .select('id, nombre, link')
+      .in('id', idsConVideo);
+    if (errorVideos) throw errorVideos;
+    videos = data;
+  }
+  const videoPorId = new Map(videos.filter((v) => v.link).map((v) => [v.id, { nombre: v.nombre, link: v.link }]));
+
+  return sesiones.map((s) => ({
+    id: s.id,
+    fecha: s.fecha,
+    lineas: lineas
+      .filter((l) => l.sesion_id === s.id)
+      .map((l) => ({
+        id: l.id,
+        orden: l.orden,
+        bloque: l.bloque,
+        nombreOriginal: l.nombre_original,
+        series: l.series,
+        reps: l.reps,
+        cargaSugerida: l.carga_sugerida,
+        pausa: l.pausa,
+        notas: l.notas,
+        video: videoPorId.get(l.ejercicio_fuerza_id) ?? null,
+      })),
+  }));
+}
+
+const escaleraDesdeFila = (f) => ({ id: f.id, clave: f.clave, nombre: f.nombre, pesos: f.pesos.map(Number) });
+
+/** Todas las escaleras del club: son de todo el club, no de una categoría (0023). */
+export async function obtenerEscaleras(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('escalera_fuerza')
+    .select('id, clave, nombre, pesos')
+    .eq('club_id', clubId);
+  if (error) throw error;
+  return data.map(escaleraDesdeFila);
+}
+
+export async function crearEscalera({ clubId, clave, nombre, pesos }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('escalera_fuerza')
+    .insert({ club_id: clubId, clave, nombre, pesos })
+    .select('id, clave, nombre, pesos')
+    .single();
+  if (error) throw error;
+  return escaleraDesdeFila(data);
+}
+
+/**
+ * Sólo pesos, y no upsert: el update está otorgado sólo sobre esa columna, y un
+ * upsert de PostgREST reescribe todas las que manda. Se pide la fila de vuelta
+ * porque un update que la RLS no deja pasar no da error: afecta cero filas.
+ */
+export async function editarEscalera(escaleraId, pesos) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('escalera_fuerza')
+    .update({ pesos })
+    .eq('id', escaleraId)
+    .select('id, clave, nombre, pesos');
+  if (error) throw error;
+  if (!data.length) throw new Error('NO_SE_PUDO_EDITAR');
+  return escaleraDesdeFila(data[0]);
+}
+
+const escalonDesdeFila = (f) => ({ jugadorId: f.jugador_id, kg: Number(f.kg), desde: f.creado_en });
+
+/** El último movimiento de cada chico en una escalera (vista escalon_actual). */
+export async function obtenerEscalonesActuales(escaleraId, jugadorIds) {
+  if (!jugadorIds.length) return [];
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('escalon_actual')
+    .select('jugador_id, kg, creado_en')
+    .eq('escalera_id', escaleraId)
+    .in('jugador_id', jugadorIds);
+  if (error) throw error;
+  return data.map(escalonDesdeFila);
+}
+
+/** Un movimiento: los kg de destino, no "+1" (spec, sección 8). */
+export async function moverEscalon({ clubId, jugadorId, escaleraId, kg }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('movimiento_escalon')
+    .insert({ club_id: clubId, jugador_id: jugadorId, escalera_id: escaleraId, kg })
+    .select('jugador_id, kg, creado_en')
+    .single();
+  if (error) throw error;
+  return escalonDesdeFila(data);
+}
