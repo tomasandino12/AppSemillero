@@ -280,7 +280,7 @@ end;
 $$;
 
 create trigger escalera_fuerza_sellar
-  before update on escalera_fuerza
+  before insert or update on escalera_fuerza
   for each row execute function sellar_escalera_fuerza();
 
 -- Dónde quedó un chico en una escalera, cada vez que el profe lo ubicó, subió o
