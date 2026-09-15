@@ -1,5 +1,6 @@
 import { ir } from '../main.js';
 import { obtenerPlantelActivo } from '../sesion.js';
+import { escaparHtml } from '../nav.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -17,5 +18,5 @@ export async function renderEscalones() {
     ir('p-fisico');
     return;
   }
-  $('fisico-escalones-contenido').innerHTML = `<div class="pad"><div class="p">${actual.linea.nombreOriginal}</div></div>`;
+  $('fisico-escalones-contenido').innerHTML = `<div class="pad"><div class="p">${escaparHtml(actual.linea.nombreOriginal)}</div></div>`;
 }

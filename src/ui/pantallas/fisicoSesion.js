@@ -41,6 +41,7 @@ export async function renderSesion() {
   let escaleras;
   try {
     escaleras = await obtenerEscaleras(club.id);
+    if (obtenerPlantelActivo()?.id !== actual.plantelId) return;
   } catch (e) {
     if (!esErrorDeRed(e)) console.error('No se pudieron cargar las escaleras:', e);
     contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${
