@@ -989,3 +989,32 @@ export async function cerrarAsignacion(asignacionId) {
   if (error) throw error;
   if (!data.length) throw new Error('NO_SE_PUDO_CERRAR');
 }
+
+/* ---------- Etapa 6: plan físico ---------- */
+
+/**
+ * La biblioteca de fuerza del club, para el buscador de la pantalla de
+ * resolución y para reconciliar la del archivo. Es de club, no de plantel
+ * (ver ESQUEMA.md).
+ */
+export async function obtenerEjerciciosFuerza(clubId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('ejercicio_fuerza')
+    .select('id, clave, nombre, bloque, link')
+    .eq('club_id', clubId)
+    .order('nombre');
+  if (error) throw error;
+  return data.map((f) => ({ id: f.id, clave: f.clave, nombre: f.nombre, bloque: f.bloque, link: f.link }));
+}
+
+/**
+ * Única llamada transaccional del import de plan físico: o entran el plan, sus
+ * sesiones y sus ejercicios, o no entra nada (0021).
+ */
+export async function importarPlanFisico(payload) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('importar_plan_fisico', { payload });
+  if (error) throw error;
+  return data;
+}
