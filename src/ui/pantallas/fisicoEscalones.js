@@ -55,6 +55,7 @@ export async function renderEscalones() {
     jugadores.sort((a, b) => a.nombreLimpio.localeCompare(b.nombreLimpio, 'es'));
     const escalera = escaleraDeLinea(actual.linea.nombreOriginal, escaleras);
     const escalones = escalera ? await obtenerEscalonesActuales(escalera.id, jugadores.map((j) => j.id)) : [];
+    if (obtenerPlantelActivo()?.id !== actual.plantelId) return;
     vista = { escalera, jugadores, escalonPorJugador: new Map(escalones.map((e) => [e.jugadorId, e])) };
   } catch (e) {
     if (!esErrorDeRed(e)) console.error('No se pudieron cargar los escalones:', e);
