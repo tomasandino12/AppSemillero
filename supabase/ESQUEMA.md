@@ -1,6 +1,8 @@
 # ESQUEMA.md — Modelo de datos
 
-Estado al día de la migración `0019_nombre_y_categorias.sql`.
+Estado al día de la migración `0019_nombre_y_categorias.sql`, más la sección de
+escalones de fuerza de `0023_escalones_fuerza.sql`. Las tablas del plan físico de
+0020–0022 todavía no están documentadas acá (ver la Tarea 7 del plan de import).
 
 ## Diagrama en texto
 
@@ -107,6 +109,43 @@ Todo lo que trae el parser para un jugador **propio** en un partido: minutos en 
 - `numero`: el número de camiseta de ESE partido (nunca en `jugador`).
 - `nombre_crudo`: el string exacto del archivo para esa fila, para poder auditar contra el original.
 - `unique(partido_id, jugador_id)`: una sola fila de estadística por jugador por partido.
+
+### `escalera_fuerza` (0023)
+La progresión de pesos de un ejercicio de fuerza, **una para todo el club**:
+`(club_id, clave, nombre, pesos numeric[])`, único por `(club_id, clave)`.
+
+- `clave` es `clavearNombre` del nombre de la línea del plan: una línea y su
+  escalera coinciden sólo por nombre normalizado exacto. Es independiente de
+  `ejercicio_fuerza` (el anexo de videos): un ejercicio sin video puede tener
+  escalera y viceversa.
+- `pesos` en kg, estrictamente creciente, sin nulos y positivo (`pesos_validos`).
+  Los escribe el profe en la app; la app no propone valores.
+- La lee cualquier miembro del club y la escriben los entrenadores. El update
+  está otorgado sólo sobre `pesos`; `actualizado_por` y `actualizado_en` los pone
+  un trigger. Sin delete.
+
+### `movimiento_escalon` (0023)
+Cada vez que el profe ubica, sube o baja a un chico en una escalera:
+`(club_id, jugador_id, escalera_id, kg, creado_por, creado_en, orden)`.
+
+- **Sólo inserts.** Sin update ni delete: un error se corrige con otro
+  movimiento, y la historia queda completa.
+- `kg` absolutos, no la posición en la escalera: si la escalera cambia, la
+  historia sigue diciendo lo mismo. No se valida contra la escalera.
+- `orden` (identity) define cuál es el último; `creado_en` es para mostrar.
+- El escalón es del jugador y del ejercicio, no del plan ni de la categoría: se
+  conserva de por vida, igual que `jugador` es del club y no de un plantel.
+- RLS como `medicion_corporal`: por pertenencia vigente y plantel asignado.
+  Coordinación no lo ve.
+
+### `escalon_actual` (vista, 0023)
+El último movimiento de cada `(jugador_id, escalera_id)`. Con
+`security_invoker = true`: aplica la RLS de `movimiento_escalon` con los permisos
+de quien consulta. Es la primera vista del esquema.
+
+### `ejercicio_asignado.escalon_kg` (eliminada en 0023)
+Guardaba un número por línea, o sea para todo el grupo, y nunca se escribió. El
+escalón por jugador vive en `movimiento_escalon`.
 
 ## Políticas RLS
 
