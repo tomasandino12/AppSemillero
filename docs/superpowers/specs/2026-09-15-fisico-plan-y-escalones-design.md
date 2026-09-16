@@ -6,6 +6,19 @@
 pestaña FÍSICO (`src/ui/pantallas/fisico.js`) y el import de plan físico
 (`planFisico.js`, que no se toca).
 
+> **Corrección del 2026-09-16 — migración `0024_paso_fuerza.sql`.** La escalera
+> (la lista de pesos válidos de un ejercicio) era la idea equivocada: el profe no
+> trabaja con una lista, define **cuánto sube o baja por vez**. Donde este spec
+> decía "escalera", ahora hay **un número por ejercicio, el escalón** (2 kg), y
+> **un peso actual por jugador** (un número, no una posición dentro de una
+> lista). No hay mínimo, no hay máximo, y el estado "fuera de la escalera" no
+> existe más. Están reescritas con ese modelo las secciones 2, 3, 4, 5.1, 5.6, 6,
+> 7, 8, 10.4, 11 y 12; el resto —el plan visible, la sesión, la RLS, el historial
+> de movimientos, la vista `escalon_actual`— vale tal cual, y 5.7 queda como el
+> SQL histórico de 0023. En la base y en el código la tabla se llama `paso_fuerza`
+> y su columna, `paso`; en pantalla se lee siempre **"escalón"**, que es la
+> palabra que usa el profe.
+
 ---
 
 ## 1. Qué resuelve
@@ -26,19 +39,19 @@ suma dos cosas:
 Vienen del prompt y de la ronda de preguntas; el resto del documento se apoya en
 ellas y no las reabre.
 
-1. **La escalera de pesos es del ejercicio, no del jugador.** El profe define una
-   progresión por ejercicio (press plano: 8/10/12/14 kg). Lo individual es en qué
-   escalón está parado cada chico.
-2. **Una escalera por ejercicio para todo el club** (no por categoría ni por
-   plantel). El jugador conserva su escalón de por vida, sea cual sea su
-   categoría o temporada: el mismo criterio que rige el resto del esquema, donde
-   el jugador es del club y no de un plantel.
+1. **El escalón es del ejercicio, el peso es del jugador.** El profe define por
+   ejercicio de cuánto es el salto (press plano: 2 kg). Lo individual es con
+   cuánto peso trabaja hoy cada chico.
+2. **Un escalón por ejercicio para todo el club** (no por categoría ni por
+   plantel). El jugador conserva su peso de por vida, sea cual sea su categoría o
+   temporada: el mismo criterio que rige el resto del esquema, donde el jugador
+   es del club y no de un plantel.
 3. **El profe mueve a cada jugador con + y −, mirando su técnica.** La app no
-   calcula, no sugiere y no propone ningún valor: sólo mueve al jugador entre los
-   escalones que el profe escribió. Subir de peso es decisión de un adulto que
-   está mirando, nunca automática.
-4. **Video y escalera son atributos independientes.** Un ejercicio sin video
-   puede tener escalera, y uno con video puede no tenerla.
+   calcula, no sugiere y no propone ningún valor: + suma el escalón y − lo resta,
+   y nada más. Subir de peso es decisión de un adulto que está mirando, nunca
+   automática.
+4. **Video y escalón son atributos independientes.** Un ejercicio sin video puede
+   tener escalón, y uno con video puede no tenerlo.
 5. **No hacen falta cuentas de jugador.** El jugador acá es un dato que carga el
    profe, igual que una medición de tiro. Cuando existan cuentas, lo que va a
    cambiar es quién pide el ajuste, no quién lo autoriza.
@@ -49,45 +62,44 @@ ellas y no las reabre.
 
 | Pregunta | Respuesta | Sección |
 |---|---|---|
-| ¿Dónde vive la escalera? | En una tabla propia, `escalera_fuerza`, del club, identificada por el nombre normalizado del ejercicio. Ni en la biblioteca ni en la línea del plan. | 4 |
+| ¿Dónde vive el escalón? | En una tabla propia, `paso_fuerza`, del club, identificada por el nombre normalizado del ejercicio. Ni en la biblioteca ni en la línea del plan. | 4 |
 | ¿Qué pasa con `escalon_kg`? | Se elimina en 0023, con una guarda que aborta si alguna fila no está en NULL. | 5.4 |
 | ¿De dónde salen los valores? | Primero de la app. El Excel, si hace falta, después y en su propio spec. | 6 |
-| ¿Qué pasa con un plan nuevo? | El jugador conserva su escalón: no depende del plan. Cada movimiento queda guardado, así que se acumula historia. | 7 |
+| ¿Qué pasa con un plan nuevo? | El jugador conserva su peso: no depende del plan. Cada movimiento queda guardado, así que se acumula historia. | 7 |
 | ¿Cómo se ve el plan cargado? | Pantalla FÍSICO con el plan visible, sus sesiones y los otros planes; sesión con sus ejercicios; escalones de un ejercicio. | 9 y 10 |
 
 ---
 
-## 4. Dónde vive la escalera
+## 4. Dónde vive el escalón
 
-**En una tabla propia, `escalera_fuerza`: una fila por ejercicio del club, con su
-`clave` (el nombre normalizado con `clavearNombre`) y la lista de pesos.**
+**En una tabla propia, `paso_fuerza`: una fila por ejercicio del club, con su
+`clave` (el nombre normalizado con `clavearNombre`) y su escalón en kg.**
 
 Por qué no en los dos lugares candidatos:
 
 - **No en `ejercicio_fuerza` (la biblioteca).** Esa tabla es el anexo de videos:
   sólo tiene fila un ejercicio que vino con link en la hoja "Ejercicios" o al que
   el profe le cargó uno. En el archivo real, 57 de las 135 líneas no tienen fila
-  ahí. Para darles escalera habría que crearles una entrada sin link, y eso
+  ahí. Para darles escalón habría que crearles una entrada sin link, y eso
   rompe lo que se fijó en el import: el buscador de videos oculta las entradas
   sin link, el resumen cuenta "con video" a las líneas con referencia a la
-  biblioteca, y un ejercicio sin video es un ejercicio normal. Video y escalera
+  biblioteca, y un ejercicio sin video es un ejercicio normal. Video y escalón
   son independientes (decisión 4); guardarlos en la misma fila los ata.
 - **No en `ejercicio_asignado` (la línea del plan).** La línea nace de un import
-  y se redefine con el siguiente. El profe define la escalera "una vez"
-  (decisión 1); guardarla en la línea obligaría a reescribirla cada dos meses, y
-  una misma progresión quedaría copiada en cada sesión donde aparece el
-  ejercicio.
+  y se redefine con el siguiente. El profe define el escalón "una vez"
+  (decisión 1); guardarlo en la línea obligaría a reescribirlo cada dos meses, y
+  el mismo número quedaría copiado en cada sesión donde aparece el ejercicio.
 
-**Cómo se vincula una línea del plan con su escalera: por nombre normalizado
-exacto.** `clavearNombre(ejercicio_asignado.nombre_original) === escalera_fuerza.clave`,
+**Cómo se vincula una línea del plan con su escalón: por nombre normalizado
+exacto.** `clavearNombre(ejercicio_asignado.nombre_original) === paso_fuerza.clave`,
 el mismo criterio que usa el matcheo de videos y la misma función. Sin parecidos:
-"Press Plano", "Press Plano (Manc)" y "Press Plano Alternado" son tres escaleras
-distintas, porque pueden ser tres movimientos distintos y ponerle a un chico el
-peso de otro ejercicio es peor que no tener escalera.
+"Press Plano", "Press Plano (Manc)" y "Press Plano Alternado" son tres ejercicios
+distintos, porque pueden ser tres movimientos distintos y ponerle a un chico el
+peso de otro ejercicio es peor que no tener escalón.
 
 La clave sale del **nombre de la línea**, no del video que tenga. Si al importar
 el profe le eligió a "Cargada + Empuje" el video de "Cargada + Empuje (Barra)",
-la escalera sigue siendo la de "Cargada + Empuje". Es la consecuencia directa de
+el escalón sigue siendo el de "Cargada + Empuje". Es la consecuencia directa de
 que sean atributos independientes.
 
 El vínculo se calcula en JavaScript al leer, no con una columna nueva en
@@ -100,21 +112,25 @@ nada.
 
 ## 5. Esquema — `0023_escalones_fuerza.sql`
 
-### 5.1 `escalera_fuerza`
+### 5.1 `paso_fuerza`
 
-Una fila por ejercicio del club. `pesos` es un `numeric[]` estrictamente
-creciente y no vacío: una escalera sin valores no es una fila.
+Una fila por ejercicio del club, con `paso numeric check (paso > 0)`: cuántos kg
+suma + y resta −.
 
 - **`numeric` y no texto**, a diferencia de reps, carga y pausa del import.
   Aquellos son texto porque copian lo que dice el archivo ("5xL", "PC") y
-  convertirlos fabricaría una precisión que el dato no tiene. Acá los valores
-  los escribe el profe en la app, en kg, justamente para que + y − tengan un
-  orden; son números por definición.
-- **Array y no una fila por escalón:** la escalera se lee y se guarda entera, y
-  así guardarla es escribir una sola fila (ver 5.6).
-- **Sin historia de versiones de la escalera.** Lo que tiene historia es dónde
-  estuvo cada chico (5.2), y esa historia guarda los kg absolutos: sigue siendo
-  legible aunque la escalera cambie después.
+  convertirlos fabricaría una precisión que el dato no tiene. Acá el número lo
+  escribe el profe en la app, en kg, justamente para sumarlo y restarlo. Admite
+  decimales: 2,5 kg es un escalón real.
+- **`paso` admite nulo**, y no por descuido: es la fila del ejercicio con el
+  escalón todavía sin definir. Como `movimiento_escalon.escalera_id` es
+  `not null`, anotarle el peso a un chico exige que la fila exista; con `paso`
+  nulo el peso se escribe igual y no hay + ni −.
+- **Un número y no una lista:** no hay pesos válidos, así que no hay mínimo, ni
+  máximo, ni el estado "este peso no está en la escalera".
+- **Sin historia de versiones del escalón.** Lo que tiene historia es con cuánto
+  peso trabajó cada chico (5.2), y esa historia guarda los kg absolutos: sigue
+  siendo legible aunque el escalón cambie después.
 - `actualizado_por` y `actualizado_en` los pone un trigger, no el cliente. Es la
   misma idea que el trigger de cierre de `asignacion_plantel` en 0017.
 
@@ -125,13 +141,11 @@ agrega una fila con los kg donde quedó, cuándo y quién. No hay update ni dele
 un toque equivocado se corrige con el botón contrario, y los dos quedan en la
 historia.
 
-- **Guarda kg y no la posición en la escalera.** Si el profe corrige la escalera
-  (cambia 12 por 12,5, o agrega un escalón intermedio), una posición guardada
-  pasaría a apuntar a otro peso sin que nadie lo moviera. Los kg no.
-- **Los kg no se validan en la base contra la escalera.** Sólo `kg > 0`. La
-  escalera se puede editar después y la historia no debe romperse ni volverse
-  inválida por eso. Que el valor salga de la escalera lo garantiza la app, que
-  nunca manda un número que no leyó de ahí.
+- **Guarda kg absolutos.** Es el peso con el que trabajó el chico ese día;
+  cambiar después el escalón del ejercicio no reescribe nada de lo anotado.
+- **Los kg no se validan en la base contra nada más que `kg > 0`.** El escalón se
+  puede editar después y la historia no debe romperse ni volverse inválida por
+  eso.
 - FK compuestas `(club_id, jugador_id)` y `(club_id, escalera_id)`, como el resto
   del esquema: un movimiento no puede cruzar clubes.
 - **El último movimiento lo define `orden`** (una identity), no `creado_en`.
@@ -142,7 +156,7 @@ historia.
 
 ### 5.3 `escalon_actual` (vista)
 
-El escalón vigente de cada chico en cada escalera es su último movimiento.
+El peso vigente de cada chico en cada ejercicio es su último movimiento.
 
 ```sql
 select distinct on (jugador_id, escalera_id) ...
@@ -161,8 +175,8 @@ esquema; queda comentada en la migración por qué lleva esa opción.
 
 ### 5.4 `escalon_kg`: se elimina
 
-La columna guarda un número por línea, o sea para todo el grupo, y una escalera
-son varios valores por ejercicio para todo el club. No sirve como está y no hay
+La columna guarda un número por línea, o sea para todo el grupo, y lo que hace
+falta es un peso por chico. No sirve como está y no hay
 forma útil de reutilizarla. Dejarla sin uso es peor que sacarla: es una columna
 que parece decir dónde va el peso y no lo dice.
 
@@ -184,19 +198,18 @@ que parece decir dónde va el peso y no lo dice.
 
 Mismo modelo que el resto:
 
-- **La escalera se lee por membresía al club y la escriben los entrenadores**,
+- **El escalón se lee por membresía al club y lo escriben los entrenadores**,
   igual que `ejercicio_fuerza`. No tiene datos de ningún chico, así que el
-  coordinador puede leerla (hoy no tiene pantalla que la muestre). Es de todo el
-  club (decisión 2): cualquier entrenador del club la edita. Sin delete: una
-  escalera con historia no se borra, y la FK de los movimientos lo impide igual.
-- **El escalón de cada chico es un dato individual** y se protege como
+  coordinador puede leerlo (hoy no tiene pantalla que lo muestre). Es de todo el
+  club (decisión 2): cualquier entrenador del club lo edita. Sin delete: un
+  ejercicio con historia no se borra, y la FK de los movimientos lo impide igual.
+- **El peso de cada chico es un dato individual** y se protege como
   `medicion_corporal` (0016): lo lee y lo escribe un entrenador con asignación
   vigente a algún plantel donde el chico tiene pertenencia vigente. Por
   `puede_ver_plantel` / `puede_escribir_plantel`, que desde 0018 excluyen al
-  coordinador: **coordinación nunca ve escalones individuales.**
-- **Un chico citado a dos categorías tiene un solo escalón** (decisión 2) y
-  aparece con ese mismo escalón en las dos listas. Lo pueden mover los profes de
-  las dos.
+  coordinador: **coordinación nunca ve pesos individuales.**
+- **Un chico citado a dos categorías tiene un solo peso** (decisión 2) y aparece
+  con ese mismo peso en las dos listas. Lo pueden mover los profes de las dos.
 - **Consecuencia aceptada:** la historia de un chico sin ninguna pertenencia
   vigente no la ve nadie desde la app, igual que sus mediciones corporales. No
   se pierde; vuelve a verse si se lo vuelve a sumar a un plantel.
@@ -204,18 +217,19 @@ Mismo modelo que el resto:
   de otro.
 - Primero se revoca todo a `anon` y `authenticated` (Supabase concede ALL por
   defecto, ver 0017) y después se otorga sólo lo que alguna policy habilita. En
-  `escalera_fuerza` el update se otorga **sólo sobre `pesos`**: la clave, el
-  club y el nombre no se editan.
+  `paso_fuerza` el update se otorga **sólo sobre `paso`**: la clave, el club y
+  el nombre no se editan.
 
 ### 5.6 Sin RPC
 
 Cada escritura toca una sola fila:
 
-- ubicar, subir o bajar a un chico = un insert en `movimiento_escalon`;
-- definir una escalera = un insert de una fila de `escalera_fuerza`; editarla =
-  un update de `pesos` en esa fila. **No es un upsert:** el update está otorgado
-  sólo sobre `pesos` (5.5), y el upsert de PostgREST reescribe todas las
-  columnas que manda, así que chocaría con ese permiso.
+- anotar, subir o bajar el peso de un chico = un insert en `movimiento_escalon`
+  (más, la primera vez, el insert de la fila del ejercicio si todavía no existe);
+- definir un escalón = un insert de una fila de `paso_fuerza`; editarlo = un
+  update de `paso` en esa fila. **No es un upsert:** el update está otorgado
+  sólo sobre `paso` (5.5), y el upsert de PostgREST reescribe todas las columnas
+  que manda, así que chocaría con ese permiso.
 
 No hay nada que tenga que entrar todo junto o nada, así que no hace falta una
 RPC. Si más adelante aparece "subir a todos un escalón", eso sí escribe varias
@@ -223,7 +237,13 @@ filas y va con RPC (fuera de alcance, sección 13).
 
 ### 5.7 El SQL
 
-Se muestra completo acá para aprobarlo; al implementarlo se vuelve a mostrar
+**Histórico: es el SQL de 0023, tal como se aprobó.** La tabla que crea acá se
+llama `escalera_fuerza` y tiene `pesos numeric[]`; `0024_paso_fuerza.sql` la
+renombra a `paso_fuerza` y cambia esa columna por `paso`, sin tocar
+`movimiento_escalon` ni `escalon_actual`. Se deja como está para que se lea de
+dónde viene cada objeto.
+
+Se mostró completo acá para aprobarlo; al implementarlo se volvió a mostrar
 antes de `db push`, igual que siempre.
 
 ```sql
@@ -393,72 +413,68 @@ con su propio spec.
 
 Por qué la app primero:
 
-- **La escalera sobrevive a los planes y el archivo no.** El `.xlsx` llega cada
-  dos meses; la escalera se define una vez (decisión 1). Si viniera en el
+- **El escalón sobrevive a los planes y el archivo no.** El `.xlsx` llega cada
+  dos meses; el escalón se define una vez (decisión 1). Si viniera en el
   archivo, cada import tendría que decidir qué hacer cuando el archivo dice otra
   cosa que lo guardado: ¿pisa lo que el profe ajustó en la app?, ¿avisa?, ¿se
   ignora? Esa regla es una decisión de producto que hoy no está tomada.
 - **El parser está cerrado y la plantilla es del profe.** Una columna nueva
   obliga a reabrir `parserFisico.js` y a acordar con el cuerpo técnico un cambio
   en un archivo que hoy arma a su manera.
-- **En la app se ve el efecto al escribir.** El editor muestra cómo queda la
-  escalera y muestra si algún chico está en un peso que no queda en ella
-  (sección 10.4). Desde el Excel eso
+- **En la app se ve el efecto al escribir.** Definido el escalón, las filas de
+  los chicos muestran enseguida a qué peso llevan + y −. Desde el Excel eso
   recién aparecería al importar.
 
 Si después conviene sumar el Excel, la tabla no cambia: sería otra forma de
-escribir la misma fila de `escalera_fuerza`, y lo nuevo sería la regla de
-conflicto.
+escribir la misma fila de `paso_fuerza`, y lo nuevo sería la regla de conflicto.
 
 ---
 
 ## 7. Qué pasa cuando llega un plan nuevo
 
-**El jugador conserva su escalón.** El escalón es de `(jugador, escalera)` y la
-escalera es del club, no del plan: un plan nuevo no toca ninguna de las dos.
+**El jugador conserva su peso.** El peso es de `(jugador, ejercicio)` y el
+ejercicio es del club, no del plan: un plan nuevo no toca ninguno de los dos.
 
 - **Se acumula historia.** Cada movimiento es una fila con fecha y autor; nada se
   reinicia con un import.
 - **Un ejercicio que se repite** en el plan nuevo, con el mismo nombre
-  normalizado, muestra su escalera y los escalones donde los chicos quedaron.
-- **Un ejercicio que no está en el plan nuevo** no pierde nada: su escalera y los
-  escalones siguen guardados y reaparecen el día que vuelva a un plan.
+  normalizado, muestra su escalón y los pesos donde los chicos quedaron.
+- **Un ejercicio que no está en el plan nuevo** no pierde nada: su escalón y los
+  pesos siguen guardados y reaparecen el día que vuelva a un plan.
 - **Un ejercicio renombrado en el archivo es otro ejercicio** ("Press Plano" →
-  "Press Plano Manc"), con otra escalera y sin escalones. Es el mismo criterio
-  exacto que los videos. Unir los dos nombres sería un alias, y queda fuera de
-  alcance (sección 13).
-- **Si la escalera cambia** entre un plan y otro, los chicos no se mueven solos:
-  quedan en sus kg, y si ese valor ya no está en la escalera la fila lo dice
-  como un dato ("este peso ya no está en la escalera actual") hasta que el
-  profe los mueva (10.4).
+  "Press Plano Manc"), con otro escalón y sin pesos. Es el mismo criterio exacto
+  que los videos. Unir los dos nombres sería un alias, y queda fuera de alcance
+  (sección 13).
+- **Si el escalón cambia** entre un plan y otro, los chicos no se mueven solos:
+  quedan en sus kg, y el escalón nuevo rige desde el próximo + o −.
 
 ---
 
 ## 8. Reglas del escalón
 
-1. **Un chico sin escalón no tiene peso asignado**, y la app no le asigna uno.
-   No arranca en el escalón más liviano por defecto: ubicarlo es un toque
-   explícito del profe sobre un valor de la escalera (10.3). Decisión 3 y la
-   regla de seguridad.
-2. **+ lleva al valor inmediatamente superior de la escalera y − al inferior.**
-   En el extremo, el botón correspondiente se ve deshabilitado (no desaparece:
-   que no cambie la fila de lugar).
-3. **Un peso que ya no está en la escalera:** si los kg actuales no están en la
-   escalera (porque la escalera se editó), + lleva al menor valor mayor que los
-   kg actuales y − al mayor valor menor. Si no hay, ese botón queda
-   deshabilitado. **Se muestra como un dato, no como un error:** nadie hizo
-   nada mal y el chico sigue en su peso. Va en el texto normal de la fila ("este
-   peso ya no está en la escalera actual"), sin rojo, sin ícono de alerta y sin
-   `.al`.
-4. **Cada toque se guarda en el momento**, sin botón "guardar". Mientras se
+1. **Un chico sin peso no tiene peso asignado**, y la app no le asigna uno. No
+   arranca en un peso liviano por defecto: el profe escribe el número (10.4).
+   Decisión 3 y la regla de seguridad.
+2. **+ suma el escalón al peso actual y − lo resta.** Nada más: no hay mínimo ni
+   máximo. + nunca se apaga; − se apaga sólo cuando restar daría cero o menos,
+   que no es un peso (no desaparece, para que la fila no cambie de lugar). Ese
+   piso no es inventado: es el mismo `kg > 0` que exige la base.
+3. **Se puede anotar el peso de un chico aunque el ejercicio todavía no tenga
+   escalón.** En ese caso la fila muestra el peso y no muestra + ni −: el profe
+   todavía no dijo de a cuánto se mueve.
+4. **El peso también se corrige escribiéndolo.** El número de la fila es un
+   botón: abre la misma hoja, con el valor actual. Un peso mal anotado se arregla
+   ahí, sin ir sumando y restando escalones hasta llegar.
+5. **Cada toque se guarda en el momento**, sin botón "guardar". Mientras se
    escribe, los botones de esa fila se deshabilitan; si falla, se avisa y la fila
    vuelve a lo que estaba.
-5. **El cliente manda los kg de destino, no "+1".** Si dos profes mueven al mismo
+6. **El cliente manda los kg de destino, no "+1".** Si dos profes mueven al mismo
    chico a la vez, gana el último y los dos movimientos quedan en la historia.
    Después de escribir, la fila muestra lo que devolvió la base.
-6. **Ningún número propuesto por la app.** El editor de escalera arranca vacío y
-   sin placeholder numérico (un "ej. 8, 10, 12" también es proponer valores). No
-   hay pesos por defecto ni referencias por edad en ningún lado.
+7. **Ningún número propuesto por la app.** El editor del escalón y la hoja del
+   peso arrancan vacíos y sin placeholder numérico (un "ej. 2,5" también es
+   proponer valores). No hay pesos por defecto ni referencias por edad en ningún
+   lado.
 
 ---
 
@@ -561,19 +577,19 @@ Se llega tocando una sesión. Título "Sesión"; volver lleva a FÍSICO.
 │ │ 1 · Cargada + Empuje          › │ │
 │ │ 4 series · 5xL · PC · pausa 90''│ │
 │ │ Bajar controlado                │ │
-│ │ [ VER VIDEO ]   Escalera 20–40 kg │
+│ │ [ VER VIDEO ]     Escalón 2,5 kg│ │
 │ └─────────────────────────────────┘ │
 │ ┌─────────────────────────────────┐ │
 │ │ 2 · Salto al cajón            › │ │
 │ │ 3 series · 6 · pausa 60''       │ │
-│ │ Sin escalera                    │ │
+│ │ Sin escalón                     │ │
 │ └─────────────────────────────────┘ │
 │                                     │
 │ ■ FUERZA                            │
 │ ┌─────────────────────────────────┐ │
 │ │ 3 · Press Plano               › │ │
 │ │ 4 series · 8 · Media            │ │
-│ │ Escalera 8–14 kg                │ │
+│ │ Escalón 2 kg                    │ │
 │ └─────────────────────────────────┘ │
 └─────────────────────────────────────┘
 ```
@@ -585,7 +601,7 @@ Se llega tocando una sesión. Título "Sesión"; volver lleva a FÍSICO.
 - **"Ver video"** sólo si la línea tiene video (link de su `ejercicio_fuerza`).
   Abre el link en una pestaña nueva. **Sin video no se dice nada:** es el estado
   normal.
-- **Escalera:** "Escalera 20–40 kg" (menor y mayor valor) o "Sin escalera".
+- **Escalón:** "Escalón 2,5 kg" o "Sin escalón".
 - Tocar la tarjeta (fuera de "Ver video") lleva a los escalones de ese ejercicio.
 
 ### 10.4 Escalones de un ejercicio (`p-fisico-escalones`)
@@ -600,77 +616,80 @@ Se llega desde una línea de la sesión. Título "Escalones".
 │ Cargada + Empuje                    │
 │ En esta sesión: 4 series · 5xL · PC │
 │                                     │
-│ ■ ESCALERA                          │
+│ ■ ESCALÓN                           │
 │ ┌─────────────────────────────────┐ │
-│ │ 20 · 25 · 30 · 35 · 40 kg       │ │
-│ │ [ EDITAR ESCALERA ]             │ │
+│ │ 2,5 kg cada vez que subís o     │ │
+│ │ bajás. Es el mismo para todo el │ │
+│ │ club.            [ EDITAR ESCALÓN ]│
 │ └─────────────────────────────────┘ │
 │                                     │
 │ ■ U17M · 14 JUGADORES               │
 │ ┌─────────────────────────────────┐ │
 │ │ DÍAZ, M.        [−] 22,5 kg [+] │ │
-│ │ desde el 02/03 · este peso ya   │ │
-│ │ no está en la escalera actual   │ │
+│ │ desde el 02/03                  │ │
 │ ├─────────────────────────────────┤ │
 │ │ GÓMEZ, L.       [−]  25 kg  [+] │ │
 │ │ desde el 06/04                  │ │
 │ ├─────────────────────────────────┤ │
-│ │ PÉREZ, J.       [−]  40 kg  [+] │ │
-│ │ desde el 09/03   (+ deshabilitado)│
+│ │ PÉREZ, J.       [−]   2 kg  [+] │ │
+│ │ desde el 09/03   (− deshabilitado)│
 │ ├─────────────────────────────────┤ │
-│ │ ROSSI, T.   sin escalón [UBICAR]│ │
+│ │ ROSSI, T.  sin peso [PONER PESO]│ │
 │ └─────────────────────────────────┘ │
 └─────────────────────────────────────┘
 ```
 
 - **Jugadores:** los que tienen pertenencia vigente al plantel de la categoría
   activa, en orden alfabético, con `nombreCorto`. Un chico citado a dos
-  categorías aparece en las dos con el mismo escalón.
-- **Cada fila:** kg actuales entre − y +, y debajo desde cuándo está ahí (fecha
-  del último movimiento). Reglas de + y − en la sección 8.
-- **Sin escalón:** "sin escalón" y un botón "Ubicar" que abre una hoja con los
-  valores de la escalera como botones ("Elegí el escalón donde está hoy"). Tocar
-  un valor lo ubica.
-- **Sin escalera:** en lugar de la escalera y la lista, "Este ejercicio todavía
-  no tiene escalera" y el botón "Definir escalera". Sin escalera no hay nada que
-  mover, así que la lista no aparece.
+  categorías aparece en las dos con el mismo peso.
+- **Cada fila:** los kg actuales entre − y +, y debajo desde cuándo está ahí
+  (fecha del último movimiento). Reglas de + y − en la sección 8. El número de
+  kg es un botón: abre la hoja del peso con el valor actual.
+- **Sin peso:** "sin peso" y un botón "Poner peso", que abre la misma hoja
+  vacía.
+- **Sin escalón definido:** la tarjeta dice "Todavía no tiene escalón. Podés
+  anotar el peso de cada chico igual." y el botón dice "Definir escalón". **La
+  lista de jugadores aparece igual**, con sus pesos, y sin + ni −.
 
-**Hoja "Escalera de Cargada + Empuje"** (definir o editar):
+**Hoja "Peso de Díaz, M."** (poner o corregir):
 
 ```
 ┌─────────────────────────────────────┐
-│ ESCALERA DE CARGADA + EMPUJE        │
-│ Es la misma para todo el club.      │
+│ PESO DE DÍAZ, M.                    │
+│ El peso con el que trabaja hoy en   │
+│ este ejercicio.                     │
 │                                     │
-│ PESOS (KG)                          │
-│ [ 20, 25, 30, 35, 40              ] │
-│ De menor a mayor, separados por     │
-│ espacio o por coma y espacio.       │
+│ PESO (KG)                           │
+│ [ 22,5                            ] │
 │                                     │
-│ Queda: 20 · 25 · 30 · 35 · 40 kg    │
-│                                     │
-│ 1 jugador está en 22,5 kg, un peso  │
-│ que no está en esta escalera. Sigue │
-│ en ese peso; + y − lo llevan al     │
-│ escalón más cercano.                │
-│                                     │
-│ [ GUARDAR ESCALERA ] [ CANCELAR ]   │
+│ [ GUARDAR PESO ] [ CANCELAR ]       │
 └─────────────────────────────────────┘
 ```
 
-- **Arranca vacío** si no hay escalera, **sin placeholder numérico** (sección 8,
-  regla 6). Si ya hay, arranca con sus valores.
-- Separan el espacio, el punto y coma o la coma seguida de espacio. Una coma
-  entre dos dígitos es decimal ("12,5"), así que "8,10" se lee 8,1 kg: por eso
-  "Queda:" muestra cómo se leyó antes de guardar. Ordena y saca repetidos de lo
-  que el profe escribió (son sus propios valores, no una sugerencia). Rechaza lo
-  que no es un número o no es mayor que cero.
-- "Es la misma para todo el club": editarla cambia lo que ven todas las
-  categorías (decisión 2), y el profe tiene que saberlo antes de tocarla.
-- **Chicos en un peso que no está en la escalera nueva:** se dice cuántos, de
-  los de esta categoría (los que el profe puede ver), en texto normal y no como
-  alerta: nadie hizo nada mal, siguen en su peso, y + y − los llevan al escalón
-  más cercano. No impide guardar.
+**Hoja "Escalón de Cargada + Empuje"** (definir o editar):
+
+```
+┌─────────────────────────────────────┐
+│ ESCALÓN DE CARGADA + EMPUJE         │
+│ Cuánto suma + y cuánto resta −. Es  │
+│ el mismo para todo el club.         │
+│                                     │
+│ ESCALÓN (KG)                        │
+│ [ 2,5                             ] │
+│                                     │
+│ [ GUARDAR ESCALÓN ] [ CANCELAR ]    │
+└─────────────────────────────────────┘
+```
+
+- Las dos hojas **arrancan vacías** si no hay valor, **sin placeholder
+  numérico** (sección 8, regla 7). Si ya hay, arrancan con el valor actual.
+- **Un solo número**, con coma decimal ("12,5"), el mismo criterio de siempre.
+  Rechaza lo que no es un número y lo que no es mayor que cero, con el error
+  debajo del campo.
+- "Es el mismo para todo el club": editar el escalón cambia lo que ven todas las
+  categorías (decisión 2), y el profe tiene que saberlo antes de tocarlo.
+- Cambiar el escalón **no mueve a nadie**: los chicos siguen en sus kg y el
+  número nuevo rige desde el próximo + o −.
 
 ### 10.5 Navegación
 
@@ -692,12 +711,10 @@ Sin red ni DOM, con tests en `tests/escalones.test.js`:
 
 | Función | Qué hace |
 |---|---|
-| `parsearPesos(texto)` | `{ error, pesos }`. Separan espacio, `;` o coma seguida de espacio; una coma entre dígitos es decimal; ordena, saca repetidos; error si hay algo que no es número o no es > 0, o si queda vacío. |
-| `estadoDelEscalon(pesos, kg)` | `'sin'` (kg null), `'en'` (kg está en la escalera) o `'fuera'`. |
-| `pasoDeEscalon(pesos, kg, direccion)` | kg de destino para + o −, o `null` si no hay. Con kg null devuelve `null`: no hay subir ni bajar sin ubicar antes. |
-| `quedanFuera(pesosNuevos, escalones)` | Los chicos cuyos kg actuales no están en la escalera nueva, para el aviso. |
+| `parsearPeso(texto)` | `{ error, kg }`. Un solo número; una coma entre dígitos es decimal; error si no es un número, si no es > 0 o si está vacío. Sirve para el peso de un chico y para el escalón de un ejercicio. |
+| `nuevoPeso(kg, paso, direccion)` | kg de destino para + o −, o `null` si no hay adónde ir: sin peso, sin escalón, o si restar daría cero o menos. |
 | `elegirPlanVisible(planes, hoy)` | La regla de la sección 9: `{ visible, estado, otros }`. |
-| `escaleraDeLinea(nombreOriginal, escaleras)` | Busca por `clavearNombre` exacto. Importa `clavearNombre` de `parserCabb.js`, la misma fuente que el import. |
+| `pasoDeLinea(nombreOriginal, pasos)` | Busca por `clavearNombre` exacto. Importa `clavearNombre` de `parserCabb.js`, la misma fuente que el import. |
 
 ### 11.2 `repositorio.js` (sólo agregar)
 
@@ -705,40 +722,44 @@ Sin red ni DOM, con tests en `tests/escalones.test.js`:
 |---|---|
 | `obtenerPlanesFisicos(clubId, plantelId)` | Planes de la categoría con sus fechas de sesión, para la regla de la sección 9. |
 | `obtenerPlanFisico(planId)` | Sesiones con sus líneas y, de cada línea, el `nombre` y `link` de su `ejercicio_fuerza` si tiene. |
-| `obtenerEscaleras(clubId)` | Todas las escaleras del club. |
-| `crearEscalera({ clubId, clave, nombre, pesos })` | Insert de la fila. |
-| `editarEscalera(escaleraId, pesos)` | Update sólo de `pesos` (ver 5.6: no upsert). |
-| `obtenerEscalonesActuales(escaleraId, jugadorIds)` | Desde `escalon_actual`. |
-| `moverEscalon({ clubId, jugadorId, escaleraId, kg })` | Insert en `movimiento_escalon`; devuelve la fila. |
+| `obtenerPasos(clubId)` | Todos los escalones del club. `paso` nulo es "sin definir". |
+| `crearPaso({ clubId, clave, nombre, paso })` | Insert de la fila; `paso` puede ir nulo (5.1). |
+| `editarPaso(pasoId, paso)` | Update sólo de `paso` (ver 5.6: no upsert). |
+| `obtenerEscalonesActuales(pasoId, jugadorIds)` | Desde `escalon_actual`. |
+| `moverEscalon({ clubId, jugadorId, pasoId, kg })` | Insert en `movimiento_escalon`; devuelve la fila. La columna sigue llamándose `escalera_id` (0024). |
 
 ---
 
 ## 12. Verificación
 
-- **Tests unitarios** de `escalones.js`, incluyendo: `pasoDeEscalon` sin escalón
-  devuelve `null` (no hay ubicación implícita), extremos, valores fuera de la
-  escalera, `parsearPesos` con coma decimal y con basura, y los tres casos más el
-  empate de `elegirPlanVisible`.
-- **Test de fuente:** el editor de escalera no tiene placeholder con dígitos.
+- **Tests unitarios** de `escalones.js`, incluyendo: `nuevoPeso` sin peso o sin
+  escalón devuelve `null` (no hay + ni − implícitos), no baja a cero ni a
+  negativo, no tiene techo y redondea las colas del punto flotante;
+  `parsearPeso` con coma decimal y con basura; y los tres casos más el empate de
+  `elegirPlanVisible`.
+- **Tests de fuente:** ni la hoja del peso ni la del escalón tienen placeholder
+  con dígitos; la palabra "escalera" no quedó en ningún lado; − se apaga sólo
+  por `nuevoPeso(...) == null`.
 - **`tests/verificarEscalones.sql`** contra el Docker local, como
   `verificarCoordinacion.sql`:
-  - un entrenador asignado define una escalera, ubica, sube y lee el escalón
+  - un entrenador asignado define el escalón, anota un peso, sube y lee el peso
     actual;
-  - dos movimientos seguidos en la misma transacción: el escalón actual es el
+  - dos movimientos seguidos en la misma transacción: el peso actual es el
     segundo;
-  - un entrenador de otro plantel no ve ni escribe escalones de ese chico;
+  - una fila con `paso` nulo acepta movimientos igual (anotar sin escalón);
+  - un entrenador de otro plantel no ve ni escribe pesos de ese chico;
   - un coordinador puro no ve filas de `movimiento_escalon` ni de
-    `escalon_actual`, pero sí la escalera;
-  - la base rechaza pesos no crecientes, vacíos o ≤ 0, kg ≤ 0, un `creado_por`
-    ajeno, y cualquier update o delete de un movimiento;
-  - un chico citado a dos categorías tiene un solo escalón, visible desde las dos;
-  - `escalon_kg` ya no existe.
+    `escalon_actual`, pero sí el escalón;
+  - la base rechaza `paso` ≤ 0, kg ≤ 0, un `creado_por` ajeno, y cualquier
+    update o delete de un movimiento;
+  - un chico citado a dos categorías tiene un solo peso, visible desde las dos;
+  - `escalon_kg` ya no existe y `pesos_validos` tampoco.
 - **`tests/verificarImportarPlanFisico.js`** actualizado (5.4) y en verde.
-- **`tests/rollback0023.sql`.**
+- **`tests/rollback0023.sql`** y **`tests/rollback0024.sql`.**
 - **Navegador a 375px y en escritorio**, con el plan real importado en el Docker
-  local: los tres estados de FÍSICO, una sesión con y sin video, definir una
-  escalera, ubicar, subir, bajar, un chico en un peso que ya no está en la escalera y el aviso de la
-  hoja.
+  local: los tres estados de FÍSICO, una sesión con y sin video, anotar un peso
+  sin escalón definido, definir el escalón, subir, bajar, − apagado cerca de
+  cero, corregir el peso escribiéndolo y un escalón con decimales.
 - **`npm test`** en verde.
 - **Nada contra producción.** El SQL completo se muestra antes de `db push`.
 
@@ -747,9 +768,9 @@ Sin red ni DOM, con tests en `tests/escalones.test.js`:
 ## 13. Fuera de alcance
 
 - **Cuentas de jugador**, y cualquier cosa que dependa de ellas (pedir un ajuste).
-- **Pesos por defecto, sugerencias o normas por edad.** Los escalones los escribe
-  el cuerpo técnico, siempre.
-- **La escalera desde el Excel** (sección 6).
+- **Pesos por defecto, sugerencias o normas por edad.** Los pesos y los escalones
+  los escribe el cuerpo técnico, siempre.
+- **El escalón desde el Excel** (sección 6).
 - **Unidades que no son kg** (bandas, peso corporal, tiempo).
 - **Alias entre ejercicios renombrados** (sección 7).
 - **Editar o borrar un movimiento.** Se corrige con otro movimiento.

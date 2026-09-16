@@ -110,30 +110,39 @@ Todo lo que trae el parser para un jugador **propio** en un partido: minutos en 
 - `nombre_crudo`: el string exacto del archivo para esa fila, para poder auditar contra el original.
 - `unique(partido_id, jugador_id)`: una sola fila de estadística por jugador por partido.
 
-### `escalera_fuerza` (0023)
-La progresión de pesos de un ejercicio de fuerza, **una para todo el club**:
-`(club_id, clave, nombre, pesos numeric[])`, único por `(club_id, clave)`.
+### `paso_fuerza` (0023 como `escalera_fuerza`, renombrada en 0024)
+Cuánto sube o baja de peso un ejercicio de fuerza por vez —el **"escalón"** que
+dice la pantalla—, **uno para todo el club**: `(club_id, clave, nombre, paso
+numeric)`, único por `(club_id, clave)`.
 
 - `clave` es `clavearNombre` del nombre de la línea del plan: una línea y su
-  escalera coinciden sólo por nombre normalizado exacto. Es independiente de
+  escalón coinciden sólo por nombre normalizado exacto. Es independiente de
   `ejercicio_fuerza` (el anexo de videos): un ejercicio sin video puede tener
-  escalera y viceversa.
-- `pesos` en kg, estrictamente creciente, sin nulos y positivo (`pesos_validos`).
-  Los escribe el profe en la app; la app no propone valores.
+  escalón y viceversa.
+- `paso` en kg, mayor que cero, con decimales (2,5 kg es un escalón real). Lo
+  escribe el profe en la app; la app no propone valores. **Nulo = todavía sin
+  definir**: la fila existe para colgarle los movimientos, el peso de cada chico
+  se escribe igual y no hay + ni −.
+- 0024 la renombró (con su índice, su trigger, sus policies y sus constraints) y
+  cambió `pesos numeric[]` por `paso`: una lista de pesos válidos resultó no ser
+  cómo trabaja el profe. Se fue con ella la función `pesos_validos`. La tabla
+  estaba vacía en producción y en local, y la migración se frena si no lo está.
 - La lee cualquier miembro del club y la escriben los entrenadores. El update
-  está otorgado sólo sobre `pesos`; `actualizado_por` y `actualizado_en` los pone
+  está otorgado sólo sobre `paso`; `actualizado_por` y `actualizado_en` los pone
   un trigger. Sin delete.
 
 ### `movimiento_escalon` (0023)
-Cada vez que el profe ubica, sube o baja a un chico en una escalera:
+Cada vez que el profe le anota, sube o baja el peso a un chico en un ejercicio:
 `(club_id, jugador_id, escalera_id, kg, creado_por, creado_en, orden)`.
 
 - **Sólo inserts.** Sin update ni delete: un error se corrige con otro
   movimiento, y la historia queda completa.
-- `kg` absolutos, no la posición en la escalera: si la escalera cambia, la
-  historia sigue diciendo lo mismo. No se valida contra la escalera.
+- `escalera_id` apunta a `paso_fuerza` y **conserva el nombre de 0023 a
+  propósito** (0024): cambia la tabla a la que apunta, no la historia ya escrita.
+- `kg` absolutos: si el escalón del ejercicio cambia, la historia sigue diciendo
+  lo mismo. Lo único que valida la base es `kg > 0`.
 - `orden` (identity) define cuál es el último; `creado_en` es para mostrar.
-- El escalón es del jugador y del ejercicio, no del plan ni de la categoría: se
+- El peso es del jugador y del ejercicio, no del plan ni de la categoría: se
   conserva de por vida, igual que `jugador` es del club y no de un plantel.
 - RLS como `medicion_corporal`: por pertenencia vigente y plantel asignado.
   Coordinación no lo ve.
@@ -145,7 +154,7 @@ de quien consulta. Es la primera vista del esquema.
 
 ### `ejercicio_asignado.escalon_kg` (eliminada en 0023)
 Guardaba un número por línea, o sea para todo el grupo, y nunca se escribió. El
-escalón por jugador vive en `movimiento_escalon`.
+peso de cada jugador vive en `movimiento_escalon`.
 
 ## Políticas RLS
 
