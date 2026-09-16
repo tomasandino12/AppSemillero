@@ -1,4 +1,4 @@
--- Verificación de 0023 (escalones de fuerza) contra el Docker LOCAL.
+-- Verificación de 0023 + 0024 (escalones de fuerza) contra el Docker LOCAL.
 --
 -- CÓMO SE CORRE (nunca contra producción):
 --   DB=$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -1)
@@ -8,22 +8,24 @@
 -- sintéticos dentro de UNA transacción que termina en ROLLBACK: no deja nada.
 -- La impersonación (role authenticated + request.jwt.claims) es como PostgREST
 -- evalúa la RLS de una sesión real.
+--
+-- Desde 0024 el ejercicio tiene un paso (un número) y el chico un peso actual;
+-- no hay lista de pesos válidos ni estado "fuera de la escalera". El paso puede
+-- ser nulo: la fila existe para colgarle los movimientos aunque el profe todavía
+-- no haya definido el escalón.
 
 \set ON_ERROR_STOP off
 begin;
 
-\echo '===== 0023 aplicada (esperado: t t t)'
-select to_regclass('public.escalera_fuerza') is not null as escalera,
+\echo '===== 0023 + 0024 aplicadas (esperado: t t t t)'
+select to_regclass('public.paso_fuerza') is not null as paso,
+       to_regclass('public.escalera_fuerza') is null as escalera_ya_no_existe,
        to_regclass('public.movimiento_escalon') is not null as movimientos,
        to_regclass('public.escalon_actual') is not null as vista;
 
-\echo '===== pesos_validos (esperado: t f f f f f)'
-select pesos_validos(array[8, 10, 12.5]::numeric[]) as creciente,
-       pesos_validos(array[10, 8]::numeric[]) as decreciente,
-       pesos_validos(array[8, 8]::numeric[]) as repetido,
-       pesos_validos('{}'::numeric[]) as vacio,
-       pesos_validos(array[8, null]::numeric[]) as con_null,
-       pesos_validos(array[0, 8]::numeric[]) as con_cero;
+\echo '===== pesos_validos ya no existe (esperado: 0)'
+select count(*) as pesos_validos_existe
+from pg_proc where proname = 'pesos_validos';
 
 \echo '===== escalon_kg (esperado: 0)'
 select count(*) as escalon_kg_existe
@@ -49,25 +51,30 @@ insert into pertenencia (club_id, jugador_id, plantel_id, temporada_id, desde)
   select p.club_id, '44444444-4444-4444-4444-444444444401', p.id, p.temporada_id, current_date
   from plantel p where p.id = '20000000-0000-0000-0000-000000000004';
 
-\echo '===== entrenador de U17M: define, ubica, sube; dos movimientos en la misma transacción (esperado: 12)'
+\echo '===== entrenador de U17M: define el paso, ubica y sube; dos movimientos en la misma transacción (esperado: 12)'
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"55555555-5555-5555-5555-555555555501","role":"authenticated"}', true) \g /dev/null
-insert into escalera_fuerza (club_id, clave, nombre, pesos)
-  values ('20000000-0000-0000-0000-000000000001', 'ZZTEST PRESS', 'ZZtest Press', array[8, 10, 12]::numeric[])
-  returning id \gset esc_
+insert into paso_fuerza (club_id, clave, nombre, paso)
+  values ('20000000-0000-0000-0000-000000000001', 'ZZTEST PRESS', 'ZZtest Press', 2)
+  returning id \gset paso_
 insert into movimiento_escalon (club_id, jugador_id, escalera_id, kg)
-  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'esc_id', 10);
+  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'paso_id', 10);
 insert into movimiento_escalon (club_id, jugador_id, escalera_id, kg)
-  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'esc_id', 12);
+  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'paso_id', 12);
 select kg as escalon_actual from escalon_actual where jugador_id = '44444444-4444-4444-4444-444444444401';
 
-\echo '===== editar pesos: permitido, y el trigger sella (esperado: {8,10,12,14} | t)'
-update escalera_fuerza set pesos = array[8, 10, 12, 14]::numeric[] where id = :'esc_id'
-  returning pesos, actualizado_por = '55555555-5555-5555-5555-555555555501' as sellado_por_trigger;
+\echo '===== el trigger sella también el insert, aunque el cliente mande otro autor (esperado: t)'
+insert into paso_fuerza (club_id, clave, nombre, paso, actualizado_por)
+  values ('20000000-0000-0000-0000-000000000001', 'ZZTEST SELLO', 'ZZtest Sello', 5, '55555555-5555-5555-5555-555555555503')
+  returning actualizado_por = '55555555-5555-5555-5555-555555555501' as sellado_en_el_insert;
+
+\echo '===== editar el paso: permitido, y el trigger sella (esperado: 2.5 | t)'
+update paso_fuerza set paso = 2.5 where id = :'paso_id'
+  returning paso, actualizado_por = '55555555-5555-5555-5555-555555555501' as sellado_por_trigger;
 
 \echo '===== editar nombre: esperado permission denied'
 savepoint s1;
-update escalera_fuerza set nombre = 'Otro nombre' where id = :'esc_id';
+update paso_fuerza set nombre = 'Otro nombre' where id = :'paso_id';
 rollback to savepoint s1;
 
 \echo '===== update de un movimiento: esperado permission denied'
@@ -83,19 +90,28 @@ rollback to savepoint s3;
 \echo '===== movimiento a nombre de otro: esperado row-level security'
 savepoint s4;
 insert into movimiento_escalon (club_id, jugador_id, escalera_id, kg, creado_por)
-  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'esc_id', 8, '55555555-5555-5555-5555-555555555503');
+  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'paso_id', 8, '55555555-5555-5555-5555-555555555503');
 rollback to savepoint s4;
 
 \echo '===== kg 0: esperado check violation'
 savepoint s5;
 insert into movimiento_escalon (club_id, jugador_id, escalera_id, kg)
-  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'esc_id', 0);
+  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'paso_id', 0);
 rollback to savepoint s5;
 
-\echo '===== escalera decreciente: esperado check violation'
+\echo '===== ubicar sin escalón definido: la fila existe con paso nulo (esperado: 7 | t)'
+insert into paso_fuerza (club_id, clave, nombre)
+  values ('20000000-0000-0000-0000-000000000001', 'ZZTEST SIN PASO', 'ZZtest Sin Paso')
+  returning id \gset sinpaso_
+insert into movimiento_escalon (club_id, jugador_id, escalera_id, kg)
+  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'sinpaso_id', 7);
+select (select kg from escalon_actual where escalera_id = :'sinpaso_id') as peso_sin_escalon,
+       (select paso is null from paso_fuerza where id = :'sinpaso_id') as escalon_sin_definir;
+
+\echo '===== paso 0: esperado check violation'
 savepoint s6;
-insert into escalera_fuerza (club_id, clave, nombre, pesos)
-  values ('20000000-0000-0000-0000-000000000001', 'ZZTEST OTRO', 'ZZtest Otro', array[10, 8]::numeric[]);
+insert into paso_fuerza (club_id, clave, nombre, paso)
+  values ('20000000-0000-0000-0000-000000000001', 'ZZTEST OTRO', 'ZZtest Otro', 0);
 rollback to savepoint s6;
 reset role;
 
@@ -104,10 +120,10 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"55555555-5555-5555-5555-555555555503","role":"authenticated"}', true) \g /dev/null
 select (select count(*) from movimiento_escalon where jugador_id = '44444444-4444-4444-4444-444444444401') as ve_movimientos,
        (select count(*) from escalon_actual where jugador_id = '44444444-4444-4444-4444-444444444401') as ve_escalon,
-       (select count(*) from escalera_fuerza where clave = 'ZZTEST PRESS') as ve_escalera;
+       (select count(*) from paso_fuerza where clave = 'ZZTEST PRESS') as ve_paso;
 savepoint s7;
 insert into movimiento_escalon (club_id, jugador_id, escalera_id, kg)
-  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'esc_id', 8);
+  values ('20000000-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444401', :'paso_id', 8);
 rollback to savepoint s7;
 reset role;
 
@@ -116,16 +132,17 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"55555555-5555-5555-5555-555555555502","role":"authenticated"}', true) \g /dev/null
 select (select count(*) from movimiento_escalon) as ve_movimientos,
        (select count(*) from escalon_actual) as ve_escalon,
-       (select count(*) from escalera_fuerza where clave = 'ZZTEST PRESS') as ve_escalera;
+       (select count(*) from paso_fuerza where clave = 'ZZTEST PRESS') as ve_paso;
 reset role;
 
-\echo '===== citado también a U21M: el profe de U21M lo ve con el mismo escalón (esperado: 12)'
+\echo '===== citado también a U21M: el profe de U21M lo ve con el mismo peso (esperado: 12)'
 insert into pertenencia (club_id, jugador_id, plantel_id, temporada_id, desde)
   select p.club_id, '44444444-4444-4444-4444-444444444401', p.id, p.temporada_id, current_date
   from plantel p where p.id = '20000000-0000-0000-0000-000000000003';
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"55555555-5555-5555-5555-555555555503","role":"authenticated"}', true) \g /dev/null
-select kg as escalon_desde_u21m from escalon_actual where jugador_id = '44444444-4444-4444-4444-444444444401';
+select kg as peso_desde_u21m from escalon_actual
+where jugador_id = '44444444-4444-4444-4444-444444444401' and escalera_id = :'paso_id';
 reset role;
 
 \echo '===== anon: esperado permission denied'
