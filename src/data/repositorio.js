@@ -1102,68 +1102,69 @@ export async function obtenerPlanFisico(planId) {
   }));
 }
 
-const escaleraDesdeFila = (f) => ({ id: f.id, clave: f.clave, nombre: f.nombre, pesos: f.pesos.map(Number) });
+// paso nulo es "todavía sin escalón", y Number(null) es 0: se conserva el nulo.
+const pasoDesdeFila = (f) => ({ id: f.id, clave: f.clave, nombre: f.nombre, paso: f.paso == null ? null : Number(f.paso) });
 
-/** Todas las escaleras del club: son de todo el club, no de una categoría (0023). */
-export async function obtenerEscaleras(clubId) {
+/** Todos los escalones del club: son de todo el club, no de una categoría (0023, 0024). */
+export async function obtenerPasos(clubId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
-    .from('escalera_fuerza')
-    .select('id, clave, nombre, pesos')
+    .from('paso_fuerza')
+    .select('id, clave, nombre, paso')
     .eq('club_id', clubId);
   if (error) throw error;
-  return data.map(escaleraDesdeFila);
+  return data.map(pasoDesdeFila);
 }
 
-export async function crearEscalera({ clubId, clave, nombre, pesos }) {
+export async function crearPaso({ clubId, clave, nombre, paso }) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
-    .from('escalera_fuerza')
-    .insert({ club_id: clubId, clave, nombre, pesos })
-    .select('id, clave, nombre, pesos')
+    .from('paso_fuerza')
+    .insert({ club_id: clubId, clave, nombre, paso })
+    .select('id, clave, nombre, paso')
     .single();
   if (error) throw error;
-  return escaleraDesdeFila(data);
+  return pasoDesdeFila(data);
 }
 
 /**
- * Sólo pesos, y no upsert: el update está otorgado sólo sobre esa columna, y un
+ * Sólo el paso, y no upsert: el update está otorgado sólo sobre esa columna, y un
  * upsert de PostgREST reescribe todas las que manda. Se pide la fila de vuelta
  * porque un update que la RLS no deja pasar no da error: afecta cero filas.
  */
-export async function editarEscalera(escaleraId, pesos) {
+export async function editarPaso(pasoId, paso) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
-    .from('escalera_fuerza')
-    .update({ pesos })
-    .eq('id', escaleraId)
-    .select('id, clave, nombre, pesos');
+    .from('paso_fuerza')
+    .update({ paso })
+    .eq('id', pasoId)
+    .select('id, clave, nombre, paso');
   if (error) throw error;
   if (!data.length) throw new Error('NO_SE_PUDO_EDITAR');
-  return escaleraDesdeFila(data[0]);
+  return pasoDesdeFila(data[0]);
 }
 
 const escalonDesdeFila = (f) => ({ jugadorId: f.jugador_id, kg: Number(f.kg), desde: f.creado_en });
 
-/** El último movimiento de cada chico en una escalera (vista escalon_actual). */
-export async function obtenerEscalonesActuales(escaleraId, jugadorIds) {
+/** El último movimiento de cada chico en un ejercicio (vista escalon_actual). */
+export async function obtenerEscalonesActuales(pasoId, jugadorIds) {
   if (!jugadorIds.length) return [];
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('escalon_actual')
     .select('jugador_id, kg, creado_en')
-    .eq('escalera_id', escaleraId)
+    .eq('escalera_id', pasoId)
     .in('jugador_id', jugadorIds);
   if (error) throw error;
   return data.map(escalonDesdeFila);
 }
 
 /** Un movimiento: los kg de destino, no "+1" (spec, sección 8). */
-export async function moverEscalon({ clubId, jugadorId, escaleraId, kg }) {
+export async function moverEscalon({ clubId, jugadorId, pasoId, kg }) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('movimiento_escalon')
-    .insert({ club_id: clubId, jugador_id: jugadorId, escalera_id: escaleraId, kg })
+    .insert({ club_id: clubId, jugador_id: jugadorId, escalera_id: pasoId, kg })
     .select('jugador_id, kg, creado_en')
     .single();
   if (error) throw error;

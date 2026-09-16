@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  fechaLocal, diaDeLaSemana, formatearKg, textoDeEscalera,
-  parsearPesos, estadoDelEscalon, pasoDeEscalon, quedanFuera,
-  claveDeEjercicio, escaleraDeLinea,
+  fechaLocal, diaDeLaSemana, formatearKg,
+  parsearPeso, nuevoPeso,
+  claveDeEjercicio, pasoDeLinea,
   estadoDePlan, elegirPlanVisible, bloquesDeLineas, agruparPorBloque, detalleDeLinea,
 } from '../src/data/escalones.js';
 
@@ -24,84 +24,61 @@ test('formatearKg usa coma decimal y no agrega ceros', () => {
   assert.equal(formatearKg(20), '20');
 });
 
-test('textoDeEscalera dice el menor y el mayor, o el único', () => {
-  assert.equal(textoDeEscalera([20, 25, 30, 35, 40]), '20–40 kg');
-  assert.equal(textoDeEscalera([8]), '8 kg');
-});
-
 /* ---------- pesos ---------- */
 
-test('parsearPesos: separan espacio, punto y coma o coma seguida de espacio', () => {
-  assert.deepEqual(parsearPesos('8 10 12'), { error: null, pesos: [8, 10, 12] });
-  assert.deepEqual(parsearPesos('8, 10, 12'), { error: null, pesos: [8, 10, 12] });
-  assert.deepEqual(parsearPesos('8;10; 12'), { error: null, pesos: [8, 10, 12] });
+test('parsearPeso: un número solo, con coma decimal', () => {
+  assert.deepEqual(parsearPeso('12'), { error: null, kg: 12 });
+  assert.deepEqual(parsearPeso('12,5'), { error: null, kg: 12.5 });
+  assert.deepEqual(parsearPeso('  2 '), { error: null, kg: 2 });
 });
 
-test('parsearPesos: una coma entre dígitos es decimal', () => {
-  assert.deepEqual(parsearPesos('20 22,5 25'), { error: null, pesos: [20, 22.5, 25] });
-  // "8,10" se lee 8,1: por eso la hoja muestra "Queda:" antes de guardar.
-  assert.deepEqual(parsearPesos('8,10'), { error: null, pesos: [8.1] });
-});
-
-test('parsearPesos ordena y saca repetidos de lo que escribió el profe', () => {
-  assert.deepEqual(parsearPesos('12 8 10 8'), { error: null, pesos: [8, 10, 12] });
-});
-
-test('parsearPesos rechaza vacío, texto, cero, negativos y listas sin espacio', () => {
-  for (const texto of ['', '   ', 'diez', '0', '-5', '8,10,12', '8 kg']) {
-    const r = parsearPesos(texto);
+test('parsearPeso rechaza vacío, texto, cero, negativos y más de un número', () => {
+  for (const texto of ['', '   ', 'diez', '0', '-5', '8 10', '8 kg', '8;10']) {
+    const r = parsearPeso(texto);
     assert.ok(r.error, `"${texto}" tendría que dar error`);
-    assert.equal(r.pesos, null);
+    assert.equal(r.kg, null);
   }
 });
 
 /* ---------- escalones ---------- */
 
-const PESOS = [20, 25, 30, 35, 40];
-
-test('estadoDelEscalon: sin escalón, en la escalera o en un peso que ya no está', () => {
-  assert.equal(estadoDelEscalon(PESOS, null), 'sin');
-  assert.equal(estadoDelEscalon(PESOS, 25), 'en');
-  assert.equal(estadoDelEscalon(PESOS, 22.5), 'fuera');
+test('nuevoPeso suma y resta el escalón del ejercicio', () => {
+  assert.equal(nuevoPeso(10, 2, 'subir'), 12);
+  assert.equal(nuevoPeso(10, 2, 'bajar'), 8);
+  assert.equal(nuevoPeso(12.5, 2.5, 'subir'), 15);
 });
 
-test('pasoDeEscalon sube y baja al valor contiguo', () => {
-  assert.equal(pasoDeEscalon(PESOS, 25, 'subir'), 30);
-  assert.equal(pasoDeEscalon(PESOS, 25, 'bajar'), 20);
+test('nuevoPeso no tiene techo: sube indefinidamente', () => {
+  assert.equal(nuevoPeso(200, 5, 'subir'), 205);
 });
 
-test('pasoDeEscalon en los extremos devuelve null', () => {
-  assert.equal(pasoDeEscalon(PESOS, 40, 'subir'), null);
-  assert.equal(pasoDeEscalon(PESOS, 20, 'bajar'), null);
+test('nuevoPeso no baja a cero ni a negativo, y no inventa un piso', () => {
+  assert.equal(nuevoPeso(2, 2, 'bajar'), null);
+  assert.equal(nuevoPeso(1, 2, 'bajar'), null);
+  assert.equal(nuevoPeso(2.5, 2, 'bajar'), 0.5);
 });
 
-test('pasoDeEscalon desde un peso que ya no está en la escalera va al más cercano de cada lado', () => {
-  assert.equal(pasoDeEscalon(PESOS, 22.5, 'subir'), 25);
-  assert.equal(pasoDeEscalon(PESOS, 22.5, 'bajar'), 20);
-  assert.equal(pasoDeEscalon(PESOS, 50, 'subir'), null);
-  assert.equal(pasoDeEscalon(PESOS, 50, 'bajar'), 40);
+test('nuevoPeso sin peso o sin escalón devuelve null: primero hay que ubicar y definir', () => {
+  assert.equal(nuevoPeso(null, 2, 'subir'), null);
+  assert.equal(nuevoPeso(10, null, 'subir'), null);
+  assert.equal(nuevoPeso(null, null, 'bajar'), null);
 });
 
-test('pasoDeEscalon sin escalón devuelve null: no hay subir ni bajar sin ubicar antes', () => {
-  assert.equal(pasoDeEscalon(PESOS, null, 'subir'), null);
-  assert.equal(pasoDeEscalon(PESOS, null, 'bajar'), null);
+test('nuevoPeso redondea las colas del punto flotante', () => {
+  assert.equal(nuevoPeso(12.3, 2.1, 'bajar'), 10.2);
+  assert.equal(nuevoPeso(0.1, 0.2, 'subir'), 0.3);
 });
 
-test('quedanFuera: los chicos cuyo peso no está en la escalera nueva', () => {
-  const escalones = [{ jugadorId: 'a', kg: 22.5 }, { jugadorId: 'b', kg: 25 }, { jugadorId: 'c', kg: null }];
-  assert.deepEqual(quedanFuera(PESOS, escalones), [{ jugadorId: 'a', kg: 22.5 }]);
-});
+/* ---------- línea ↔ escalón ---------- */
 
-/* ---------- línea ↔ escalera ---------- */
-
-test('escaleraDeLinea busca por nombre normalizado exacto, sin parecidos', () => {
-  const escaleras = [
+test('pasoDeLinea busca por nombre normalizado exacto, sin parecidos', () => {
+  const pasos = [
     { id: 'e1', clave: claveDeEjercicio('Press Plano') },
     { id: 'e2', clave: claveDeEjercicio('Press Plano (Manc)') },
   ];
-  assert.equal(escaleraDeLinea('press  PLANO', escaleras).id, 'e1');
-  assert.equal(escaleraDeLinea('Press Plano (Manc)', escaleras).id, 'e2');
-  assert.equal(escaleraDeLinea('Press Plano Alternado', escaleras), null);
+  assert.equal(pasoDeLinea('press  PLANO', pasos).id, 'e1');
+  assert.equal(pasoDeLinea('Press Plano (Manc)', pasos).id, 'e2');
+  assert.equal(pasoDeLinea('Press Plano Alternado', pasos), null);
 });
 
 /* ---------- plan visible ---------- */

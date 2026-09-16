@@ -1,12 +1,12 @@
 import { ir } from '../main.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import {
-  obtenerEscaleras, crearEscalera, editarEscalera,
+  obtenerPasos, crearPaso, editarPaso,
   obtenerEscalonesActuales, moverEscalon, obtenerJugadoresDelPlantel,
 } from '../../data/repositorio.js';
 import {
-  claveDeEjercicio, escaleraDeLinea, estadoDelEscalon, pasoDeEscalon,
-  parsearPesos, quedanFuera, formatearKg, fechaLocal, detalleDeLinea,
+  claveDeEjercicio, pasoDeLinea, nuevoPeso, parsearPeso,
+  formatearKg, fechaLocal, detalleDeLinea,
 } from '../../data/escalones.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta, nombreCorto, toast } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
@@ -16,15 +16,20 @@ const contenedor = () => $('fisico-escalones-contenido');
 const SIN_CONEXION = 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
 
 /*
- * Escalones de un ejercicio: su escalera (una para todo el club) y dónde está
- * parado cada chico de la categoría. El profe ubica, sube y baja; la app nunca
- * propone un peso ni ubica a nadie sola. Cada toque es un movimiento guardado en
- * el momento. Ver la sección 8 del spec.
+ * Escalones de un ejercicio: cuánto sube o baja por vez (el escalón, uno para
+ * todo el club) y con cuánto peso trabaja hoy cada chico de la categoría. El
+ * profe escribe el peso, sube y baja; la app nunca propone un peso ni mueve a
+ * nadie sola. Cada toque es un movimiento guardado en el momento. Ver la
+ * sección 8 del spec.
+ *
+ * En el código el dato del ejercicio se llama `paso` —es cuánto se mueve, no
+ * dónde está parado nadie— pero en pantalla dice "escalón", que es la palabra
+ * del profe.
  */
 
 // Lo que se abrió desde la sesión: { plantelId, plan, sesion, linea }.
 let actual = null;
-// Lo leído en el último render: { escalera, jugadores, escalonPorJugador: Map }.
+// Lo leído en el último render: { paso, jugadores, escalonPorJugador: Map }.
 let vista = null;
 
 export function abrirEscalones(datos) {
@@ -47,16 +52,16 @@ export async function renderEscalones() {
 
   contenedor().innerHTML = `<div class="pad"><div class="p">Cargando los escalones…</div></div>`;
   try {
-    const [escaleras, jugadores] = await Promise.all([
-      obtenerEscaleras(club.id),
+    const [pasos, jugadores] = await Promise.all([
+      obtenerPasos(club.id),
       obtenerJugadoresDelPlantel(club.id, plantel.id),
     ]);
     if (obtenerPlantelActivo()?.id !== actual.plantelId) return;
     jugadores.sort((a, b) => a.nombreLimpio.localeCompare(b.nombreLimpio, 'es'));
-    const escalera = escaleraDeLinea(actual.linea.nombreOriginal, escaleras);
-    const escalones = escalera ? await obtenerEscalonesActuales(escalera.id, jugadores.map((j) => j.id)) : [];
+    const paso = pasoDeLinea(actual.linea.nombreOriginal, pasos);
+    const escalones = paso ? await obtenerEscalonesActuales(paso.id, jugadores.map((j) => j.id)) : [];
     if (obtenerPlantelActivo()?.id !== actual.plantelId) return;
-    vista = { escalera, jugadores, escalonPorJugador: new Map(escalones.map((e) => [e.jugadorId, e])) };
+    vista = { paso, jugadores, escalonPorJugador: new Map(escalones.map((e) => [e.jugadorId, e])) };
   } catch (e) {
     if (!esErrorDeRed(e)) console.error('No se pudieron cargar los escalones:', e);
     contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${esErrorDeRed(e) ? SIN_CONEXION : 'No se pudieron cargar los escalones.'}</div></div></div>`;
@@ -66,7 +71,8 @@ export async function renderEscalones() {
 }
 
 function pintar(plantel) {
-  const { escalera, jugadores } = vista;
+  const { jugadores } = vista;
+  const paso = vista.paso?.paso ?? null;
   const detalle = detalleDeLinea(actual.linea);
   contenedor().innerHTML = `
     <div class="pad">
@@ -75,63 +81,70 @@ function pintar(plantel) {
         ${detalle ? `<div class="det">En esta sesión: ${escaparHtml(detalle)}</div>` : ''}
       </div>
 
-      ${escalera ? `
-        <div class="eyebrow">Escalera</div>
-        <div class="tarj">
-          <div class="p">${escaparHtml(escalera.pesos.map(formatearKg).join(' · '))} kg</div>
-          <div class="acciones-al"><button class="btn sec chico" id="fe-editar">Editar escalera</button></div>
+      <div class="eyebrow">Escalón</div>
+      <div class="tarj">
+        <div class="p">${paso != null
+          ? `${escaparHtml(formatearKg(paso))} kg cada vez que subís o bajás. Es el mismo para todo el club.`
+          : 'Todavía no tiene escalón. Podés anotar el peso de cada chico igual.'}</div>
+        <div class="acciones-al">
+          <button class="btn sec chico" id="fe-editar">${paso != null ? 'Editar escalón' : 'Definir escalón'}</button>
         </div>
+      </div>
 
-        <div class="eyebrow">${escaparHtml(plantel.categoria)} · ${jugadores.length} ${jugadores.length === 1 ? 'jugador' : 'jugadores'}</div>
-        <div id="fe-lista">
-          ${jugadores.length ? jugadores.map(filaDeJugador).join('') : '<div class="p">Esta categoría todavía no tiene jugadores.</div>'}
-        </div>
-      ` : `
-        <div class="estado-vacio">
-          <div class="p">Este ejercicio todavía no tiene escalera.</div>
-          <div class="acciones"><button class="btn" id="fe-editar">Definir escalera</button></div>
-        </div>
-      `}
+      <div class="eyebrow">${escaparHtml(plantel.categoria)} · ${jugadores.length} ${jugadores.length === 1 ? 'jugador' : 'jugadores'}</div>
+      <div id="fe-lista">
+        ${jugadores.length ? jugadores.map(filaDeJugador).join('') : '<div class="p">Esta categoría todavía no tiene jugadores.</div>'}
+      </div>
     </div>
   `;
 
   $('fe-editar').addEventListener('click', abrirEditor);
-  $('fe-lista')?.addEventListener('click', (e) => {
+  $('fe-lista').addEventListener('click', (e) => {
     const boton = e.target.closest('button[data-accion]');
     if (!boton || boton.disabled) return;
     const jugadorId = boton.closest('[data-jugador]').dataset.jugador;
-    if (boton.dataset.accion === 'ubicar') abrirUbicar(jugadorId);
+    if (boton.dataset.accion === 'escribir') abrirPeso(jugadorId);
     else mover(jugadorId, Number(boton.dataset.kg));
   });
 }
 
 function filaDeJugador(j) {
-  const { escalera } = vista;
+  const paso = vista.paso?.paso ?? null;
   const escalon = vista.escalonPorJugador.get(j.id) ?? null;
-  const estado = estadoDelEscalon(escalera.pesos, escalon?.kg ?? null);
   const nombre = `<div class="nom">${escaparHtml(nombreCorto(j.nombreLimpio))}</div>`;
 
-  if (estado === 'sin') {
+  if (!escalon) {
     return `
-      <div class="escalon-fila sin-escalon" data-jugador="${escaparHtml(j.id)}">
-        <div>${nombre}<div class="det">sin escalón</div></div>
-        <button class="btn sec chico" data-accion="ubicar">Ubicar</button>
+      <div class="escalon-fila dos" data-jugador="${escaparHtml(j.id)}">
+        <div>${nombre}<div class="det">sin peso</div></div>
+        <button class="btn sec chico" data-accion="escribir">Poner peso</button>
       </div>
     `;
   }
 
-  const bajar = pasoDeEscalon(escalera.pesos, escalon.kg, 'bajar');
-  const subir = pasoDeEscalon(escalera.pesos, escalon.kg, 'subir');
-  // Un peso que ya no está en la escalera es un dato: nadie hizo nada mal y el
-  // chico sigue en su peso. Texto normal de la fila, sin rojo ni .al.
+  // El peso es un botón: se toca para corregirlo sin tener que ir sumando o
+  // restando escalones hasta llegar.
+  const kg = `<button class="kg" data-accion="escribir" aria-label="Cambiar el peso">${escaparHtml(formatearKg(escalon.kg))} kg</button>`;
   const desde = `desde el ${formatearFechaCorta(fechaLocal(new Date(escalon.desde)))}`;
-  const texto = estado === 'fuera' ? `${desde} · este peso ya no está en la escalera actual` : desde;
+  // Sin escalón no hay + ni −: el profe todavía no dijo de a cuánto se mueve.
+  if (paso == null) {
+    return `
+      <div class="escalon-fila dos" data-jugador="${escaparHtml(j.id)}">
+        <div>${nombre}<div class="det">${escaparHtml(desde)}</div></div>
+        ${kg}
+      </div>
+    `;
+  }
+
+  // − se apaga sólo cuando restar dejaría un peso que no existe (cero o menos).
+  const bajar = nuevoPeso(escalon.kg, paso, 'bajar');
+  const subir = nuevoPeso(escalon.kg, paso, 'subir');
   return `
     <div class="escalon-fila" data-jugador="${escaparHtml(j.id)}">
-      <div>${nombre}<div class="det">${escaparHtml(texto)}</div></div>
+      <div>${nombre}<div class="det">${escaparHtml(desde)}</div></div>
       <button class="btn sec chico" data-accion="bajar" data-kg="${bajar ?? ''}" ${bajar == null ? 'disabled' : ''} aria-label="Bajar un escalón">−</button>
-      <div class="kg">${escaparHtml(formatearKg(escalon.kg))} kg</div>
-      <button class="btn sec chico" data-accion="subir" data-kg="${subir ?? ''}" ${subir == null ? 'disabled' : ''} aria-label="Subir un escalón">+</button>
+      ${kg}
+      <button class="btn sec chico" data-accion="subir" data-kg="${subir}" aria-label="Subir un escalón">+</button>
     </div>
   `;
 }
@@ -142,117 +155,135 @@ function repintarFila(jugadorId) {
   if (fila && jugador) fila.outerHTML = filaDeJugador(jugador);
 }
 
-/** Guarda en el momento. Mientras escribe, la fila no responde; si falla, vuelve a lo que estaba. */
+/**
+ * Guarda en el momento. Mientras escribe, la fila no responde; si falla, vuelve
+ * a lo que estaba. Si el ejercicio todavía no tiene fila propia, la crea sin
+ * escalón: el peso de un chico no espera a que el profe decida de a cuánto sube.
+ */
 async function mover(jugadorId, kg) {
   const club = obtenerClubActual();
   const vistaAlPedir = vista;
-  const escaleraId = vista.escalera.id;
   const fila = contenedor().querySelector(`[data-jugador="${CSS.escape(jugadorId)}"]`);
   fila?.querySelectorAll('button').forEach((b) => { b.disabled = true; });
   try {
-    const escalon = await moverEscalon({ clubId: club.id, jugadorId, escaleraId, kg });
+    const pasoId = (vista.paso ?? await crearFilaDelEjercicio()).id;
+    if (vista !== vistaAlPedir || obtenerPlantelActivo()?.id !== actual.plantelId) return;
+    const escalon = await moverEscalon({ clubId: club.id, jugadorId, pasoId, kg });
     if (vista !== vistaAlPedir || obtenerPlantelActivo()?.id !== actual.plantelId) return;
     vista.escalonPorJugador.set(jugadorId, escalon);
   } catch (e) {
     if (vista !== vistaAlPedir || obtenerPlantelActivo()?.id !== actual.plantelId) return;
-    if (!esErrorDeRed(e)) console.error('No se pudo guardar el escalón:', e);
-    toast(esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo guardar el escalón. Intentá de nuevo.');
+    if (!esErrorDeRed(e)) console.error('No se pudo guardar el peso:', e);
+    toast(esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo guardar el peso. Intentá de nuevo.');
   }
   repintarFila(jugadorId);
 }
 
-function abrirUbicar(jugadorId) {
+/** La fila del ejercicio, con escalón sin definir: sólo para colgarle los pesos. */
+async function crearFilaDelEjercicio() {
+  const club = obtenerClubActual();
+  const nombre = actual.linea.nombreOriginal;
+  const clave = claveDeEjercicio(nombre);
+  let paso;
+  try {
+    paso = await crearPaso({ clubId: club.id, clave, nombre: nombre.trim(), paso: null });
+  } catch (e) {
+    // Alguien la creó en el medio (otra pestaña, otro profe): es la misma fila
+    // del mismo ejercicio, así que se usa esa y el peso se guarda igual.
+    if (e?.code !== '23505') throw e;
+    paso = (await obtenerPasos(club.id)).find((p) => p.clave === clave);
+    if (!paso) throw e;
+  }
+  if (vista) vista.paso = paso;
+  return paso;
+}
+
+function abrirPeso(jugadorId) {
   const jugador = vista.jugadores.find((j) => j.id === jugadorId);
+  const escalon = vista.escalonPorJugador.get(jugadorId) ?? null;
+  // Sin placeholder ni valor sugerido cuando no hay peso: proponer un número
+  // sería decidir por el profe.
   abrirHoja({
-    titulo: `Ubicar a ${nombreCorto(jugador.nombreLimpio)}`,
+    titulo: `Peso de ${nombreCorto(jugador.nombreLimpio)}`,
     cuerpo: `
-      <div class="p">Elegí el escalón donde está hoy.</div>
-      <div class="acciones-escalera">
-        ${vista.escalera.pesos.map((p) => `<button class="btn sec chico" data-kg="${p}">${escaparHtml(formatearKg(p))} kg</button>`).join('')}
+      <div class="p">El peso con el que trabaja hoy en este ejercicio.</div>
+      <div class="campo">
+        <label for="fe-kg">Peso (kg)</label>
+        <input id="fe-kg" type="text" inputmode="decimal" autocomplete="off" value="${escalon ? escaparHtml(formatearKg(escalon.kg)) : ''}">
       </div>
-      <div class="acciones-bateria"><button class="btn sec" id="fe-cancelar-ubicar">Cancelar</button></div>
+      <div id="fe-aviso-kg"></div>
+      <div class="acciones-bateria">
+        <button class="btn" id="fe-guardar-kg">Guardar peso</button>
+        <button class="btn sec" id="fe-cancelar-kg">Cancelar</button>
+      </div>
     `,
   });
-  document.querySelectorAll('#hoja [data-kg]').forEach((boton) => {
-    boton.addEventListener('click', () => {
-      cerrarHoja();
-      mover(jugadorId, Number(boton.dataset.kg));
-    });
-  });
-  $('fe-cancelar-ubicar').addEventListener('click', () => cerrarHoja());
+
+  const guardar = () => {
+    const { error, kg } = parsearPeso($('fe-kg').value);
+    if (error) {
+      $('fe-aviso-kg').innerHTML = `<div class="al"><div class="tx">${escaparHtml(error)}</div></div>`;
+      return;
+    }
+    cerrarHoja();
+    mover(jugadorId, kg);
+  };
+
+  $('fe-kg').addEventListener('keydown', (e) => { if (e.key === 'Enter') guardar(); });
+  $('fe-guardar-kg').addEventListener('click', guardar);
+  $('fe-cancelar-kg').addEventListener('click', () => cerrarHoja());
+  $('fe-kg').focus();
 }
 
 function abrirEditor() {
-  const existente = vista.escalera;
+  const existente = vista.paso;
   const nombre = actual.linea.nombreOriginal;
-  // Sin placeholder: un "ej. 8, 10, 12" también sería proponer pesos.
+  // Sin placeholder: un "ej. 2,5" también sería proponer un escalón.
   abrirHoja({
-    titulo: `Escalera de ${nombre}`,
+    titulo: `Escalón de ${nombre}`,
     cuerpo: `
-      <div class="p">Es la misma para todo el club.</div>
+      <div class="p">Cuánto suma + y cuánto resta −. Es el mismo para todo el club.</div>
       <div class="campo">
-        <label for="fe-pesos">Pesos (kg)</label>
-        <input id="fe-pesos" type="text" inputmode="decimal" autocomplete="off" value="${existente ? escaparHtml(existente.pesos.map(formatearKg).join(' ')) : ''}">
-        <div class="ayuda">De menor a mayor, separados por espacio o por coma y espacio.</div>
+        <label for="fe-paso">Escalón (kg)</label>
+        <input id="fe-paso" type="text" inputmode="decimal" autocomplete="off" value="${existente?.paso != null ? escaparHtml(formatearKg(existente.paso)) : ''}">
       </div>
-      <div class="p" id="fe-queda"></div>
-      <div class="p" id="fe-fuera"></div>
       <div id="fe-aviso"></div>
       <div class="acciones-bateria">
-        <button class="btn" id="fe-guardar">Guardar escalera</button>
+        <button class="btn" id="fe-guardar">Guardar escalón</button>
         <button class="btn sec" id="fe-cancelar">Cancelar</button>
       </div>
     `,
   });
 
-  const actualizar = () => {
-    const { error, pesos } = parsearPesos($('fe-pesos').value);
-    $('fe-aviso').innerHTML = '';
-    if (error) {
-      $('fe-queda').textContent = $('fe-pesos').value.trim() ? error : '';
-      $('fe-fuera').textContent = '';
-      return null;
-    }
-    $('fe-queda').textContent = `Queda: ${pesos.map(formatearKg).join(' · ')} kg`;
-    const fuera = quedanFuera(pesos, [...vista.escalonPorJugador.values()]);
-    $('fe-fuera').textContent = !fuera.length ? ''
-      : fuera.length === 1
-        ? `1 jugador está en ${formatearKg(fuera[0].kg)} kg, un peso que no está en esta escalera. Sigue en ese peso; + y − lo llevan al escalón más cercano.`
-        : `${fuera.length} jugadores están en pesos que no están en esta escalera. Siguen en esos pesos; + y − los llevan al escalón más cercano.`;
-    return pesos;
-  };
-
   const guardar = async () => {
     const boton = $('fe-guardar');
     if (boton.disabled) return;
-    const pesos = actualizar();
-    if (!pesos) {
-      $('fe-aviso').innerHTML = `<div class="al"><div class="tx">${escaparHtml(parsearPesos($('fe-pesos').value).error)}</div></div>`;
+    const { error, kg } = parsearPeso($('fe-paso').value);
+    if (error) {
+      $('fe-aviso').innerHTML = `<div class="al"><div class="tx">${escaparHtml(error)}</div></div>`;
       return;
     }
     boton.disabled = true;
     boton.textContent = 'Guardando...';
     try {
-      vista.escalera = existente
-        ? await editarEscalera(existente.id, pesos)
-        : await crearEscalera({ clubId: obtenerClubActual().id, clave: claveDeEjercicio(nombre), nombre: nombre.trim(), pesos });
+      vista.paso = existente
+        ? await editarPaso(existente.id, kg)
+        : await crearPaso({ clubId: obtenerClubActual().id, clave: claveDeEjercicio(nombre), nombre: nombre.trim(), paso: kg });
       cerrarHoja();
       renderEscalones();
     } catch (e) {
-      if (!esErrorDeRed(e)) console.error('No se pudo guardar la escalera:', e);
+      if (!esErrorDeRed(e)) console.error('No se pudo guardar el escalón:', e);
       const mensaje = e?.code === '23505'
-        ? 'Alguien definió esta escalera recién. Cerrá y volvé a abrir el ejercicio.'
-        : esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo guardar la escalera.';
+        ? 'Alguien definió este escalón recién. Cerrá y volvé a abrir el ejercicio.'
+        : esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo guardar el escalón.';
       $('fe-aviso').innerHTML = `<div class="al"><div class="tx">${escaparHtml(mensaje)}</div></div>`;
       boton.disabled = false;
-      boton.textContent = 'Guardar escalera';
+      boton.textContent = 'Guardar escalón';
     }
   };
 
-  $('fe-pesos').addEventListener('input', actualizar);
-  $('fe-pesos').addEventListener('keydown', (e) => { if (e.key === 'Enter') guardar(); });
+  $('fe-paso').addEventListener('keydown', (e) => { if (e.key === 'Enter') guardar(); });
   $('fe-guardar').addEventListener('click', guardar);
   $('fe-cancelar').addEventListener('click', () => cerrarHoja());
-  actualizar();
-  $('fe-pesos').focus();
+  $('fe-paso').focus();
 }

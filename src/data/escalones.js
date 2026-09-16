@@ -1,5 +1,5 @@
 // Mismo criterio de normalización que el import y el matcheo de videos, y de la
-// misma fuente: una línea y su escalera coinciden sólo por nombre exacto.
+// misma fuente: una línea y su escalón coinciden sólo por nombre exacto.
 import { clavearNombre } from '../parser/parserCabb.js';
 
 /*
@@ -7,8 +7,9 @@ import { clavearNombre } from '../parser/parserCabb.js';
  * peso. Sin red, sin DOM. Ver
  * docs/superpowers/specs/2026-09-15-fisico-plan-y-escalones-design.md.
  *
- * Nada de acá propone un peso. pasoDeEscalon sólo se mueve entre valores que
- * escribió el profe, y con un chico sin escalón no devuelve nada.
+ * Nada de acá propone un peso. El ejercicio tiene un escalón (cuánto se mueve
+ * por vez, lo escribe el profe) y el chico un peso actual; + y − sólo suman o
+ * restan ese escalón, y sin peso o sin escalón no devuelven nada.
  */
 
 const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -30,64 +31,51 @@ export function formatearKg(kg) {
   return KG.format(Number(kg));
 }
 
-export function textoDeEscalera(pesos) {
-  if (pesos.length === 1) return `${formatearKg(pesos[0])} kg`;
-  return `${formatearKg(pesos[0])}–${formatearKg(pesos[pesos.length - 1])} kg`;
-}
-
 /**
- * Separan el espacio, el punto y coma o la coma seguida de espacio. Una coma
- * entre dígitos es decimal ("22,5"); por eso "8,10" es 8,1 y la hoja muestra
- * cómo se leyó antes de guardar. Ordena y saca repetidos: son los valores del
- * profe, no una sugerencia.
+ * Un número solo: el peso de un chico o el escalón de un ejercicio. Una coma
+ * entre dígitos es decimal ("12,5"), el mismo criterio de siempre. No propone
+ * nada: si está vacío, devuelve error.
  */
-export function parsearPesos(texto) {
+export function parsearPeso(texto) {
   const crudo = typeof texto === 'string' ? texto.trim() : '';
-  if (!crudo) return { error: 'Escribí al menos un peso.', pesos: null };
-  const partes = crudo.split(/\s*;\s*|,\s+|\s+/).filter(Boolean);
-  const pesos = [];
-  for (const parte of partes) {
-    if (!/^\d+([.,]\d+)?$/.test(parte)) {
-      return { error: `"${parte}" no es un peso. Separá los pesos con espacio o con coma y espacio.`, pesos: null };
-    }
-    const kg = Number(parte.replace(',', '.'));
-    if (!(kg > 0)) return { error: `${parte} no es mayor que cero.`, pesos: null };
-    pesos.push(kg);
+  if (!crudo) return { error: 'Escribí un número.', kg: null };
+  if (!/^\d+([.,]\d+)?$/.test(crudo)) {
+    return { error: `"${crudo}" no es un número en kg.`, kg: null };
   }
-  return { error: null, pesos: [...new Set(pesos)].sort((a, b) => a - b) };
-}
-
-export function estadoDelEscalon(pesos, kg) {
-  if (kg == null) return 'sin';
-  return pesos.map(Number).includes(Number(kg)) ? 'en' : 'fuera';
+  const kg = Number(crudo.replace(',', '.'));
+  if (!(kg > 0)) return { error: 'Tiene que ser mayor que cero.', kg: null };
+  return { error: null, kg: redondearKg(kg) };
 }
 
 /**
- * Los kg de destino para + o −: el valor contiguo de la escalera, o el más
- * cercano de ese lado si el peso actual ya no está en ella. Sin escalón no hay
- * paso: ubicar a un chico es un toque explícito del profe.
+ * Los kg de destino de + o −: el peso actual más o menos el escalón del
+ * ejercicio. Devuelve null cuando no hay adónde ir — sin peso cargado, sin
+ * escalón definido, o si restar dejaría el peso en cero o menos. No hay piso ni
+ * techo inventados: el único límite es que un peso sea mayor que cero.
  */
-export function pasoDeEscalon(pesos, kg, direccion) {
-  if (kg == null || !Array.isArray(pesos) || !pesos.length) return null;
+export function nuevoPeso(kg, paso, direccion) {
+  if (kg == null || paso == null) return null;
   const actual = Number(kg);
-  const valores = pesos.map(Number);
-  if (direccion === 'subir') return valores.find((p) => p > actual) ?? null;
-  if (direccion === 'bajar') return [...valores].reverse().find((p) => p < actual) ?? null;
-  return null;
+  const salto = Number(paso);
+  if (!(salto > 0)) return null;
+  if (direccion !== 'subir' && direccion !== 'bajar') return null;
+  const destino = redondearKg(direccion === 'subir' ? actual + salto : actual - salto);
+  return destino > 0 ? destino : null;
 }
 
-export function quedanFuera(pesosNuevos, escalones) {
-  const valores = pesosNuevos.map(Number);
-  return escalones.filter((e) => e.kg != null && !valores.includes(Number(e.kg)));
+// Sumar y restar decimales en punto flotante deja colas (12,3 − 2,1 = 10,199…).
+// Dos decimales es más de lo que distingue una pesa.
+function redondearKg(kg) {
+  return Math.round(kg * 100) / 100;
 }
 
 export function claveDeEjercicio(nombre) {
   return clavearNombre(nombre ?? '');
 }
 
-export function escaleraDeLinea(nombreOriginal, escaleras) {
+export function pasoDeLinea(nombreOriginal, pasos) {
   const clave = claveDeEjercicio(nombreOriginal);
-  return escaleras.find((e) => e.clave === clave) ?? null;
+  return pasos.find((p) => p.clave === clave) ?? null;
 }
 
 export function estadoDePlan(plan, hoy) {

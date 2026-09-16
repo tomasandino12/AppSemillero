@@ -91,15 +91,26 @@ test('los escalones no proponen pesos: ningún placeholder con números', () => 
   assert.doesNotMatch(src, /placeholder=/);
 });
 
-test('un peso que ya no está en la escalera se informa como dato, no como alerta', () => {
-  const src = fuente('src/ui/pantallas/fisicoEscalones.js');
-  assert.match(src, /este peso ya no está en la escalera actual/);
-  assert.doesNotMatch(src, /class="al"[^`]*este peso ya no está/);
-  assert.doesNotMatch(src, /class="al"[^`]*no está en esta escalera/);
+test('la escalera de pesos ya no existe: ni el estado "fuera", ni la palabra', () => {
+  for (const archivo of ['src/ui/pantallas/fisicoEscalones.js', 'src/ui/pantallas/fisicoSesion.js', 'src/data/escalones.js']) {
+    assert.doesNotMatch(fuente(archivo), /escalera/i, archivo);
+  }
 });
 
-test('ubicar a un chico es un toque sobre un valor de la escalera, nunca un valor inicial', () => {
+test('el peso de un chico lo escribe el profe: campo vacío si todavía no tiene', () => {
   const src = fuente('src/ui/pantallas/fisicoEscalones.js');
-  assert.match(src, /data-accion="ubicar"/);
-  assert.doesNotMatch(src, /pesos\[0\]/);
+  assert.match(src, /data-accion="escribir"/);
+  assert.match(src, /escalon \? escaparHtml\(formatearKg\(escalon\.kg\)\) : ''/);
+});
+
+test('− se apaga sólo cuando bajar no daría un peso mayor que cero, sin piso inventado', () => {
+  const src = fuente('src/ui/pantallas/fisicoEscalones.js');
+  assert.match(src, /const bajar = nuevoPeso\(escalon\.kg, paso, 'bajar'\)/);
+  assert.match(src, /bajar == null \? 'disabled' : ''/);
+});
+
+test('sin escalón definido no hay + ni −, pero el peso se anota igual', () => {
+  const src = fuente('src/ui/pantallas/fisicoEscalones.js');
+  assert.match(src, /if \(paso == null\)/);
+  assert.match(src, /paso: null/);
 });

@@ -1,8 +1,8 @@
 import { ir } from '../main.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { obtenerEscaleras } from '../../data/repositorio.js';
+import { obtenerPasos } from '../../data/repositorio.js';
 import {
-  agruparPorBloque, diaDeLaSemana, escaleraDeLinea, textoDeEscalera, detalleDeLinea,
+  agruparPorBloque, diaDeLaSemana, pasoDeLinea, formatearKg, detalleDeLinea,
 } from '../../data/escalones.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { abrirEscalones } from './fisicoEscalones.js';
@@ -21,8 +21,8 @@ export function abrirSesion(datos) {
 /**
  * Una sesión del plan: sus ejercicios por bloque, en el orden del archivo.
  * Series, reps, carga y pausa como texto, tal cual. Lo que no tiene video no
- * muestra nada de video. Se relee al volver desde escalones, así una escalera
- * recién definida aparece.
+ * muestra nada de video. Se relee al volver desde escalones, así un escalón
+ * recién definido aparece.
  */
 export async function renderSesion() {
   const club = obtenerClubActual();
@@ -38,12 +38,12 @@ export async function renderSesion() {
   }
 
   contenedor().innerHTML = `<div class="pad"><div class="p">Cargando la sesión…</div></div>`;
-  let escaleras;
+  let pasos;
   try {
-    escaleras = await obtenerEscaleras(club.id);
+    pasos = await obtenerPasos(club.id);
     if (obtenerPlantelActivo()?.id !== actual.plantelId) return;
   } catch (e) {
-    if (!esErrorDeRed(e)) console.error('No se pudieron cargar las escaleras:', e);
+    if (!esErrorDeRed(e)) console.error('No se pudieron cargar los escalones:', e);
     contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${
       esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar la sesión.'
     }</div></div></div>`;
@@ -57,7 +57,7 @@ export async function renderSesion() {
       <div class="p"><b>${escaparHtml(dia.charAt(0).toUpperCase() + dia.slice(1))} ${formatearFechaCorta(sesion.fecha)}</b> · ${escaparHtml(plan.nombreArchivo)}</div>
       ${agruparPorBloque(sesion.lineas).map((grupo) => `
         ${grupo.bloque ? `<div class="eyebrow">${escaparHtml(grupo.bloque)}</div>` : ''}
-        ${grupo.lineas.map((l) => tarjetaDeLinea(l, escaleras)).join('')}
+        ${grupo.lineas.map((l) => tarjetaDeLinea(l, pasos)).join('')}
       `).join('')}
     </div>
   `;
@@ -77,8 +77,8 @@ export async function renderSesion() {
   });
 }
 
-function tarjetaDeLinea(l, escaleras) {
-  const escalera = escaleraDeLinea(l.nombreOriginal, escaleras);
+function tarjetaDeLinea(l, pasos) {
+  const paso = pasoDeLinea(l.nombreOriginal, pasos)?.paso ?? null;
   const detalle = detalleDeLinea(l);
   return `
     <div class="tarj linea-fisico" data-linea="${escaparHtml(l.id)}" role="button" tabindex="0">
@@ -90,7 +90,7 @@ function tarjetaDeLinea(l, escaleras) {
       ${l.notas ? `<div class="det">${escaparHtml(l.notas)}</div>` : ''}
       <div class="pie-linea">
         ${l.video ? `<a class="btn sec chico" href="${escaparHtml(l.video.link)}" target="_blank" rel="noopener noreferrer">Ver video</a>` : ''}
-        <span class="escalera">${escaparHtml(escalera ? `Escalera ${textoDeEscalera(escalera.pesos)}` : 'Sin escalera')}</span>
+        <span class="escalon">${escaparHtml(paso != null ? `Escalón ${formatearKg(paso)} kg` : 'Sin escalón')}</span>
       </div>
     </div>
   `;
