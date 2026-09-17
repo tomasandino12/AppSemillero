@@ -86,9 +86,11 @@ test('la sesión no dice nada de los ejercicios sin video', () => {
   assert.doesNotMatch(src, /sin video/i);
 });
 
-test('los escalones no proponen pesos: ningún placeholder con números', () => {
+test('los escalones no proponen pesos de la nada: ni placeholder, ni escalón sugerido', () => {
   const src = fuente('src/ui/pantallas/fisicoEscalones.js');
   assert.doesNotMatch(src, /placeholder=/);
+  // El escalón del ejercicio nunca arranca con un número: sólo con el guardado.
+  assert.match(src, /existente\?\.paso != null \? escaparHtml\(formatearKg\(existente\.paso\)\) : ''/);
 });
 
 test('la escalera de pesos ya no existe: ni el estado "fuera", ni la palabra', () => {
@@ -97,10 +99,11 @@ test('la escalera de pesos ya no existe: ni el estado "fuera", ni la palabra', (
   }
 });
 
-test('el peso de un chico lo escribe el profe: campo vacío si todavía no tiene', () => {
+test('el primer peso arranca con el de la carga del plan, y nunca pisa uno guardado', () => {
   const src = fuente('src/ui/pantallas/fisicoEscalones.js');
   assert.match(src, /data-accion="escribir"/);
-  assert.match(src, /escalon \? escaparHtml\(formatearKg\(escalon\.kg\)\) : ''/);
+  assert.match(src, /escalon \? null : pesoSugeridoDeCarga\(actual\.linea\.cargaSugerida\)/);
+  assert.match(src, /escalon \? formatearKg\(escalon\.kg\)/);
 });
 
 test('− se apaga sólo cuando bajar no daría un peso mayor que cero, sin piso inventado', () => {

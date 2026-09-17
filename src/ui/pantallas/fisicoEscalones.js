@@ -5,7 +5,7 @@ import {
   obtenerEscalonesActuales, moverEscalon, obtenerJugadoresDelPlantel,
 } from '../../data/repositorio.js';
 import {
-  claveDeEjercicio, pasoDeLinea, nuevoPeso, parsearPeso,
+  claveDeEjercicio, pasoDeLinea, nuevoPeso, parsearPeso, pesoSugeridoDeCarga,
   formatearKg, fechaLocal, detalleDeLinea,
 } from '../../data/escalones.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta, nombreCorto, toast } from '../nav.js';
@@ -201,15 +201,19 @@ async function crearFilaDelEjercicio() {
 function abrirPeso(jugadorId) {
   const jugador = vista.jugadores.find((j) => j.id === jugadorId);
   const escalon = vista.escalonPorJugador.get(jugadorId) ?? null;
-  // Sin placeholder ni valor sugerido cuando no hay peso: proponer un número
-  // sería decidir por el profe.
+  // El primer peso arranca con el de la carga de esta línea, que el archivo ya
+  // escribió en kg ("Manc. 10kg (x2)"); de "PC" o "5xL" no sale nada y el campo
+  // queda vacío. Es un punto de partida para editar, no un peso guardado: lo
+  // confirma el profe tocando "Guardar peso". Sin placeholder igual que antes.
+  const sugerido = escalon ? null : pesoSugeridoDeCarga(actual.linea.cargaSugerida);
+  const inicial = escalon ? formatearKg(escalon.kg) : sugerido != null ? formatearKg(sugerido) : '';
   abrirHoja({
     titulo: `Peso de ${nombreCorto(jugador.nombreLimpio)}`,
     cuerpo: `
       <div class="p">El peso con el que trabaja hoy en este ejercicio.</div>
       <div class="campo">
         <label for="fe-kg">Peso (kg)</label>
-        <input id="fe-kg" type="text" inputmode="decimal" autocomplete="off" value="${escalon ? escaparHtml(formatearKg(escalon.kg)) : ''}">
+        <input id="fe-kg" type="text" inputmode="decimal" autocomplete="off" value="${escaparHtml(inicial)}">
       </div>
       <div id="fe-aviso-kg"></div>
       <div class="acciones-bateria">
@@ -233,6 +237,8 @@ function abrirPeso(jugadorId) {
   $('fe-guardar-kg').addEventListener('click', guardar);
   $('fe-cancelar-kg').addEventListener('click', () => cerrarHoja());
   $('fe-kg').focus();
+  // Con un número ya puesto, tipear lo reemplaza en vez de pegarse atrás.
+  if (inicial) $('fe-kg').select();
 }
 
 function abrirEditor() {

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   fechaLocal, diaDeLaSemana, formatearKg,
-  parsearPeso, nuevoPeso,
+  parsearPeso, nuevoPeso, pesoSugeridoDeCarga,
   claveDeEjercicio, pasoDeLinea,
   estadoDePlan, elegirPlanVisible, bloquesDeLineas, agruparPorBloque, detalleDeLinea,
 } from '../src/data/escalones.js';
@@ -38,6 +38,24 @@ test('parsearPeso rechaza vacío, texto, cero, negativos y más de un número', 
     assert.ok(r.error, `"${texto}" tendría que dar error`);
     assert.equal(r.kg, null);
   }
+});
+
+test('pesoSugeridoDeCarga toma el número pegado a kg, venga lo que venga adelante', () => {
+  assert.equal(pesoSugeridoDeCarga('Barra Ol + 10 kg'), 10);
+  assert.equal(pesoSugeridoDeCarga('Disco 5 kg'), 5);
+  assert.equal(pesoSugeridoDeCarga('Manc. 10kg (x2)'), 10);
+  assert.equal(pesoSugeridoDeCarga('12,5 KG'), 12.5);
+});
+
+test('pesoSugeridoDeCarga no adivina cuando no hay kg', () => {
+  for (const carga of ['PC', 'Fallo', 'Máxima', '5xL', '', null, undefined]) {
+    assert.equal(pesoSugeridoDeCarga(carga), null, String(carga));
+  }
+});
+
+test('pesoSugeridoDeCarga con varios kg toma el primero, y 0 kg no es un peso', () => {
+  assert.equal(pesoSugeridoDeCarga('Barra 20 kg + disco 5 kg'), 20);
+  assert.equal(pesoSugeridoDeCarga('0 kg'), null);
 });
 
 /* ---------- escalones ---------- */

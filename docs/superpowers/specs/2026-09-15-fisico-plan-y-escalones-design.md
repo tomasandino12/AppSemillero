@@ -471,10 +471,14 @@ ejercicio es del club, no del plan: un plan nuevo no toca ninguno de los dos.
 6. **El cliente manda los kg de destino, no "+1".** Si dos profes mueven al mismo
    chico a la vez, gana el último y los dos movimientos quedan en la historia.
    Después de escribir, la fila muestra lo que devolvió la base.
-7. **Ningún número propuesto por la app.** El editor del escalón y la hoja del
-   peso arrancan vacíos y sin placeholder numérico (un "ej. 2,5" también es
-   proponer valores). No hay pesos por defecto ni referencias por edad en ningún
-   lado.
+7. **Ningún número inventado por la app.** El editor del escalón arranca vacío,
+   las dos hojas van sin placeholder numérico (un "ej. 2,5" también es proponer
+   valores) y no hay pesos por defecto ni referencias por edad en ningún lado.
+   La única excepción, y no es un invento de la app: **el primer peso de un chico
+   arranca con el número de la carga sugerida de esa línea**, que el archivo ya
+   escribió en kg ("Barra Ol + 10 kg" → 10). Es el valor de arranque de un campo
+   que el profe confirma o cambia antes de guardar; si la carga no trae un número
+   pegado a "kg" ("PC", "Fallo", "Manc 10"), el campo arranca vacío.
 
 ---
 
@@ -681,8 +685,12 @@ Se llega desde una línea de la sesión. Título "Escalones".
 └─────────────────────────────────────┘
 ```
 
-- Las dos hojas **arrancan vacías** si no hay valor, **sin placeholder
-  numérico** (sección 8, regla 7). Si ya hay, arrancan con el valor actual.
+- Las dos hojas van **sin placeholder numérico** (sección 8, regla 7) y
+  arrancan con el valor guardado si lo hay. Si el chico **todavía no tiene
+  peso**, la hoja del peso arranca con el número de la carga sugerida de la
+  línea (`pesoSugeridoDeCarga`), seleccionado para que tipear lo reemplace; sin
+  número pegado a "kg", vacía. Un peso ya guardado nunca se pisa con la
+  sugerencia.
 - **Un solo número**, con coma decimal ("12,5"), el mismo criterio de siempre.
   Rechaza lo que no es un número y lo que no es mayor que cero, con el error
   debajo del campo.
@@ -712,6 +720,7 @@ Sin red ni DOM, con tests en `tests/escalones.test.js`:
 | Función | Qué hace |
 |---|---|
 | `parsearPeso(texto)` | `{ error, kg }`. Un solo número; una coma entre dígitos es decimal; error si no es un número, si no es > 0 o si está vacío. Sirve para el peso de un chico y para el escalón de un ejercicio. |
+| `pesoSugeridoDeCarga(cargaSugerida)` | El número pegado a "kg" en la carga de la línea ("Barra Ol + 10 kg", "Manc. 10kg (x2)" → 10), o `null` si no hay ninguno ("PC", "5xL", "Manc 10"). Sólo para el valor de arranque del campo. |
 | `nuevoPeso(kg, paso, direccion)` | kg de destino para + o −, o `null` si no hay adónde ir: sin peso, sin escalón, o si restar daría cero o menos. |
 | `elegirPlanVisible(planes, hoy)` | La regla de la sección 9: `{ visible, estado, otros }`. |
 | `pasoDeLinea(nombreOriginal, pasos)` | Busca por `clavearNombre` exacto. Importa `clavearNombre` de `parserCabb.js`, la misma fuente que el import. |
@@ -735,7 +744,8 @@ Sin red ni DOM, con tests en `tests/escalones.test.js`:
 - **Tests unitarios** de `escalones.js`, incluyendo: `nuevoPeso` sin peso o sin
   escalón devuelve `null` (no hay + ni − implícitos), no baja a cero ni a
   negativo, no tiene techo y redondea las colas del punto flotante;
-  `parsearPeso` con coma decimal y con basura; y los tres casos más el empate de
+  `parsearPeso` con coma decimal y con basura; `pesoSugeridoDeCarga` con y sin
+  match, con coma decimal y con texto adelante; y los tres casos más el empate de
   `elegirPlanVisible`.
 - **Tests de fuente:** ni la hoja del peso ni la del escalón tienen placeholder
   con dígitos; la palabra "escalera" no quedó en ningún lado; − se apaga sólo

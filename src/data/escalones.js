@@ -69,6 +69,25 @@ function redondearKg(kg) {
   return Math.round(kg * 100) / 100;
 }
 
+// El número pegado a "kg", sin importar qué venga antes ("Barra Ol + 10 kg",
+// "Manc. 10kg (x2)"). El primero, si el texto trae más de uno.
+const KG_EN_CARGA = /(\d+(?:[.,]\d+)?)\s*kg/i;
+
+/**
+ * Con qué número arranca el campo cuando el profe le pone el peso a un chico
+ * por primera vez: el de la carga sugerida de esa línea del plan, que ya está
+ * escrita en kg. No lo guarda nadie: el profe lo confirma o lo cambia antes de
+ * guardar. Sin número pegado a "kg" ("PC", "Fallo", "5xL") devuelve null y el
+ * campo arranca vacío — de esos textos no se adivina nada.
+ */
+export function pesoSugeridoDeCarga(cargaSugerida) {
+  const texto = typeof cargaSugerida === 'string' ? cargaSugerida : '';
+  const encontrado = texto.match(KG_EN_CARGA);
+  if (!encontrado) return null;
+  const kg = redondearKg(Number(encontrado[1].replace(',', '.')));
+  return kg > 0 ? kg : null;
+}
+
 export function claveDeEjercicio(nombre) {
   return clavearNombre(nombre ?? '');
 }
