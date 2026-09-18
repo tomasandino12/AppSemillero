@@ -515,3 +515,8 @@ svg.g{width:100%;display:block;overflow:visible}
   min-height:var(--tap);padding:0 var(--sp-2);background:none;border:0;border-radius:.5rem;color:inherit;cursor:pointer;
 }
 .escalon-fila .btn.chico{min-width:var(--tap);padding:0}
+
+/* Inventario: el tipo encima de sus filas, y el contador de cantidad. */
+.inv-grupo{margin:var(--sp-3) 0 var(--sp-1);font-weight:600;font-size:var(--fs-125);color:var(--gris-osc)}
+.inv-cantidad{display:flex;align-items:center;gap:var(--sp-2)}
+.inv-cantidad input{width:5rem;text-align:center}

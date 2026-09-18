@@ -117,3 +117,17 @@ test('sin escalón definido no hay + ni −, pero el peso se anota igual', () =>
   assert.match(src, /if \(paso == null\)/);
   assert.match(src, /paso: null/);
 });
+
+test('coordinación tiene INVENTARIO después de Profes, y cada pestaña tiene su sección', async () => {
+  const { TABS_COORDINACION } = await import('../src/ui/chrome.js');
+  assert.deepEqual(TABS_COORDINACION.map((t) => t.id), ['p-coord-panorama', 'p-coord-profes', 'p-coord-inventario']);
+  assert.equal(TABS_COORDINACION[2].texto, 'Inventario');
+  const html = fuente('public/index.html');
+  for (const t of TABS_COORDINACION) assert.match(html, new RegExp(`<section class="pant" id="${t.id}">`), t.id);
+  assert.match(html, /id="coord-inventario-contenido"/);
+});
+
+test('la pestaña INVENTARIO está registrada con su render', () => {
+  const src = fuente('src/ui/pantallas/registro.js');
+  assert.match(src, /registrarPantalla\('p-coord-inventario', \{ titulo: 'Inventario', render: renderInventarioCoordinacion \}\)/);
+});

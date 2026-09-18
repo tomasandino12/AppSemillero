@@ -15,6 +15,7 @@ import { renderEjercicio, abrirEjercicio } from './ejercicio.js';
 import { renderMetas } from './metas.js';
 import { renderPanorama } from './coordPanorama.js';
 import { renderProfes } from './coordProfes.js';
+import { renderInventarioCoordinacion } from './inventario.js';
 import { renderMiPerfil } from './miPerfil.js';
 import { refrescarPlanFisico } from './planFisico.js';
 import { renderFisico, iniciarFisico } from './fisico.js';
@@ -45,6 +46,7 @@ export function registrarPantallas() {
   registrarPantalla('p-metas', { titulo: 'Metas', render: renderMetas });
   registrarPantalla('p-coord-panorama', { titulo: 'Panorama', render: renderPanorama });
   registrarPantalla('p-coord-profes', { titulo: 'Profes', render: renderProfes });
+  registrarPantalla('p-coord-inventario', { titulo: 'Inventario', render: renderInventarioCoordinacion });
   registrarPantalla('p-mi-perfil', { titulo: 'Mi perfil', render: renderMiPerfil });
   setAbrirFicha(abrirFicha);
   setAbrirEjercicio(abrirEjercicio);

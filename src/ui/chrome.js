@@ -37,11 +37,13 @@ export const TABS = [
   { id: 'p-datos', texto: 'Datos', icono: ICONOS.datos },
 ];
 
-// Coordinación: dos pestañas y ningún chip de categoría. No hay "categoría
-// activa" porque el coordinador no entra a ninguna.
+// Coordinación: tres pestañas y ningún chip de categoría. No hay "categoría
+// activa" porque el coordinador no entra a ninguna. INVENTARIO es del club
+// entero, y es la única que escribe algo que no son accesos.
 export const TABS_COORDINACION = [
   { id: 'p-coord-panorama', texto: 'Panorama', icono: ICONOS.datos },
   { id: 'p-coord-profes', texto: 'Profes', icono: ICONOS.plantel },
+  { id: 'p-coord-inventario', texto: 'Inventario', icono: ICONOS.fisico },
 ];
 
 export const PANTALLA_PERFIL = 'p-mi-perfil';
