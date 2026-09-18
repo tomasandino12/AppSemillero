@@ -154,12 +154,19 @@ function textoDeEstado(plan, hoy) {
   return `Terminó el ${formatearFechaCorta(plan.hasta)}`;
 }
 
+// El inventario es del club, no de la categoría: el enlace está en todos los
+// estados de FÍSICO y no depende del chip. Va en el mismo pie: una sola
+// franja inferior por pantalla.
 function pieCargar() {
-  return `<div class="pie-fijo"><button class="btn" id="btn-cargar-plan-fisico">Cargar plan de fuerza</button></div>`;
+  return `<div class="pie-fijo">
+    <button class="btn" id="btn-cargar-plan-fisico">Cargar plan de fuerza</button>
+    <button class="btn sec" id="btn-ver-inventario">Inventario del club</button>
+  </div>`;
 }
 
 function ligarCargar() {
   $('btn-cargar-plan-fisico')?.addEventListener('click', () => $('input-plan-fisico').click());
+  $('btn-ver-inventario')?.addEventListener('click', () => ir('p-inventario', { push: true }));
 }
 
 export function iniciarFisico() {

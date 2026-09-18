@@ -131,3 +131,13 @@ test('la pestaña INVENTARIO está registrada con su render', () => {
   const src = fuente('src/ui/pantallas/registro.js');
   assert.match(src, /registrarPantalla\('p-coord-inventario', \{ titulo: 'Inventario', render: renderInventarioCoordinacion \}\)/);
 });
+
+test('el profe llega al inventario desde el pie de FÍSICO, en una pantalla sólo de lectura', () => {
+  const registro = fuente('src/ui/pantallas/registro.js');
+  assert.match(registro, /registrarPantalla\('p-inventario', \{ titulo: 'Inventario', render: renderInventarioLectura \}\)/);
+  const html = fuente('public/index.html');
+  assert.match(html, /<section class="pant" id="p-inventario"><div id="inventario-contenido"><\/div><\/section>/);
+  const fisico = fuente('src/ui/pantallas/fisico.js');
+  assert.match(fisico, /id="btn-ver-inventario"/);
+  assert.match(fisico, /ir\('p-inventario', \{ push: true \}\)/);
+});
