@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cargasPorBloque } from '../src/data/cargas.js';
+import { cargasPorBloque, bloquesPorClave } from '../src/data/cargas.js';
 
 // Ejercicios: pasoId → nombre y bloque. `orden` es el orden de llegada de la
 // base (movimiento_escalon.orden): define cuál es el último movimiento.
@@ -88,4 +88,64 @@ test('el detalle es por ejercicio, en kg promedio', () => {
 test('un movimiento de un ejercicio desconocido va a "Sin bloque" con su id', () => {
   const [b] = cargasPorBloque([mov('a', 'x', 10, '2026-09-01')], EJ);
   assert.equal(b.bloque, 'Sin bloque');
+});
+
+test('el arranque es el primero por fecha, aunque se haya cargado después', () => {
+  // Un movimiento con fecha anterior que llegó a la base más tarde (orden
+  // mayor) sigue siendo el arranque: la curva va por fecha.
+  const [fuerza] = cargasPorBloque([
+    { jugadorId: 'a', pasoId: 'sent', kg: 60, fecha: '2026-09-08', orden: 1 },
+    { jugadorId: 'a', pasoId: 'sent', kg: 50, fecha: '2026-09-01', orden: 2 },
+  ], EJ);
+  assert.deepEqual(fuerza.serie.map((p) => [p.fecha, p.pct]), [['2026-09-01', 0], ['2026-09-08', 20]]);
+});
+
+/* ---------- el bloque de cada ejercicio: la aparición más reciente ---------- */
+
+const linea = (clave, bloque, fecha, orden = 1) => ({ clave, bloque, fecha, orden });
+
+test('vale el bloque de la aparición más reciente por fecha de sesión', () => {
+  // PRESS ARNOLD en el archivo real: AUX/CORE en marzo, AUXILIAR, y FUERZA el 24/04.
+  const b = bloquesPorClave([
+    linea('PRESS ARNOLD', 'FUERZA', '2026-04-24'),
+    linea('PRESS ARNOLD', 'AUX/CORE', '2026-03-09'),
+    linea('PRESS ARNOLD', 'AUXILIAR', '2026-04-03'),
+  ]);
+  assert.equal(b.get('PRESS ARNOLD'), 'FUERZA');
+});
+
+test('AUX/CORE se guarda tal cual: es un bloque más', () => {
+  const b = bloquesPorClave([linea('REMO', 'AUX/CORE', '2026-03-23')]);
+  assert.equal(b.get('REMO'), 'AUX/CORE');
+});
+
+test('el mismo día con dos bloques: gana la línea que va más abajo en la sesión', () => {
+  const b = bloquesPorClave([
+    linea('X', 'CORE', '2026-04-10', 7),
+    linea('X', 'AUXILIAR', '2026-04-10', 3),
+  ]);
+  assert.equal(b.get('X'), 'CORE');
+});
+
+test('una aparición sin bloque no pisa el bloque de las anteriores', () => {
+  const b = bloquesPorClave([
+    linea('X', 'FUERZA', '2026-04-01'),
+    linea('X', null, '2026-04-20'),
+  ]);
+  assert.equal(b.get('X'), 'FUERZA');
+});
+
+test('sin bloque en ninguna aparición no entra al mapa (queda "Sin bloque")', () => {
+  const b = bloquesPorClave([linea('X', null, '2026-04-01'), linea('X', '  ', '2026-04-02')]);
+  assert.equal(b.has('X'), false);
+});
+
+test('con los bloques de las sesiones, un ejercicio que no está en la hoja Ejercicios igual tiene bloque', () => {
+  // El bug: PRESS PLANO no está en la hoja "Ejercicios" y caía en "Sin bloque".
+  const bloques = bloquesPorClave([linea('PRESS PLANO', 'FUERZA', '2026-04-27')]);
+  const [b] = cargasPorBloque(
+    [mov('a', 'pp', 20, '2026-09-01')],
+    [{ pasoId: 'pp', nombre: 'PRESS PLANO', bloque: bloques.get('PRESS PLANO') ?? null }],
+  );
+  assert.equal(b.bloque, 'FUERZA');
 });

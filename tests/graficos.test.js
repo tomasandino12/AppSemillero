@@ -102,3 +102,26 @@ test('sin min y max la escala sigue saliendo de los datos', () => {
   });
   assert.doesNotMatch(svg.innerHTML, />100<\/text>/);
 });
+
+// Las etiquetas del eje X son los <text> en mayúsculas con formato DD/MM.
+const fechasDelEje = (html) => [...html.matchAll(/>(\d\d\/\d\d)<\/text>/g)].map((m) => m[1]);
+const fechas = (n) => Array.from({ length: n }, (_, i) => `${String(1 + (i % 28)).padStart(2, '0')}/${String(1 + Math.floor(i / 28)).padStart(2, '0')}`);
+
+test('con pocas fechas se escriben todas', () => {
+  const svg = svgFalso();
+  grafico(svg, { etiquetas: fechas(5), series: [{ nombre: 'a', c: '#000', d: [1, 2, 3, 4, 5] }] });
+  assert.deepEqual(fechasDelEje(svg.innerHTML), fechas(5));
+});
+
+test('con muchas fechas se escriben algunas, sin encimarse, y siempre la primera y la última', () => {
+  // Caso real: cargas de fuerza, lunes y jueves durante cuatro meses.
+  const svg = svgFalso();
+  const e = fechas(32);
+  grafico(svg, { etiquetas: e, series: [{ nombre: 'a', c: '#000', d: e.map((_, i) => i) }] });
+  const eje = fechasDelEje(svg.innerHTML);
+  assert.ok(eje.length <= 7, `se escribieron ${eje.length} fechas en 320 de ancho`);
+  assert.equal(eje[0], e[0]);
+  assert.equal(eje[eje.length - 1], e[31]);
+  // Los puntos se dibujan todos igual: lo que se ralea es el texto.
+  assert.equal((svg.innerHTML.match(/<circle/g) ?? []).length, 32);
+});

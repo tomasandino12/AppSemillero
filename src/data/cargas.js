@@ -12,7 +12,7 @@ const promedio = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
  * ejercicio liviano el promedio en kg del bloque se desploma aunque todos
  * hayan subido. En %, un ejercicio nuevo entra en 0 y sube con los chicos.
  *
- * El arranque es el primer movimiento de ese chico en ese ejercicio (el que
+ * El arranque es el primer movimiento, por fecha, de ese chico en ese ejercicio (el que
  * siembra el import, o el que anotó el profe). Entre movimientos, cada chico
  * conserva su último peso: el promedio de un día incluye a todos los que ya
  * tenían peso, se hayan movido ese día o no.
@@ -24,9 +24,13 @@ const promedio = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
  */
 export function cargasPorBloque(movimientos, ejercicios) {
   const porPaso = new Map((ejercicios ?? []).map((e) => [e.pasoId, e]));
-  const ordenados = [...(movimientos ?? [])].sort((a, b) => a.orden - b.orden);
+  // Por fecha y, dentro del mismo día, por orden de llegada. Sólo por orden
+  // fallaría con un movimiento fechado antes que llegó después; sólo por
+  // fecha no desempata dos del mismo día.
+  const ordenados = [...(movimientos ?? [])]
+    .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.orden - b.orden);
 
-  // bloque → (jugador|paso) → movimientos en orden de llegada
+  // bloque → (jugador|paso) → movimientos en ese orden
   const bloques = new Map();
   for (const m of ordenados) {
     const bloque = porPaso.get(m.pasoId)?.bloque || SIN_BLOQUE;
@@ -53,7 +57,7 @@ function resumenDeBloque(bloque, pares, porPaso) {
     const pcts = [];
     const pasos = new Set();
     for (const movs of listas) {
-      // Ya ordenados por llegada: el último con fecha <= a la del punto.
+      // Ya ordenados: el último con fecha <= a la del punto.
       const hasta = movs.filter((m) => m.fecha <= fecha);
       if (!hasta.length) continue;
       const arranque = Number(movs[0].kg);
@@ -84,4 +88,33 @@ function resumenDeBloque(bloque, pares, porPaso) {
     chicos: new Set(listas.map((movs) => movs[0].jugadorId)).size,
     ejercicios: detalle,
   };
+}
+
+/**
+ * El bloque de cada ejercicio, por clave: el de su aparición más reciente en
+ * las sesiones del plan (ejercicio_asignado), no el de la hoja "Ejercicios".
+ * Esa hoja no trae todos los ejercicios con el mismo nombre (PRESS PLANO no
+ * está) y a veces quedó vieja: si el profe lo reclasificó, lo último es lo
+ * que vale.
+ *
+ * - Por fecha de sesión; el mismo día, gana la línea que va más abajo
+ *   (`orden` mayor).
+ * - Una aparición sin bloque no pisa a las anteriores.
+ * - El valor va tal cual: AUX/CORE es un bloque más, no se reparte.
+ * - Una clave sin bloque en ninguna aparición no entra (→ "Sin bloque").
+ *
+ * lineas: [{ clave, bloque, fecha: 'YYYY-MM-DD', orden }]
+ */
+export function bloquesPorClave(lineas) {
+  const elegida = new Map();
+  for (const l of lineas ?? []) {
+    const bloque = typeof l.bloque === 'string' ? l.bloque.trim() : '';
+    if (!bloque || !l.clave) continue;
+    const previa = elegida.get(l.clave);
+    const orden = l.orden ?? -Infinity;
+    if (!previa || l.fecha > previa.fecha || (l.fecha === previa.fecha && orden > previa.orden)) {
+      elegida.set(l.clave, { bloque, fecha: l.fecha, orden });
+    }
+  }
+  return new Map([...elegida].map(([clave, e]) => [clave, e.bloque]));
 }

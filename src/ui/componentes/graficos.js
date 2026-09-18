@@ -102,7 +102,15 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
     g += `<text x="${ml - 6}" y="${y + 3.5}" text-anchor="end" font-family="IBM Plex Mono" font-size="10" fill="${COL_MUTED}">${v.toFixed(dec)}</text>`;
   }
   g += `<line x1="${ml}" y1="${Y(min)}" x2="${W - mr}" y2="${Y(min)}" stroke="#C9C5BE" stroke-width="1.2"/>`;
+  // Una fecha ocupa ~30 de los 320 de ancho: con más de 7 se enciman y no se
+  // lee ninguna. Se escriben la primera, la última y las del medio cada
+  // `salto`; los puntos se dibujan todos igual. Si la anteúltima escrita cae
+  // pegada a la última, se omite.
+  const maxEtiquetas = Math.max(2, Math.floor((W - ml - mr) / 40));
+  const salto = Math.max(1, Math.ceil((n - 1) / (maxEtiquetas - 1)));
+  const escribir = (i) => i === 0 || i === n - 1 || (i % salto === 0 && n - 1 - i >= salto / 2);
   etiquetas.forEach((f, i) => {
+    if (!escribir(i)) return;
     g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-family="Barlow Condensed" font-size="11.5" letter-spacing=".7" fill="#6E6B66">${String(f).toUpperCase()}</text>`;
   });
   g += `<text x="4" y="9" font-family="Barlow Condensed" font-size="10" letter-spacing="1" fill="${COL_MUTED}">${u.toUpperCase()}</text>`;

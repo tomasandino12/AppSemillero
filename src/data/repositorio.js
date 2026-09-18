@@ -1,5 +1,6 @@
 import { crearClienteSupabase } from './cliente.js';
-import { fechaLocal } from './escalones.js';
+import { fechaLocal, claveDeEjercicio } from './escalones.js';
+import { bloquesPorClave } from './cargas.js';
 
 let clienteCache = null;
 function obtenerCliente() {
@@ -1164,15 +1165,17 @@ export async function obtenerEscalonesActuales(pasoId, jugadorIds) {
  * Toda la historia de pesos de los chicos de una categoría, con el nombre y el
  * bloque de cada ejercicio, para las curvas de cargas de DATOS.
  *
- * El bloque no está en paso_fuerza: está en la biblioteca (ejercicio_fuerza),
- * y las dos comparten la clave normalizada del nombre. Se unen acá por esa
- * clave, sin FK, igual que las reconcilia el import. Un ejercicio que no está
- * en la biblioteca queda con bloque null ("Sin bloque").
+ * paso_fuerza no tiene bloque. El bloque sale de las líneas de las sesiones
+ * (ejercicio_asignado) de los planes de ESTA categoría, unidas por la clave
+ * del nombre de la línea: la misma con que el import crea el paso y con que
+ * FÍSICO une cada línea con su escalón. No de la biblioteca (ejercicio_fuerza):
+ * la hoja "Ejercicios" del archivo no trae todos los nombres y su bloque puede
+ * haber quedado viejo. Qué aparición manda lo decide bloquesPorClave().
  *
  * La fecha de cada movimiento es la del dispositivo (fechaLocal): un peso
  * anotado a las 22 en Argentina es de ese día, no del siguiente en UTC.
  */
-export async function obtenerCargasDelPlantel(clubId, jugadorIds) {
+export async function obtenerCargasDelPlantel(clubId, plantelId, jugadorIds) {
   if (!jugadorIds.length) return { movimientos: [], ejercicios: [] };
   const supabase = obtenerCliente();
   // Paginada: la historia sólo crece (un movimiento por cada + o −) y pasa
@@ -1200,13 +1203,7 @@ export async function obtenerCargasDelPlantel(clubId, jugadorIds) {
     .in('id', pasoIds);
   if (errorPasos) throw errorPasos;
 
-  const { data: biblioteca, error: errorBiblioteca } = await supabase
-    .from('ejercicio_fuerza')
-    .select('clave, bloque')
-    .eq('club_id', clubId)
-    .in('clave', pasos.map((p) => p.clave));
-  if (errorBiblioteca) throw errorBiblioteca;
-  const bloquePorClave = new Map(biblioteca.map((b) => [b.clave, b.bloque]));
+  const bloques = bloquesPorClave(await lineasDeLosPlanes(supabase, clubId, plantelId));
 
   return {
     movimientos: movs.map((m) => ({
@@ -1216,8 +1213,54 @@ export async function obtenerCargasDelPlantel(clubId, jugadorIds) {
       fecha: fechaLocal(new Date(m.creado_en)),
       orden: Number(m.orden),
     })),
-    ejercicios: pasos.map((p) => ({ pasoId: p.id, nombre: p.nombre, bloque: bloquePorClave.get(p.clave) ?? null })),
+    ejercicios: pasos.map((p) => ({ pasoId: p.id, nombre: p.nombre, bloque: bloques.get(p.clave) ?? null })),
   };
+}
+
+/**
+ * Clave, bloque, fecha y orden de cada línea de los planes de una categoría.
+ * Las sesiones van de a tandas: sus ids viajan en la URL del .in(), y cada
+ * tanda se pagina porque un plan de un año pasa las 1000 líneas.
+ */
+async function lineasDeLosPlanes(supabase, clubId, plantelId) {
+  const { data: planes, error } = await supabase
+    .from('plan_fisico')
+    .select('id')
+    .eq('club_id', clubId)
+    .eq('plantel_id', plantelId);
+  if (error) throw error;
+  if (!planes.length) return [];
+  const { data: sesiones, error: errorSesiones } = await supabase
+    .from('sesion_fisico')
+    .select('id, fecha')
+    .in('plan_id', planes.map((p) => p.id));
+  if (errorSesiones) throw errorSesiones;
+  const fechaDeSesion = new Map(sesiones.map((s) => [s.id, s.fecha]));
+
+  const lineas = [];
+  const TANDA = 50;
+  for (let t = 0; t < sesiones.length; t += TANDA) {
+    const ids = sesiones.slice(t, t + TANDA).map((s) => s.id);
+    let desde = 0;
+    for (;;) {
+      const { data: pagina, error: errorLineas } = await supabase
+        .from('ejercicio_asignado')
+        .select('id, sesion_id, nombre_original, bloque, orden')
+        .in('sesion_id', ids)
+        .order('id')
+        .range(desde, desde + TAMANIO_PAGINA - 1);
+      if (errorLineas) throw errorLineas;
+      lineas.push(...pagina);
+      if (pagina.length < TAMANIO_PAGINA) break;
+      desde += TAMANIO_PAGINA;
+    }
+  }
+  return lineas.map((l) => ({
+    clave: claveDeEjercicio(l.nombre_original),
+    bloque: l.bloque,
+    fecha: fechaDeSesion.get(l.sesion_id),
+    orden: l.orden,
+  }));
 }
 
 /** Un movimiento: los kg de destino, no "+1" (spec, sección 8). */

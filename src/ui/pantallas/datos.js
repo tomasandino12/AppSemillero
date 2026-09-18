@@ -316,7 +316,7 @@ async function renderCargas(club, plantel) {
   let bloques;
   try {
     const jugadores = await obtenerJugadoresDelPlantel(club.id, plantel.id);
-    const { movimientos, ejercicios } = await obtenerCargasDelPlantel(club.id, jugadores.map((j) => j.id));
+    const { movimientos, ejercicios } = await obtenerCargasDelPlantel(club.id, plantel.id, jugadores.map((j) => j.id));
     bloques = cargasPorBloque(movimientos, ejercicios);
   } catch (e) {
     console.error('No se pudieron cargar las cargas:', e);
