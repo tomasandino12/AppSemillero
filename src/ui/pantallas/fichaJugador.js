@@ -18,7 +18,7 @@ import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast 
 import { ir } from '../main.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
-import { detalleColapsableHtml } from '../componentes/detalleColapsable.js';
+import { verDetallesHtml } from '../componentes/verDetalles.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('ficha-contenido');
@@ -105,7 +105,7 @@ function bloqueDeSerie(id, titulo, serie, ayuda) {
       ${resumenDeFuente('Práctica', 'linea-practica', serie.practica)}
       ${resumenDeFuente('Partido', 'linea-partido', serie.partido)}
     </div>
-    ${detalleColapsableHtml([
+    ${verDetallesHtml(titulo, [
       { nombre: 'Práctica', html: tabla(serie.practica) },
       { nombre: 'Partido', html: tabla(serie.partido) },
     ])}

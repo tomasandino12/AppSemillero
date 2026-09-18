@@ -4,7 +4,7 @@
 
 App móvil para seguimiento del desarrollo de jugadores en categorías inferiores de clubes de básquet argentinos. Piloto gratuito en Newell's Old Boys (Rosario), dos categorías (U21M, U17M). El problema de negocio: pérdida de memoria institucional cuando cambia el cuerpo técnico.
 
-**Restricción de diseño dura:** el usuario es un entrenador con el celular, al aire libre, con una mano, durante la práctica. Sol directo, pantalla chica, dedo gordo, apuro. Toda decisión de UI se resuelve contra ese escenario.
+**Restricción de diseño dura:** el usuario es un entrenador con el celular, en la cancha, con una mano, durante la práctica. Pantalla chica, dedo gordo, apuro. Se entrena bajo techo: NO es un escenario de sol directo (corregido por el usuario el 2026-09-18). Toda decisión de UI se resuelve contra ese escenario.
 
 **Ya construido y verificado (Etapas 1 y 2A, mergeadas a `main`):**
 - `src/parser/parserCabb.js` / `PARSER.md` — parser CABB club-agnóstico, nunca lanza excepción, 16 tests.

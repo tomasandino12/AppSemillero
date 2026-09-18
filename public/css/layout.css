@@ -162,7 +162,7 @@
 }
 /* Todos los tabs en blanco (18.5:1 sobre --negro). Con el gris de antes
    (#817D77, 4.5:1) un entrenador no encontró la barra dos veces en un test
-   sin sol: al aire libre desaparecía. Como el texto ya no marca cuál está
+   de usabilidad. Como el texto ya no marca cuál está
    activo, el activo lleva dos señales: ícono rojo y etiqueta en bold.
    --fs-115 es el tamaño más grande que deja margen a 320px: RECURSOS en
    bold ocupa ~48px de los 53px de su tab. */

@@ -8,7 +8,7 @@ import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta } from '../nav.js';
 import { grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
-import { detalleColapsableHtml } from '../componentes/detalleColapsable.js';
+import { verDetallesHtml } from '../componentes/verDetalles.js';
 
 const $ = (id) => document.getElementById(id);
 const contenedor = () => $('coord-panorama-contenido');
@@ -166,7 +166,7 @@ function tablasDeTarjeta(t) {
 
 function tarjetaHtml(t) {
   const cuerpo = hayAlgoParaMostrar(t)
-    ? `${TIPOS.map((tipo) => resumenTipoHtml(t, tipo)).join('')}${detalleColapsableHtml(tablasDeTarjeta(t))}`
+    ? `${TIPOS.map((tipo) => resumenTipoHtml(t, tipo)).join('')}${verDetallesHtml(`Historial de ${t.categoria}`, tablasDeTarjeta(t))}`
     : `<div class="det sin-tiros">Todavía no hay baterías ni partidos con tiros en ${escaparHtml(t.categoria)}.</div>`;
   return `
     <article class="tarjeta-cat">

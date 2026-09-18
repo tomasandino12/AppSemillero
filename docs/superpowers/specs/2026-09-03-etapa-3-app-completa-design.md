@@ -40,7 +40,7 @@ Se descarta el marco de teléfono de 390px centrado. CSS base = celular, sin nin
 - `100dvh`, nunca `100vh`.
 - `env(safe-area-inset-bottom)` en la navegación inferior.
 - `clamp()` para la escala tipográfica de títulos.
-- Contraste alto (el escenario es sol directo sobre un celular).
+- Contraste alto: se usa en un celular, en la cancha. Se entrena bajo techo, NO al sol (corregido por el usuario el 2026-09-18).
 - **Todos los breakpoints viven en `layout.css`.** Ningún otro archivo tiene media queries de ancho.
 
 ## Decisión 2 — Se reconstruye la cáscara, se conserva el estilo gráfico

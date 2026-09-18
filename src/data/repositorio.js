@@ -1,4 +1,5 @@
 import { crearClienteSupabase } from './cliente.js';
+import { fechaLocal } from './escalones.js';
 
 let clienteCache = null;
 function obtenerCliente() {
@@ -1157,6 +1158,66 @@ export async function obtenerEscalonesActuales(pasoId, jugadorIds) {
     .in('jugador_id', jugadorIds);
   if (error) throw error;
   return data.map(escalonDesdeFila);
+}
+
+/**
+ * Toda la historia de pesos de los chicos de una categoría, con el nombre y el
+ * bloque de cada ejercicio, para las curvas de cargas de DATOS.
+ *
+ * El bloque no está en paso_fuerza: está en la biblioteca (ejercicio_fuerza),
+ * y las dos comparten la clave normalizada del nombre. Se unen acá por esa
+ * clave, sin FK, igual que las reconcilia el import. Un ejercicio que no está
+ * en la biblioteca queda con bloque null ("Sin bloque").
+ *
+ * La fecha de cada movimiento es la del dispositivo (fechaLocal): un peso
+ * anotado a las 22 en Argentina es de ese día, no del siguiente en UTC.
+ */
+export async function obtenerCargasDelPlantel(clubId, jugadorIds) {
+  if (!jugadorIds.length) return { movimientos: [], ejercicios: [] };
+  const supabase = obtenerCliente();
+  // Paginada: la historia sólo crece (un movimiento por cada + o −) y pasa
+  // las 1000 filas de max-rows. `orden` es único, así que no saltea ni repite.
+  const movs = [];
+  let desde = 0;
+  for (;;) {
+    const { data: pagina, error } = await supabase
+      .from('movimiento_escalon')
+      .select('jugador_id, escalera_id, kg, creado_en, orden')
+      .in('jugador_id', jugadorIds)
+      .order('orden')
+      .range(desde, desde + TAMANIO_PAGINA - 1);
+    if (error) throw error;
+    movs.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
+  if (!movs.length) return { movimientos: [], ejercicios: [] };
+
+  const pasoIds = [...new Set(movs.map((m) => m.escalera_id))];
+  const { data: pasos, error: errorPasos } = await supabase
+    .from('paso_fuerza')
+    .select('id, clave, nombre')
+    .in('id', pasoIds);
+  if (errorPasos) throw errorPasos;
+
+  const { data: biblioteca, error: errorBiblioteca } = await supabase
+    .from('ejercicio_fuerza')
+    .select('clave, bloque')
+    .eq('club_id', clubId)
+    .in('clave', pasos.map((p) => p.clave));
+  if (errorBiblioteca) throw errorBiblioteca;
+  const bloquePorClave = new Map(biblioteca.map((b) => [b.clave, b.bloque]));
+
+  return {
+    movimientos: movs.map((m) => ({
+      jugadorId: m.jugador_id,
+      pasoId: m.escalera_id,
+      kg: Number(m.kg),
+      fecha: fechaLocal(new Date(m.creado_en)),
+      orden: Number(m.orden),
+    })),
+    ejercicios: pasos.map((p) => ({ pasoId: p.id, nombre: p.nombre, bloque: bloquePorClave.get(p.clave) ?? null })),
+  };
 }
 
 /** Un movimiento: los kg de destino, no "+1" (spec, sección 8). */

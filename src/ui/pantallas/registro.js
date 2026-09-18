@@ -3,6 +3,7 @@ import { renderDatos, iniciarDatos } from './datos.js';
 import { renderPlantel, setAbrirFicha, setAbrirAltaManual } from './plantel.js';
 import { renderFicha, abrirFicha } from './fichaJugador.js';
 import { iniciarHoja } from '../componentes/hoja.js';
+import { iniciarVerDetalles } from '../componentes/verDetalles.js';
 import { abrirAltaManual } from './altaJugador.js';
 import { renderHoy } from './hoy.js';
 import { renderMedir } from './medir.js';
@@ -50,5 +51,6 @@ export function registrarPantallas() {
   iniciarDatos();
   iniciarFisico();
   iniciarHoja();
+  iniciarVerDetalles();
   setAbrirAltaManual(abrirAltaManual);
 }

@@ -22,7 +22,7 @@
 - Ningún jugador del bloque rival se persiste — solo `rival_nombre`/`puntos_rival` del `partido`.
 - Una `sugerencia` de `mapearImportacion` nunca se resuelve sola — siempre requiere una decisión explícita del entrenador ("es el mismo" / "es otro").
 - Targets táctiles ≥44px, contraste alto, contenido importante en la mitad inferior de la pantalla, sin hover como única señal de estado (pantalla táctil).
-- Restricción de UX dura: el usuario está con el celular, al aire libre, con una mano, apurado. Toda pantalla se diseña contra ese escenario.
+- Restricción de UX dura: el usuario está con el celular, en la cancha (bajo techo, no al sol), con una mano, apurado. Toda pantalla se diseña contra ese escenario.
 
 ---
 

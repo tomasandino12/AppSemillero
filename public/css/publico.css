@@ -4,7 +4,7 @@
    aparte a propósito: la app por dentro sigue clara y nada de acá tiene
    que poder filtrarse hacia ella. Por eso todo cuelga de .publico.
    No es una inconsistencia — es la separación entre la presentación
-   pública y la herramienta de trabajo, que se usa al sol en una cancha.
+   pública y la herramienta de trabajo, que se usa en la cancha (bajo techo).
    Todos los colores salen de tokens.css.
    Mobile-first. Las versiones de escritorio viven en layout.css, que es el
    único lugar del proyecto con media queries de ancho.

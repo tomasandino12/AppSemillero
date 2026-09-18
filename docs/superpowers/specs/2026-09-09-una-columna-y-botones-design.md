@@ -84,7 +84,7 @@ tarjetas del proyecto:
 proponía el borde en `--linea`. Medido: **1.22:1 contra `--papel`**, muy lejos
 del 3:1 que pide WCAG 1.4.11 para el contorno de un control. Con ese borde, la
 sombra habría sido la única señal de que ahí hay un botón — y es lo primero que
-desaparece al sol. `--gris-cl` da **4.50:1 contra el papel y 5.08:1 contra el
+desaparece en una pantalla con poco brillo. `--gris-cl` da **4.50:1 contra el papel y 5.08:1 contra el
 blanco**, ya es un token del proyecto, y se verificó sobre la captura que el
 borde de 1px se renderiza en exactamente ese color, sin antialiasing que lo
 aclare.

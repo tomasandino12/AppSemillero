@@ -20,7 +20,7 @@
    era un contorno negro de 1.5px, y tres seguidos se leían como tres losas.
    El borde es --gris-cl a propósito: 4.50:1 contra --papel y 5.08:1 contra el
    blanco, arriba del 3:1 que pide WCAG 1.4.11 para el contorno de un control.
-   Tiene que alcanzar SOLO: la sombra es lo primero que se pierde al sol, así
+   Tiene que alcanzar SOLO: la sombra es lo primero que se pierde con poco brillo, así
    que es un refuerzo, nunca la única señal de que ahí hay un botón. */
 .btn.sec{
   background:var(--blanco);color:var(--tinta);
@@ -322,7 +322,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .contexto{font-size:var(--fs-125);color:var(--gris-cl);margin-bottom:10px}
 
 /* El número que el entrenador se lleva de la card. Tiene que leerse a un
-   metro y con sol, así que es el elemento más grande de la pantalla. */
+   metro de distancia, así que es el elemento más grande de la pantalla. */
 .cabecera-tiro{margin:0 0 18px}
 .cabecera-tiro .k{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 .cabecera-tiro .n{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--tinta)}
@@ -469,23 +469,24 @@ svg.g{width:100%;display:block;overflow:visible}
 .fuente .frac{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--gris-cl)}
 .fuente .vacio{font-size:var(--fs-135);color:var(--gris-cl);margin-top:var(--sp-1)}
 
-/* El detalle colapsable, compartido por el panorama y la ficha del jugador
-   (src/ui/componentes/detalleColapsable.js). */
-.detalle-colapsable{border-top:1px solid var(--linea);margin-top:var(--sp-3)}
-.detalle-colapsable > summary{
-  list-style:none;min-height:var(--tap);cursor:pointer;
+/* "Ver detalles", compartido por DATOS, el panorama y la ficha del jugador
+   (src/ui/componentes/verDetalles.js). Abre la hoja: el historial fecha por
+   fecha no estira la pantalla. */
+.ver-detalles{
+  width:100%;min-height:var(--tap);margin-top:var(--sp-3);
+  border-top:1px solid var(--linea);
   display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);
   font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--tinta);
+  letter-spacing:.06em;text-transform:uppercase;color:var(--tinta);text-align:left;
 }
-.detalle-colapsable > summary::-webkit-details-marker{display:none}
-.detalle-colapsable .ocultar{display:none}
-.detalle-colapsable[open] .ver{display:none}
-.detalle-colapsable[open] .ocultar{display:inline}
-.detalle-colapsable .flecha{transition:transform .15s}
-.detalle-colapsable[open] .flecha{transform:rotate(180deg)}
-.detalle-colapsable .tabla-nombrada{padding-top:var(--sp-3)}
-.detalle-colapsable .sub-fuente{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.ver-detalles .flecha{font-size:var(--fs-200);line-height:1}
+.hoja .tabla-nombrada + .tabla-nombrada{padding-top:var(--sp-4)}
+.hoja .sub-fuente{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.hoja .cerrar-detalles{margin-top:var(--sp-5)}
+/* Un ejercicio del detalle de cargas: el nombre puede ser largo ("Barra Ol +
+   10 kg…"), así que va en su propio renglón y los números abajo. */
+.fila-carga{padding:8px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}
+.fila-carga .det{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl);margin-top:2px}
 .fila-ev .rival{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris-cl)}
 /* En la fila de un partido cede el rival, nunca la fracción: un nombre largo
    se corta con puntos suspensivos y "31% · 12/39" queda en una línea. */

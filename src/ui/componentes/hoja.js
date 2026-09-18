@@ -17,6 +17,9 @@ export function abrirHoja({ titulo, cuerpo, alCerrar }) {
     <h2 id="hoja-titulo">${escaparHtml(titulo)}</h2>
     <div class="pad">${cuerpo}</div>
   `;
+  // La hoja es una sola y se reusa: sin esto, abre donde quedó el scroll
+  // de la anterior.
+  hoja.scrollTop = 0;
   $('velo').classList.add('on');
   hoja.classList.add('on');
   alCerrarActual = alCerrar ?? null;
