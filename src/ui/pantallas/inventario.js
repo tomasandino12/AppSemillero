@@ -49,15 +49,15 @@ function filaHtml(fila, editable) {
     <span class="det">${fila.cantidad} unid.</span>
   `;
   return editable
-    ? `<button type="button" class="jug-fila" data-material="${fila.id}">${contenido}</button>`
-    : `<div class="jug-fila">${contenido}</div>`;
+    ? `<button type="button" class="jug-fila inv-fila" data-material="${fila.id}">${contenido}</button>`
+    : `<div class="jug-fila inv-fila">${contenido}</div>`;
 }
 
 function listaHtml(editable) {
   return agruparInventario(vista.filas).map((s) => `
     <div class="eyebrow">${escaparHtml(s.titulo)}</div>
     ${s.grupos.map((g) => `
-      <div class="inv-grupo">${escaparHtml(g.titulo)}</div>
+      ${g.tipo === 'otro' ? '' : `<div class="inv-grupo">${escaparHtml(g.titulo)}</div>`}
       ${g.filas.map((f) => filaHtml(f, editable)).join('')}
     `).join('')}
   `).join('');

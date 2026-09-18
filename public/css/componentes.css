@@ -518,5 +518,8 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Inventario: el tipo encima de sus filas, y el contador de cantidad. */
 .inv-grupo{margin:var(--sp-3) 0 var(--sp-1);font-weight:600;font-size:var(--fs-125);color:var(--gris-osc)}
+/* Un botón no se estira solo aunque sea flex: la fila editable ocupa el ancho
+   como la de lectura, con la cantidad a la derecha. */
+.inv-fila{width:100%;text-align:left;font:inherit;color:inherit;border:0}
 .inv-cantidad{display:flex;align-items:center;gap:var(--sp-2)}
 .inv-cantidad input{width:5rem;text-align:center}
