@@ -42,7 +42,7 @@ Sin esto no funcionan ni la recuperación de contraseña ni Google.
 
 ---
 
-## 2. Supabase — confirmación de mail (decisión tuya)
+## 2. Supabase — confirmación de mail y contraseñas
 
 **Authentication → Sign In / Providers → Email**
 
@@ -54,9 +54,22 @@ banca las dos:
 | **Activada** (por defecto) | Supabase manda un mail y no abre sesión | "Te mandamos un mail a X. Abrilo para confirmar la cuenta y después ingresá." |
 | **Desactivada** | La cuenta queda usable al instante | Entra directo |
 
-**Recomendación: dejala activada.** Sin confirmación, cualquiera crea cuentas
-con mails ajenos. No cuesta nada porque igual hace falta que alguien del club
-habilite el acceso a mano.
+**Tiene que estar activada.** Coordinación habilita a los profes por su mail,
+desde la lista de cuentas pendientes, y esa lista sólo muestra mails
+confirmados. Con la confirmación apagada, Supabase da todo mail por confirmado
+al instante: cualquiera podría crear la cuenta `profe.real@gmail.com` antes que
+el profe, y coordinación la habilitaría con acceso a los datos de los chicos de
+esa categoría.
+
+En la misma sección de **Authentication**:
+
+- **Minimum password length: 8**, que es lo que pide la app al crear la cuenta
+  y al cambiar la contraseña. Si Supabase pide menos, la app sigue pidiendo 8,
+  pero alguien que llame a la API directo podría poner una más corta.
+- **Leaked password protection: activada** (en planes que la incluyen).
+  Rechaza contraseñas que aparecen en filtraciones conocidas.
+
+`supabase/config.toml` replica esto para el entorno local.
 
 Ojo con el **mailer gratuito de Supabase**: tiene un límite bajo de mails por
 hora y a veces cae en spam. Para el piloto alcanza; si se usa en serio, hay que
