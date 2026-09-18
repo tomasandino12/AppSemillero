@@ -5,6 +5,7 @@ import {
 import { nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast, formatearFechaCorta } from '../nav.js';
+import { esEnlaceWeb } from '../../data/enlaces.js';
 import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
 import { abrirAltaEjercicio } from './ejercicios.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
@@ -86,7 +87,7 @@ function bloqueDetalleMenor(ejercicio) {
     ejercicio.material ? filaMenor('Material', ejercicio.material) : '',
     ejercicio.jugadores ? filaMenor('Jugadores', ejercicio.jugadores) : '',
     ejercicio.categorias ? filaMenor('Categorías', ejercicio.categorias) : '',
-    ejercicio.enlace
+    esEnlaceWeb(ejercicio.enlace)
       ? `<div class="fila-menor"><span class="k">Enlace</span><a href="${escaparHtml(ejercicio.enlace)}" target="_blank" rel="noopener noreferrer">Abrir el enlace</a></div>`
       : '',
   ].filter(Boolean);

@@ -1,6 +1,7 @@
 import { obtenerRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
+import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir } from '../main.js';
 import { renderSeccionEjercicios } from './ejercicios.js';
@@ -29,7 +30,7 @@ function tarjetaRecurso(r) {
     <div class="rec">
       <div class="t">${escaparHtml(r.titulo)}</div>
       <div class="d">${escaparHtml(r.descripcion)}</div>
-      ${r.enlace ? `<a class="enlace-rec" href="${escaparHtml(r.enlace)}" target="_blank" rel="noopener noreferrer">Abrir el material</a>` : ''}
+      ${esEnlaceWeb(r.enlace) ? `<a class="enlace-rec" href="${escaparHtml(r.enlace)}" target="_blank" rel="noopener noreferrer">Abrir el material</a>` : ''}
       <div class="m">
         <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
         ${ultima ? `<span class="tag">${escaparHtml(formatearFechaCorta(ultima))}</span>` : ''}
@@ -126,8 +127,8 @@ async function confirmarEnvio(recursoId) {
   }
   // escaparHtml evita romper el atributo href, pero no frena un
   // "javascript:..." o cualquier otro esquema: eso se rechaza acá.
-  if (enlace && !/^https?:\/\//i.test(enlace)) {
-    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">El link tiene que empezar con http:// o https://.</div></div>`;
+  if (enlace && !esEnlaceWeb(enlace)) {
+    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">${MENSAJE_ENLACE_NO_WEB}</div></div>`;
     return;
   }
   if (!jugadorIds.length) {

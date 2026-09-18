@@ -5,6 +5,7 @@ import {
   agruparPorBloque, diaDeLaSemana, pasoDeLinea, formatearKg, detalleDeLinea,
 } from '../../data/escalones.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta } from '../nav.js';
+import { esEnlaceWeb } from '../../data/enlaces.js';
 import { abrirEscalones } from './fisicoEscalones.js';
 
 const $ = (id) => document.getElementById(id);
@@ -89,7 +90,7 @@ function tarjetaDeLinea(l, pasos) {
       ${detalle ? `<div class="det">${escaparHtml(detalle)}</div>` : ''}
       ${l.notas ? `<div class="det">${escaparHtml(l.notas)}</div>` : ''}
       <div class="pie-linea">
-        ${l.video ? `<a class="btn sec chico" href="${escaparHtml(l.video.link)}" target="_blank" rel="noopener noreferrer">Ver video</a>` : ''}
+        ${esEnlaceWeb(l.video?.link) ? `<a class="btn sec chico" href="${escaparHtml(l.video.link)}" target="_blank" rel="noopener noreferrer">Ver video</a>` : ''}
         <span class="escalon">${escaparHtml(paso != null ? `Escalón ${formatearKg(paso)} kg` : 'Sin escalón')}</span>
       </div>
     </div>

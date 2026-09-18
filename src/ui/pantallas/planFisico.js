@@ -10,6 +10,7 @@ import {
 } from '../../data/prepararPayloadPlanFisico.js';
 import { obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo } from '../sesion.js';
 import { mostrarPantalla, toast, esErrorDeRed, escaparHtml, formatearFechaCorta } from '../nav.js';
+import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { retornarDePlanFisico } from './retornoPlanFisico.js';
 
@@ -350,6 +351,10 @@ function abrirCargar(i) {
     // Obligatorio: una entrada sin link no le da video a nadie.
     if (!link) {
       aviso('Poné el link del video.');
+      return;
+    }
+    if (!esEnlaceWeb(link)) {
+      aviso(MENSAJE_ENLACE_NO_WEB);
       return;
     }
     // Un nombre que ya existe no se da de alta de nuevo: se elige. Es el mismo

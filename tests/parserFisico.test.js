@@ -275,6 +275,31 @@ test('dos entradas de la biblioteca con el mismo nombre normalizado: sin referen
   assert.equal(r.sinMatchear[0].motivo, 'ambiguo');
 });
 
+test('un link de la biblioteca que no es http(s) se descarta y se avisa, el ejercicio queda', () => {
+  const r = parsearPlanFisico(libro({
+    Ejercicios: [BIB[0], ['FUERZA', 'Press Plano (Manc)', 'javascript:alert(1)'], BIB[2]],
+    'Mayo (Fuerza)': [ENC, filaEj(serial(2026, 5, 4), 'FUERZA', 1, 'Press Plano (Manc)')],
+  }), 'x.xlsx');
+  const press = r.biblioteca.find((e) => e.nombre === 'Press Plano (Manc)');
+  assert.equal(press.link, null);
+  assert.equal(r.sesiones[0].ejercicios[0].referencia, press);
+  const aviso = r.advertencias.find((a) => a.mensaje.startsWith('[LINK_NO_WEB]'));
+  assert.ok(aviso);
+  assert.equal(aviso.fila, 2);
+  assert.equal(r.biblioteca.find((e) => e.nombre === 'Sentadilla Búlgara').link, 'https://example.com/bulgara');
+});
+
+test('el hipervínculo real de la celda también se filtra, no sólo el texto', () => {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([BIB[0], ['FUERZA', 'Press Plano (Manc)', 'Ver video']]);
+  ws.C2.l = { Target: 'javascript:fetch("//x")' };
+  XLSX.utils.book_append_sheet(wb, ws, 'Ejercicios');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([ENC, filaEj(serial(2026, 5, 4), 'FUERZA', 1, 'Press Plano (Manc)')]), 'Mayo (Fuerza)');
+  const r = parsearPlanFisico(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }), 'x.xlsx');
+  assert.equal(r.biblioteca[0].link, null);
+  assert.ok(r.advertencias.some((a) => a.mensaje.startsWith('[LINK_NO_WEB]')));
+});
+
 test('las columnas se ubican por su encabezado, no por su lugar', () => {
   const encabezados = ['Fecha', '#', 'Bloque', 'Ejercicio', 'Reps', 'Series', 'Pausa', 'Carga Sugerida', 'Notas Técnicas'];
   const datos = [serial(2026, 5, 4), 1, 'FUERZA', 'Press Plano (Manc)', '8xL', 4, "90''", 'Manc 10kg', 'Codos a 45°'];

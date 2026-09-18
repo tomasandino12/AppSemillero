@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 // misma fuente: si alguna vez cambia cómo se normaliza un nombre, cambia en
 // los dos lados a la vez.
 import { clavearNombre } from './parserCabb.js';
+import { esEnlaceWeb } from '../data/enlaces.js';
 
 /*
  * Parser del plan de fuerza del club (Físico.xlsx).
@@ -254,12 +255,22 @@ function parsearBiblioteca(ws, hoja, salida) {
     const nombre = texto(celda(ws, r, columnas.ejercicio));
     if (!nombre) continue;
     const celLink = columnas.link === undefined ? null : celda(ws, r, columnas.link);
+    // El hipervínculo real de la celda manda sobre el texto que muestra.
+    let link = celLink?.l?.Target ?? textoONull(celLink);
+    if (typeof link === 'string') link = link.trim() || null;
+    // Un link que no es http(s) no se guarda: la base lo rechazaría y, peor,
+    // un "javascript:" en un archivo que circula por WhatsApp se ejecutaría al
+    // tocar "Ver video". El ejercicio entra igual, sin video.
+    if (link !== null && !esEnlaceWeb(link)) {
+      advertir(salida, hoja, r + 1, 'link',
+        `[LINK_NO_WEB] el link de "${nombre}" no empieza con http:// o https://: se guarda sin video`);
+      link = null;
+    }
     salida.biblioteca.push({
       clave: clavearNombre(nombre),
       nombre,
       bloque: columnas.bloque === undefined ? null : textoONull(celda(ws, r, columnas.bloque)),
-      // El hipervínculo real de la celda manda sobre el texto que muestra.
-      link: celLink?.l?.Target ?? textoONull(celLink),
+      link,
       fila: r + 1,
     });
   }

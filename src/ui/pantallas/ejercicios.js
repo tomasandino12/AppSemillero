@@ -2,6 +2,7 @@ import { obtenerEjercicios, crearEjercicio, actualizarEjercicio } from '../../da
 import { TEMAS, nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast } from '../nav.js';
+import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { cargarPerfiles, nombreDe, asegurarNombre } from '../perfil.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 
@@ -224,10 +225,10 @@ async function confirmarAltaEjercicio(previo) {
   // el atributo href, pero no frena un "javascript:..." o cualquier otro
   // esquema, y sin "https://" el navegador lo resuelve como ruta relativa de
   // la app: el link queda roto para todo el club. El trim() es sólo para
-  // chequear, igual que con el título; lo que se guarda es lo tipeado.
+  // chequear, igual que con el título; lo que se guarda va recortado (abajo).
   const enlaceCrudo = $('in-ej-enlace').value;
-  if (enlaceCrudo.trim() && !/^https?:\/\//i.test(enlaceCrudo.trim())) {
-    aviso.innerHTML = `<div class="al"><div class="tx">El link tiene que empezar con http:// o https://.</div></div>`;
+  if (enlaceCrudo.trim() && !esEnlaceWeb(enlaceCrudo.trim())) {
+    aviso.innerHTML = `<div class="al"><div class="tx">${MENSAJE_ENLACE_NO_WEB}</div></div>`;
     return;
   }
 
@@ -241,7 +242,9 @@ async function confirmarAltaEjercicio(previo) {
     titulo: tituloCrudo,
     tema,
     descripcion: $('in-ej-desc').value,
-    enlace: $('in-ej-enlace').value,
+    // El enlace sí va recortado: un espacio adelante lo rechaza la base (0027)
+    // y un link con espacios no abre nada.
+    enlace: $('in-ej-enlace').value.trim(),
     material: $('in-ej-material').value,
     jugadores: $('in-ej-jugadores').value,
     categorias: $('in-ej-categorias').value,
