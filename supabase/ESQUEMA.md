@@ -120,9 +120,10 @@ numeric)`, único por `(club_id, clave)`.
   `ejercicio_fuerza` (el anexo de videos): un ejercicio sin video puede tener
   escalón y viceversa.
 - `paso` en kg, mayor que cero, con decimales (2,5 kg es un escalón real). Lo
-  escribe el profe en la app; la app no propone valores. **Nulo = todavía sin
-  definir**: la fila existe para colgarle los movimientos, el peso de cada chico
-  se escribe igual y no hay + ni −.
+  escribe el profe en la app; ni el archivo ni la app lo proponen. **Nulo =
+  todavía sin definir**: la fila existe para colgarle los movimientos, el peso de
+  cada chico se escribe igual y no hay + ni −. Así es como la crea el import
+  cuando siembra el peso inicial de un ejercicio nuevo (0025).
 - 0024 la renombró (con su índice, su trigger, sus policies y sus constraints) y
   cambió `pesos numeric[]` por `paso`: una lista de pesos válidos resultó no ser
   cómo trabaja el profe. Se fue con ella la función `pesos_validos`. La tabla
@@ -137,6 +138,10 @@ Cada vez que el profe le anota, sube o baja el peso a un chico en un ejercicio:
 
 - **Sólo inserts.** Sin update ni delete: un error se corrige con otro
   movimiento, y la historia queda completa.
+- **El primer movimiento de cada chico lo siembra el import** (0025), con el
+  número de la carga sugerida del archivo, y sólo donde todavía no hay nada: una
+  progresión ya empezada no se pisa. El resto los escribe el profe desde la
+  pantalla de escalones.
 - `escalera_id` apunta a `paso_fuerza` y **conserva el nombre de 0023 a
   propósito** (0024): cambia la tabla a la que apunta, no la historia ya escrita.
 - `kg` absolutos: si el escalón del ejercicio cambia, la historia sigue diciendo

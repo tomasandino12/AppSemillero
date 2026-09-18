@@ -406,12 +406,19 @@ revoke execute on function sellar_escalera_fuerza() from public, anon, authentic
 
 ---
 
-## 6. De dónde salen los valores: la app primero
+## 6. De dónde salen los valores
 
-**Esta etapa los carga en la app.** El Excel queda como posibilidad para después,
-con su propio spec.
+**El escalón lo carga el profe en la app. El peso inicial de cada chico lo
+siembra el import** (0025): el número que el profe escribió como carga sugerida
+("Barra Ol + 10 kg") ya es su decisión sobre con cuánto arranca el grupo, así que
+se anota solo al importar, para todos los chicos del plantel que todavía no
+tengan peso en ese ejercicio. Un ejercicio que aparece en varias sesiones se
+siembra una sola vez, con la carga de la sesión más temprana del import; de ahí
+en más la progresión la maneja el profe con + y −, y el archivo no vuelve a
+tocarla. Una carga sin número pegado a "kg" ("PC", "Fallo", "Manc 10") no siembra
+nada.
 
-Por qué la app primero:
+Por qué el **escalón** sigue siendo de la app y no del archivo:
 
 - **El escalón sobrevive a los planes y el archivo no.** El `.xlsx` llega cada
   dos meses; el escalón se define una vez (decisión 1). Si viniera en el
@@ -425,8 +432,10 @@ Por qué la app primero:
   los chicos muestran enseguida a qué peso llevan + y −. Desde el Excel eso
   recién aparecería al importar.
 
-Si después conviene sumar el Excel, la tabla no cambia: sería otra forma de
-escribir la misma fila de `paso_fuerza`, y lo nuevo sería la regla de conflicto.
+Si después conviene sumar el escalón al Excel, la tabla no cambia: sería otra
+forma de escribir la misma fila de `paso_fuerza`, y lo nuevo sería la regla de
+conflicto. Para el peso inicial esa regla ya está tomada y es la más simple
+posible: **el archivo sólo escribe donde no hay nada**.
 
 ---
 
@@ -453,8 +462,9 @@ ejercicio es del club, no del plan: un plan nuevo no toca ninguno de los dos.
 ## 8. Reglas del escalón
 
 1. **Un chico sin peso no tiene peso asignado**, y la app no le asigna uno. No
-   arranca en un peso liviano por defecto: el profe escribe el número (10.4).
-   Decisión 3 y la regla de seguridad.
+   arranca en un peso liviano por defecto. El único número que aparece solo es
+   el que el profe escribió en el archivo, y entra en el import (0025); lo demás
+   lo escribe él en la pantalla (10.4). Decisión 3 y la regla de seguridad.
 2. **+ suma el escalón al peso actual y − lo resta.** Nada más: no hay mínimo ni
    máximo. + nunca se apaga; − se apaga sólo cuando restar daría cero o menos,
    que no es un peso (no desaparece, para que la fila no cambie de lugar). Ese
@@ -474,11 +484,12 @@ ejercicio es del club, no del plan: un plan nuevo no toca ninguno de los dos.
 7. **Ningún número inventado por la app.** El editor del escalón arranca vacío,
    las dos hojas van sin placeholder numérico (un "ej. 2,5" también es proponer
    valores) y no hay pesos por defecto ni referencias por edad en ningún lado.
-   La única excepción, y no es un invento de la app: **el primer peso de un chico
-   arranca con el número de la carga sugerida de esa línea**, que el archivo ya
-   escribió en kg ("Barra Ol + 10 kg" → 10). Es el valor de arranque de un campo
-   que el profe confirma o cambia antes de guardar; si la carga no trae un número
-   pegado a "kg" ("PC", "Fallo", "Manc 10"), el campo arranca vacío.
+   La única excepción, y no es un invento de la app: **el número de la carga
+   sugerida**, que el profe escribió en kg ("Barra Ol + 10 kg" → 10). Ese número
+   siembra el peso inicial al importar (sección 6) y, para un chico que igual
+   quedó sin peso, es con lo que arranca el campo de la hoja, que él confirma o
+   cambia antes de guardar. Sin número pegado a "kg", no hay nada: ni siembra ni
+   valor de arranque.
 
 ---
 
@@ -720,7 +731,7 @@ Sin red ni DOM, con tests en `tests/escalones.test.js`:
 | Función | Qué hace |
 |---|---|
 | `parsearPeso(texto)` | `{ error, kg }`. Un solo número; una coma entre dígitos es decimal; error si no es un número, si no es > 0 o si está vacío. Sirve para el peso de un chico y para el escalón de un ejercicio. |
-| `pesoSugeridoDeCarga(cargaSugerida)` | El número pegado a "kg" en la carga de la línea ("Barra Ol + 10 kg", "Manc. 10kg (x2)" → 10), o `null` si no hay ninguno ("PC", "5xL", "Manc 10"). Sólo para el valor de arranque del campo. |
+| `pesoSugeridoDeCarga(cargaSugerida)` | El número pegado a "kg" en la carga de la línea ("Barra Ol + 10 kg", "Manc. 10kg (x2)" → 10), o `null` si no hay ninguno ("PC", "5xL", "Manc 10"). La usan el import, para sembrar, y la hoja del peso, para el valor de arranque. |
 | `nuevoPeso(kg, paso, direccion)` | kg de destino para + o −, o `null` si no hay adónde ir: sin peso, sin escalón, o si restar daría cero o menos. |
 | `elegirPlanVisible(planes, hoy)` | La regla de la sección 9: `{ visible, estado, otros }`. |
 | `pasoDeLinea(nombreOriginal, pasos)` | Busca por `clavearNombre` exacto. Importa `clavearNombre` de `parserCabb.js`, la misma fuente que el import. |
@@ -780,7 +791,11 @@ Sin red ni DOM, con tests en `tests/escalones.test.js`:
 - **Cuentas de jugador**, y cualquier cosa que dependa de ellas (pedir un ajuste).
 - **Pesos por defecto, sugerencias o normas por edad.** Los pesos y los escalones
   los escribe el cuerpo técnico, siempre.
-- **El escalón desde el Excel** (sección 6).
+- **El escalón desde el Excel** (sección 6). Lo que sí viene del archivo es el
+  peso inicial de cada chico.
+- **Sembrarle el peso inicial a un chico que se suma al plantel después del
+  import.** Se siembra a los que tienen pertenencia vigente en el momento del
+  import; al que llega después le pone el peso el profe, desde la pantalla.
 - **Unidades que no son kg** (bandas, peso corporal, tiempo).
 - **Alias entre ejercicios renombrados** (sección 7).
 - **Editar o borrar un movimiento.** Se corrige con otro movimiento.

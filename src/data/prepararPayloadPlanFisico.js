@@ -1,6 +1,9 @@
 // Mismo criterio de normalización que usa el parser para buscar en la
 // biblioteca, y de la misma fuente: si cambia, cambia en los dos lados a la vez.
 import { clavearNombre } from '../parser/parserCabb.js';
+// La misma lectura de la carga que muestra la pantalla de escalones: el número
+// pegado a "kg". Acá se usa para sembrarlo, no para sugerirlo.
+import { pesoSugeridoDeCarga } from './escalones.js';
 
 /**
  * Puro: sin red, sin cliente de base, sin generar ids. Toma lo que devolvió
@@ -138,9 +141,12 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
         ?? { ejercicioFuerzaId: null, claveNueva: null };
       ejercicios += 1;
       if (resuelto.ejercicioFuerzaId === null && resuelto.claveNueva === null) pendientes += 1;
-      // escalonKg no está acá a propósito: el manejo de peso es por jugador y
-      // esta etapa no lo toca (la RPC tampoco lo escribiría).
+      // escalonKg no está acá a propósito: el peso es por jugador y no por
+      // línea (la RPC tampoco lo escribiría). pesoSugerido sí viaja: es cómo se
+      // leyó la carga de ESTA línea. Lo que se siembra es `pesosIniciales`, uno
+      // por ejercicio; acá queda para poder auditar de dónde salió cada número.
       return {
+        pesoSugerido: pesoSugeridoDeCarga(e?.cargaSugerida ?? null),
         orden: e?.orden ?? null,
         bloque: e?.bloque ?? null,
         nombreOriginal: e?.nombreOriginal ?? null,
@@ -156,6 +162,7 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
   }));
 
   const ejerciciosNuevos = [...nuevosPorClave.values()];
+  const pesosIniciales = pesosPorEjercicio(sesiones);
 
   return {
     error: null,
@@ -166,6 +173,7 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
       hashArchivo: ctx.hashArchivo,
       advertencias: Array.isArray(resultadoParser.advertencias) ? resultadoParser.advertencias : [],
       ejerciciosNuevos,
+      pesosIniciales,
       sesiones: sesionesPayload,
     },
     resumen: {
@@ -173,8 +181,41 @@ function armar(resultadoParser, bibliotecaDelClub, decisiones, contexto) {
       ejercicios,
       pendientes,
       ejerciciosNuevos: ejerciciosNuevos.length,
+      pesosIniciales: pesosIniciales.length,
     },
   };
+}
+
+/**
+ * El peso con el que arranca cada ejercicio del import: `[{ clave, nombre, kg }]`,
+ * uno por nombre normalizado. El número que el profe escribió como carga es su
+ * decisión sobre el peso inicial, así que se anota solo al importar; de ahí en
+ * más la progresión la maneja él con + y −, y el archivo no vuelve a tocarla.
+ *
+ * Un ejercicio que aparece en varias sesiones se siembra una sola vez, con la
+ * carga de la sesión más temprana; con fechas iguales gana el orden del archivo.
+ * Una carga sin número pegado a "kg" ("PC", "Fallo", "Manc 10") no aporta nada,
+ * y entonces decide la sesión más temprana que sí lo traiga: lo que manda es el
+ * primer número que escribió el profe para ese ejercicio.
+ *
+ * `clave` y `nombre` salen del nombre de la línea, no del video que tenga: es la
+ * misma identidad que usa `paso_fuerza` y que busca la pantalla de escalones.
+ */
+function pesosPorEjercicio(sesiones) {
+  const porClave = new Map();
+  const porFecha = sesiones
+    .map((s, orden) => ({ s, orden }))
+    .sort((a, b) => (a.s.fecha < b.s.fecha ? -1 : a.s.fecha > b.s.fecha ? 1 : a.orden - b.orden));
+  for (const { s } of porFecha) {
+    for (const e of s.ejercicios) {
+      const clave = claveDe(e);
+      if (clave === null || porClave.has(clave)) continue;
+      const kg = pesoSugeridoDeCarga(e?.cargaSugerida ?? null);
+      if (kg === null) continue;
+      porClave.set(clave, { clave, nombre: (texto(e?.nombreOriginal) ?? clave).trim(), kg });
+    }
+  }
+  return [...porClave.values()];
 }
 
 /* ---------- lo que la pantalla le muestra al profe ---------- */

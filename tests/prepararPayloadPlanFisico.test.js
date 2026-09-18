@@ -363,7 +363,7 @@ test('el payload lleva el contexto y las advertencias del parser tal cual', () =
   assert.equal(payload.hashArchivo, 'hash-1');
   assert.deepEqual(payload.advertencias, advertencias);
   assert.deepEqual(payload.sesiones.map((s) => s.fecha), ['2026-04-06']);
-  assert.deepEqual(resumen, { sesiones: 1, ejercicios: 1, pendientes: 1, ejerciciosNuevos: 0 });
+  assert.deepEqual(resumen, { sesiones: 1, ejercicios: 1, pendientes: 1, ejerciciosNuevos: 0, pesosIniciales: 0 });
 });
 
 /* ---------- nunca lanza ---------- */
@@ -497,4 +497,94 @@ test('la pantalla del plan físico no habla de deuda: un ejercicio sin video es 
     .replace(/nombresPorResolver/g, '')
     .replace(/\.pendientes\b/g, '');
   assert.doesNotMatch(fuente, /pendiente|resolver|conflicto/i);
+});
+
+/* ---------- el peso inicial que siembra el import ---------- */
+
+test('cada ejercicio con carga numérica entra en pesosIniciales, con su clave y su nombre de línea', () => {
+  const r = resultado({
+    sesiones: [sesion('2026-04-06', [
+      ejercicio('Press Plano', { cargaSugerida: 'Manc. 10kg (x2)' }),
+      ejercicio('Cargada + Empuje', { orden: 2, cargaSugerida: 'Barra Ol + 12,5 kg' }),
+    ])],
+  });
+
+  const { payload, resumen } = prepararPayloadPlanFisico(r, [], {}, CONTEXTO);
+
+  assert.deepEqual(payload.pesosIniciales, [
+    { clave: clavearNombre('Press Plano'), nombre: 'Press Plano', kg: 10 },
+    { clave: clavearNombre('Cargada + Empuje'), nombre: 'Cargada + Empuje', kg: 12.5 },
+  ]);
+  assert.equal(resumen.pesosIniciales, 2);
+});
+
+test('una carga sin número pegado a kg no siembra nada', () => {
+  const r = resultado({
+    sesiones: [sesion('2026-04-06', [
+      ejercicio('Plancha', { cargaSugerida: 'PC' }),
+      ejercicio('Dominadas', { orden: 2, cargaSugerida: 'Fallo' }),
+      ejercicio('Remo', { orden: 3, cargaSugerida: 'Manc 10' }),
+      ejercicio('Salto', { orden: 4, cargaSugerida: null }),
+    ])],
+  });
+
+  const { payload, resumen } = prepararPayloadPlanFisico(r, [], {}, CONTEXTO);
+
+  assert.deepEqual(payload.pesosIniciales, []);
+  assert.equal(resumen.pesosIniciales, 0);
+});
+
+test('un ejercicio en varias sesiones se siembra una vez, con la carga de la sesión más temprana', () => {
+  const r = resultado({
+    sesiones: [
+      // El archivo puede traerlas en cualquier orden: manda la fecha.
+      sesion('2026-04-20', [ejercicio('Press Plano', { cargaSugerida: '20 kg' })]),
+      sesion('2026-04-06', [ejercicio('Press Plano', { cargaSugerida: '10 kg' })]),
+    ],
+  });
+
+  const { payload } = prepararPayloadPlanFisico(r, [], {}, CONTEXTO);
+
+  assert.deepEqual(payload.pesosIniciales, [{ clave: clavearNombre('Press Plano'), nombre: 'Press Plano', kg: 10 }]);
+});
+
+test('si la sesión más temprana no trae número, decide la primera que sí lo trae', () => {
+  const r = resultado({
+    sesiones: [
+      sesion('2026-04-06', [ejercicio('Press Plano', { cargaSugerida: 'Manc 10' })]),
+      sesion('2026-04-13', [ejercicio('Press Plano', { cargaSugerida: '12 kg' })]),
+      sesion('2026-04-20', [ejercicio('Press Plano', { cargaSugerida: '15 kg' })]),
+    ],
+  });
+
+  const { payload } = prepararPayloadPlanFisico(r, [], {}, CONTEXTO);
+
+  assert.deepEqual(payload.pesosIniciales, [{ clave: clavearNombre('Press Plano'), nombre: 'Press Plano', kg: 12 }]);
+});
+
+test('el peso se sigue por el nombre de la línea, no por el video: dos nombres parecidos son dos ejercicios', () => {
+  const r = resultado({
+    sesiones: [sesion('2026-04-06', [
+      ejercicio('Press Plano', { cargaSugerida: '10 kg' }),
+      ejercicio('Press Plano (Manc)', { orden: 2, cargaSugerida: '12 kg' }),
+    ])],
+  });
+
+  const { payload } = prepararPayloadPlanFisico(r, [], {}, CONTEXTO);
+
+  assert.deepEqual(payload.pesosIniciales.map((p) => p.kg), [10, 12]);
+  assert.equal(payload.pesosIniciales[0].clave === payload.pesosIniciales[1].clave, false);
+});
+
+test('cada línea lleva además cómo se leyó su propia carga', () => {
+  const r = resultado({
+    sesiones: [sesion('2026-04-06', [
+      ejercicio('Press Plano', { cargaSugerida: 'Manc. 10kg (x2)' }),
+      ejercicio('Plancha', { orden: 2, cargaSugerida: 'PC' }),
+    ])],
+  });
+
+  const { payload } = prepararPayloadPlanFisico(r, [], {}, CONTEXTO);
+
+  assert.deepEqual(ejerciciosDel(payload).map((e) => e.pesoSugerido), [10, null]);
 });
