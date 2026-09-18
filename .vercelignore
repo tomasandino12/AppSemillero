@@ -12,3 +12,12 @@ docs/
 supabase/
 tests/
 *.md
+
+# Ni el manifiesto de npm ni sus versiones: el navegador usa public/vendor/.
+package.json
+package-lock.json
+.env
+.env.*
+.claude/
+graphify-out/
+.graphifyignore

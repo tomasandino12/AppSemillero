@@ -15,20 +15,18 @@
 <link rel="stylesheet" href="/public/css/layout.css">
 <link rel="stylesheet" href="/public/css/componentes.css">
 <link rel="stylesheet" href="/public/css/publico.css">
+<!-- Las librerías se sirven desde el propio dominio (npm run vendor), no desde
+     un CDN: corren con la sesión del profe al alcance. Si se toca el import
+     map, cambia su hash en la CSP de vercel.json: tests/csp.test.js avisa. -->
 <script type="importmap">
 {
   "imports": {
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.112.4"
+    "xlsx": "/public/vendor/xlsx.mjs",
+    "@supabase/supabase-js": "/public/vendor/supabase-js.mjs"
   }
 }
 </script>
-<script>
-  // Públicas por diseño (publishable key, no la secret key) — ver
-  // docs/superpowers/specs/2026-09-02-etapa-2b-import-ui-design.md.
-  window.SUPABASE_URL = 'https://lseqvbtdzebomxwtqhwu.supabase.co';
-  window.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_nuPVo5yqsAFzY1uf6qcWBA_quRRgUFF';
-</script>
+<script src="/public/config.js"></script>
 </head>
 <body>
 
