@@ -1,8 +1,9 @@
 # ESQUEMA.md — Modelo de datos
 
 Estado al día de la migración `0019_nombre_y_categorias.sql`, más la sección de
-escalones de fuerza de `0023_escalones_fuerza.sql`. Las tablas del plan físico de
-0020–0022 todavía no están documentadas acá (ver la Tarea 7 del plan de import).
+escalones de fuerza de `0023_escalones_fuerza.sql` y el inventario de
+`0026_material.sql`. Las tablas del plan físico de 0020–0022 todavía no están
+documentadas acá (ver la Tarea 7 del plan de import).
 
 ## Diagrama en texto
 
@@ -161,6 +162,29 @@ de quien consulta. Es la primera vista del esquema.
 Guardaba un número por línea, o sea para todo el grupo, y nunca se escribió. El
 peso de cada jugador vive en `movimiento_escalon`.
 
+### `material` (0026)
+El inventario de material del club: una fila por variante, con `cantidad` en
+unidades sueltas (dos mancuernas de 10 kg son `cantidad = 2`).
+
+- `tipo`: lista cerrada — `mancuerna`, `disco`, `barra`, `pesa_rusa`,
+  `balon_medicinal` (con peso obligatorio), `pelota`, `cono`, `soga`,
+  `escalerita`, `banda` (sin peso) y `otro` (peso opcional, `detalle`
+  obligatorio como nombre). Sumar un tipo es una migración: el tipo decide si
+  lleva peso y si se combina (sólo `disco`), y el cruce futuro con los
+  ejercicios busca por tipo.
+- `peso_kg`: de **una** unidad, `numeric`, como `paso_fuerza.paso`.
+- `detalle`: lo que distingue dos filas del mismo tipo ("N° 7", "EZ"); `''` si
+  no hace falta.
+- Único por `(club_id, tipo, peso_kg, lower(detalle))` con `nulls not
+  distinct`: la segunda carga de una variante es editar la primera.
+- **Lo que ya no se tiene se borra**, no se archiva: la tabla dice lo que hay
+  hoy, y ninguna consulta tiene que acordarse de filtrar bajas.
+- `actualizado_por`/`actualizado_en` los sella un trigger; `creado_*` por
+  default.
+- La lee cualquier miembro del club; la escribe sólo `es_coordinador_de`, tenga
+  o no además el rol de entrenador. Insert y update con grant por columna: el
+  tipo y el club de una fila no cambian.
+
 ## Políticas RLS
 
 Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde 0016 pasa por la asignación, y **lectura y escritura son ejes separados**. Desde 0018 el coordinador no lee datos individuales.
@@ -171,6 +195,7 @@ Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembr
 | `jugador`, `pertenencia`, `partido`, `estadistica_*`, `sesion_medicion`, `medicion_*`, `medicion_corporal`, `envio_recurso`, `meta_zona` | sus asignadas vigentes | **nada** | sus asignadas vigentes |
 | `jugadores_del_club_para_dedup` | sí | **rechaza** | sí |
 | `ejercicio`, `nota_ejercicio`, `recurso`, `perfil_entrenador` | todo el club | todo el club (la UI de coordinación no lo muestra) | todo el club |
+| `material` (inventario) | lee todo el club | lee y **escribe** todo el club | lee y escribe |
 | Panel: pendientes, miembros, asignaciones, panorama | **rechaza** | su club | su club |
 | Habilitar, asignar, cerrar | **nunca** | a otros, en su club | a otros, en su club |
 
@@ -203,7 +228,7 @@ Son `security definer` por obligación, no por comodidad: se llaman desde las po
 
 Un chico citado en dos categorías tiene dos pertenencias vigentes: con que **alguna** dé acceso alcanza.
 
-**Siguen siendo a nivel club, a propósito:** `club`, `temporada`, `importacion`, `recurso`, `ejercicio`, `nota_ejercicio`, `perfil_entrenador`. `importacion` porque se inserta **antes** que el partido y en ese momento no hay plantel contra el cual chequear (y no contiene datos de menores: hash, nombre de archivo y advertencias). La biblioteca de ejercicios porque el beneficio que justifica que un profe se tome el trabajo de cargar es que quede para todos: scoparla por plantel la vacía de sentido.
+**Siguen siendo a nivel club, a propósito:** `club`, `temporada`, `importacion`, `recurso`, `ejercicio`, `nota_ejercicio`, `perfil_entrenador`, `material`. `importacion` porque se inserta **antes** que el partido y en ese momento no hay plantel contra el cual chequear (y no contiene datos de menores: hash, nombre de archivo y advertencias). La biblioteca de ejercicios porque el beneficio que justifica que un profe se tome el trabajo de cargar es que quede para todos: scoparla por plantel la vacía de sentido. `material` porque el inventario es del club entero, no de una categoría ni de un turno.
 
 **Dos formas que no siguen el patrón, y por qué:**
 
