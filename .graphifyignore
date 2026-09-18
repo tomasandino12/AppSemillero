@@ -1,0 +1,6 @@
+public/vendor/
+tests/fixtures/
+docs/
+supabase/.temp/
+node_modules/
+.claude/

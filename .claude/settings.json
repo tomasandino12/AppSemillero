@@ -1,0 +1,30 @@
+{
+  "model": "sonnet",
+  "effortLevel": "medium",
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Edit(./.env)",
+      "Write(./.env)",
+      "Read(./supabase/.temp/**)",
+      "Read(./tests/fixtures/*.xlsx)",
+      "Read(./package-lock.json)",
+      "Read(./graphify-out/graph.json)",
+      "Read(./graphify-out/graph.html)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/proteger-migraciones.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
