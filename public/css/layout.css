@@ -158,14 +158,20 @@
   flex:1;min-height:var(--tap);
   padding:var(--sp-2) 0 var(--sp-3);
   display:flex;flex-direction:column;align-items:center;gap:.1875rem;
-  color:#817D77;
+  color:var(--blanco);
 }
-.nav button.on{color:#fff}
+/* Todos los tabs en blanco (18.5:1 sobre --negro). Con el gris de antes
+   (#817D77, 4.5:1) un entrenador no encontró la barra dos veces en un test
+   sin sol: al aire libre desaparecía. Como el texto ya no marca cuál está
+   activo, el activo lleva dos señales: ícono rojo y etiqueta en bold.
+   --fs-115 es el tamaño más grande que deja margen a 320px: RECURSOS en
+   bold ocupa ~48px de los 53px de su tab. */
 .nav button.on svg{stroke:var(--rojo)}
-.nav svg{width:1.125rem;height:1.125rem;stroke:#817D77;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nav button.on span{font-weight:700}
+.nav svg{width:1.125rem;height:1.125rem;stroke:var(--blanco);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .nav span{
-  font-family:var(--ff-titulo);font-size:var(--fs-100);letter-spacing:.06em;
-  text-transform:uppercase;font-weight:600;
+  font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;
+  text-transform:uppercase;font-weight:500;
 }
 
 /* ---- velo, hoja y toast ---- */
@@ -341,7 +347,8 @@
 
 /* Hover solo donde hay puntero fino: en táctil no debe ser señal de nada. */
 @media (hover:hover){
-  .nav button:hover{color:#fff}
+  /* El texto ya es blanco siempre: el hover no puede aclararlo. */
+  .nav button:hover span{text-decoration:underline;text-underline-offset:.2em}
   .cabecera .salir:hover{color:#fff}
   .cat:hover{background:var(--sup-2)}
   .cat.on:hover{background:var(--rojo-osc)}
