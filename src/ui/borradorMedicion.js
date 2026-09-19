@@ -5,17 +5,41 @@
  * club se corta. Se escribe en cada tap y sólo se borra cuando la RPC
  * confirma: si el envío falla, el borrador sigue ahí para reintentar.
  *
- * Una clave por (club, plantel, tipo), así cambiar de categoría no pisa el
- * borrador de la otra.
+ * Una clave por (usuario, club, plantel, tipo): cambiar de categoría no pisa el
+ * borrador de la otra, y en un celular compartido otra cuenta no ve, ni puede
+ * enviar como propia, la sesión sin terminar de quien la dejó. Un borrador
+ * sobrevive al cierre de sesión a propósito (no se pierde media hora de
+ * medición por tocar "Salir"), pero sólo lo levanta su dueño.
  *
  * Todo va envuelto en try/catch: en modo privado localStorage tira al
  * escribir, y perder el borrador nunca puede romper la pantalla.
  */
-const PREFIJO = 'medicion.borrador.v1';
+const PREFIJO = 'medicion.borrador.v2';
+const PREFIJO_ANTERIOR = 'medicion.borrador.v1.';
 const VERSION = 1;
 
-export function claveBorrador(clubId, plantelId, tipo) {
-  return `${PREFIJO}.${clubId}.${plantelId}.${tipo}`;
+export function claveBorrador(usuarioId, clubId, plantelId, tipo) {
+  return `${PREFIJO}.${usuarioId ?? 'sin-cuenta'}.${clubId}.${plantelId}.${tipo}`;
+}
+
+/**
+ * Borra los borradores del formato anterior, cuya clave no llevaba usuario:
+ * quedarían para siempre en el celular sin que nadie pudiera reclamarlos.
+ * Se llama una vez al abrir la app. Devuelve cuántos borró.
+ */
+export function descartarBorradoresAnteriores(almacen = almacenPorDefecto()) {
+  if (!almacen) return 0;
+  try {
+    const claves = [];
+    for (let i = 0; i < almacen.length; i += 1) {
+      const clave = almacen.key(i);
+      if (clave && clave.startsWith(PREFIJO_ANTERIOR)) claves.push(clave);
+    }
+    for (const clave of claves) almacen.removeItem(clave);
+    return claves.length;
+  } catch {
+    return 0;
+  }
 }
 
 function almacenPorDefecto() {

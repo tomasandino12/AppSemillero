@@ -1,5 +1,5 @@
 import { obtenerSesionesDeMedicion } from '../../data/repositorio.js';
-import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
+import { obtenerClubActual, obtenerPlantelActivo, obtenerCuenta } from '../sesion.js';
 import { escaparHtml } from '../nav.js';
 import { claveBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
 import { ir } from '../main.js';
@@ -47,8 +47,8 @@ export async function renderMedir() {
   }
 
   const borradores = {
-    tiro: leerBorrador(claveBorrador(club.id, plantel.id, 'tiro')),
-    velocidad: leerBorrador(claveBorrador(club.id, plantel.id, 'velocidad')),
+    tiro: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'tiro')),
+    velocidad: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'velocidad')),
   };
 
   contenedor().innerHTML = `
@@ -81,7 +81,7 @@ export async function renderMedir() {
   });
   contenedor().querySelectorAll('[data-descartar]').forEach((b) => {
     b.addEventListener('click', async () => {
-      borrarBorrador(claveBorrador(club.id, plantel.id, b.dataset.descartar));
+      borrarBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, b.dataset.descartar));
       await renderMedir();
     });
   });

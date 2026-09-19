@@ -1,7 +1,7 @@
 import { obtenerJugadoresDelPlantel, guardarSesionMedicion } from '../../data/repositorio.js';
 import { POSICIONES_BATERIA, INTENTOS_POR_POSICION } from '../../data/posiciones.js';
 import { prepararPayloadBateria } from '../../data/prepararPayloadMedicion.js';
-import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
+import { obtenerClubActual, obtenerPlantelActivo, obtenerCuenta } from '../sesion.js';
 import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
 import { iniciales } from './plantel.js';
@@ -25,7 +25,7 @@ function hoyLocal() {
 function clave() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
-  return claveBorrador(club.id, plantel.id, 'tiro');
+  return claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'tiro');
 }
 
 /** Se llama en CADA tap: la sesión en curso no puede depender de que el celular no se bloquee. */

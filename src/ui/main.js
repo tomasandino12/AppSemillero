@@ -7,6 +7,7 @@ import { mostrarPantalla, toast } from './nav.js';
 import {
   setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo, setCuenta,
 } from './sesion.js';
+import { descartarBorradoresAnteriores } from './borradorMedicion.js';
 import {
   iniciarChrome, renderChrome, pantallaInicialDelModo, pantallaDeInicio, PANTALLA_PERFIL,
 } from './chrome.js';
@@ -191,6 +192,7 @@ async function entrarConSesion() {
 }
 
 async function iniciar() {
+  descartarBorradoresAnteriores();
   iniciarPublico({ onEntrar: entrarConSesion, onReintentarClub: entrarConSesion });
   iniciarChrome({
     onTab: (id) => ir(id),

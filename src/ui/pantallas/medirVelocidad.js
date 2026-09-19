@@ -1,6 +1,6 @@
 import { obtenerJugadoresDelPlantel, guardarSesionMedicion } from '../../data/repositorio.js';
 import { prepararPayloadVelocidad, redondearSegundos } from '../../data/prepararPayloadMedicion.js';
-import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
+import { obtenerClubActual, obtenerPlantelActivo, obtenerCuenta } from '../sesion.js';
 import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
 import { ir } from '../main.js';
@@ -32,7 +32,7 @@ function hoyLocal() {
 function clave() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
-  return claveBorrador(club.id, plantel.id, 'velocidad');
+  return claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'velocidad');
 }
 
 function persistir() {
