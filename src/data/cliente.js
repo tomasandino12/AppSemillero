@@ -18,3 +18,13 @@ export function crearClienteSupabase() {
   }
   return createClient(url, publishableKey);
 }
+
+let clienteCache = null;
+/** El cliente compartido: se crea la primera vez que se pide. */
+export function obtenerCliente() {
+  if (!clienteCache) clienteCache = crearClienteSupabase();
+  return clienteCache;
+}
+
+/** Filas por página al leer todo un conjunto (PostgREST corta en 1000). */
+export const TAMANIO_PAGINA = 1000;

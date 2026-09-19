@@ -26,9 +26,23 @@ function archivosJs(dir) {
   });
 }
 
-/** Los nombres que un módulo exporta, en cualquiera de las formas que usa el repo. */
-function exportsDe(src) {
+/**
+ * Los nombres que un módulo exporta, en cualquiera de las formas que usa el
+ * repo. Si se pasa la ruta del archivo, también sigue `export * from './x.js'`
+ * (así funciona la fachada src/data/repositorio.js).
+ */
+function exportsDe(src, ruta = null) {
   const nombres = new Set();
+
+  // export * from './x.js'  →  todo lo que exporta x.js
+  if (ruta) {
+    for (const m of src.matchAll(/^export\s*\*\s*from\s*['"](\.[^'"]*)['"]/gm)) {
+      const destino = resolve(dirname(ruta), m[1]);
+      if (existsSync(destino)) {
+        for (const n of exportsDe(readFileSync(destino, 'utf8'), destino)) nombres.add(n);
+      }
+    }
+  }
 
   // export function x / export async function x / export const x / export class x
   for (const m of src.matchAll(/^export\s+(?:async\s+)?(?:function|const|let|var|class)\s+([A-Za-z0-9_$]+)/gm)) {
@@ -71,7 +85,7 @@ test('todo import nombrado de src/ existe como export en su archivo de origen', 
         rotos.push(`${archivo}: importa de '${desde}', que no existe`);
         continue;
       }
-      const disponibles = exportsDe(readFileSync(destino, 'utf8'));
+      const disponibles = exportsDe(readFileSync(destino, 'utf8'), destino);
       for (const nombre of nombres) {
         if (!disponibles.has(nombre)) {
           rotos.push(`${archivo}: importa '${nombre}' de '${desde}', que no lo exporta`);
@@ -94,6 +108,15 @@ test('el detector reconoce las formas de export que usa el repo', () => {
     'export { cinco, seis as siete };',
   ].join('\n'));
   assert.deepEqual([...nombres].sort(), ['Cuatro', 'cinco', 'dos', 'siete', 'tres', 'uno']);
+});
+
+test('el detector sigue las re-exportaciones de la fachada del repositorio', () => {
+  const ruta = resolve('src/data/repositorio.js');
+  const nombres = exportsDe(readFileSync(ruta, 'utf8'), ruta);
+  // Uno de cada área: si falta alguno, la fachada perdió un `export * from`.
+  for (const esperado of ['iniciarSesion', 'obtenerJugadoresDelClub', 'obtenerMaterial', 'moverEscalon']) {
+    assert.ok(nombres.has(esperado), `la fachada no re-exporta ${esperado}`);
+  }
 });
 
 test('el detector encuentra los imports nombrados relativos y saltea los bare', () => {
