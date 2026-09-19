@@ -6,8 +6,9 @@ import { obtenerClubActual } from '../sesion.js';
 import { mostrarPantalla, toast, esErrorDeRed, escaparHtml } from '../nav.js';
 import { mostrarResultado } from './resultadoImport.js';
 import { retornarDeImport } from './retornoImport.js';
+import { $ } from '../dom.js';
+import { SIN_CONEXION, textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('confirmacion-contenido');
 
 let estado = null;
@@ -58,7 +59,7 @@ export async function iniciarConfirmacion(archivo) {
     hashArchivo = await calcularHashArchivo(datos);
     planteles = await obtenerPlantelesDelClub(club.id);
   } catch (e) {
-    contenedor().innerHTML = `<div class="al"><div class="tx">${esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'Ocurrió un error inesperado.'}</div></div>` + botonVolver();
+    contenedor().innerHTML = `<div class="al"><div class="tx">${textoDeError(e, 'Ocurrió un error inesperado.')}</div></div>` + botonVolver();
     ligarBotonVolver();
     return;
   }
@@ -69,7 +70,7 @@ export async function iniciarConfirmacion(archivo) {
   try {
     importacionExistente = await buscarImportacionPorHash(club.id, hashArchivo);
   } catch (e) {
-    contenedor().innerHTML = `<div class="al"><div class="tx">${esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'Ocurrió un error inesperado.'}</div></div>` + botonVolver();
+    contenedor().innerHTML = `<div class="al"><div class="tx">${textoDeError(e, 'Ocurrió un error inesperado.')}</div></div>` + botonVolver();
     ligarBotonVolver();
     return;
   }
@@ -192,7 +193,7 @@ async function avanzarAJugadores() {
   try {
     jugadoresExistentes = await obtenerJugadoresDelClub(club.id);
   } catch (e) {
-    $('cargando-jugadores').textContent = esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'Ocurrió un error inesperado.';
+    $('cargando-jugadores').textContent = textoDeError(e, 'Ocurrió un error inesperado.');
     $('btn-confirmar-equipo-plantel').disabled = false;
     $('btn-confirmar-equipo-plantel').insertAdjacentHTML('afterend', '<button class="btn sec" id="btn-volver-inicio" style="margin-top:8px">Volver</button>');
     ligarBotonVolver();
@@ -370,7 +371,7 @@ async function guardar() {
     if (e?.message === 'IMPORTACION_DUPLICADA') {
       toast('Este partido ya fue importado.');
     } else if (esErrorDeRed(e)) {
-      toast('Sin conexión. Revisá tu wifi/datos e intentá de nuevo.');
+      toast(SIN_CONEXION);
     } else {
       toast('No se pudo guardar. Intentá de nuevo.');
     }

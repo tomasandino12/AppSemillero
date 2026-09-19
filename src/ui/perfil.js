@@ -1,11 +1,11 @@
 import { obtenerPerfilesDelClub, obtenerUsuarioActual, guardarMiNombre } from '../data/repositorio.js';
 import { normalizarNombre } from '../data/cuenta.js';
 import { abrirHoja, cerrarHoja } from './componentes/hoja.js';
-import { esErrorDeRed, toast } from './nav.js';
+import { toast } from './nav.js';
 import { obtenerCuenta, setNombreDeCuenta } from './sesion.js';
 import { sincronizarChrome } from './main.js';
-
-const $ = (id) => document.getElementById(id);
+import { $ } from './dom.js';
+import { textoDeError } from './errores.js';
 
 let perfiles = {};
 let usuarioActual = null;
@@ -139,7 +139,7 @@ export function asegurarNombre(clubId) {
         await guardarMiNombre(nombre);
       } catch (e) {
         $('perfil-aviso').innerHTML = `<div class="al"><div class="tx">${
-          esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar tu nombre.'
+          textoDeError(e, 'No se pudo guardar tu nombre.')
         }</div></div>`;
         boton.disabled = false;
         boton.textContent = 'Guardar';

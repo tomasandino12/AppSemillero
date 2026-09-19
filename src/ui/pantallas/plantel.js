@@ -1,10 +1,11 @@
 import { obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub } from '../../data/repositorio.js';
 import { ultimaMedicionPorJugador } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo, obtenerPlanteles } from '../sesion.js';
-import { escaparHtml, esErrorDeRed } from '../nav.js';
+import { escaparHtml } from '../nav.js';
 import { ir } from '../main.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('plantel-contenido');
 
 let abrirAltaManual = () => {};
@@ -92,9 +93,7 @@ export async function renderPlantel() {
       obtenerMedicionesCorporalesDelClub(club.id).catch(() => []),
     ]);
   } catch (e) {
-    $('plantel-estado').textContent = esErrorDeRed(e)
-      ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-      : 'No se pudo cargar el plantel.';
+    $('plantel-estado').textContent = textoDeError(e, 'No se pudo cargar el plantel.');
     return;
   }
 

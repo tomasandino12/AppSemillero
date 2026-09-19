@@ -1,10 +1,11 @@
 import { obtenerSesionesDeMedicion } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed } from '../nav.js';
+import { escaparHtml } from '../nav.js';
 import { claveBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
 import { ir } from '../main.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('medir-contenido');
 
 /** 'YYYY-MM-DD' → 'DD/MM/YY', a mano para no depender de la zona horaria. */
@@ -89,9 +90,7 @@ export async function renderMedir() {
   try {
     sesiones = await obtenerSesionesDeMedicion(club.id, plantel.id);
   } catch (e) {
-    $('medir-estado').textContent = esErrorDeRed(e)
-      ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-      : 'No se pudieron cargar las sesiones.';
+    $('medir-estado').textContent = textoDeError(e, 'No se pudieron cargar las sesiones.');
     return;
   }
 

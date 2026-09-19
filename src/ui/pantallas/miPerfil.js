@@ -8,8 +8,9 @@ import { obtenerCuenta, obtenerClubActual, obtenerRoles, setNombreDeCuenta } fro
 import { escaparHtml, esErrorDeRed, toast } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { sincronizarChrome, salir } from '../main.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('mi-perfil-contenido');
 
 /**
@@ -82,7 +83,7 @@ function abrirEditarNombre() {
       await guardarMiNombre(nombre);
     } catch (e) {
       $('mi-nombre-aviso').innerHTML = `<div class="al"><div class="tx">${
-        esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar tu nombre.'
+        textoDeError(e, 'No se pudo guardar tu nombre.')
       }</div></div>`;
       boton.disabled = false;
       boton.textContent = 'Guardar';

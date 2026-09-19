@@ -6,10 +6,11 @@ import {
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel,
 } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, toast, textoPorcentaje } from '../nav.js';
+import { escaparHtml, toast, textoPorcentaje } from '../nav.js';
 import { volver } from '../main.js';
+import { $ } from '../dom.js';
+import { avisoDeError, textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('metas-contenido');
 
 /**
@@ -40,9 +41,7 @@ export async function renderMetas() {
       obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
     ]);
   } catch (e) {
-    contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudieron cargar las metas.'
-    }</div></div></div>`;
+    contenedor().innerHTML = avisoDeError(e, 'No se pudieron cargar las metas.');
     return;
   }
 
@@ -111,7 +110,7 @@ async function guardar() {
     await guardarMetasPlantel({ clubId: club.id, plantelId: plantel.id, metas });
   } catch (e) {
     aviso.innerHTML = `<div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudieron guardar las metas.'
+      textoDeError(e, 'No se pudieron guardar las metas.')
     }</div></div>`;
     boton.disabled = false;
     boton.textContent = 'Guardar las metas';

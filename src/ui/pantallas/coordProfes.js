@@ -5,10 +5,11 @@ import {
 } from '../../data/repositorio.js';
 import { armarProfes } from '../../data/coordinacion.js';
 import { obtenerClubActual } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, toast, formatearFechaCorta } from '../nav.js';
+import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { $ } from '../dom.js';
+import { mensajeAlGuardar, textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('coord-profes-contenido');
 
 /**
@@ -22,14 +23,13 @@ const contenedor = () => $('coord-profes-contenido');
 
 let vista = null;
 
-function mensajeDeError(e) {
-  if (esErrorDeRed(e)) return 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
-  const texto = e?.message ?? '';
-  if (/SIN_CATEGORIAS/.test(texto)) return 'Marcá al menos una categoría.';
-  if (/NO_ES_ENTRENADOR/.test(texto)) return 'Esa cuenta es de coordinación. Para que además entrene, hay que dárselo desde la base.';
-  if (/NO_SE_PUDO_CERRAR|row-level security|permission denied|42501/i.test(texto)) return 'No tenés permiso para hacer eso.';
-  return 'No se pudo guardar. Probá de nuevo.';
-}
+const mensajeDeError = (e) => mensajeAlGuardar(e, {
+  reglas: [
+    [/SIN_CATEGORIAS/, 'Marcá al menos una categoría.'],
+    [/NO_ES_ENTRENADOR/, 'Esa cuenta es de coordinación. Para que además entrene, hay que dárselo desde la base.'],
+  ],
+  permiso: /NO_SE_PUDO_CERRAR|row-level security|permission denied|42501/i,
+});
 
 /* ---------- bloques ---------- */
 
@@ -267,7 +267,7 @@ export async function renderProfes() {
       notaCodigos = `${mayores.map((c) => c.codigo).join(' y ')} ${verbo} ${mayores.map((c) => c.nombre).join(' y ')}.`;
     }
   } catch (e) {
-    const mensaje = esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar la lista de profes.';
+    const mensaje = textoDeError(e, 'No se pudo cargar la lista de profes.');
     contenedor().innerHTML = `<div class="pad"><div class="p">${mensaje}</div></div>`;
     return;
   }

@@ -9,9 +9,8 @@ import { formatearKg, fechaLocal } from '../../data/escalones.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
-
-const $ = (id) => document.getElementById(id);
-const SIN_CONEXION = 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
+import { $ } from '../dom.js';
+import { mensajeAlGuardar, textoDeError } from '../errores.js';
 
 /*
  * Inventario de material del club. Una sola pantalla en dos variantes: la del
@@ -24,14 +23,9 @@ const SIN_CONEXION = 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
 // Lo leído en el último render: { filas, nombres: { userId: nombre } }.
 let vista = { filas: [], nombres: {} };
 
-function mensajeDeError(e) {
-  if (esErrorDeRed(e)) return SIN_CONEXION;
-  const texto = e?.message ?? '';
-  if (e?.code === '42501' || /NO_SE_PUDO|row-level security|permission denied/i.test(texto)) {
-    return 'No tenés permiso para hacer eso.';
-  }
-  return 'No se pudo guardar. Probá de nuevo.';
-}
+const mensajeDeError = (e) => mensajeAlGuardar(e, {
+  permiso: /NO_SE_PUDO|row-level security|permission denied/i,
+});
 
 /** "Tomás, 18/09", o sólo la fecha si esa persona no cargó nombre. */
 function autoria(fila) {
@@ -78,7 +72,7 @@ async function pintar(idContenedor, editable) {
   } catch (e) {
     if (!esErrorDeRed(e)) console.error('No se pudo cargar el inventario:', e);
     contenedor.innerHTML = `<div class="pad"><div class="p">${
-      esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo cargar el inventario.'
+      textoDeError(e, 'No se pudo cargar el inventario.')
     }</div></div>`;
     return;
   }

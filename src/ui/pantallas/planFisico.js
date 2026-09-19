@@ -13,6 +13,8 @@ import { mostrarPantalla, toast, esErrorDeRed, escaparHtml, formatearFechaCorta 
 import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { retornarDePlanFisico } from './retornoPlanFisico.js';
+import { $ } from '../dom.js';
+import { SIN_CONEXION, textoDeError } from '../errores.js';
 
 /*
  * Import del plan físico (Etapa 6). Una sola pantalla, con los pasos
@@ -34,10 +36,7 @@ import { retornarDePlanFisico } from './retornoPlanFisico.js';
  * video sale de ahí mismo (nombresPorResolver), no de `sinMatchear` del parser.
  */
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('plan-fisico-contenido');
-
-const SIN_CONEXION = 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
 
 let estado = null;
 
@@ -97,7 +96,7 @@ export async function iniciarPlanFisico(archivo) {
   } catch (e) {
     if (!vigente()) return;
     if (!esErrorDeRed(e)) console.error('No se pudo preparar el import del plan físico:', e);
-    cartel(esErrorDeRed(e) ? SIN_CONEXION : 'Ocurrió un error inesperado.');
+    cartel(textoDeError(e, 'Ocurrió un error inesperado.'));
     return;
   }
   if (!vigente()) return;

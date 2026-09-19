@@ -1,12 +1,13 @@
 import { obtenerRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js';
+import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
 import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir } from '../main.js';
 import { renderSeccionEjercicios } from './ejercicios.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('recursos-contenido');
 const contenedorJugadores = () => $('recursos-jugadores');
 
@@ -150,7 +151,7 @@ async function confirmarEnvio(recursoId) {
     });
   } catch (e) {
     $('rec-aviso').innerHTML = `<div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo registrar el envío.'
+      textoDeError(e, 'No se pudo registrar el envío.')
     }</div></div>`;
     boton.disabled = false;
     boton.textContent = 'Registrar el envío';
@@ -195,9 +196,7 @@ async function renderSeccionJugadores() {
     // el entrenador tiene que poder reintentar sin salir y volver a entrar.
     $('recursos-estado').outerHTML = `
       <div class="al"><div class="tx">${
-        esErrorDeRed(e)
-          ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-          : 'No se pudieron cargar los recursos.'
+        textoDeError(e, 'No se pudieron cargar los recursos.')
       }</div></div>
       <button class="btn sec" id="btn-reintentar-recursos">Reintentar</button>
     `;

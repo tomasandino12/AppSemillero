@@ -19,8 +19,9 @@ import { ir } from '../main.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
 import { verDetallesHtml } from '../componentes/verDetalles.js';
+import { $ } from '../dom.js';
+import { avisoDeError, textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('ficha-contenido');
 
 let jugadorId = null;
@@ -255,9 +256,7 @@ export async function renderFicha() {
     jugador = jugadores.find((j) => j.id === jugadorId) ?? null;
     if (jugador) pertenencias = await obtenerPertenenciasDeJugador(club.id, jugadorId);
   } catch (e) {
-    contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar el jugador.'
-    }</div></div></div>`;
+    contenedor().innerHTML = avisoDeError(e, 'No se pudo cargar el jugador.');
     return;
   }
 
@@ -327,7 +326,7 @@ export async function renderFicha() {
     dibujarSerie('ficha-libres', series.libres);
   } catch (e) {
     $('ficha-historia').innerHTML = `<div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar la historia del jugador.'
+      textoDeError(e, 'No se pudo cargar la historia del jugador.')
     }</div></div>`;
   }
 }
@@ -373,7 +372,7 @@ function renderPersonales(jugador) {
       await actualizarFechaNacimiento(obtenerClubActual().id, jugador.id, valor);
     } catch (e) {
       aviso.innerHTML = `<div class="al"><div class="tx">${
-        esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar la fecha.'
+        textoDeError(e, 'No se pudo guardar la fecha.')
       }</div></div>`;
       boton.disabled = false;
       boton.textContent = 'Guardar fecha de nacimiento';
@@ -401,7 +400,7 @@ async function cargarCorporal(clubId, idJugador) {
     cont.innerHTML = `
       <div class="eyebrow">Mediciones</div>
       <div class="al"><div class="tx">${
-        esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudieron cargar las mediciones.'
+        textoDeError(e, 'No se pudieron cargar las mediciones.')
       }</div></div>
       <button class="btn sec" id="btn-reintentar-corporal">Reintentar</button>
     `;
@@ -506,7 +505,7 @@ function renderCorporal(clubId, idJugador, mediciones) {
       aviso.innerHTML = `<div class="al"><div class="tx">${
         e?.message === 'MEDICION_DUPLICADA'
           ? 'Ya hay una medición de este jugador en esa fecha. Borrá la que está o poné otra fecha.'
-          : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo agregar la medición.')
+          : (textoDeError(e, 'No se pudo agregar la medición.'))
       }</div></div>`;
       boton.disabled = false;
       boton.textContent = 'Agregar medición';

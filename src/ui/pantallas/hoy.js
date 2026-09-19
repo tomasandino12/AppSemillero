@@ -10,13 +10,14 @@ import {
   obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub, obtenerMetasDelPlantel,
 } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, formatearFechaCorta, textoPorcentaje } from '../nav.js';
+import { escaparHtml, formatearFechaCorta, textoPorcentaje } from '../nav.js';
 import { abrirHoja } from '../componentes/hoja.js';
 import { grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
 import { ir } from '../main.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('hoy-contenido');
 
 /**
@@ -36,7 +37,6 @@ function estadoVacioHtml(categoria) {
     </div>
   `;
 }
-
 
 /**
  * Una zona. La barra va siempre en escala 0-100 fija: una barra cuya escala
@@ -155,9 +155,7 @@ export async function renderHoy() {
       obtenerMetasDelPlantel(club.id, plantel.id).catch(() => ({})),
     ]);
   } catch (e) {
-    $('hoy-estado').textContent = esErrorDeRed(e)
-      ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-      : 'No se pudo cargar el resumen.';
+    $('hoy-estado').textContent = textoDeError(e, 'No se pudo cargar el resumen.');
     return;
   }
 

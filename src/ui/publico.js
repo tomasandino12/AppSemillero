@@ -4,6 +4,8 @@ import {
 } from '../data/repositorio.js';
 import { normalizarNombre } from '../data/cuenta.js';
 import { esErrorDeRed } from './nav.js';
+import { $ } from './dom.js';
+import { SIN_CONEXION, textoDeError } from './errores.js';
 
 /**
  * Shell público: landing, ingresar, crear cuenta, recuperar la clave, poner
@@ -14,8 +16,6 @@ import { esErrorDeRed } from './nav.js';
  * único que vive en este archivo es validación de formulario para dar buen
  * feedback antes del viaje al servidor, y el cableado de las vistas.
  */
-
-const $ = (id) => document.getElementById(id);
 
 /** Sólo para avisar temprano. El largo real lo exige Supabase. */
 const CLAVE_MINIMA = 8;
@@ -98,7 +98,7 @@ function problemaDeClave(clave, repetida) {
  * se separa el caso de red, que no dice nada de ninguna cuenta.
  */
 function mensajeDeIngreso(e) {
-  if (esErrorDeRed(e)) return 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
+  if (esErrorDeRed(e)) return SIN_CONEXION;
   if (/email not confirmed/i.test(e?.message ?? '')) {
     return 'Todavía no confirmaste tu mail. Buscá el mail de confirmación y abrí el link.';
   }
@@ -107,7 +107,7 @@ function mensajeDeIngreso(e) {
 
 /** El proveedor de Google se habilita en el dashboard, no desde el código. */
 function mensajeDeGoogle(e) {
-  if (esErrorDeRed(e)) return 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
+  if (esErrorDeRed(e)) return SIN_CONEXION;
   if (/provider is not enabled|unsupported provider|validation_failed/i.test(e?.message ?? '')) {
     return 'El ingreso con Google todavía no está habilitado en este proyecto. Entrá con mail y contraseña.';
   }
@@ -177,7 +177,7 @@ async function crear() {
  * igual en los dos casos, que es la forma estándar de no filtrar el padrón.
  */
 function mensajeDeCreacion(e) {
-  if (esErrorDeRed(e)) return 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
+  if (esErrorDeRed(e)) return SIN_CONEXION;
   const msg = e?.message ?? '';
   if (/already registered|already exists|user_already_exists/i.test(msg)) {
     return 'Si ese mail no tenía cuenta, ya te llegó el mail para confirmarla. Si ya tenía, ingresá con tu contraseña.';
@@ -195,7 +195,7 @@ async function recuperar() {
       await enviarRecuperacionDeClave(email);
     } catch (e) {
       if (esErrorDeRed(e)) {
-        avisar('recuperar-error', 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.');
+        avisar('recuperar-error', SIN_CONEXION);
         return;
       }
       // Cualquier otro fallo se trata como éxito a propósito: contestar
@@ -216,9 +216,7 @@ async function guardarClaveNueva() {
       await cambiarClave(clave);
       await alEntrar();
     } catch (e) {
-      avisar('nueva-clave-error', esErrorDeRed(e)
-        ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-        : 'No se pudo guardar la contraseña. Puede que el link haya vencido: pedí uno nuevo.');
+      avisar('nueva-clave-error', textoDeError(e, 'No se pudo guardar la contraseña. Puede que el link haya vencido: pedí uno nuevo.'));
     }
   });
 }
@@ -232,9 +230,7 @@ async function guardarNombre() {
       await guardarMiNombre(nombre);
       await alEntrar();
     } catch (e) {
-      avisar('nombre-error', esErrorDeRed(e)
-        ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-        : 'No se pudo guardar tu nombre. Intentá de nuevo.');
+      avisar('nombre-error', textoDeError(e, 'No se pudo guardar tu nombre. Intentá de nuevo.'));
     }
   });
 }

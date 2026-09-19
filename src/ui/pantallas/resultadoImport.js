@@ -1,7 +1,6 @@
 import { mostrarPantalla, escaparHtml } from '../nav.js';
 import { retornarDeImport } from './retornoImport.js';
-
-const $ = (id) => document.getElementById(id);
+import { $ } from '../dom.js';
 
 export function mostrarResultado({ resumen, advertencias }) {
   mostrarPantalla('p-resultado');

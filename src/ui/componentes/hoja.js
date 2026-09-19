@@ -1,6 +1,5 @@
 import { escaparHtml } from '../nav.js';
-
-const $ = (id) => document.getElementById(id);
+import { $ } from '../dom.js';
 
 // Callback de cierre de la hoja actualmente abierta, si quien la abrió pasó
 // uno. Vive acá (no observado desde afuera) porque el mecanismo de

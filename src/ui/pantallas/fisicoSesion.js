@@ -7,8 +7,9 @@ import {
 import { escaparHtml, esErrorDeRed, formatearFechaCorta } from '../nav.js';
 import { esEnlaceWeb } from '../../data/enlaces.js';
 import { abrirEscalones } from './fisicoEscalones.js';
+import { $ } from '../dom.js';
+import { avisoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('fisico-sesion-contenido');
 
 // Lo que se abrió desde FÍSICO: { plantelId, plan, sesion }.
@@ -45,9 +46,7 @@ export async function renderSesion() {
     if (obtenerPlantelActivo()?.id !== actual.plantelId) return;
   } catch (e) {
     if (!esErrorDeRed(e)) console.error('No se pudieron cargar los escalones:', e);
-    contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar la sesión.'
-    }</div></div></div>`;
+    contenedor().innerHTML = avisoDeError(e, 'No se pudo cargar la sesión.');
     return;
   }
 

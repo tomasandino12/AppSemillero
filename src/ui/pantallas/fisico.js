@@ -8,8 +8,9 @@ import {
   elegirPlanVisible, estadoDePlan, fechaLocal, diaDeLaSemana, bloquesDeLineas,
 } from '../../data/escalones.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta } from '../nav.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('fisico-contenido');
 
 /**
@@ -56,7 +57,7 @@ export async function renderFisico() {
     if (!esErrorDeRed(e)) console.error('No se pudo cargar el plan físico:', e);
     contenedor().innerHTML = `
       <div class="pad"><div class="al"><div class="tx">${
-        esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar el plan.'
+        textoDeError(e, 'No se pudo cargar el plan.')
       }</div></div></div>
       ${pieCargar()}`;
     ligarCargar();

@@ -4,7 +4,7 @@ import {
   obtenerMedicionesTiroDelPlantel, obtenerCargasDelPlantel,
 } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, textoPorcentaje, nombreCorto, formatearFechaCorta } from '../nav.js';
+import { escaparHtml, textoPorcentaje, nombreCorto, formatearFechaCorta } from '../nav.js';
 import { ir } from '../main.js';
 import { iniciarConfirmacion } from './confirmacionImport.js';
 import { setRetornoImport } from './retornoImport.js';
@@ -15,8 +15,9 @@ import { grafico } from '../componentes/graficos.js';
 import { verDetallesHtml } from '../componentes/verDetalles.js';
 import { cargasPorBloque } from '../../data/cargas.js';
 import { formatearKg } from '../../data/escalones.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('datos-contenido');
 
 function formatearFecha(iso) {
@@ -170,9 +171,7 @@ export async function renderDatos() {
   try {
     partidos = await obtenerPartidosDelPlantel(club.id, plantel.id);
   } catch (e) {
-    $('datos-estado').textContent = esErrorDeRed(e)
-      ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-      : 'No se pudieron cargar los partidos.';
+    $('datos-estado').textContent = textoDeError(e, 'No se pudieron cargar los partidos.');
     return;
   }
 

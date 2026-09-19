@@ -5,12 +5,13 @@ import {
 import { armarPanorama, textoSinDatos, hayAlgoParaMostrar } from '../../data/coordinacion.js';
 import { ejeComun } from '../../data/estadisticas.js';
 import { obtenerClubActual } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta } from '../nav.js';
+import { escaparHtml, textoPorcentaje, formatearFechaCorta } from '../nav.js';
 import { grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
 import { verDetallesHtml } from '../componentes/verDetalles.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('coord-panorama-contenido');
 
 /**
@@ -195,7 +196,7 @@ export async function renderPanorama() {
     ]);
     vista = armarPanorama({ planteles, catalogo, temporadas, panorama, miembros, asignaciones });
   } catch (e) {
-    const mensaje = esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar el panorama.';
+    const mensaje = textoDeError(e, 'No se pudo cargar el panorama.');
     contenedor().innerHTML = `<div class="pad"><div class="p">${mensaje}</div></div>`;
     return;
   }

@@ -6,8 +6,9 @@ import { escaparHtml, toast, esErrorDeRed, formatearFechaCorta } from '../nav.js
 import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion.js';
 import { iniciales } from './plantel.js';
 import { ir } from '../main.js';
+import { $ } from '../dom.js';
+import { avisoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('bateria-contenido');
 
 let jugadores = [];
@@ -190,9 +191,7 @@ export async function renderBateria() {
   try {
     jugadores = await obtenerJugadoresDelPlantel(club.id, plantel.id);
   } catch (e) {
-    contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar el plantel.'
-    }</div></div></div>`;
+    contenedor().innerHTML = avisoDeError(e, 'No se pudo cargar el plantel.');
     return;
   }
 

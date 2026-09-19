@@ -4,14 +4,15 @@ import {
 } from '../../data/repositorio.js';
 import { nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, toast, formatearFechaCorta } from '../nav.js';
+import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
 import { esEnlaceWeb } from '../../data/enlaces.js';
 import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
 import { abrirAltaEjercicio } from './ejercicios.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir, volver } from '../main.js';
+import { $ } from '../dom.js';
+import { avisoDeError, textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('ejercicio-contenido');
 
 let ejercicioId = null;
@@ -134,7 +135,7 @@ function pintarEjercicio(club, ejercicio, notas) {
         // pestañas del mismo profe borran distinto, esto puede llegar igual.
         toast(e?.message === 'NO_ES_TUYO'
           ? 'Esta nota ya no es tuya: no se puede borrar.'
-          : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo borrar la nota.'));
+          : (textoDeError(e, 'No se pudo borrar la nota.')));
         boton.disabled = false;
         return;
       }
@@ -177,9 +178,7 @@ export async function renderEjercicio() {
       obtenerNotas(club.id, ejercicioId),
     ]);
   } catch (e) {
-    contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo cargar el ejercicio.'
-    }</div></div></div>`;
+    contenedor().innerHTML = avisoDeError(e, 'No se pudo cargar el ejercicio.');
     return;
   }
 
@@ -235,7 +234,7 @@ async function confirmarNota(club, ejercicio) {
     await crearNota({ clubId: club.id, ejercicioId: ejercicio.id, texto });
   } catch (e) {
     $('nota-aviso').innerHTML = `<div class="al"><div class="tx">${
-      esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar la nota.'
+      textoDeError(e, 'No se pudo guardar la nota.')
     }</div></div>`;
     boton.disabled = false;
     boton.textContent = 'Guardar la nota';
@@ -279,7 +278,7 @@ function confirmarBorrado(club, ejercicio) {
       $('borrado-ej-aviso').innerHTML = `<div class="al"><div class="tx">${
         e?.message === 'NO_ES_TUYO'
           ? 'Este ejercicio ya no es tuyo: no se puede borrar.'
-          : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo borrar el ejercicio.')
+          : (textoDeError(e, 'No se pudo borrar el ejercicio.'))
       }</div></div>`;
       boton.disabled = false;
       boton.textContent = 'Borrar de todos modos';

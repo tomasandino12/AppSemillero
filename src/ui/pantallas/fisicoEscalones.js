@@ -10,10 +10,10 @@ import {
 } from '../../data/escalones.js';
 import { escaparHtml, esErrorDeRed, formatearFechaCorta, nombreCorto, toast } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { $ } from '../dom.js';
+import { avisoDeError, textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('fisico-escalones-contenido');
-const SIN_CONEXION = 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
 
 /*
  * Escalones de un ejercicio: cuánto sube o baja por vez (el escalón, uno para
@@ -64,7 +64,7 @@ export async function renderEscalones() {
     vista = { paso, jugadores, escalonPorJugador: new Map(escalones.map((e) => [e.jugadorId, e])) };
   } catch (e) {
     if (!esErrorDeRed(e)) console.error('No se pudieron cargar los escalones:', e);
-    contenedor().innerHTML = `<div class="pad"><div class="al"><div class="tx">${esErrorDeRed(e) ? SIN_CONEXION : 'No se pudieron cargar los escalones.'}</div></div></div>`;
+    contenedor().innerHTML = avisoDeError(e, 'No se pudieron cargar los escalones.');
     return;
   }
   pintar(plantel);
@@ -174,7 +174,7 @@ async function mover(jugadorId, kg) {
   } catch (e) {
     if (vista !== vistaAlPedir || obtenerPlantelActivo()?.id !== actual.plantelId) return;
     if (!esErrorDeRed(e)) console.error('No se pudo guardar el peso:', e);
-    toast(esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo guardar el peso. Intentá de nuevo.');
+    toast(textoDeError(e, 'No se pudo guardar el peso. Intentá de nuevo.'));
   }
   repintarFila(jugadorId);
 }
@@ -281,7 +281,7 @@ function abrirEditor() {
       if (!esErrorDeRed(e)) console.error('No se pudo guardar el escalón:', e);
       const mensaje = e?.code === '23505'
         ? 'Alguien definió este escalón recién. Cerrá y volvé a abrir el ejercicio.'
-        : esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo guardar el escalón.';
+        : textoDeError(e, 'No se pudo guardar el escalón.');
       $('fe-aviso').innerHTML = `<div class="al"><div class="tx">${escaparHtml(mensaje)}</div></div>`;
       boton.disabled = false;
       boton.textContent = 'Guardar escalón';

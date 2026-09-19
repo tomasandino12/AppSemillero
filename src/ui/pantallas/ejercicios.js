@@ -1,12 +1,13 @@
 import { obtenerEjercicios, crearEjercicio, actualizarEjercicio } from '../../data/repositorio.js';
 import { TEMAS, nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
-import { escaparHtml, esErrorDeRed, toast } from '../nav.js';
+import { escaparHtml, toast } from '../nav.js';
 import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { cargarPerfiles, nombreDe, asegurarNombre } from '../perfil.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { $ } from '../dom.js';
+import { textoDeError } from '../errores.js';
 
-const $ = (id) => document.getElementById(id);
 const contenedor = () => $('recursos-ejercicios');
 
 let temaFiltro = null;              // null = todos
@@ -97,9 +98,7 @@ export async function renderSeccionEjercicios() {
     // mismo criterio que ya sigue la pestaña Jugadores (recursos.js).
     $('ejercicios-estado').outerHTML = `
       <div class="al"><div class="tx">${
-        esErrorDeRed(e)
-          ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.'
-          : 'No se pudieron cargar los ejercicios.'
+        textoDeError(e, 'No se pudieron cargar los ejercicios.')
       }</div></div>
       <button class="btn sec" id="btn-reintentar-ejercicios">Reintentar</button>
     `;
@@ -265,7 +264,7 @@ async function confirmarAltaEjercicio(previo) {
     aviso.innerHTML = `<div class="al"><div class="tx">${
       e?.message === 'NO_ES_TUYO'
         ? 'Este ejercicio ya no es tuyo: no se puede editar.'
-        : (esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.' : 'No se pudo guardar el ejercicio.')
+        : (textoDeError(e, 'No se pudo guardar el ejercicio.'))
     }</div></div>`;
     boton.disabled = false;
     boton.textContent = previo ? 'Guardar los cambios' : 'Guardar';

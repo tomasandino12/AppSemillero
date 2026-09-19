@@ -4,8 +4,7 @@ import {
 } from './sesion.js';
 import { escaparHtml } from './nav.js';
 import { inicialesDeNombre } from '../data/cuenta.js';
-
-const $ = (id) => document.getElementById(id);
+import { $ } from './dom.js';
 
 const ICONOS = {
   hoy: '<path d="M4 13h5v7H4zM10 8h5v12h-5zM16 4h4v16h-4z"/>',
