@@ -16,6 +16,7 @@ import { readFileSync } from 'node:fs';
 
 test('el body parte las palabras largas en lugar de ensanchar la página', () => {
   const css = readFileSync('public/css/base.css', 'utf8');
-  const cuerpo = css.match(/body\s*\{([^}]*)\}/)?.[1] ?? '';
+  // `^body` con /m: sin el ancla agarraría antes `html,body{margin:0}`.
+  const cuerpo = css.match(/^body\s*\{([^}]*)\}/m)?.[1] ?? '';
   assert.match(cuerpo, /overflow-wrap\s*:\s*anywhere/);
 });
