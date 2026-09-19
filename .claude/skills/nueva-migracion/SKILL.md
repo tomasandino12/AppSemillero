@@ -17,5 +17,5 @@ Crear la migración pedida en `$ARGUMENTS`. No leas los planes viejos de `docs/`
    - Si es memoria institucional: sin `delete` (se cierra, no se borra).
    - `comment on table` con el número de migración.
 4. **Documentar**: agregar la sección en `supabase/ESQUEMA.md`.
-5. **Cliente**: la función de acceso va en `src/data/repositorio.js`; la lógica pura, en un módulo de `src/data/` con su test. Correr `npm run test:q`.
+5. **Cliente**: la función de acceso va en el repo de su área, `src/data/repos/<área>.js` (la fachada `repositorio.js` sólo re-exporta); la lógica pura, en un módulo de `src/data/` con su test. Si una regla vive en SQL y en JS (lista de tipos, rangos), agregar un test de contrato como `tests/contratoMaterial.test.js`. Correr `npm run test:q`.
 6. **No correr `supabase db push`** sin que Tomás lo confirme: aplica a la base real.
