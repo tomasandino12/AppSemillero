@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test:q": "node --test --test-reporter=dot \"tests/*.test.js\"",
-    "test": "node --test tests/parserCabb.test.js tests/mapearImportacion.test.js tests/prepararPayloadImportacion.test.js tests/navegacionInvariante.test.js tests/estadisticas.test.js tests/prepararPayloadMedicion.test.js tests/borradorMedicion.test.js tests/sinDatosDeEjemplo.test.js tests/graficos.test.js tests/nav.test.js tests/antropometria.test.js tests/metas.test.js tests/importsResueltos.test.js tests/temas.test.js tests/coordinacion.test.js tests/coordinacionSinDatosIndividuales.test.js tests/cuenta.test.js tests/verDetalles.test.js tests/cargas.test.js tests/detalleUnico.test.js tests/escalones.test.js tests/parserFisico.test.js tests/prepararPayloadPlanFisico.test.js tests/inventario.test.js tests/enlaces.test.js tests/csp.test.js",
+    "test": "node --test \"tests/*.test.js\"",
     "vendor": "esbuild node_modules/@supabase/supabase-js/dist/index.mjs --bundle --format=esm --platform=browser --target=es2020 --minify --legal-comments=eof --outfile=public/vendor/supabase-js.mjs && node -e \"require('fs').copyFileSync('node_modules/xlsx/xlsx.mjs', 'public/vendor/xlsx.mjs')\""
   },
   "dependencies": {
