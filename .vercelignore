@@ -9,6 +9,7 @@
 # que el navegador carga es /public/** y /src/**.
 
 docs/
+documentos/
 supabase/
 tests/
 *.md

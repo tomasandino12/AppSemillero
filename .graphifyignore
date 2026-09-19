@@ -1,6 +1,7 @@
 public/vendor/
 tests/fixtures/
 docs/
+documentos/
 supabase/.temp/
 node_modules/
 .claude/

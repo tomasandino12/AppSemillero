@@ -1,6 +1,6 @@
 # CAMBIOS — v2 → v3
 
-`prototipo_inferiores_v2.html` no se tocó: sigue byte a byte igual, se usó solo como
+`documentos/prototipo_inferiores_v2.html` no se tocó: sigue byte a byte igual, se usó solo como
 referencia de lectura. Todos los flujos, datos de ejemplo y copy en español son
 idénticos a v2 — esto es una refactorización de calidad, no un rediseño.
 

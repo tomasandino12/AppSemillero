@@ -4,3 +4,6 @@ tests/fixtures/*
 .env
 .claude/worktrees/
 graphify-out/
+
+# Material de referencia (entrevistas, planillas): no se publica
+documentos/
