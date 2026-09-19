@@ -36,6 +36,8 @@ Flujo de dependencias: **pantalla → `repositorio.js` → `repos/<área>` → `
 - **La seguridad la impone RLS, no la interfaz.** Roles: entrenador (sus planteles asignados), coordinador (agregados del club), o ambos.
 - **Una migración aplicada no se edita** (lo bloquea un hook): se agrega una nueva. Tabla nueva = `revoke all` + `grant` mínimo por columna + RLS + trigger de sellado. Patrón: `0026_material.sql`. Skill `/nueva-migracion`.
 - `NULL` es "no se sabe", nunca `0`. Un jugador es único por club, no por categoría.
+- **Texto que escribe un usuario**: su largo va en `src/data/limites.js` (y `maxlength` en el campo) y en un `check (char_length(...))` de la migración; `tests/contratoLimites.test.js` compara los dos. **Números tecleados**: siempre `decimalEstricto` de `src/data/numeros.js`, nunca `Number(texto)` (`Number("1e2")` da 100).
+- Nada de autorización en `user_metadata` (lo edita el propio usuario) ni en el cliente: el cliente decide qué mostrar, la base decide qué se puede. Auditoría y pendientes de lanzamiento: `docs/SEGURIDAD-LANZAMIENTO.md`.
 - Los `.xlsx` reales de `tests/fixtures/` **no van a git** (nombres de menores); sólo `tests/fixtures/sintetico/`. Nunca abrirlos ni pegar sus nombres. Sin ellos, los tests que los usan se saltean.
 - UI y comentarios en español rioplatense (voseo). Los comentarios explican el porqué, no el qué.
 - `CAMBIOS.md` es histórico (v2→v3) y `docs/superpowers/` son planes y specs ya ejecutados: **no leerlos salvo que la tarea sea sobre ellos**.

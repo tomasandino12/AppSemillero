@@ -251,6 +251,17 @@ Que el coordinador no pueda asignarse a sí mismo es a propósito: si pudiera, "
 
 Cerrar una asignación es un update de una fila y va directo, sin RPC.
 
+## Límites de largo (0028)
+
+Todo texto que escribe un usuario tiene un `check (char_length(col) <= N)`
+(`not valid`, con límites holgados): sin él, un usuario habilitado podía guardar
+megabytes en un título o una nota, que se le manda a todo el club en cada
+lectura. Los números están en `src/data/limites.js` y
+`tests/contratoLimites.test.js` los compara con la migración. Los checks no
+revisan lo que ya estaba guardado; para revisarlo:
+`alter table <t> validate constraint <c>;`. 0028 también quita a `anon` el
+permiso de ejecutar los RPC de escritura.
+
 ## Orden de persistencia de una importación
 
 `src/data/repositorio.js` expone una función por operación de base de datos, sin transacción que las envuelva. Persistir un partido importado requiere, en este orden:
