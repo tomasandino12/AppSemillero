@@ -11,6 +11,7 @@ import { abrirAltaEjercicio } from './ejercicios.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir, volver } from '../main.js';
 import { $ } from '../dom.js';
+import { LIMITE } from '../../data/limites.js';
 import { avisoDeError, textoDeError } from '../errores.js';
 
 const contenedor = () => $('ejercicio-contenido');
@@ -205,7 +206,7 @@ async function abrirAgregarNota(club, ejercicio) {
     cuerpo: `
       <div class="campo">
         <label for="in-nota-texto">Qué pasó al usarlo</label>
-        <textarea id="in-nota-texto" rows="4" placeholder="Ej.: con los de mini no funcionó hasta que achiqué la cancha"></textarea>
+        <textarea id="in-nota-texto" rows="4" maxlength="${LIMITE.nota}" placeholder="Ej.: con los de mini no funcionó hasta que achiqué la cancha"></textarea>
       </div>
       <div id="nota-aviso"></div>
       <button class="btn" id="btn-guardar-nota">Guardar la nota</button>

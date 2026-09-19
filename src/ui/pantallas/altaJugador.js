@@ -5,6 +5,7 @@ import { escaparHtml, toast, esErrorDeRed } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir } from '../main.js';
 import { $ } from '../dom.js';
+import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
 
 function hoyLocal() {
@@ -22,7 +23,7 @@ export function abrirAltaManual() {
     cuerpo: `
       <div class="campo">
         <label for="in-nombre-jugador">Nombre</label>
-        <input id="in-nombre-jugador" type="text" autocomplete="off" spellcheck="false">
+        <input id="in-nombre-jugador" type="text" maxlength="${LIMITE.nombrePersona}" autocomplete="off" spellcheck="false">
         <div class="ayuda">Como en la CABB: Apellido, Nombre. El orden importa para que un import futuro lo reconozca en vez de duplicarlo.</div>
       </div>
       <div id="alta-aviso"></div>

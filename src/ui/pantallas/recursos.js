@@ -6,6 +6,7 @@ import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir } from '../main.js';
 import { renderSeccionEjercicios } from './ejercicios.js';
 import { $ } from '../dom.js';
+import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
 
 const contenedor = () => $('recursos-contenido');
@@ -45,11 +46,11 @@ function cuerpoDeHoja(jugadores, { conCampos }) {
   return `
     ${conCampos ? `
       <div class="campo"><label for="in-rec-titulo">Título</label>
-        <input id="in-rec-titulo" type="text" autocomplete="off"></div>
+        <input id="in-rec-titulo" type="text" maxlength="${LIMITE.titulo}" autocomplete="off"></div>
       <div class="campo"><label for="in-rec-desc">Instrucciones</label>
-        <textarea id="in-rec-desc" rows="3"></textarea></div>
+        <textarea id="in-rec-desc" rows="3" maxlength="${LIMITE.descripcion}"></textarea></div>
       <div class="campo"><label for="in-rec-link">Link (opcional)</label>
-        <input id="in-rec-link" type="url" autocomplete="off" inputmode="url" placeholder="https://"></div>
+        <input id="in-rec-link" type="url" maxlength="${LIMITE.enlace}" autocomplete="off" inputmode="url" placeholder="https://"></div>
     ` : ''}
     <div class="eyebrow">A quién <button class="btn sec chico" id="btn-todos" type="button">Todo el plantel</button></div>
     <div class="lista-chk">

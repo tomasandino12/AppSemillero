@@ -6,6 +6,7 @@ import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { cargarPerfiles, nombreDe, asegurarNombre } from '../perfil.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { $ } from '../dom.js';
+import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
 
 const contenedor = () => $('recursos-ejercicios');
@@ -132,7 +133,7 @@ function cuerpoDeAlta(previo) {
   return `
     <div class="campo">
       <label for="in-ej-titulo">Título</label>
-      <input id="in-ej-titulo" type="text" autocomplete="off" value="${escaparHtml(previo?.titulo ?? '')}">
+      <input id="in-ej-titulo" type="text" maxlength="${LIMITE.titulo}" autocomplete="off" value="${escaparHtml(previo?.titulo ?? '')}">
     </div>
     <div class="campo">
       <label id="lbl-tema">Tema</label>
@@ -142,11 +143,11 @@ function cuerpoDeAlta(previo) {
     </div>
     <button class="btn sec" id="btn-mas-detalles" type="button" ${tieneDetalles ? 'hidden' : ''}>${previo ? 'Agregar detalles' : 'Agregar más detalles'}</button>
     <div id="ej-detalles" ${tieneDetalles ? '' : 'hidden'}>
-      <div class="campo"><label for="in-ej-desc">Descripción</label><textarea id="in-ej-desc" rows="4">${escaparHtml(previo?.descripcion ?? '')}</textarea></div>
-      <div class="campo"><label for="in-ej-enlace">Enlace</label><input id="in-ej-enlace" type="url" inputmode="url" placeholder="https://" value="${escaparHtml(previo?.enlace ?? '')}"></div>
-      <div class="campo"><label for="in-ej-material">Material</label><input id="in-ej-material" type="text" placeholder="conos, dos pelotas" value="${escaparHtml(previo?.material ?? '')}"></div>
-      <div class="campo"><label for="in-ej-jugadores">Jugadores</label><input id="in-ej-jugadores" type="text" placeholder="6 a 12" value="${escaparHtml(previo?.jugadores ?? '')}"></div>
-      <div class="campo"><label for="in-ej-categorias">Categorías</label><input id="in-ej-categorias" type="text" placeholder="mini, sub-13" value="${escaparHtml(previo?.categorias ?? '')}"></div>
+      <div class="campo"><label for="in-ej-desc">Descripción</label><textarea id="in-ej-desc" rows="4" maxlength="${LIMITE.descripcion}">${escaparHtml(previo?.descripcion ?? '')}</textarea></div>
+      <div class="campo"><label for="in-ej-enlace">Enlace</label><input id="in-ej-enlace" type="url" maxlength="${LIMITE.enlace}" inputmode="url" placeholder="https://" value="${escaparHtml(previo?.enlace ?? '')}"></div>
+      <div class="campo"><label for="in-ej-material">Material</label><input id="in-ej-material" type="text" maxlength="${LIMITE.material}" placeholder="conos, dos pelotas" value="${escaparHtml(previo?.material ?? '')}"></div>
+      <div class="campo"><label for="in-ej-jugadores">Jugadores</label><input id="in-ej-jugadores" type="text" maxlength="${LIMITE.listaCorta}" placeholder="6 a 12" value="${escaparHtml(previo?.jugadores ?? '')}"></div>
+      <div class="campo"><label for="in-ej-categorias">Categorías</label><input id="in-ej-categorias" type="text" maxlength="${LIMITE.listaCorta}" placeholder="mini, sub-13" value="${escaparHtml(previo?.categorias ?? '')}"></div>
     </div>
     <div id="ej-aviso"></div>
     <button class="btn" id="btn-guardar-ejercicio">${previo ? 'Guardar los cambios' : 'Guardar'}</button>

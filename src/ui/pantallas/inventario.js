@@ -10,6 +10,7 @@ import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { $ } from '../dom.js';
+import { LIMITE } from '../../data/limites.js';
 import { mensajeAlGuardar, textoDeError } from '../errores.js';
 
 /*
@@ -111,7 +112,7 @@ function campo(id, rotulo, valor, decimal = false) {
   return `
     <div class="campo">
       <label for="${id}">${escaparHtml(rotulo)}</label>
-      <input id="${id}" type="text" ${decimal ? 'inputmode="decimal"' : ''} autocomplete="off" value="${escaparHtml(valor)}">
+      <input id="${id}" type="text" ${decimal ? 'inputmode="decimal"' : ''} ${id === 'inv-detalle' ? `maxlength="${LIMITE.detalleMaterial}"` : ''} autocomplete="off" value="${escaparHtml(valor)}">
     </div>
   `;
 }
