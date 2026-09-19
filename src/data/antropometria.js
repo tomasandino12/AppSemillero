@@ -7,6 +7,8 @@
  * Por eso cada medición guarda su fecha y ninguna pisa a la anterior.
  */
 
+import { decimalEstricto } from './numeros.js';
+
 /**
  * Rangos plausibles para las categorías del club (13 a 21 años). No son
  * normas de referencia ni se comparan contra nadie: son el filtro que evita
@@ -66,9 +68,7 @@ export function ordenarMediciones(mediciones) {
 
 /** Acepta coma o punto como separador decimal: el teclado es-AR ofrece coma. */
 function aNumero(valor) {
-  if (valor == null || String(valor).trim() === '') return null;
-  const n = Number(String(valor).replace(',', '.'));
-  return Number.isFinite(n) ? n : NaN;
+  return decimalEstricto(valor);
 }
 
 /**

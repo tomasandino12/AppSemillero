@@ -19,6 +19,8 @@
  * categoría y temporada. Este módulo sólo tiene la lógica pura de leerlos.
  */
 
+import { decimalEstricto } from './numeros.js';
+
 /** Sin metas fijadas. Es el estado en el que arranca el piloto. */
 export const SIN_METAS = {};
 
@@ -67,7 +69,7 @@ export function validarMeta(entrada) {
   if (entrada == null || String(entrada).trim() === '') {
     return { ok: true, valor: null, error: null };
   }
-  const n = Number(String(entrada).replace(',', '.'));
+  const n = decimalEstricto(entrada);
   if (!Number.isFinite(n)) return { ok: false, valor: null, error: 'Tiene que ser un número.' };
   if (n < 0 || n > 100) return { ok: false, valor: null, error: 'Tiene que estar entre 0 y 100.' };
   return { ok: true, valor: Math.round(n), error: null };

@@ -1,4 +1,5 @@
 import { POSICIONES_BATERIA, INTENTOS_POR_POSICION } from './posiciones.js';
+import { decimalEstricto } from './numeros.js';
 
 /**
  * Borrador de batería → payload de guardar_sesion_medicion.
@@ -42,10 +43,8 @@ export function prepararPayloadBateria({ clubId, plantelId, fecha, valores }) {
  * Sin esto, "4,7" se pierde en silencio y ese jugador no entra al payload.
  */
 export function redondearSegundos(valor) {
-  if (valor == null || valor === '') return null;
-  const normalizado = typeof valor === 'string' ? valor.replace(',', '.') : valor;
-  const n = Number(normalizado);
-  if (!Number.isFinite(n) || n <= 0) return null;
+  const n = decimalEstricto(valor);
+  if (n == null || !Number.isFinite(n) || n <= 0) return null;
   return Math.round(n * 10) / 10;
 }
 
