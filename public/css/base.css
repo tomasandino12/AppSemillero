@@ -14,6 +14,11 @@ body{
   line-height:1.45;
   min-height:100dvh;
   overscroll-behavior-y:none;
+  /* Lo que escribe la gente (títulos, nombres, notas) puede traer una palabra
+     larguísima sin espacios: sin esto ensancha la página entera. `anywhere`
+     además achica el ancho mínimo de las cajas flexibles, que con
+     `break-word` seguirían desbordando. Sólo parte cuando no cabe. */
+  overflow-wrap:anywhere;
 }
 
 button{font-family:inherit;font-size:inherit;border:0;background:none;cursor:pointer;color:inherit;padding:0;user-select:none}
