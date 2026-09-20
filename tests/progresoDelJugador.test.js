@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos } from '../src/data/progresoDelJugador.js';
+import { insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque } from '../src/data/progresoDelJugador.js';
 import { serieDeTiroDelJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador, UMBRAL_INTENTOS } from '../src/data/estadisticas.js';
 
 const progreso = {
@@ -102,4 +102,44 @@ test('progresionDePesos: una baja es una variación negativa, sin suavizar', () 
     { clave: 'A', nombre: 'A', kg: 47.5, creadoEn: '2026-04-08T15:00:00Z' },
   ]);
   assert.equal(x.variacionKg, -2.5);
+});
+
+const mov = (clave, kg, dia) => ({ clave, nombre: clave, kg, creadoEn: `2026-04-${dia}T15:00:00Z` });
+
+test('progresionDePesos: cada ejercicio lleva su bloque, y sin dato queda en null', () => {
+  const bloques = new Map([['PRESS', 'FUERZA']]);
+  const p = progresionDePesos([mov('PRESS', 20, '01'), mov('PLANCHA', 0.5, '02')], bloques);
+  assert.equal(p.find((x) => x.clave === 'PRESS').bloque, 'FUERZA');
+  assert.equal(p.find((x) => x.clave === 'PLANCHA').bloque, null);
+});
+
+test('pesosPorBloque agrupa por bloque en el orden del plan y deja "Sin bloque" al final', () => {
+  const bloques = new Map([['SENTADILLA', 'FUERZA'], ['PLANCHA', 'CORE'], ['PRESS', 'FUERZA']]);
+  const ejercicios = progresionDePesos([
+    mov('PRESS', 20, '01'), mov('PRESS', 25, '08'),
+    mov('SUELTO', 5, '02'),
+    mov('PLANCHA', 1, '03'),
+    mov('SENTADILLA', 40, '04'),
+  ], bloques);
+  const grupos = pesosPorBloque(ejercicios, bloques);
+  assert.deepEqual(grupos.map((g) => g.bloque), ['FUERZA', 'CORE', 'Sin bloque']);
+  assert.deepEqual(grupos[0].ejercicios.map((e) => e.clave), ['PRESS', 'SENTADILLA']);
+});
+
+test('pesosPorBloque cuenta cuántos subieron: una baja o un solo movimiento no cuentan', () => {
+  const bloques = new Map([['A', 'FUERZA'], ['B', 'FUERZA'], ['C', 'FUERZA'], ['D', 'FUERZA']]);
+  const ejercicios = progresionDePesos([
+    mov('A', 10, '01'), mov('A', 12, '08'),
+    mov('B', 10, '01'), mov('B', 8, '08'),
+    mov('C', 10, '01'), mov('C', 10, '08'),
+    mov('D', 10, '01'),
+  ], bloques);
+  const [fuerza] = pesosPorBloque(ejercicios, bloques);
+  assert.equal(fuerza.subieron, 1);
+  assert.equal(fuerza.ejercicios.length, 4);
+});
+
+test('pesosPorBloque sin ejercicios devuelve una lista vacía', () => {
+  assert.deepEqual(pesosPorBloque([], new Map()), []);
+  assert.deepEqual(pesosPorBloque(undefined, undefined), []);
 });

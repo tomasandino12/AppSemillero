@@ -1,5 +1,6 @@
 import { porcentaje } from './estadisticas.js';
 import { fechaLocal } from './escalones.js';
+import { SIN_BLOQUE } from './cargas.js';
 
 /*
  * Lógica pura de "Mi progreso": arma lo que mi_progreso() (0030) devuelve con
@@ -68,8 +69,10 @@ export function acumuladosDePartidos(partidos) {
  * `escalones` viene en orden de llegada (mi_progreso). La fecha es la del
  * dispositivo, como en FÍSICO: un peso anotado a las 22 en Argentina es de ese
  * día. `variacionKg` es null con un solo movimiento: no hay con qué comparar.
+ * `bloquePorClave` (bloquesPorClave de cargas.js) le pone a cada ejercicio su
+ * bloque del plan; sin dato queda null y se agrupa como "Sin bloque".
  */
-export function progresionDePesos(escalones) {
+export function progresionDePesos(escalones, bloquePorClave = new Map()) {
   const porEjercicio = new Map();
   for (const e of escalones ?? []) {
     if (!porEjercicio.has(e.clave)) porEjercicio.set(e.clave, { clave: e.clave, nombre: e.nombre, movimientos: [] });
@@ -81,10 +84,36 @@ export function progresionDePesos(escalones) {
       const ultimo = x.movimientos[x.movimientos.length - 1].kg;
       return {
         ...x,
+        bloque: bloquePorClave.get(x.clave) ?? null,
         inicialKg: primero,
         actualKg: ultimo,
         variacionKg: x.movimientos.length > 1 ? Math.round((ultimo - primero) * 100) / 100 : null,
       };
     })
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+/**
+ * Los ejercicios de progresionDePesos agrupados por bloque, para el desplegable
+ * de cada uno. Los bloques van en el orden en que los trae el plan (el del mapa
+ * de bloquesPorClave); "Sin bloque" siempre al final. `subieron` cuenta los
+ * ejercicios con variación positiva: uno con una sola marca o que bajó no suma,
+ * porque "subió" es una afirmación y ahí no hay con qué hacerla.
+ */
+export function pesosPorBloque(ejercicios, bloquePorClave = new Map()) {
+  const orden = [...new Set(bloquePorClave?.values() ?? [])];
+  const grupos = new Map();
+  for (const e of ejercicios ?? []) {
+    const bloque = e.bloque ?? SIN_BLOQUE;
+    if (!grupos.has(bloque)) grupos.set(bloque, []);
+    grupos.get(bloque).push(e);
+  }
+  const posicion = (b) => (b === SIN_BLOQUE ? Infinity : orden.indexOf(b) === -1 ? orden.length : orden.indexOf(b));
+  return [...grupos]
+    .map(([bloque, lista]) => ({
+      bloque,
+      ejercicios: lista,
+      subieron: lista.filter((e) => e.variacionKg > 0).length,
+    }))
+    .sort((a, b) => posicion(a.bloque) - posicion(b.bloque));
 }
