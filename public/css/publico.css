@@ -71,6 +71,12 @@
   background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:.5625rem;
   color:#fff;font-size:var(--fs-160);font-family:var(--ff-mono);
 }
+.campo-osc select{
+  width:100%;min-height:3rem;padding:var(--sp-3);
+  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:.5625rem;
+  color:#fff;font-size:var(--fs-160);
+}
+.campo-osc select:focus{border-color:var(--rojo)}
 .campo-osc input::placeholder{color:#7C7870}
 .campo-osc input:focus{border-color:var(--rojo)}
 .campo-osc .ayuda{font-size:var(--fs-115);color:var(--gris-osc);margin-top:var(--sp-1)}
@@ -122,6 +128,8 @@
   display:flex;align-items:center;justify-content:center;
   font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:700;color:var(--rojo);
 }
+.sin-club .btn + .d{margin-top:var(--sp-5)}
+.sin-club .d + .btn{margin-top:var(--sp-2)}
 .sin-club h2{font-size:var(--fs-250);margin-bottom:var(--sp-3)}
 .sin-club .d{color:var(--gris-osc);font-size:var(--fs-145);line-height:1.55;margin-bottom:var(--sp-4);text-align:left}
 .sin-club .mail{

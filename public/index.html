@@ -131,12 +131,12 @@
       <div class="sub">Crear la cuenta es el primer paso. Para ver los datos de un club, después alguien del club tiene que darte el acceso.</div>
 
       <div class="campo-osc">
-        <label for="cr-nombre">Nombre y apellido</label>
+        <label for="cr-nombre">Nombre y apellido completos</label>
         <span class="env">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-          <input id="cr-nombre" type="text" autocomplete="name" autocapitalize="words" spellcheck="false" enterkeyhint="next" maxlength="80" placeholder="Como te conocen en el club">
+          <input id="cr-nombre" type="text" autocomplete="name" autocapitalize="words" spellcheck="false" enterkeyhint="next" maxlength="80" placeholder="Como figura en tu documento">
         </span>
-        <div class="ayuda">Es lo que ven los demás profes y la coordinación.</div>
+        <div class="ayuda">Escribilo como figura en tu documento. Es lo que ven los demás profes y la coordinación y, si sos jugador, de acá puede salir tu ficha: cuanto mejor escrito, menos trabajo después.</div>
       </div>
       <div class="campo-osc">
         <label for="cr-email">Email</label>
@@ -252,6 +252,36 @@
     </div>
   </section>
 
+  <section class="vista" id="v-jugador">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="caja">
+      <h2>Soy jugador de un club</h2>
+
+      <div id="jugador-form" hidden>
+        <div class="sub">Elegí tu club y tu categoría. El entrenador de esa categoría tiene que aprobar tu pedido antes de que veas tus datos.</div>
+        <div class="campo-osc">
+          <label for="sj-club">Club</label>
+          <span class="env"><select id="sj-club"></select></span>
+        </div>
+        <div class="campo-osc">
+          <label for="sj-categoria">Categoría</label>
+          <span class="env"><select id="sj-categoria"></select></span>
+        </div>
+        <div class="al" id="jugador-error" role="alert" style="display:none"><div class="tx"></div></div>
+        <button class="btn" id="btn-jugador-pedir">Pedir acceso</button>
+      </div>
+
+      <div id="jugador-estado">
+        <div class="sub" id="jugador-estado-texto">Cargando…</div>
+        <button class="btn" id="btn-jugador-reintentar" hidden>Ya me aprobaron, reintentar</button>
+      </div>
+
+      <div class="enlaces">
+        <button id="btn-jugador-volver">&lsaquo; Volver</button>
+      </div>
+    </div>
+  </section>
+
   <section class="vista" id="v-sin-club">
     <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
     <div class="sin-club">
@@ -264,6 +294,8 @@
       <div class="d">Pasale este mail al coordinador para que te habilite:</div>
       <div class="mail" id="sin-club-mail">—</div>
       <button class="btn" id="btn-sin-club-reintentar">Ya me dieron el acceso, reintentar</button>
+      <div class="d" id="sin-club-solicitud" hidden></div>
+      <button class="btn sec" id="btn-sin-club-jugador">Soy jugador de un club</button>
       <div class="enlaces">
         <button id="btn-sin-club-salir">Salir de esta cuenta</button>
       </div>

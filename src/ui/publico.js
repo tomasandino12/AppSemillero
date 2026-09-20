@@ -6,6 +6,9 @@ import { normalizarNombre } from '../data/cuenta.js';
 import { esErrorDeRed } from './nav.js';
 import { $ } from './dom.js';
 import { SIN_CONEXION, textoDeError } from './errores.js';
+import {
+  iniciarSolicitudJugador, abrirSolicitudJugador, solicitudPendiente, textoDeSolicitudPendiente,
+} from './pantallas/solicitudJugador.js';
 
 /**
  * Shell público: landing, ingresar, crear cuenta, recuperar la clave, poner
@@ -45,6 +48,23 @@ export function mostrarLanding() {
 export function mostrarSinClub(email) {
   $('sin-club-mail').textContent = email ?? '—';
   mostrarPublico('v-sin-club');
+  mostrarSolicitudEnSinClub();
+}
+
+/**
+ * Si la cuenta ya pidió acceso como jugador, se lo dice acá: al volver a
+ * entrar tiene que ver que su pedido sigue esperando, y no otra vez un botón
+ * que parece no haber hecho nada.
+ */
+async function mostrarSolicitudEnSinClub() {
+  const aviso = $('sin-club-solicitud');
+  aviso.hidden = true;
+  $('btn-sin-club-jugador').textContent = 'Soy jugador de un club';
+  const pendiente = await solicitudPendiente();
+  if (!pendiente) return;
+  aviso.textContent = textoDeSolicitudPendiente(pendiente);
+  aviso.hidden = false;
+  $('btn-sin-club-jugador').textContent = 'Ver mi solicitud';
 }
 
 /**
@@ -64,7 +84,7 @@ export function mostrarPedirNombre({ sugerido } = {}) {
 
 /* ---------- avisos ---------- */
 
-const ERRORES = ['ingresar-error', 'crear-error', 'recuperar-error', 'nueva-clave-error', 'nombre-error'];
+const ERRORES = ['ingresar-error', 'crear-error', 'recuperar-error', 'nueva-clave-error', 'nombre-error', 'jugador-error'];
 
 function limpiarErrores() {
   ERRORES.forEach((id) => { $(id).style.display = 'none'; $(id).classList.remove('ok'); });
@@ -289,6 +309,12 @@ export function iniciarPublico({ onEntrar, onReintentarClub }) {
   $('btn-nombre-salir').addEventListener('click', salirDeLaCuenta);
 
   $('btn-sin-club-reintentar').addEventListener('click', () => onReintentarClub());
+  $('btn-sin-club-jugador').addEventListener('click', () => abrirSolicitudJugador());
+  iniciarSolicitudJugador({
+    mostrar: mostrarPublico,
+    onReintentar: () => onReintentarClub(),
+    onVolver: () => { mostrarPublico('v-sin-club'); mostrarSolicitudEnSinClub(); },
+  });
   $('btn-sin-club-salir').addEventListener('click', salirDeLaCuenta);
 
   // Supabase avisa con PASSWORD_RECOVERY cuando el usuario vuelve desde el
