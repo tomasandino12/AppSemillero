@@ -80,3 +80,36 @@ export async function obtenerTemporadasDelClub(clubId) {
   if (error) throw error;
   return data;
 }
+
+/* ---------- Pedir acceso como jugador (0029) ---------- */
+
+/** El catálogo del formulario: cada categoría vigente de cada club, en una lista plana. */
+export async function obtenerClubesParaSolicitar() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('clubes_para_solicitar');
+  if (error) throw error;
+  return data.map((f) => ({
+    clubId: f.club_id,
+    clubNombre: f.club_nombre,
+    plantelId: f.plantel_id,
+    categoriaCodigo: f.categoria_codigo,
+    categoriaNombre: f.categoria_nombre,
+  }));
+}
+
+/** Lanza un Error con message 'SOLICITUD_YA_PENDIENTE' si ya hay una esperando. */
+export async function crearSolicitudJugador({ clubId, plantelId }) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.rpc('crear_solicitud_jugador', { p_club_id: clubId, p_plantel_id: plantelId });
+  if (error) throw error;
+}
+
+/** La última solicitud propia, o null: para mostrar "pendiente" al volver a entrar. */
+export async function obtenerMiSolicitud() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('mi_solicitud_jugador');
+  if (error) throw error;
+  const f = data[0];
+  if (!f) return null;
+  return { id: f.id, estado: f.estado, clubNombre: f.club_nombre, categoriaNombre: f.categoria_nombre, creadoEn: f.creado_en };
+}

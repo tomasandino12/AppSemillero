@@ -61,9 +61,9 @@ test('los repos sólo dependen del cliente, de lógica pura y de otros repos', (
 
 test('repositorio.js es sólo la fachada y re-exporta todos los repos', () => {
   const lineas = sinComentarios(leer('src/data/repositorio.js')).split('\n').map((l) => l.trim()).filter(Boolean);
-  const raras = lineas.filter((l) => !/^export \* from '\.\/repos\/[a-z]+\.js';$/.test(l));
+  const raras = lineas.filter((l) => !/^export \* from '\.\/repos\/[a-zA-Z]+\.js';$/.test(l));
   assert.deepEqual(raras, [], 'repositorio.js sólo puede tener líneas `export * from ./repos/x.js`; el código va en el repo de su área');
-  const reexportados = lineas.map((l) => l.match(/repos\/([a-z]+)\.js/)[1]).sort();
+  const reexportados = lineas.map((l) => l.match(/repos\/([a-zA-Z]+)\.js/)[1]).sort();
   const existentes = REPOS.map((p) => p.replace(/^.*[\\/]/, '').replace('.js', '')).sort();
   assert.deepEqual(reexportados, existentes, 'hay repos que la fachada no re-exporta (o al revés)');
 });

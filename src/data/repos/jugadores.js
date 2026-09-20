@@ -128,3 +128,53 @@ export async function actualizarFechaNacimiento(clubId, jugadorId, fechaNacimien
     .eq('id', jugadorId);
   if (error) throw error;
 }
+
+/* ---------- Cuenta de jugador: lo que hace el entrenador del plantel (0029) ---------- */
+
+/** Solicitudes pendientes, con el nombre que escribió el chico al registrarse. */
+export async function obtenerSolicitudesDelPlantel(plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('solicitudes_del_plantel', { p_plantel_id: plantelId });
+  if (error) throw error;
+  return data.map((f) => ({ id: f.id, userId: f.user_id, nombre: f.nombre, creadoEn: f.creado_en }));
+}
+
+/**
+ * Aprueba por uno de los dos caminos, en una sola transacción:
+ * `{ solicitudId, jugadorId }` vincula a una ficha existente;
+ * `{ solicitudId, nombreClave, nombreLimpio, desambiguador? }` crea la ficha en
+ * el plantel de la solicitud y vincula. Lanza un Error con message
+ * 'JUGADOR_YA_EXISTE' si el nombre ya tiene ficha en el club.
+ */
+export async function aprobarSolicitud(payload) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('aprobar_solicitud_jugador', { payload });
+  if (error) throw error;
+  return data;
+}
+
+export async function rechazarSolicitud(solicitudId) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.rpc('rechazar_solicitud_jugador', { p_id: solicitudId });
+  if (error) throw error;
+}
+
+/** Cierra la cuenta vigente del jugador: deja de ver todo, no se borra nada. */
+export async function revocarCuentaJugador(jugadorId) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.rpc('revocar_cuenta_jugador', { p_jugador: jugadorId });
+  if (error) throw error;
+}
+
+/** Si el jugador tiene una cuenta vigente, para mostrar "tiene acceso" y poder revocarla. */
+export async function jugadorTieneCuenta(jugadorId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('cuenta_jugador')
+    .select('id')
+    .eq('jugador_id', jugadorId)
+    .is('hasta', null)
+    .maybeSingle();
+  if (error) throw error;
+  return data != null;
+}
