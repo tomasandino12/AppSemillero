@@ -1,6 +1,7 @@
 import {
   obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion,
   obtenerMisRoles, obtenerMisPlantelesAsignados, obtenerMiUsuario, obtenerMiFicha,
+  guardarErrorDeCliente,
 } from '../data/repositorio.js';
 import { necesitaNombre, nombreSugerido, nombreDeUsuario, quiereSerJugador } from '../data/cuenta.js';
 import { puedeHaberSesion } from '../data/sesionGuardada.js';
@@ -8,7 +9,8 @@ import { iniciarReporteDeErrores } from './reporteDeErrores.js';
 import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
 import {
-  setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo, setCuenta, setFichaJugador,
+  setClubActual, obtenerClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo,
+  setCuenta, setFichaJugador,
 } from './sesion.js';
 import { descartarBorradoresAnteriores } from './borradorMedicion.js';
 import {
@@ -250,10 +252,13 @@ async function entrarConSesion() {
 }
 
 async function iniciar() {
-  // Primero de todo: desde acá en adelante, lo que se rompa deja rastro. Sin
-  // alCapturar todavía —no hay dónde guardarlo— así que por ahora avisa y va
-  // a la consola.
-  iniciarReporteDeErrores({ pantallaActual: pantallaActualId });
+  // Primero de todo: desde acá en adelante, lo que se rompa deja rastro. El
+  // club se lee en el momento de capturar, no acá: al arrancar todavía no se
+  // sabe cuál es, y una sesión que cambia de club tiene que cambiarlo también.
+  iniciarReporteDeErrores({
+    pantallaActual: pantallaActualId,
+    alCapturar: (registro) => guardarErrorDeCliente(registro, obtenerClubActual()?.id ?? null),
+  });
 
   descartarBorradoresAnteriores();
   iniciarPublico({ onEntrar: entrarConSesion, onReintentarClub: entrarConSesion });

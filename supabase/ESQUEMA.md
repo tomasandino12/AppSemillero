@@ -2,8 +2,9 @@
 
 Estado al día de la migración `0019_nombre_y_categorias.sql`, más la sección de
 escalones de fuerza de `0023_escalones_fuerza.sql`, el inventario de
-`0026_material.sql` y la cuenta de jugador de `0029` y `0030`. Las tablas del
-plan físico de 0020–0022 todavía no están documentadas acá (ver la Tarea 7 del
+`0026_material.sql`, la cuenta de jugador de `0029` y `0030` y los errores del
+cliente de `0031_error_cliente.sql`. Las tablas del plan físico de 0020–0022
+todavía no están documentadas acá (ver la Tarea 7 del
 plan de import).
 
 ## Diagrama en texto
@@ -299,6 +300,42 @@ lectura. Los números están en `src/data/limites.js` y
 revisan lo que ya estaba guardado; para revisarlo:
 `alter table <t> validate constraint <c>;`. 0028 también quita a `anon` el
 permiso de ejecutar los RPC de escritura.
+
+## Errores del cliente (0031)
+
+`error_cliente` guarda lo que se rompió en el teléfono de un profe y nadie
+atrapó: `mensaje`, `stack`, `pantalla`, `agente` (userAgent), `creado_por` y
+`creado_en`, más un `club_id` **opcional** (la app puede romperse antes de
+saber a qué club pertenece la cuenta).
+
+No es una tabla de datos del club, es diagnóstico, y se comporta distinto a
+todas las demás:
+
+- **Sólo insert.** No hay policy de update ni de delete: un log que el que lo
+  genera puede editar no sirve. Se limpia desde el dashboard.
+- **No la lee nadie desde la app.** Sin policy de select y sin `grant select`:
+  se lee con la service role desde el dashboard de Supabase. Es lo más fácil
+  de filtrar sin querer —Postgres mete el valor adentro del texto del error,
+  `Key (nombre_clave)=(Juan Perez) already exists`—, así que el cliente lo
+  depura antes de mandarlo (`src/data/errorDeCliente.js`) y además lo lee la
+  menor cantidad de gente posible.
+- **Sólo `authenticated`.** Un error en la landing, sin sesión, queda en la
+  consola: dejar escribir a `anon` sería un endpoint abierto a internet.
+- La policy `error_cliente_propio_agrega` exige `creado_por = auth.uid()` (lo
+  pone el trigger de sellado, la columna no se concede) y que el `club_id`, si
+  viene, sea uno propio.
+
+Los largos de las columnas de texto son los de `LARGO` en
+`src/data/errorDeCliente.js` y los compara `tests/contratoErrorCliente.test.js`
+(no van en `limites.js`, que es el espejo exacto de 0028).
+
+### Helper `pertenece_al_club(club_id)` (0031)
+
+`stable security definer`, otorgado a `authenticated`. Verdadero si quien llama
+está en `miembro_club` de ese club **o** tiene una `cuenta_jugador` vigente.
+Tiene que ser `security definer` porque un jugador no puede leer su propia fila
+de `cuenta_jugador` (`cuenta_jugador_ver` es para el staff que ve el plantel).
+Devuelve un booleano sobre quien llama, nada más.
 
 ## Orden de persistencia de una importación
 

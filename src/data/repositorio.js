@@ -14,3 +14,4 @@ export * from './repos/ejercicios.js';
 export * from './repos/fisico.js';
 export * from './repos/inventario.js';
 export * from './repos/miCuenta.js';
+export * from './repos/errores.js';
