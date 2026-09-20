@@ -2,12 +2,41 @@
 // Se importa a través de src/data/repositorio.js (fachada).
 import { obtenerCliente } from '../cliente.js';
 
-/** Cuentas con mail confirmado y sin club. Sólo coordinación (la función rechaza al resto). */
+/**
+ * Cuentas con mail confirmado y sin club, menos las rechazadas. Incluye a los
+ * jugadores con cuenta del propio club (`esJugador`): habilitarlos como profes
+ * les cierra la cuenta de jugador (0032). Sólo coordinación.
+ */
 export async function obtenerUsuariosPendientes() {
   const supabase = obtenerCliente();
   const { data, error } = await supabase.rpc('usuarios_pendientes');
   if (error) throw error;
-  return data.map((f) => ({ userId: f.user_id, email: f.email, nombre: f.nombre, registradoEn: f.registrado_en }));
+  return data.map((f) => ({ userId: f.user_id, email: f.email, nombre: f.nombre, registradoEn: f.registrado_en, esJugador: f.es_jugador }));
+}
+
+/**
+ * Rechaza un pedido de acceso. Reversible: la cuenta rechazada puede volver a
+ * pedir (volverAPedirAcceso) y reaparece en la lista. No borra nada.
+ */
+export async function descartarCuenta({ userId, clubId }) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.rpc('descartar_cuenta', { p_user_id: userId, p_club_id: clubId });
+  if (error) throw error;
+}
+
+/** ¿Coordinación rechazó a la cuenta que llama? Sólo el hecho: ni quién ni por qué. */
+export async function miPedidoDescartado() {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('mi_pedido_descartado');
+  if (error) throw error;
+  return data === true;
+}
+
+/** "Fue un error": la cuenta rechazada vuelve a la lista de pendientes. */
+export async function volverAPedirAcceso() {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.rpc('volver_a_pedir_acceso');
+  if (error) throw error;
 }
 
 export async function obtenerMiembrosDelClub(clubId) {
