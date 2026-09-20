@@ -49,6 +49,10 @@ export function registrarPantallas() {
   registrarPantalla('p-coord-profes', { titulo: 'Profes', render: renderProfes });
   registrarPantalla('p-coord-inventario', { titulo: 'Inventario', render: renderInventarioCoordinacion });
   registrarPantalla('p-mi-perfil', { titulo: 'Mi perfil', render: renderMiPerfil });
+  // Modo jugador (0030). Todavía sin contenido: cada pantalla trae su render.
+  registrarPantalla('p-jug-recursos', { titulo: 'Recursos' });
+  registrarPantalla('p-jug-fisico', { titulo: 'Físico' });
+  registrarPantalla('p-jug-progreso', { titulo: 'Mi progreso' });
   setAbrirFicha(abrirFicha);
   setAbrirEjercicio(abrirEjercicio);
   iniciarDatos();

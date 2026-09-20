@@ -50,4 +50,5 @@ test('los roles se leen en orden fijo', () => {
   assert.deepEqual(rolesLegibles({ esEntrenador: true, esCoordinador: true }), ['Entrenador', 'Coordinación']);
   assert.deepEqual(rolesLegibles({ esCoordinador: true }), ['Coordinación']);
   assert.deepEqual(rolesLegibles(), []);
+  assert.deepEqual(rolesLegibles({ esJugador: true }), ['Jugador']);
 });

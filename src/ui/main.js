@@ -1,11 +1,11 @@
 import {
   obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion,
-  obtenerMisRoles, obtenerMisPlantelesAsignados, obtenerMiUsuario,
+  obtenerMisRoles, obtenerMisPlantelesAsignados, obtenerMiUsuario, obtenerMiFicha,
 } from '../data/repositorio.js';
 import { necesitaNombre, nombreSugerido, nombreDeUsuario } from '../data/cuenta.js';
 import { mostrarPantalla, toast } from './nav.js';
 import {
-  setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo, setCuenta,
+  setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo, setCuenta, setFichaJugador,
 } from './sesion.js';
 import { descartarBorradoresAnteriores } from './borradorMedicion.js';
 import {
@@ -114,6 +114,29 @@ export async function salir() {
 }
 
 /**
+ * La ficha de quien tiene cuenta de jugador, o null. Un error no la vuelve un
+ * fallo de arranque: quien no es jugador (o todavía no tiene la migración 0030
+ * en su base) sigue viendo "todavía no tenés club", con su botón de reintentar.
+ */
+async function fichaDelJugador() {
+  try {
+    return await obtenerMiFicha();
+  } catch {
+    return null;
+  }
+}
+
+/** Shell del jugador: sin categorías ni cambio de modo, sólo sus tres pestañas. */
+async function entrarComoJugador(ficha) {
+  setClubActual({ id: ficha.clubId, nombre: ficha.clubNombre });
+  setFichaJugador(ficha);
+  setRoles({ esJugador: true });
+  setPlanteles([]);
+  mostrarApp();
+  await ir(pantallaInicialDelModo());
+}
+
+/**
  * Con sesión válida, decide entre la app y la pantalla de "todavía no tenés
  * club". Una cuenta sin fila en miembro_club no es un error ni una app rota:
  * es el estado normal de alguien que recién se registró. RLS ya garantiza que
@@ -153,6 +176,13 @@ async function entrarConSesion() {
     return;
   }
   if (!clubes.length) {
+    // Sin club de staff puede ser un jugador con cuenta. Se pregunta recién acá
+    // para que el arranque del cuerpo técnico no sume ni una llamada.
+    const ficha = await fichaDelJugador();
+    if (ficha) {
+      await entrarComoJugador(ficha);
+      return;
+    }
     const sesion = await sesionSilenciosa();
     mostrarSinClub(sesion?.user?.email);
     return;

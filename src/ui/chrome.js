@@ -45,19 +45,43 @@ export const TABS_COORDINACION = [
   { id: 'p-coord-inventario', texto: 'Inventario', icono: ICONOS.fisico },
 ];
 
+// El jugador: tres pestañas, sólo lectura, y ningún chip de categoría ni
+// cambio de modo. Su categoría es la suya y no elige (spec de la cuenta de
+// jugador, sección 5). Sumar una función es una pantalla y una línea acá.
+export const TABS_JUGADOR = [
+  { id: 'p-jug-recursos', texto: 'Recursos', icono: ICONOS.recursos },
+  { id: 'p-jug-fisico', texto: 'Físico', icono: ICONOS.fisico },
+  { id: 'p-jug-progreso', texto: 'Mi progreso', icono: ICONOS.datos },
+];
+
 export const PANTALLA_PERFIL = 'p-mi-perfil';
 
-/** Entrenando arranca en PLANTEL; coordinando, en el Panorama. */
+/** Las pestañas del modo actual. */
+export function tabsDelModo() {
+  const modo = obtenerModo();
+  if (modo === 'coordinar') return TABS_COORDINACION;
+  if (modo === 'jugar') return TABS_JUGADOR;
+  return TABS;
+}
+
+/** Entrenando arranca en PLANTEL; coordinando, en el Panorama; el jugador, en su primera pestaña. */
 export function pantallaInicialDelModo() {
-  return obtenerModo() === 'coordinar' ? TABS_COORDINACION[0].id : TABS[1].id;
+  const modo = obtenerModo();
+  if (modo === 'coordinar') return TABS_COORDINACION[0].id;
+  if (modo === 'jugar') return TABS_JUGADOR[0].id;
+  return TABS[1].id;
 }
 
 /**
  * A dónde lleva el escudo: HOY. Coordinando, al Panorama: HOY es el resumen
- * de una categoría, y coordinación no entra a ninguna.
+ * de una categoría, y coordinación no entra a ninguna. El jugador no tiene HOY:
+ * va a su primera pestaña.
  */
 export function pantallaDeInicio() {
-  return obtenerModo() === 'coordinar' ? TABS_COORDINACION[0].id : TABS[0].id;
+  const modo = obtenerModo();
+  if (modo === 'coordinar') return TABS_COORDINACION[0].id;
+  if (modo === 'jugar') return TABS_JUGADOR[0].id;
+  return TABS[0].id;
 }
 
 let alTocarTab = () => {};
@@ -93,7 +117,7 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
 
   const club = obtenerClubActual();
   const roles = obtenerRoles();
-  const coordinando = obtenerModo() === 'coordinar';
+  const modo = obtenerModo();
   const iniciales = inicialesDeNombre(obtenerCuenta()?.nombre ?? '');
 
   const atras = mostrarAtras
@@ -101,7 +125,7 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
     : '';
   // Sólo quien tiene los dos roles cambia de modo.
   const botonModo = roles.esEntrenador && roles.esCoordinador
-    ? `<button class="salir modo" id="btn-modo">${coordinando ? 'Entrenar' : 'Coordinar'}</button>`
+    ? `<button class="salir modo" id="btn-modo">${modo === 'coordinar' ? 'Entrenar' : 'Coordinar'}</button>`
     : '';
   // Sin nombre cargado (cuentas anteriores a 0019) va el ícono de persona.
   const contenidoPerfil = iniciales
@@ -131,8 +155,9 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
   $('btn-modo')?.addEventListener('click', () => alCambiarModo());
   $('btn-perfil').addEventListener('click', () => alAbrirPerfil());
 
-  if (coordinando) {
-    // Vacío se oculta solo (.cats:empty en layout.css).
+  if (modo !== 'entrenar') {
+    // Coordinando y jugando no hay categoría activa. Vacío se oculta solo
+    // (.cats:empty en layout.css).
     cats.innerHTML = '';
   } else {
     const activo = obtenerPlantelActivo();
@@ -152,7 +177,7 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
   // La marca encabeza la navegación lateral en escritorio: escudo y club fijos
   // arriba de los ítems, en todas las pantallas. En celular la barra de abajo
   // no la muestra (layout.css): ahí el escudo está en la cabecera.
-  const tabs = coordinando ? TABS_COORDINACION : TABS;
+  const tabs = tabsDelModo();
   nav.innerHTML = `
     <button class="marca-nav" id="btn-inicio-nav" aria-label="Ir al inicio">
       ${ESCUDO}

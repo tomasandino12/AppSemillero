@@ -3,9 +3,10 @@
 let clubActual = null;
 let planteles = [];
 let plantelActivoId = null;
-let roles = { esEntrenador: false, esCoordinador: false };
+let roles = { esEntrenador: false, esCoordinador: false, esJugador: false };
 let modo = 'entrenar';
 let cuenta = null;
+let fichaJugador = null;
 
 /** { id, email, nombre } de quien usa la app. nombre puede ser null (cuentas anteriores a 0019). */
 export function setCuenta(nueva) {
@@ -49,11 +50,18 @@ export function obtenerPlantelActivo() {
 
 /**
  * Quien entrena arranca entrenando aunque también coordine: es el uso de
- * todos los días. Quien sólo coordina no tiene otro modo.
+ * todos los días. Quien sólo coordina no tiene otro modo. Un jugador nunca es
+ * del cuerpo técnico (no tiene fila en miembro_club): su único modo es 'jugar'.
  */
 export function setRoles(nuevos) {
-  roles = { esEntrenador: nuevos.esEntrenador === true, esCoordinador: nuevos.esCoordinador === true };
-  modo = roles.esEntrenador ? 'entrenar' : 'coordinar';
+  roles = {
+    esEntrenador: nuevos.esEntrenador === true,
+    esCoordinador: nuevos.esCoordinador === true,
+    esJugador: nuevos.esJugador === true,
+  };
+  if (roles.esEntrenador) modo = 'entrenar';
+  else if (roles.esCoordinador) modo = 'coordinar';
+  else modo = roles.esJugador ? 'jugar' : 'coordinar';
 }
 
 export function obtenerRoles() {
@@ -68,13 +76,24 @@ export function obtenerModo() {
 export function setModo(nuevo) {
   if (nuevo === 'coordinar' && roles.esCoordinador) modo = 'coordinar';
   if (nuevo === 'entrenar' && roles.esEntrenador) modo = 'entrenar';
+  if (nuevo === 'jugar' && roles.esJugador) modo = 'jugar';
+}
+
+/** La ficha propia de un jugador con cuenta ({ jugadorId, clubId, planteles… }); null si no lo es. */
+export function setFichaJugador(ficha) {
+  fichaJugador = ficha;
+}
+
+export function obtenerFichaJugador() {
+  return fichaJugador;
 }
 
 export function limpiarSesion() {
   clubActual = null;
   planteles = [];
   plantelActivoId = null;
-  roles = { esEntrenador: false, esCoordinador: false };
+  roles = { esEntrenador: false, esCoordinador: false, esJugador: false };
   modo = 'entrenar';
   cuenta = null;
+  fichaJugador = null;
 }

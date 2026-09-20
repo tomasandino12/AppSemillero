@@ -4,7 +4,7 @@ import {
 } from '../../data/repositorio.js';
 import { normalizarNombre, inicialesDeNombre, rolesLegibles } from '../../data/cuenta.js';
 import { temporadaMasReciente } from '../../data/coordinacion.js';
-import { obtenerCuenta, obtenerClubActual, obtenerRoles, setNombreDeCuenta } from '../sesion.js';
+import { obtenerCuenta, obtenerClubActual, obtenerRoles, obtenerFichaJugador, setNombreDeCuenta } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { sincronizarChrome, salir } from '../main.js';
@@ -25,6 +25,12 @@ function nombreHtml(nombre) {
 
 /** Las categorías vigentes propias, en orden de catálogo; con año si no son de la temporada actual. */
 async function categoriasHtml(club, roles) {
+  if (roles.esJugador) {
+    // Sale de su ficha (mi_ficha): el jugador no lee ni plantel ni asignaciones.
+    const propias = obtenerFichaJugador()?.planteles ?? [];
+    if (!propias.length) return '<span class="sin">Todavía no estás en ninguna categoría.</span>';
+    return `<div class="perfil-cats">${propias.map((p) => `<span class="chip">${escaparHtml(p.categoria)}</span>`).join('')}</div>`;
+  }
   if (!roles.esEntrenador) {
     return '<span class="sin">Coordinación no tiene categorías a cargo: ve el panorama de todas.</span>';
   }
@@ -118,7 +124,7 @@ export async function renderMiPerfil() {
         </div>
       </section>
 
-      ${cuenta.nombre ? '' : '<div class="p">Cargá tu nombre: es lo que ven los demás profes y la coordinación. Mientras no esté, ven tu mail.</div>'}
+      ${cuenta.nombre || roles.esJugador ? '' : '<div class="p">Cargá tu nombre: es lo que ven los demás profes y la coordinación. Mientras no esté, ven tu mail.</div>'}
 
       <section class="perfil-datos">
         <div class="perfil-fila">
@@ -136,7 +142,7 @@ export async function renderMiPerfil() {
         </div>
         <div class="perfil-fila">
           <div>
-            <div class="k">Categorías a cargo</div>
+            <div class="k">${roles.esJugador ? 'Tu categoría' : 'Categorías a cargo'}</div>
             <div class="v" id="perfil-categorias"><span class="sin">Cargando...</span></div>
           </div>
         </div>
