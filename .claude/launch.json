@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["esbuild", "--serve=5173", "--servedir=."],
+      "port": 5173
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import {
   obtenerMisRoles, obtenerMisPlantelesAsignados, obtenerMiUsuario, obtenerMiFicha,
 } from '../data/repositorio.js';
 import { necesitaNombre, nombreSugerido, nombreDeUsuario, quiereSerJugador } from '../data/cuenta.js';
+import { puedeHaberSesion } from '../data/sesionGuardada.js';
 import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
 import {
@@ -102,6 +103,21 @@ async function sesionSilenciosa() {
     return await obtenerSesionActual();
   } catch {
     return null;
+  }
+}
+
+/** Lo que la UI aporta a la decisión de sesionGuardada.js: URL y storage. */
+function puedeHaberSesionAbierta() {
+  try {
+    return puedeHaberSesion({
+      search: window.location.search,
+      hash: window.location.hash,
+      claves: Object.keys(window.localStorage),
+    });
+  } catch {
+    // localStorage bloqueado (modo privado, cookies de terceros): no se puede
+    // saber, así que se le pregunta a Supabase como antes.
+    return true;
   }
 }
 
@@ -250,13 +266,23 @@ async function iniciar() {
     },
   });
 
-  const { registrarPantallas } = await import('./pantallas/registro.js');
-  registrarPantallas();
-
   // Splash oscuro mientras se resuelve la sesión. Los dos shells arrancan
   // ocultos a propósito: quien ya entró no tiene que ver pasar la landing, y
   // quien no entró no tiene que ver el chrome de la app.
-  mostrarPublico('v-cargando');
+  //
+  // Salvo que ya se sepa que no hay sesión: entonces la landing se pinta acá,
+  // antes de cargar las pantallas y sin tocar la red. Las pantallas son las
+  // de adentro de la app; los botones de la landing los cableó iniciarPublico
+  // más arriba, así que ya andan.
+  const derechoALaLanding = !puedeHaberSesionAbierta();
+  mostrarPublico(derechoALaLanding ? 'v-landing' : 'v-cargando');
+
+  const { registrarPantallas } = await import('./pantallas/registro.js');
+  registrarPantallas();
+
+  // Se cargaron igual porque hacen falta en cuanto entre; lo que no hace
+  // falta es lo que viene abajo, que es preguntar por una sesión que no hay.
+  if (derechoALaLanding) return;
 
   if (VIENE_A_CAMBIAR_LA_CLAVE) {
     // Fuerza la creación del cliente, que es lo que consume el token del hash
