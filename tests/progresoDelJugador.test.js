@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque } from '../src/data/progresoDelJugador.js';
+import { insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque, bloquePorClaveDePlanes } from '../src/data/progresoDelJugador.js';
 import { serieDeTiroDelJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador, UMBRAL_INTENTOS } from '../src/data/estadisticas.js';
+import { claveDeEjercicio } from '../src/data/escalones.js';
 
 const progreso = {
   partidos: [
@@ -142,4 +143,27 @@ test('pesosPorBloque cuenta cuántos subieron: una baja o un solo movimiento no 
 test('pesosPorBloque sin ejercicios devuelve una lista vacía', () => {
   assert.deepEqual(pesosPorBloque([], new Map()), []);
   assert.deepEqual(pesosPorBloque(undefined, undefined), []);
+});
+
+const linea = (orden, bloque, nombreOriginal) => ({ id: `l${orden}`, orden, bloque, nombreOriginal });
+
+test('bloquePorClaveDePlanes une cada línea del plan con su clave y respeta el orden del plan', () => {
+  const planes = [{
+    planId: 'p', plantelId: 'x', categoria: 'U15', nombreArchivo: 'a.xlsx',
+    sesiones: [
+      { id: 's2', fecha: '2026-04-08', lineas: [linea(1, 'CORE', 'Plancha')] },
+      { id: 's1', fecha: '2026-04-01', lineas: [linea(2, 'FUERZA', 'Press plano'), linea(1, 'POTENCIA', 'Salto')] },
+    ],
+  }];
+  const mapa = bloquePorClaveDePlanes(planes);
+  assert.equal(mapa.get(claveDeEjercicio('Press plano')), 'FUERZA');
+  assert.equal(mapa.get(claveDeEjercicio('Plancha')), 'CORE');
+  // Sesión más vieja primero y, dentro de ella, por `orden`: POTENCIA, FUERZA, CORE.
+  assert.deepEqual([...new Set(mapa.values())], ['POTENCIA', 'FUERZA', 'CORE']);
+});
+
+test('bloquePorClaveDePlanes: sin planes o líneas sin bloque no inventa nada', () => {
+  assert.equal(bloquePorClaveDePlanes(undefined).size, 0);
+  const planes = [{ sesiones: [{ fecha: '2026-04-01', lineas: [linea(1, null, 'Suelto')] }] }];
+  assert.equal(bloquePorClaveDePlanes(planes).size, 0);
 });

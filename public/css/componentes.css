@@ -200,6 +200,22 @@ svg.g{width:100%;display:block;overflow:visible}
 .leyenda i{display:inline-block;width:.875rem;height:.15625rem;background:var(--rojo);vertical-align:middle;margin-right:.3125rem}
 .leyenda i.pt{background:none;border-top:.15625rem dashed var(--gris-cl)}
 
+/* ---- progresión de pesos: un desplegable por bloque del plan ---- */
+.pesos-bloque{margin-bottom:var(--sp-1)}
+.pesos-bloque summary{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);
+  padding:var(--sp-3) 0;min-height:var(--tap);cursor:pointer;list-style:none;
+}
+.pesos-bloque summary::-webkit-details-marker{display:none}
+.pesos-bloque summary::after{content:"›";font-size:var(--fs-190);color:var(--gris);transition:transform .15s}
+.pesos-bloque[open] summary::after{transform:rotate(90deg)}
+.pesos-bloque summary .t{font-family:var(--ff-titulo);font-size:var(--fs-145);font-weight:600;text-transform:uppercase;letter-spacing:.05em;flex:1}
+.pesos-bloque summary .n{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris)}
+.pesos-nom{font-weight:600;font-size:var(--fs-145)}
+.pesos-actual{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3);margin:var(--sp-1) 0 var(--sp-3)}
+.pesos-actual .kg{font-family:var(--ff-mono);font-size:var(--fs-190);font-weight:600}
+.pesos-det{font-size:var(--fs-115);color:var(--gris);text-align:right}
+
 /* Feedback de presión (auditoría de accesibilidad del prototipo, punto 8) */
 .al,.opt,.test-fila,.jug,.btn{transition:transform 120ms ease-out}
 .al:active,.opt:active,.test-fila:active{transform:scale(.97)}

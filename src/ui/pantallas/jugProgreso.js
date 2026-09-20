@@ -1,13 +1,15 @@
-import { obtenerMiProgreso } from '../../data/repositorio.js';
+import { obtenerMiProgreso, obtenerMiPlan } from '../../data/repositorio.js';
 import {
   serieDeTiroDelJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador,
   ejeComun, compararPorcentajes,
 } from '../../data/estadisticas.js';
-import { insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos } from '../../data/progresoDelJugador.js';
-import { formatearKg } from '../../data/escalones.js';
+import {
+  insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque, bloquePorClaveDePlanes,
+} from '../../data/progresoDelJugador.js';
 import { obtenerFichaJugador } from '../sesion.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
+import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjetasDePesos.js';
 import { html, crudo } from '../html.js';
 import { formatearFechaCorta, textoPorcentaje } from '../nav.js';
 import { avisoDeError } from '../errores.js';
@@ -136,20 +138,13 @@ function seccionPartidos(historial, acumulados) {
   `;
 }
 
-function seccionPesos(ejercicios) {
-  if (!ejercicios.length) {
+function seccionPesos(grupos) {
+  if (!grupos.length) {
     return html`<div class="eyebrow">Tus pesos</div><div class="p">Todavía no tenés pesos anotados.</div>`;
   }
-  const cambio = (v) => (v == null ? '' : v === 0 ? 'sin cambio' : `${v > 0 ? '+' : '−'}${formatearKg(Math.abs(v))} kg`);
   return html`
     <div class="eyebrow">Tus pesos</div>
-    ${ejercicios.map((e) => html`
-      <div class="tarj">
-        <div class="nom">${e.nombre}</div>
-        <div class="det">${e.movimientos.slice(-6).map((m) => formatearKg(m.kg)).join(' → ')} kg</div>
-        <div class="det">Ahora: ${formatearKg(e.actualKg)} kg${e.variacionKg == null ? '' : ` · ${cambio(e.variacionKg)} desde el primero`}</div>
-      </div>
-    `)}
+    ${tarjetasDePesosHtml(grupos, 'jug-pesos')}
   `;
 }
 
@@ -159,8 +154,14 @@ export async function renderJugProgreso() {
   contenedor().innerHTML = '<div class="pad"><div class="p">Cargando tu progreso…</div></div>';
 
   let progreso;
+  let plan = null;
   try {
-    progreso = await obtenerMiProgreso();
+    // El plan sólo aporta el bloque de cada ejercicio: si falla, los pesos se
+    // muestran igual, todos en "Sin bloque", en vez de tirar abajo la pantalla.
+    [progreso, plan] = await Promise.all([
+      obtenerMiProgreso(),
+      obtenerMiPlan().catch((e) => { console.error('No se pudo leer el plan para agrupar los pesos:', e); return null; }),
+    ]);
   } catch (e) {
     contenedor().innerHTML = `${avisoDeError(e, 'No se pudo cargar tu progreso.')}
       <div class="pad"><button class="btn sec" id="btn-reintentar-jug-progreso">Reintentar</button></div>`;
@@ -186,6 +187,9 @@ export async function renderJugProgreso() {
   const series = serieDeTiroDelJugador(insumos);
   const historial = historialDePartidosDelJugador(insumos.partidos, insumos.estadisticas, ficha.jugadorId);
 
+  const bloques = bloquePorClaveDePlanes(plan?.planes);
+  const pesos = pesosPorBloque(progresionDePesos(progreso.escalones, bloques), bloques);
+
   contenedor().innerHTML = html`
     <div class="pad">
       ${seccionCancha(bateria)}
@@ -193,7 +197,7 @@ export async function renderJugProgreso() {
       ${seccionSerie('jug-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial, acumuladosDePartidos(progreso.partidos))}
       ${seccionVelocidad(progreso.velocidad)}
-      ${seccionPesos(progresionDePesos(progreso.escalones))}
+      ${seccionPesos(pesos)}
     </div>
   `;
 
@@ -201,4 +205,5 @@ export async function renderJugProgreso() {
   if (bateria) cancha($('jug-cancha'), bateria.porPosicion);
   dibujarSerie('jug-triples', series.triples);
   dibujarSerie('jug-libres', series.libres);
+  dibujarCurvasDePesos(pesos, 'jug-pesos');
 }

@@ -1,6 +1,7 @@
 import { porcentaje } from './estadisticas.js';
-import { fechaLocal } from './escalones.js';
-import { SIN_BLOQUE } from './cargas.js';
+import { fechaLocal, claveDeEjercicio } from './escalones.js';
+import { SIN_BLOQUE, bloquesPorClave } from './cargas.js';
+import { sesionesDeLosPlanes } from './planDelJugador.js';
 
 /*
  * Lógica pura de "Mi progreso": arma lo que mi_progreso() (0030) devuelve con
@@ -116,4 +117,18 @@ export function pesosPorBloque(ejercicios, bloquePorClave = new Map()) {
       subieron: lista.filter((e) => e.variacionKg > 0).length,
     }))
     .sort((a, b) => posicion(a.bloque) - posicion(b.bloque));
+}
+
+/**
+ * El bloque de cada ejercicio (por clave) según los planes del propio jugador
+ * (mi_plan). mi_progreso no trae el bloque y la unión por nombre es JavaScript
+ * (claveDeEjercicio), así que se arma acá. El orden del mapa es el del plan:
+ * sesiones por fecha y, dentro de cada una, por `orden`.
+ */
+export function bloquePorClaveDePlanes(planes) {
+  const lineas = sesionesDeLosPlanes(planes).flatMap((s) =>
+    [...(s.lineas ?? [])]
+      .sort((a, b) => a.orden - b.orden)
+      .map((l) => ({ clave: claveDeEjercicio(l.nombreOriginal), bloque: l.bloque, fecha: s.fecha, orden: l.orden })));
+  return bloquesPorClave(lineas);
 }
