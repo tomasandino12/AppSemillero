@@ -7,6 +7,32 @@
 <meta name="theme-color" content="#131316">
 <title>Inferiores · Seguimiento de jugadores</title>
 <meta name="description" content="Seguimiento del desarrollo de jugadores en inferiores de básquet: partidos, mediciones y biblioteca de ejercicios.">
+
+<!-- La misma página se sirve en / y en /public/index.html (el rewrite de
+     vercel.json apunta ahí). El canonical le dice a Google cuál de las dos es
+     la buena; sin esto puede quedarse con la fea y competir consigo misma.
+
+     Open Graph porque la app no se reparte por buscador: el coordinador pasa
+     el link por WhatsApp. Sin estas etiquetas llega pelado, sin escudo ni
+     título. La imagen va con URL absoluta y con las medidas declaradas a
+     propósito: quien arma la tarjeta es el servidor de WhatsApp, que no
+     resuelve rutas relativas y no espera a descargar la imagen para saber
+     cómo maquetarla. El escudo es cuadrado, así que la tarjeta es 'summary'
+     (miniatura al costado) y no una foto ancha. -->
+<link rel="canonical" href="https://app-semillero.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Inferiores">
+<meta property="og:locale" content="es_AR">
+<meta property="og:url" content="https://app-semillero.vercel.app/">
+<meta property="og:title" content="Inferiores · Seguimiento de jugadores">
+<meta property="og:description" content="Seguimiento del desarrollo de jugadores en inferiores de básquet: partidos, mediciones y biblioteca de ejercicios.">
+<meta property="og:image" content="https://app-semillero.vercel.app/public/escudo.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Escudo del club">
+<meta name="twitter:card" content="summary">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
