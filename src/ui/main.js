@@ -4,6 +4,7 @@ import {
 } from '../data/repositorio.js';
 import { necesitaNombre, nombreSugerido, nombreDeUsuario, quiereSerJugador } from '../data/cuenta.js';
 import { puedeHaberSesion } from '../data/sesionGuardada.js';
+import { iniciarReporteDeErrores } from './reporteDeErrores.js';
 import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
 import {
@@ -249,6 +250,11 @@ async function entrarConSesion() {
 }
 
 async function iniciar() {
+  // Primero de todo: desde acá en adelante, lo que se rompa deja rastro. Sin
+  // alCapturar todavía —no hay dónde guardarlo— así que por ahora avisa y va
+  // a la consola.
+  iniciarReporteDeErrores({ pantallaActual: pantallaActualId });
+
   descartarBorradoresAnteriores();
   iniciarPublico({ onEntrar: entrarConSesion, onReintentarClub: entrarConSesion });
   iniciarChrome({
