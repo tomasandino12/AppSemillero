@@ -6,7 +6,7 @@ import { nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
 import { esEnlaceWeb } from '../../data/enlaces.js';
-import { urlDeReproductor } from '../../data/youtube.js';
+import { reproductorHtml } from '../componentes/video.js';
 import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
 import { abrirAltaEjercicio } from './ejercicios.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
@@ -80,22 +80,6 @@ function bloqueNotas(notas) {
   return notas.map(notaHtml).join('');
 }
 
-/**
- * Si el enlace es un video de YouTube, se ve ahí mismo. Si no (link de un
- * tercero, o todavía no hay video propio), queda sólo "Abrir el enlace" abajo:
- * el iframe es un agregado, no reemplaza al link. La CSP (frame-src) sólo deja
- * cargar youtube-nocookie.
- */
-function bloqueVideo(ejercicio) {
-  const src = urlDeReproductor(ejercicio.enlace);
-  if (!src) return '';
-  return `
-    <div class="video-embed">
-      <iframe src="${escaparHtml(src)}" title="Video del ejercicio: ${escaparHtml(ejercicio.titulo)}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-    </div>
-  `;
-}
-
 function filaMenor(etiqueta, valor) {
   return `<div class="fila-menor"><span class="k">${escaparHtml(etiqueta)}</span><span class="v">${escaparHtml(valor)}</span></div>`;
 }
@@ -121,7 +105,7 @@ function pintarEjercicio(club, ejercicio, notas) {
       <div class="sub">${escaparHtml(nombreDeTema(ejercicio.tema))} · ${escaparHtml(nombreDe(ejercicio.creadoPor))}</div>
     </div>
     <div class="pad">
-      ${bloqueVideo(ejercicio)}
+      ${reproductorHtml(ejercicio.enlace, ejercicio.titulo)}
       ${bloqueDescripcion(ejercicio)}
 
       <div class="eyebrow">Notas de uso</div>
