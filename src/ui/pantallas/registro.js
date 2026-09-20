@@ -21,6 +21,7 @@ import { refrescarPlanFisico } from './planFisico.js';
 import { renderFisico, iniciarFisico } from './fisico.js';
 import { renderSesion } from './fisicoSesion.js';
 import { renderEscalones } from './fisicoEscalones.js';
+import { renderJugRecursos } from './jugRecursos.js';
 
 /**
  * Punto único donde se registran las pantallas. Existe para que main.js no
@@ -50,7 +51,7 @@ export function registrarPantallas() {
   registrarPantalla('p-coord-inventario', { titulo: 'Inventario', render: renderInventarioCoordinacion });
   registrarPantalla('p-mi-perfil', { titulo: 'Mi perfil', render: renderMiPerfil });
   // Modo jugador (0030). Todavía sin contenido: cada pantalla trae su render.
-  registrarPantalla('p-jug-recursos', { titulo: 'Recursos' });
+  registrarPantalla('p-jug-recursos', { titulo: 'Recursos', render: renderJugRecursos });
   registrarPantalla('p-jug-fisico', { titulo: 'Físico' });
   registrarPantalla('p-jug-progreso', { titulo: 'Mi progreso' });
   setAbrirFicha(abrirFicha);
