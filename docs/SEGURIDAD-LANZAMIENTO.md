@@ -55,6 +55,30 @@ Con más calma:
   dashboard es lo más seguro. Contrapartida: coordinación ya no habilita
   gente que se registró sola.
 
+## Cuenta de jugador (0029 y 0030)
+
+Los jugadores tienen cuenta propia, de sólo lectura y sólo sobre lo suyo. Antes
+de darle acceso a un chico real:
+
+- **Consentimiento de los padres: pendiente de lanzamiento.** Son datos de
+  menores de todas las categorías, U13 incluida. El consentimiento se gestiona
+  por el canal de papel que el club ya usa; lo que aporta la app es el rastro
+  de quién dio el acceso y cuándo (`cuenta_jugador.aprobado_por` y `desde`). No
+  aprobar solicitudes hasta tenerlo resuelto con el club.
+- **Revocar es cerrar, no borrar.** "Quitarle el acceso" (en la ficha del
+  jugador) pone `hasta` y `revocado_por` en la cuenta; el chico deja de ver
+  todo al instante y queda escrito quién le dio y quién le sacó el acceso. No hay
+  forma de borrar una cuenta de jugador desde la app.
+- **Aplicar las migraciones y correr la verificación.** `npx supabase db push`
+  (pide confirmación) y después pegar `tests/verificarCuentaJugador.sql` en el
+  SQL Editor: tiene que dar todos los casos en OK, en particular el 8 (cero
+  filas en todas las tablas) y el 12 (nada de otro chico en `mi_progreso`). Las
+  dos migraciones se escribieron sin una base local a mano: esa corrida es la
+  primera vez que se ejecutan.
+- El chico ve sus recursos, el plan de su categoría con su propio peso y su
+  progreso (partidos, tiro, velocidad). **No** ve medidas corporales ni datos de
+  otro jugador, ni siquiera un promedio del plantel.
+
 ## Datos de menores
 
 La app guarda nombres, fecha de nacimiento, altura y peso de menores. Antes de

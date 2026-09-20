@@ -1,9 +1,10 @@
 # ESQUEMA.md — Modelo de datos
 
 Estado al día de la migración `0019_nombre_y_categorias.sql`, más la sección de
-escalones de fuerza de `0023_escalones_fuerza.sql` y el inventario de
-`0026_material.sql`. Las tablas del plan físico de 0020–0022 todavía no están
-documentadas acá (ver la Tarea 7 del plan de import).
+escalones de fuerza de `0023_escalones_fuerza.sql`, el inventario de
+`0026_material.sql` y la cuenta de jugador de `0029` y `0030`. Las tablas del
+plan físico de 0020–0022 todavía no están documentadas acá (ver la Tarea 7 del
+plan de import).
 
 ## Diagrama en texto
 
@@ -19,6 +20,8 @@ club (1) ──< temporada (1) ──< plantel >── (N) pertenencia >── (
   ├──< miembro_club >── auth.users
   │          │
   │          └──< asignacion_plantel >── plantel
+  ├──< cuenta_jugador >── auth.users      (el jugador, 0029; nunca en miembro_club)
+  ├──< solicitud_jugador >── plantel      (el pedido de acceso, 0029)
   └──< importacion ──(1:1)── partido
 
 categoria (catálogo global, sin club_id) ──< plantel
@@ -56,7 +59,7 @@ El número de camiseta **no** vive acá — está verificado (Etapa 1) que cambi
 La membresía de un jugador a un plantel en una temporada, con rango `desde`/`hasta` (`hasta` NULL = vigente). Un jugador puede tener más de una pertenencia vigente a la vez (citado a dos categorías) — es el caso normal en inferiores, no una excepción.
 
 ### `miembro_club`
-`(user_id, club_id)`, PK compuesta. Dice **a qué club** pertenece una cuenta y **con qué rol**; a qué categorías dentro de ese club lo dice `asignacion_plantel`. Los jugadores no tienen cuenta.
+`(user_id, club_id)`, PK compuesta. Dice **a qué club** pertenece una cuenta y **con qué rol**; a qué categorías dentro de ese club lo dice `asignacion_plantel`. **Es sólo del cuerpo técnico.** Los jugadores tienen cuenta propia desde 0029, pero en otra tabla (`cuenta_jugador`, abajo): un jugador nunca es staff y el check de esta tabla no se toca.
 
 - `es_entrenador`, `es_coordinador` (0017), con `check (es_entrenador or es_coordinador)`. Una persona puede tener los dos. Son dos booleanos y no un rol de texto porque son exactamente dos roles fijos: se leen en una policy sin join, y el check hace imposible una membresía sin rol. La columna `rol` de 0016 se eliminó en 0017.
 - `habilitado_por`, `habilitado_en`: quién y cuándo, cuando se habilita desde el panel. Null = a mano por SQL, o antes de 0017.
@@ -162,6 +165,33 @@ de quien consulta. Es la primera vista del esquema.
 Guardaba un número por línea, o sea para todo el grupo, y nunca se escribió. El
 peso de cada jugador vive en `movimiento_escalon`.
 
+### `solicitud_jugador` (0029)
+Un chico que se registró pide entrar a una categoría: `(id, user_id, club_id, plantel_id, estado, creado_en, resuelto_por, resuelto_en)`.
+
+- `estado`: `pendiente` | `aprobada` | `rechazada`. Índice único parcial: **una sola pendiente por cuenta**. Las resueltas pueden repetirse (a quien le rechazaron una por error le queda pedir de nuevo).
+- **No guarda el nombre.** Ya está en los metadatos de Auth (0019), y una copia más del nombre de un menor no aporta nada; `solicitudes_del_plantel()` lo lee de ahí, como `usuarios_pendientes()`.
+- El chico no lee ni escribe la tabla: crea la solicitud con `crear_solicitud_jugador()` y ve la suya con `mi_solicitud_jugador()`. La leen y la resuelven los entrenadores con asignación vigente al plantel de la solicitud (`puede_escribir_plantel`).
+- Update otorgado sólo sobre `estado`; un trigger sella `resuelto_por` y `resuelto_en`, y una solicitud resuelta no se vuelve a tocar. Sin insert directo ni delete.
+
+### `cuenta_jugador` (0029)
+Qué cuenta de Auth ve a qué jugador: `(id, user_id, club_id, jugador_id, desde, hasta, aprobado_por, revocado_por)`.
+
+- **Con historia, como `asignacion_plantel`.** Únicos parciales `where hasta is null`: una cuenta vigente por jugador y una por cuenta. **No se borra, se cierra**: dentro de dos años tiene que poder saberse quién le dio acceso a qué chico. Sin delete; el cierre lo sella un trigger (`hasta = now()`, `revocado_por = auth.uid()`) y una fila cerrada no se toca.
+- Vincular es un insert de `(user_id, club_id, jugador_id)` y la policy exige una **solicitud pendiente de esa misma cuenta** y una ficha con **pertenencia vigente al plantel al que pidió entrar**. Lo hace `aprobar_solicitud_jugador()`; el sistema nunca compara nombres para decidir qué ficha es cuál, lo decide el profe.
+- La leen y la cierran los entrenadores de los planteles del chico. Ni coordinación ni el propio chico.
+
+### La lectura del jugador (0030): funciones, no tablas
+**El jugador no tiene `select` sobre ninguna tabla de dominio.** Comparte el rol `authenticated` con el cuerpo técnico, pero todas las policies de datos de jugador exigen ser miembro del club, así que consultando cualquier tabla obtiene cero filas (`categoria`, el catálogo global, es la excepción: no lleva datos de nadie). Lee por cuatro funciones `security definer` con `set search_path = ''`, todas arrancando por `mi_jugador()` (`auth.uid()` → `jugador_id` con cuenta vigente, o null; interna, no se otorga):
+
+| Función | Devuelve |
+|---|---|
+| `mi_ficha()` | club, nombre propio y planteles con pertenencia vigente. Null si no hay cuenta vigente: es lo que arranca la app. |
+| `mis_recursos()` | sólo los `envio_recurso` dirigidos a él. |
+| `mi_plan()` | por cada plantel suyo, el plan vigente (mismo criterio que `elegirPlanVisible`) con sus sesiones y líneas, más `pesos`: **su** último peso en cada ejercicio, con la clave para unirlo a la línea en el cliente (`clavearNombre` es JS y no se reproduce en SQL). |
+| `mi_progreso()` | `partidos`, `tiro`, `velocidad` y `escalones`, todo propio. Sin medidas corporales, sin promedios ni nombres de otros. |
+
+Con la cuenta cerrada devuelven null o cero filas, y no se borra nada. `src/data/accesoJugador.js` declara todo lo que 0029 y 0030 otorgan con `grant execute`, y `tests/contratoAccesoJugador.test.js` falla si aparece un grant que no está ahí. Sumar una función para el jugador es una RPC, una pantalla y una línea en `TABS_JUGADOR`; sacarla es `revoke execute`.
+
 ### `material` (0026)
 El inventario de material del club: una fila por variante, con `cantidad` en
 unidades sueltas (dos mancuernas de 10 kg son `cantidad = 2`).
@@ -198,6 +228,9 @@ Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembr
 | `material` (inventario) | lee todo el club | lee y **escribe** todo el club | lee y escribe |
 | Panel: pendientes, miembros, asignaciones, panorama | **rechaza** | su club | su club |
 | Habilitar, asignar, cerrar | **nunca** | a otros, en su club | a otros, en su club |
+| `solicitud_jugador`, `cuenta_jugador` (0029) | sus planteles asignados | **nada** | sus planteles asignados |
+
+**El jugador** (cuenta en `cuenta_jugador`, no en `miembro_club`) no aparece en ninguna columna de la tabla de arriba: **cero filas en todas las tablas**. Lee sólo por `mi_ficha`, `mis_recursos`, `mi_plan` y `mi_progreso` (0030), y sólo lo suyo.
 
 El coordinador ve el panorama agregado (`panorama_del_club`), que devuelve sólo conteos y sumas, nunca una fila de jugador. Menos gente con acceso a datos de menores, y la coordinación no lo necesita para su función.
 
@@ -211,9 +244,14 @@ Las funciones, todas `security definer` con `set search_path = ''`:
 | `usuarios_pendientes()` | cuentas con mail confirmado y sin club, con su nombre; sólo coordinación |
 | `miembros_del_club(club)` | membresías con mail y nombre; sólo coordinación de ese club |
 | `nombres_del_club(club)` | el nombre de cada miembro, para la autoría de ejercicios y notas; cualquier miembro de ese club (0019) |
+| `clubes_para_solicitar()` | el catálogo de clubes y categorías vigentes (los de la temporada de nombre más alto) para el formulario "Soy jugador de un club"; sólo cuentas sin club (0029) |
+| `crear_solicitud_jugador(club, plantel)`, `mi_solicitud_jugador()` | quien no es staff ni tiene cuenta, con mail confirmado y una sola pendiente; el plantel debe ser de la temporada vigente (0029) |
+| `solicitudes_del_plantel(plantel)` | el entrenador de ese plantel; el nombre que escribió el chico sale de los metadatos de Auth (0029) |
 | `panorama_del_club(club)` | por plantel: jugadores, partidos, última medición; tiro de batería sumado por (sesión, posición); y desde 0022, tiro en partidos sumado por partido (triples y libres, anotados e intentados de a pares, con el rival). Sin porcentajes: los calcula `estadisticas.js` |
 
-**Límite conocido:** `usuarios_pendientes()` muestra a cualquier coordinador todas las cuentas sin club de la plataforma. Con un solo club (hoy) es exacto. Ver `docs/COORDINACION.md`.
+**Límite conocido:** `usuarios_pendientes()` muestra a cualquier coordinador todas las cuentas sin club de la plataforma. Con un solo club (hoy) es exacto. Desde 0029 no lista a quien ya tiene una cuenta de jugador vigente: sin ese filtro, un chico figuraría entre los "pendientes de habilitar", a un toque de quedar como entrenador con acceso a datos de otros menores. `clubes_para_solicitar()` tiene el límite equivalente. Ver `docs/COORDINACION.md`.
+
+Las funciones invoker de 0029 (`aprobar_solicitud_jugador(payload)`, `rechazar_solicitud_jugador(id)`, `revocar_cuenta_jugador(jugador)`) quedan sujetas a RLS: un entrenador sin asignación al plantel de la solicitud ni siquiera la ve. `aprobar_solicitud_jugador` hace en **una transacción** los dos caminos —`{solicitudId, jugadorId}` vincula a una ficha del plantel; `{solicitudId, nombreClave, nombreLimpio}` crea la ficha, su pertenencia vigente y vincula— y falla con `JUGADOR_YA_EXISTE`, `JUGADOR_YA_TIENE_CUENTA`, `FICHA_FUERA_DEL_PLANTEL` o `SOLICITUD_NO_ENCONTRADA`, sin dejar nada a medias.
 
 Son `security definer` por obligación, no por comodidad: se llaman desde las policies de las tablas de dominio y consultan `plantel`, así que como `invoker` la consulta a `plantel` quedaría sujeta a la policy de `plantel`, que llama a esta función — recursión infinita.
 
@@ -292,3 +330,9 @@ permiso de ejecutar los RPC de escritura.
 6. Con ese usuario autenticado, confirmar que ve U17M del "Club de Prueba" y **no** ve U21M.
 7. Para probar coordinación, crear otro usuario con `es_coordinador = true` (y `es_entrenador = false`): tiene que entrar al Panorama y a Profes, poder habilitar al primero, y leer cero filas en las tablas de jugador.
 8. La verificación completa, con usuarios sintéticos, es `tests/verificarCoordinacion.sql`.
+9. Para probar a mano la cuenta de jugador sin pasar por el flujo de solicitud, con un usuario sin fila en `miembro_club` y una ficha existente:
+   ```sql
+   insert into cuenta_jugador (user_id, club_id, jugador_id, aprobado_por)
+   values ('<uuid del usuario>', '<club>', '<uuid de la ficha>', '<uuid de un entrenador>');
+   ```
+   Ese usuario entra directo al shell del jugador (Recursos, Físico, Mi progreso). La verificación completa es `tests/verificarCuentaJugador.sql`: se pega en el SQL Editor después de aplicar 0029 y otra vez después de 0030.

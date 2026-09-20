@@ -153,3 +153,15 @@ hay forma de saber a cuál va. Con Newell's solo, es exacta. Con un segundo
 club, un coordinador vería los mails de quien se registró para el otro. Se
 decidió probar primero con usuarios reales y pensarlo recién si hace falta más
 de un club.
+
+Desde la cuenta de jugador (0029) hay un límite equivalente, con el mismo
+criterio: `clubes_para_solicitar()` le muestra a **cualquier cuenta sin club**
+la lista de clubes y categorías de la plataforma, para armar el formulario
+"Soy jugador de un club". Son nombres de club y de categoría, información
+pública, y con un solo club es exacto. Con un segundo club habría que ofrecer
+un código de invitación en vez de un catálogo abierto.
+
+Esa lista de **Esperando acceso** no incluye a quien ya tiene una cuenta de
+jugador vigente. Un chico que pidió acceso y todavía no fue aprobado sí puede
+aparecer ahí: a un jugador se lo aprueba desde PLANTEL, no desde acá, y
+habilitarlo como profe le daría acceso a los datos de otros menores.
