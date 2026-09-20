@@ -1,0 +1,15 @@
+# La app tiene una sola URL pública: la landing en /. No hay ruteo — navegar
+# muestra y esconde secciones del mismo documento — así que no existen rutas
+# de la app que un buscador pueda pedir, y todo lo que hay detrás de la
+# sesión son datos de menores que nunca salen al HTML sin auth.
+#
+# No se bloquea /public/ a propósito: ahí viven el CSS, el JS y el escudo.
+# Google necesita bajarlos para renderizar la página, y bloquearlos le haría
+# ver una landing rota. El duplicado de /public/index.html no se resuelve
+# acá sino con el <link rel="canonical"> del head: un Disallow le impediría
+# leer justamente ese canonical.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://app-semillero.vercel.app/sitemap.xml

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Una sola entrada, y está bien: la app no tiene ruteo, así que / es la
+     única URL que existe. Sirve menos para el ranking que para Search
+     Console, que lo pide para confirmar qué se indexó.
+
+     Sin <lastmod>: habría que acordarse de tocarlo en cada deploy, y una
+     fecha vieja le dice a Google algo falso. Mejor que no haya dato. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://app-semillero.vercel.app/</loc>
+  </url>
+</urlset>
