@@ -14,7 +14,9 @@ import {
 } from './chrome.js';
 import {
   iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub, mostrarPedirNombre,
+  mostrarNuevaClave, mostrarLinkDeRecuperacionVencido,
 } from './publico.js';
+import { pantallaDeRecuperacion } from '../data/enlaceDeRecuperacion.js';
 
 const pantallas = new Map();
 const pila = [];
@@ -26,12 +28,12 @@ let yaSeLeAbrioElPedido = false;
 
 /**
  * Si el usuario llega desde el link de "recuperar contraseña", la URL trae el
- * token en el hash. Hay que leerlo ACÁ, antes de tocar Supabase: el cliente
- * detecta ese hash, abre sesión y lo borra, y a partir de ese momento esta
- * visita es indistinguible de una entrada normal — lo mandaríamos derecho a
- * la app en vez de pedirle la contraseña nueva.
+ * token (o el error) en el hash. Hay que leerlo ACÁ, antes de tocar Supabase:
+ * el cliente detecta ese hash, abre sesión y lo borra, y a partir de ese
+ * momento esta visita es indistinguible de una entrada normal — lo mandaríamos
+ * derecho a la app en vez de pedirle la contraseña nueva.
  */
-const VIENE_A_CAMBIAR_LA_CLAVE = /[#&]type=recovery/.test(window.location.hash);
+const HASH_DE_ARRANQUE = window.location.hash;
 
 /**
  * Registra una pantalla. `render` puede ser async; se llama cada vez que se
@@ -258,15 +260,21 @@ async function iniciar() {
   // quien no entró no tiene que ver el chrome de la app.
   mostrarPublico('v-cargando');
 
-  if (VIENE_A_CAMBIAR_LA_CLAVE) {
-    // Fuerza la creación del cliente, que es lo que consume el token del hash
-    // y deja la sesión de recuperación abierta para updateUser().
-    await sesionSilenciosa();
-    mostrarPublico('v-nueva-clave');
+  // Esto fuerza la creación del cliente, que es lo que consume el token del
+  // hash y deja la sesión de recuperación abierta para updateUser(). Si el
+  // token venció (una hora, por defecto) Supabase contesta 400 y no hay
+  // sesión: eso no se parece en nada a una visita normal y no se lo trata así.
+  const sesion = await sesionSilenciosa();
+  const destino = pantallaDeRecuperacion(HASH_DE_ARRANQUE, Boolean(sesion));
+  if (destino === 'nueva-clave') {
+    mostrarNuevaClave();
+    return;
+  }
+  if (destino === 'link-vencido') {
+    mostrarLinkDeRecuperacionVencido();
     return;
   }
 
-  const sesion = await sesionSilenciosa();
   if (sesion) await entrarConSesion();
   else mostrarLanding();
 }

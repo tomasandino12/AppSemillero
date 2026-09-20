@@ -5,7 +5,7 @@ import {
 import { normalizarNombre } from '../data/cuenta.js';
 import { esErrorDeRed } from './nav.js';
 import { $ } from './dom.js';
-import { SIN_CONEXION, textoDeError } from './errores.js';
+import { SIN_CONEXION, LINK_DE_RECUPERACION_VENCIDO, textoDeError } from './errores.js';
 import {
   iniciarSolicitudJugador, abrirSolicitudJugador, solicitudPendiente, textoDeSolicitudPendiente,
 } from './pantallas/solicitudJugador.js';
@@ -66,6 +66,27 @@ export function mostrarApp() {
 export function mostrarLanding() {
   limpiarErrores();
   mostrarPublico('v-landing');
+}
+
+/**
+ * La única puerta a la vista de contraseña nueva: la usan el arranque (que
+ * mira el hash) y el evento PASSWORD_RECOVERY. Si los dos caminos llevan a la
+ * misma función, no se pueden desincronizar.
+ */
+export function mostrarNuevaClave() {
+  limpiarErrores();
+  mostrarPublico('v-nueva-clave');
+}
+
+/**
+ * El hash traía un link de recuperación pero no se pudo abrir sesión: venció,
+ * ya se usó, o el token es inválido. Cae en "Recuperar la contraseña", que ya
+ * tiene el campo del mail y el botón para pedir otro, con el aviso puesto.
+ */
+export function mostrarLinkDeRecuperacionVencido() {
+  limpiarErrores();
+  mostrarPublico('v-recuperar');
+  avisar('recuperar-error', LINK_DE_RECUPERACION_VENCIDO);
 }
 
 /** La cuenta existe pero no tiene fila en miembro_club. No es un error. */
@@ -346,6 +367,6 @@ export function iniciarPublico({ onEntrar, onReintentarClub }) {
   // link del mail. main.js ya mira el hash antes de arrancar, así que esto es
   // el respaldo para el caso en que el evento llegue después.
   alCambiarAuth((evento) => {
-    if (evento === 'PASSWORD_RECOVERY') mostrarPublico('v-nueva-clave');
+    if (evento === 'PASSWORD_RECOVERY') mostrarNuevaClave();
   });
 }

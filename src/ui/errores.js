@@ -7,6 +7,10 @@ import { escaparHtml, esErrorDeRed } from './nav.js';
  */
 
 export const SIN_CONEXION = 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
+
+/** El link del mail de recuperación no sirvió. Vencen en una hora. */
+export const LINK_DE_RECUPERACION_VENCIDO = 'El link para cambiar la contraseña venció o ya se usó. Escribí tu mail y pedí uno nuevo.';
+
 const SIN_PERMISO = 'No tenés permiso para hacer eso.';
 const SIN_PERMISO_EN_TEXTO = /row-level security|permission denied|42501/i;
 
