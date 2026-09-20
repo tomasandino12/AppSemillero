@@ -1,13 +1,14 @@
 import {
   obtenerPlantelesDelClub, obtenerCatalogoDeCategorias, obtenerTemporadasDelClub,
   obtenerMiembrosDelClub, obtenerAsignacionesDelClub, obtenerUsuariosPendientes,
-  obtenerUsuarioActual, asignarPlanteles, cerrarAsignacion,
+  obtenerUsuarioActual, asignarPlanteles, cerrarAsignacion, descartarCuenta,
 } from '../../data/repositorio.js';
 import { armarProfes } from '../../data/coordinacion.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { $ } from '../dom.js';
+import { html } from '../html.js';
 import { mensajeAlGuardar, textoDeError } from '../errores.js';
 
 const contenedor = () => $('coord-profes-contenido');
@@ -27,6 +28,8 @@ const mensajeDeError = (e) => mensajeAlGuardar(e, {
   reglas: [
     [/SIN_CATEGORIAS/, 'Marcá al menos una categoría.'],
     [/NO_ES_ENTRENADOR/, 'Esa cuenta es de coordinación. Para que además entrene, hay que dárselo desde la base.'],
+    [/YA_ES_DEL_CLUB/, 'Esa cuenta ya es del club. Actualizá la lista.'],
+    [/ES_JUGADOR/, 'Esa cuenta es de un jugador: se la puede habilitar como profe, no rechazar.'],
   ],
   permiso: /NO_SE_PUDO_CERRAR|row-level security|permission denied|42501/i,
 });
@@ -34,16 +37,17 @@ const mensajeDeError = (e) => mensajeAlGuardar(e, {
 /* ---------- bloques ---------- */
 
 function pendientesHtml(pendientes) {
-  if (!pendientes.length) return '<div class="p">No hay cuentas esperando acceso.</div>';
-  return pendientes.map((u) => `
+  if (!pendientes.length) return html`<div class="p">No hay cuentas esperando acceso.</div>`;
+  return html`${pendientes.map((u) => html`
     <div class="jug-fila">
       <div style="flex:1;min-width:0">
-        <div class="nom">${escaparHtml(u.nombre || u.email)}</div>
-        <div class="det">${u.nombre ? `${escaparHtml(u.email)} · ` : ''}Se registró el ${escaparHtml(formatearFechaCorta(u.registradoEn.slice(0, 10)))}</div>
+        <div class="nom">${u.nombre || u.email}</div>
+        <div class="det">${u.nombre ? `${u.email} · ` : ''}${u.esJugador ? 'Es jugador del club · ' : ''}Se registró el ${formatearFechaCorta(u.registradoEn.slice(0, 10))}</div>
       </div>
+      ${!u.esJugador && html`<button class="btn sec chico" data-descartar="${u.userId}">Rechazar</button>`}
       <button class="btn chico" data-habilitar="${u.userId}">Habilitar</button>
     </div>
-  `).join('');
+  `)}`;
 }
 
 function sinProfeHtml(sinProfe) {
@@ -142,13 +146,48 @@ function abrirHabilitar(pendiente) {
   const quien = pendiente.nombre || pendiente.email;
   abrirElegirCategorias({
     titulo: 'Habilitar',
-    texto: `${escaparHtml(quien)} va a poder entrar como entrenador y ver sólo las categorías que marques. La biblioteca de ejercicios la ve entera.`,
+    texto: `${escaparHtml(quien)} va a poder entrar como entrenador y ver sólo las categorías que marques. La biblioteca de ejercicios la ve entera.${pendiente.esJugador ? ' Como hoy es jugador del club, su acceso de jugador se cierra: deja de ver su ficha y pasa a entrar sólo como profe.' : ''}`,
     planteles: vista.plantelesDeLaTemporada,
     textoBoton: 'Habilitar y asignar',
     alConfirmar: async (plantelIds) => {
       const r = await asignarPlanteles({ userId: pendiente.userId, clubId: club.id, plantelIds });
       toast(`Listo: ${quien} ya puede entrar, con ${r.asignadas} categoría${r.asignadas === 1 ? '' : 's'}.`);
     },
+  });
+}
+
+/**
+ * Rechazar es reversible (la cuenta puede volver a pedir desde su pantalla),
+ * pero mientras tanto desaparece de la lista: por eso pide confirmación.
+ */
+function abrirDescartar(pendiente) {
+  const club = obtenerClubActual();
+  const quien = pendiente.nombre || pendiente.email;
+  abrirHoja({
+    titulo: 'Rechazar',
+    cuerpo: html`
+      <div class="p">${quien} sale de la lista y no entra a la app.</div>
+      <div class="p">Si fue un error, puede volver a pedir el acceso desde su cuenta y va a aparecer de nuevo acá.</div>
+      <div class="acciones">
+        <button class="btn" id="btn-confirmar-descartar">Rechazar</button>
+        <button class="btn sec" id="btn-cancelar-descartar">Cancelar</button>
+      </div>
+    `.toString(),
+  });
+  $('btn-cancelar-descartar').addEventListener('click', () => cerrarHoja());
+  $('btn-confirmar-descartar').addEventListener('click', async () => {
+    const boton = $('btn-confirmar-descartar');
+    if (boton.disabled) return;
+    boton.disabled = true;
+    try {
+      await descartarCuenta({ userId: pendiente.userId, clubId: club.id });
+      cerrarHoja();
+      toast(`Listo: ${quien} ya no figura en la lista.`);
+      await renderProfes();
+    } catch (e) {
+      toast(mensajeDeError(e));
+      boton.disabled = false;
+    }
   });
 }
 
@@ -288,6 +327,9 @@ export async function renderProfes() {
 
   contenedor().querySelectorAll('[data-habilitar]').forEach((b) => b.addEventListener('click', () => {
     abrirHabilitar(vista.pendientes.find((u) => u.userId === b.dataset.habilitar));
+  }));
+  contenedor().querySelectorAll('[data-descartar]').forEach((b) => b.addEventListener('click', () => {
+    abrirDescartar(vista.pendientes.find((u) => u.userId === b.dataset.descartar));
   }));
   contenedor().querySelectorAll('[data-asignar-plantel]').forEach((b) => b.addEventListener('click', () => {
     abrirElegirProfe(vista.sinProfe.find((p) => p.id === b.dataset.asignarPlantel));

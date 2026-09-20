@@ -1,6 +1,7 @@
 import {
   iniciarSesion, crearCuenta, enviarRecuperacionDeClave, cambiarClave,
   entrarConGoogle, cerrarSesion, alCambiarAuth, guardarMiNombre,
+  miPedidoDescartado, volverAPedirAcceso,
 } from '../data/repositorio.js';
 import { normalizarNombre } from '../data/cuenta.js';
 import { esErrorDeRed } from './nav.js';
@@ -73,6 +74,7 @@ export function mostrarSinClub(email) {
   $('sin-club-mail').textContent = email ?? '—';
   mostrarPublico('v-sin-club');
   mostrarSolicitudEnSinClub();
+  mostrarRechazoEnSinClub();
 }
 
 /**
@@ -89,6 +91,44 @@ async function mostrarSolicitudEnSinClub() {
   aviso.textContent = textoDeSolicitudPendiente(pendiente);
   aviso.hidden = false;
   $('btn-sin-club-jugador').textContent = 'Ver mi solicitud';
+}
+
+/**
+ * Si coordinación rechazó el pedido, se le dice a la persona: sin esto mira una
+ * pantalla que dice "pasale tu mail al coordinador" y espera para siempre. Si
+ * fue un error, lo pide de nuevo desde acá y reaparece en la lista (0032).
+ * Un error de red no bloquea nada: la pantalla queda como estaba.
+ */
+async function mostrarRechazoEnSinClub() {
+  const aviso = $('sin-club-rechazo');
+  const boton = $('btn-sin-club-volver-a-pedir');
+  aviso.hidden = true;
+  boton.hidden = true;
+  let rechazada = false;
+  try {
+    rechazada = await miPedidoDescartado();
+  } catch {
+    return;
+  }
+  if (!rechazada) return;
+  aviso.textContent = 'Coordinación no habilitó esta cuenta. Si fue un error, podés pedir el acceso de nuevo.';
+  aviso.hidden = false;
+  boton.hidden = false;
+}
+
+async function volverAPedir() {
+  const aviso = $('sin-club-rechazo');
+  const boton = $('btn-sin-club-volver-a-pedir');
+  boton.disabled = true;
+  try {
+    await volverAPedirAcceso();
+    aviso.textContent = 'Listo: coordinación lo va a ver de nuevo. Cuando te habiliten, entrá con "reintentar".';
+    boton.hidden = true;
+  } catch (e) {
+    aviso.textContent = esErrorDeRed(e) ? SIN_CONEXION : 'No se pudo pedir de nuevo. Probá otra vez.';
+  } finally {
+    boton.disabled = false;
+  }
 }
 
 /**
@@ -335,10 +375,11 @@ export function iniciarPublico({ onEntrar, onReintentarClub }) {
 
   $('btn-sin-club-reintentar').addEventListener('click', () => onReintentarClub());
   $('btn-sin-club-jugador').addEventListener('click', () => abrirSolicitudJugador());
+  $('btn-sin-club-volver-a-pedir').addEventListener('click', volverAPedir);
   iniciarSolicitudJugador({
     mostrar: mostrarPublico,
     onReintentar: () => onReintentarClub(),
-    onVolver: () => { mostrarPublico('v-sin-club'); mostrarSolicitudEnSinClub(); },
+    onVolver: () => { mostrarPublico('v-sin-club'); mostrarSolicitudEnSinClub(); mostrarRechazoEnSinClub(); },
   });
   $('btn-sin-club-salir').addEventListener('click', salirDeLaCuenta);
 

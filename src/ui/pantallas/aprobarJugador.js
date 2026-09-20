@@ -22,6 +22,7 @@ const REGLAS = [
   [/JUGADOR_YA_TIENE_CUENTA/, 'Esa ficha ya tiene una cuenta vinculada.'],
   [/CUENTA_YA_VINCULADA/, 'Esa cuenta ya está vinculada a otra ficha.'],
   [/SOLICITUD_NO_ENCONTRADA/, 'Esa solicitud ya no está pendiente: la resolvió otro profe o no es de tu categoría.'],
+  [/ES_DEL_CUERPO_TECNICO/, 'Esa cuenta ya es del cuerpo técnico: no se la puede vincular a una ficha de jugador. Rechazá la solicitud.'],
   [/FICHA_FUERA_DEL_PLANTEL/, 'Esa ficha no está en esta categoría.'],
 ];
 
