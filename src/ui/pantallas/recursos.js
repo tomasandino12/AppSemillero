@@ -3,6 +3,7 @@ import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
 import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { abrirVideo, esVideoEmbebible } from '../componentes/video.js';
 import { ir } from '../main.js';
 import { renderSeccionEjercicios } from './ejercicios.js';
 import { $ } from '../dom.js';
@@ -32,6 +33,7 @@ function tarjetaRecurso(r) {
     <div class="rec">
       <div class="t">${escaparHtml(r.titulo)}</div>
       <div class="d">${escaparHtml(r.descripcion)}</div>
+      ${esVideoEmbebible(r.enlace) ? `<button class="btn sec chico" data-ver-video="${r.id}">Ver video</button>` : ''}
       ${esEnlaceWeb(r.enlace) ? `<a class="enlace-rec" href="${escaparHtml(r.enlace)}" target="_blank" rel="noopener noreferrer">Abrir el material</a>` : ''}
       <div class="m">
         <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
@@ -229,6 +231,12 @@ async function renderSeccionJugadores() {
     <div class="pie-fijo"><button class="btn sec" id="btn-ofrecer">Ofrecer un recurso</button></div>
   `;
   $('btn-ofrecer').addEventListener('click', () => abrirAltaDeRecurso(null, jugadores));
+  contenedorJugadores().querySelectorAll('[data-ver-video]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const recurso = recursos.find((r) => r.id === b.dataset.verVideo);
+      if (recurso) abrirVideo(recurso.enlace, recurso.titulo);
+    });
+  });
   contenedorJugadores().querySelectorAll('[data-reenviar]').forEach((b) => {
     b.addEventListener('click', () => abrirAltaDeRecurso(b.dataset.reenviar, jugadores));
   });
