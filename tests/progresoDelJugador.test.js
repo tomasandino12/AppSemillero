@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque, bloquePorClaveDePlanes } from '../src/data/progresoDelJugador.js';
+import { insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque, bloquePorClaveDePlanes, pesosDeMovimientos } from '../src/data/progresoDelJugador.js';
 import { serieDeTiroDelJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador, UMBRAL_INTENTOS } from '../src/data/estadisticas.js';
 import { claveDeEjercicio } from '../src/data/escalones.js';
 
@@ -166,4 +166,38 @@ test('bloquePorClaveDePlanes: sin planes o líneas sin bloque no inventa nada', 
   assert.equal(bloquePorClaveDePlanes(undefined).size, 0);
   const planes = [{ sesiones: [{ fecha: '2026-04-01', lineas: [linea(1, null, 'Suelto')] }] }];
   assert.equal(bloquePorClaveDePlanes(planes).size, 0);
+});
+
+test('progresionDePesos: una fecha ya local no se corre de día al leerla', () => {
+  const [x] = progresionDePesos([{ clave: 'A', nombre: 'A', kg: 10, fecha: '2026-04-01' }]);
+  assert.equal(x.movimientos[0].fecha, '2026-04-01');
+});
+
+test('pesosDeMovimientos adapta lo que lee el profe: orden por fecha, bloque por ejercicio', () => {
+  const ejercicios = [
+    { pasoId: 'p1', nombre: 'Plancha', bloque: 'CORE' },
+    { pasoId: 'p2', nombre: 'Sentadilla', bloque: 'FUERZA' },
+    { pasoId: 'p3', nombre: 'Suelto', bloque: null },
+  ];
+  const movimientos = [
+    { jugadorId: 'j', pasoId: 'p2', kg: 42.5, fecha: '2026-04-15', orden: 3 },
+    { jugadorId: 'j', pasoId: 'p1', kg: 1, fecha: '2026-04-05', orden: 2 },
+    { jugadorId: 'j', pasoId: 'p2', kg: 40, fecha: '2026-04-01', orden: 1 },
+    { jugadorId: 'j', pasoId: 'p3', kg: 5, fecha: '2026-04-20', orden: 4 },
+  ];
+  const { escalones, bloquePorClave } = pesosDeMovimientos(movimientos, ejercicios);
+  assert.deepEqual(escalones.map((e) => e.kg), [40, 1, 42.5, 5]);
+  // Los bloques en el orden en que aparecen sus movimientos, como en DATOS.
+  assert.deepEqual([...new Set(bloquePorClave.values())], ['FUERZA', 'CORE']);
+
+  const grupos = pesosPorBloque(progresionDePesos(escalones, bloquePorClave), bloquePorClave);
+  assert.deepEqual(grupos.map((g) => g.bloque), ['FUERZA', 'CORE', 'Sin bloque']);
+  assert.equal(grupos[0].ejercicios[0].variacionKg, 2.5);
+});
+
+test('pesosDeMovimientos: sin movimientos no hay nada, y un ejercicio desconocido no rompe', () => {
+  assert.deepEqual(pesosDeMovimientos(undefined, undefined).escalones, []);
+  const { escalones } = pesosDeMovimientos([{ pasoId: 'x', kg: 3, fecha: '2026-04-01', orden: 1 }], []);
+  assert.equal(escalones.length, 1);
+  assert.equal(progresionDePesos(escalones)[0].nombre, 'x');
 });

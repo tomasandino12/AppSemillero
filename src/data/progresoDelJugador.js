@@ -77,7 +77,9 @@ export function progresionDePesos(escalones, bloquePorClave = new Map()) {
   const porEjercicio = new Map();
   for (const e of escalones ?? []) {
     if (!porEjercicio.has(e.clave)) porEjercicio.set(e.clave, { clave: e.clave, nombre: e.nombre, movimientos: [] });
-    porEjercicio.get(e.clave).movimientos.push({ kg: Number(e.kg), fecha: fechaLocal(new Date(e.creadoEn)) });
+    // `fecha` (ya local, la que trae la ficha del profe) no se vuelve a convertir:
+    // new Date('2026-04-01') es UTC y en Argentina cae el día anterior.
+    porEjercicio.get(e.clave).movimientos.push({ kg: Number(e.kg), fecha: e.fecha ?? fechaLocal(new Date(e.creadoEn)) });
   }
   return [...porEjercicio.values()]
     .map((x) => {
@@ -131,4 +133,26 @@ export function bloquePorClaveDePlanes(planes) {
       .sort((a, b) => a.orden - b.orden)
       .map((l) => ({ clave: claveDeEjercicio(l.nombreOriginal), bloque: l.bloque, fecha: s.fecha, orden: l.orden })));
   return bloquesPorClave(lineas);
+}
+
+/**
+ * Lo que lee el profe de un chico (obtenerCargasDelPlantel con un solo jugador)
+ * con la forma de progresionDePesos: `escalones` por fecha y orden de llegada, y
+ * el mapa ejercicio→bloque. Como esa función agrupa por `clave`, acá la clave es
+ * el pasoId. Los bloques quedan en el orden en que aparecen sus movimientos,
+ * igual que en DATOS.
+ */
+export function pesosDeMovimientos(movimientos, ejercicios) {
+  const porPaso = new Map((ejercicios ?? []).map((e) => [e.pasoId, e]));
+  const ordenados = [...(movimientos ?? [])]
+    .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.orden - b.orden);
+  const bloquePorClave = new Map();
+  for (const m of ordenados) {
+    const bloque = porPaso.get(m.pasoId)?.bloque;
+    if (bloque && !bloquePorClave.has(m.pasoId)) bloquePorClave.set(m.pasoId, bloque);
+  }
+  return {
+    escalones: ordenados.map((m) => ({ clave: m.pasoId, nombre: porPaso.get(m.pasoId)?.nombre ?? m.pasoId, kg: m.kg, fecha: m.fecha })),
+    bloquePorClave,
+  };
 }

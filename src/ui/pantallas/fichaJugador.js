@@ -3,12 +3,13 @@ import {
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel, obtenerMedicionesVelocidadDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
   obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
-  actualizarFechaNacimiento,
+  actualizarFechaNacimiento, obtenerCargasDelPlantel,
 } from '../../data/repositorio.js';
 import {
   serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador,
   ejeComun, compararPorcentajes,
 } from '../../data/estadisticas.js';
+import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
   ALTURA_MIN_CM, ALTURA_MAX_CM, PESO_MIN_KG, PESO_MAX_KG,
@@ -19,6 +20,8 @@ import { ir } from '../main.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
 import { verDetallesHtml } from '../componentes/verDetalles.js';
+import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjetasDePesos.js';
+import { html } from '../html.js';
 import { $ } from '../dom.js';
 import { avisoDeError, textoDeError } from '../errores.js';
 import { renderAccesoDeJugador } from './aprobarJugador.js';
@@ -279,11 +282,13 @@ export async function renderFicha() {
     <div class="pad" id="ficha-acceso"></div>
     <div class="pad" id="ficha-corporal"><div class="p">Cargando mediciones...</div></div>
     <div class="pad" id="ficha-historia"><div class="p">Cargando historia del jugador...</div></div>
+    <div class="pad" id="ficha-cargas"></div>
   `;
 
   renderPersonales(jugador);
   renderAccesoDeJugador(jugador);
   cargarCorporal(club.id, jugador.id);
+  cargarCargas(club.id, plantel.id, jugador.id);
 
   // Todo lo de acá abajo va en su propio try/catch: los datos básicos ya
   // están pintados arriba, así que un error de red trayendo la historia no
@@ -389,6 +394,35 @@ function renderPersonales(jugador) {
     boton.textContent = 'Guardar fecha de nacimiento';
     toast(valor ? 'Fecha de nacimiento guardada' : 'Fecha de nacimiento borrada');
   });
+}
+
+/* ---------- Cargas: cómo se movió su peso en cada ejercicio ---------- */
+
+/**
+ * Los pesos de este chico, un desplegable por bloque del plan. Va aparte de la
+ * historia: si falla, el resto de la ficha sigue. Sin pesos anotados no se
+ * dibuja nada (ni siquiera el título): el profe que no usa FÍSICO no ve ruido.
+ */
+async function cargarCargas(clubId, plantelId, idJugador) {
+  const cont = $('ficha-cargas');
+  if (!cont) return;
+  let grupos;
+  let bloques;
+  try {
+    const { movimientos, ejercicios } = await obtenerCargasDelPlantel(clubId, plantelId, [idJugador]);
+    const pesos = pesosDeMovimientos(movimientos, ejercicios);
+    bloques = pesos.bloquePorClave;
+    grupos = pesosPorBloque(progresionDePesos(pesos.escalones, bloques), bloques);
+  } catch (e) {
+    console.error('No se pudieron cargar los pesos del jugador:', e);
+    cont.innerHTML = html`<div class="eyebrow">Cargas</div><div class="p">No se pudieron cargar los pesos.</div>`;
+    return;
+  }
+  // La ficha pudo cambiar de jugador mientras esto cargaba.
+  if (idJugador !== jugadorId || !$('ficha-cargas')) return;
+  if (!grupos.length) return;
+  cont.innerHTML = html`<div class="eyebrow">Cargas</div>${tarjetasDePesosHtml(grupos, 'ficha-pesos')}`;
+  dibujarCurvasDePesos(grupos, 'ficha-pesos');
 }
 
 /* ---------- Mediciones corporales: histórico y alta ---------- */
