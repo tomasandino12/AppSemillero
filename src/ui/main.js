@@ -2,7 +2,8 @@ import {
   obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion,
   obtenerMisRoles, obtenerMisPlantelesAsignados, obtenerMiUsuario, obtenerMiFicha,
 } from '../data/repositorio.js';
-import { necesitaNombre, nombreSugerido, nombreDeUsuario } from '../data/cuenta.js';
+import { necesitaNombre, nombreSugerido, nombreDeUsuario, quiereSerJugador } from '../data/cuenta.js';
+import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
 import {
   setClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo, setCuenta, setFichaJugador,
@@ -17,6 +18,11 @@ import {
 
 const pantallas = new Map();
 const pila = [];
+
+// Quien se registró por la puerta de jugadores cae en el formulario de pedir
+// acceso, pero una sola vez por sesión: si vuelve atrás a "todavía no tenés
+// club" y reintenta, no se lo vuelve a abrir por la fuerza.
+let yaSeLeAbrioElPedido = false;
 
 /**
  * Si el usuario llega desde el link de "recuperar contraseña", la URL trae el
@@ -85,6 +91,7 @@ export async function volver() {
 
 /** Deja la app cerrada y vuelve al shell público. */
 function volverALaLanding() {
+  yaSeLeAbrioElPedido = false;
   limpiarSesion();
   pila.length = 0;
   mostrarLanding();
@@ -185,6 +192,10 @@ async function entrarConSesion() {
     }
     const sesion = await sesionSilenciosa();
     mostrarSinClub(sesion?.user?.email);
+    if (quiereSerJugador(usuario) && !yaSeLeAbrioElPedido) {
+      yaSeLeAbrioElPedido = true;
+      await abrirSolicitudJugador();
+    }
     return;
   }
   setClubActual(clubes[0]);

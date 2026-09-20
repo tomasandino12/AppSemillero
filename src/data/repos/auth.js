@@ -39,7 +39,7 @@ function urlDeRetorno() {
  * esperar a que haga clic en el link. Se devuelven las dos cosas para que la
  * UI pueda decir cuál de los dos casos pasó, en vez de dejarlo esperando.
  */
-export async function crearCuenta(email, password, nombre) {
+export async function crearCuenta(email, password, nombre, { esJugador = false } = {}) {
   const supabase = obtenerCliente();
   // El nombre viaja como metadato: en este momento no hay sesión (si el
   // proyecto exige confirmar el mail) y no se podría escribir en ninguna
@@ -47,7 +47,9 @@ export async function crearCuenta(email, password, nombre) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: urlDeRetorno(), data: { nombre } },
+    // quiere_ser_jugador sólo lleva a quien se registró por la puerta de jugadores
+    // directo al formulario de pedir acceso (ver cuenta.quiereSerJugador). No autoriza nada.
+    options: { emailRedirectTo: urlDeRetorno(), data: esJugador ? { nombre, quiere_ser_jugador: true } : { nombre } },
   });
   if (error) throw error;
   return { sesion: data.session, usuario: data.user };

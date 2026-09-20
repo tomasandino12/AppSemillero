@@ -55,6 +55,9 @@
       <button class="btn" id="btn-ir-crear">Crear cuenta</button>
       <button class="btn sec" id="btn-ir-ingresar">Ya tengo cuenta</button>
     </div>
+    <div class="enlaces">
+      <button id="btn-ir-crear-jugador">¿Sos jugador?<b>Creá tu cuenta</b></button>
+    </div>
 
     <div class="beneficios">
       <div class="ben">
@@ -127,8 +130,8 @@
   <section class="vista" id="v-crear">
     <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
     <div class="caja">
-      <h2>Crear cuenta</h2>
-      <div class="sub">Crear la cuenta es el primer paso. Para ver los datos de un club, después alguien del club tiene que darte el acceso.</div>
+      <h2 id="cr-titulo">Crear cuenta</h2>
+      <div class="sub" id="cr-sub">Crear la cuenta es el primer paso. Para ver los datos de un club, después alguien del club tiene que darte el acceso.</div>
 
       <div class="campo-osc">
         <label for="cr-nombre">Nombre y apellido completos</label>
@@ -289,13 +292,13 @@
       <h2>Tu cuenta está lista, falta el acceso</h2>
       <div class="d">
         La cuenta se creó bien y podés entrar con ella. Lo que todavía no tenés es
-        acceso a los datos del club: eso lo habilita el coordinador de tu club.
+        acceso a los datos del club, y depende de quién seas.
       </div>
-      <div class="d">Pasale este mail al coordinador para que te habilite:</div>
-      <div class="mail" id="sin-club-mail">—</div>
-      <button class="btn" id="btn-sin-club-reintentar">Ya me dieron el acceso, reintentar</button>
       <div class="d" id="sin-club-solicitud" hidden></div>
-      <button class="btn sec" id="btn-sin-club-jugador">Soy jugador de un club</button>
+      <button class="btn" id="btn-sin-club-jugador">Soy jugador de un club</button>
+      <div class="d">Si sos profe o coordinador, pasale este mail al coordinador de tu club para que te habilite:</div>
+      <div class="mail" id="sin-club-mail">—</div>
+      <button class="btn sec" id="btn-sin-club-reintentar">Ya me dieron el acceso, reintentar</button>
       <div class="enlaces">
         <button id="btn-sin-club-salir">Salir de esta cuenta</button>
       </div>

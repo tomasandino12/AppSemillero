@@ -50,3 +50,13 @@ export function inicialesDeNombre(nombre) {
 export function rolesLegibles({ esEntrenador, esCoordinador, esJugador } = {}) {
   return [esEntrenador && 'Entrenador', esCoordinador && 'Coordinación', esJugador && 'Jugador'].filter(Boolean);
 }
+
+/**
+ * Si la cuenta se creó por la puerta de jugadores. Sirve únicamente para
+ * llevarla al formulario de pedir acceso apenas entra: la marca la escribe la
+ * propia persona (user_metadata), así que no autoriza nada. Lo que un jugador
+ * puede ver lo decide la base, con cuenta_jugador.
+ */
+export function quiereSerJugador(usuario) {
+  return usuario?.user_metadata?.quiere_ser_jugador === true;
+}

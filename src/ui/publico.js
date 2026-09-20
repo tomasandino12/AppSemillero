@@ -25,6 +25,30 @@ const CLAVE_MINIMA = 8;
 
 let alEntrar = async () => {};
 
+// Por qué puerta se abrió "Crear cuenta". El login es uno solo (la cuenta no
+// sabe qué es hasta que la base le da acceso); lo que cambia es la explicación
+// y llevar al jugador, apenas entra, al formulario de pedir acceso.
+let modoDeAlta = 'profe';
+
+const TEXTOS_DE_ALTA = {
+  profe: {
+    titulo: 'Crear cuenta',
+    sub: 'Crear la cuenta es el primer paso. Para ver los datos de un club, después alguien del club tiene que darte el acceso.',
+  },
+  jugador: {
+    titulo: 'Cuenta de jugador',
+    sub: 'Creá tu cuenta con tu mail. Después elegís tu club y tu categoría, y el entrenador de tu categoría aprueba tu pedido: hasta entonces no ves nada.',
+  },
+};
+
+function abrirAlta(modo) {
+  modoDeAlta = modo;
+  limpiarErrores();
+  $('cr-titulo').textContent = TEXTOS_DE_ALTA[modo].titulo;
+  $('cr-sub').textContent = TEXTOS_DE_ALTA[modo].sub;
+  mostrarPublico('v-crear');
+}
+
 /* ---------- vistas ---------- */
 
 export function mostrarPublico(vista) {
@@ -177,7 +201,7 @@ async function crear() {
 
   await conBoton($('btn-crear'), 'Creando...', async () => {
     try {
-      const { sesion } = await crearCuenta(email, clave, nombre);
+      const { sesion } = await crearCuenta(email, clave, nombre, { esJugador: modoDeAlta === 'jugador' });
       if (sesion) {
         // El proyecto no exige confirmar el mail: ya está adentro.
         await alEntrar();
@@ -185,7 +209,7 @@ async function crear() {
       }
       // El proyecto sí exige confirmar. Sin esto el usuario se queda mirando
       // un formulario que "no hizo nada", que es el peor final posible.
-      avisar('crear-error', `Te mandamos un mail a ${email}. Abrilo para confirmar la cuenta y después ingresá.`, { ok: true });
+      avisar('crear-error', `Te mandamos un mail a ${email}. Abrilo para confirmar la cuenta y después ingresá${modoDeAlta === 'jugador' ? ': te va a llevar a pedir acceso a tu categoría' : ''}.`, { ok: true });
     } catch (e) {
       avisar('crear-error', mensajeDeCreacion(e));
     }
@@ -283,8 +307,9 @@ function alApretarEnter(idCampo, fn) {
 export function iniciarPublico({ onEntrar, onReintentarClub }) {
   alEntrar = onEntrar;
 
-  $('btn-ir-crear').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-crear'); });
-  $('btn-ir-crear-2').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-crear'); });
+  $('btn-ir-crear').addEventListener('click', () => abrirAlta('profe'));
+  $('btn-ir-crear-2').addEventListener('click', () => abrirAlta('profe'));
+  $('btn-ir-crear-jugador').addEventListener('click', () => abrirAlta('jugador'));
   $('btn-ir-ingresar').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-ingresar'); });
   $('btn-ir-ingresar-2').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-ingresar'); });
   $('btn-ir-ingresar-3').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-ingresar'); });

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LARGO_MAXIMO_NOMBRE, normalizarNombre, nombreDeUsuario, necesitaNombre,
-  nombreSugerido, inicialesDeNombre, rolesLegibles,
+  nombreSugerido, inicialesDeNombre, rolesLegibles, quiereSerJugador,
 } from '../src/data/cuenta.js';
 
 test('normalizar un nombre saca espacios de más y respeta el tope', () => {
@@ -51,4 +51,11 @@ test('los roles se leen en orden fijo', () => {
   assert.deepEqual(rolesLegibles({ esCoordinador: true }), ['Coordinación']);
   assert.deepEqual(rolesLegibles(), []);
   assert.deepEqual(rolesLegibles({ esJugador: true }), ['Jugador']);
+});
+
+test('quiereSerJugador sólo es cierto con la marca en true', () => {
+  assert.equal(quiereSerJugador({ user_metadata: { quiere_ser_jugador: true } }), true);
+  assert.equal(quiereSerJugador({ user_metadata: { quiere_ser_jugador: 'true' } }), false);
+  assert.equal(quiereSerJugador({ user_metadata: { nombre: 'Ana' } }), false);
+  assert.equal(quiereSerJugador(null), false);
 });
