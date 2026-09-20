@@ -1,5 +1,6 @@
 /*
- * Lógica pura del pedido de acceso de un jugador (0029). Sin red, sin DOM.
+ * Lógica pura del pedido de acceso de un jugador (0029) y de su aprobación. Sin
+ * red, sin DOM.
  */
 
 /**
@@ -14,4 +15,18 @@ export function clubesDelCatalogo(filas) {
     porClub.get(f.clubId).categorias.push({ plantelId: f.plantelId, nombre: f.categoriaNombre });
   }
   return [...porClub.values()];
+}
+
+/**
+ * Cuando crear la ficha choca con JUGADOR_YA_EXISTE: la ficha del club con esa
+ * clave (`existentes` es lo que devuelve obtenerJugadoresDelClub) y si ya está
+ * en el plantel de la solicitud. Sólo en ese caso se puede vincular con un
+ * toque; si está en otra categoría, hay que sumarla primero a esta. Null si no
+ * hay ninguna con esa clave. La clave la compara el sistema; QUÉ ficha es la
+ * persona lo decide siempre el profe, que es quien confirma.
+ */
+export function fichaExistente(existentes, nombreClave, plantelId) {
+  const jugador = (existentes ?? []).find((j) => j.nombreClave === nombreClave);
+  if (!jugador) return null;
+  return { jugador, enPlantel: (jugador.plantelesActuales ?? []).includes(plantelId) };
 }

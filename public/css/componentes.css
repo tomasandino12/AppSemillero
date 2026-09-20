@@ -84,6 +84,9 @@
 .al .ico{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-145);color:var(--rojo)}
 .al .tx{font-size:var(--fs-135);line-height:1.4}
 .al .mt{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
+/* Un aviso con una acción al lado (p. ej. "Revisar" en PLANTEL): el texto cede, el botón no se parte. */
+.al .tx{flex:1;min-width:0}
+.al .btn.chico{flex:0 0 auto;align-self:center;white-space:nowrap}
 .al.ok{border-left-color:var(--sube)}
 .al.ok .ico{color:var(--sube)}
 

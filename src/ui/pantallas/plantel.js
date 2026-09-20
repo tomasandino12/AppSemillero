@@ -1,10 +1,13 @@
-import { obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub } from '../../data/repositorio.js';
+import {
+  obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub, obtenerSolicitudesDelPlantel,
+} from '../../data/repositorio.js';
 import { ultimaMedicionPorJugador } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo, obtenerPlanteles } from '../sesion.js';
 import { escaparHtml } from '../nav.js';
 import { ir } from '../main.js';
 import { $ } from '../dom.js';
 import { textoDeError } from '../errores.js';
+import { abrirSolicitudes } from './aprobarJugador.js';
 
 const contenedor = () => $('plantel-contenido');
 
@@ -67,6 +70,28 @@ function estadoVacioHtml(categoria) {
   `;
 }
 
+/**
+ * Los chicos que pidieron entrar a esta categoría y esperan que un entrenador
+ * los apruebe. Un aviso arriba de la lista; sin pendientes (o sin poder
+ * leerlas) no se dibuja nada: es un agregado y no puede romper PLANTEL.
+ */
+function avisoDeSolicitudesHtml(solicitudes) {
+  if (!solicitudes.length) return '';
+  const cuantos = solicitudes.length;
+  return `
+    <div class="al" id="plantel-solicitudes">
+      <div class="tx">${cuantos === 1 ? '1 chico pidió' : `${cuantos} chicos pidieron`} entrar a esta categoría.</div>
+      <button class="btn sec chico" id="btn-ver-solicitudes">Revisar</button>
+    </div>
+  `;
+}
+
+function ligarSolicitudes(solicitudes, jugadores, club, plantel) {
+  $('btn-ver-solicitudes')?.addEventListener('click', () => {
+    abrirSolicitudes({ club, plantel, jugadores, alCambiar: () => renderPlantel() }, solicitudes);
+  });
+}
+
 export async function renderPlantel() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
@@ -84,13 +109,15 @@ export async function renderPlantel() {
 
   let jugadores;
   let mediciones = [];
+  let solicitudes = [];
   try {
     // Las mediciones van juntas con el plantel para poder marcar quién está
     // sin medir. Si sólo fallara esta consulta la lista igual se dibuja: es
     // preferible un plantel sin el detalle de altura que ningún plantel.
-    [jugadores, mediciones] = await Promise.all([
+    [jugadores, mediciones, solicitudes] = await Promise.all([
       obtenerJugadoresDelPlantel(club.id, plantel.id),
       obtenerMedicionesCorporalesDelClub(club.id).catch(() => []),
+      obtenerSolicitudesDelPlantel(plantel.id).catch(() => []),
     ]);
   } catch (e) {
     $('plantel-estado').textContent = textoDeError(e, 'No se pudo cargar el plantel.');
@@ -98,7 +125,8 @@ export async function renderPlantel() {
   }
 
   if (!jugadores.length) {
-    contenedor().innerHTML = `<div class="pad">${estadoVacioHtml(plantel.categoria)}</div>`;
+    contenedor().innerHTML = `<div class="pad">${avisoDeSolicitudesHtml(solicitudes)}${estadoVacioHtml(plantel.categoria)}</div>`;
+    ligarSolicitudes(solicitudes, jugadores, club, plantel);
     $('btn-vacio-importar').addEventListener('click', () => ir('p-datos'));
     $('btn-vacio-manual').addEventListener('click', () => abrirAltaManual());
     return;
@@ -107,12 +135,14 @@ export async function renderPlantel() {
   const porJugador = ultimaMedicionPorJugador(mediciones);
   contenedor().innerHTML = `
     <div class="pad">
+      ${avisoDeSolicitudesHtml(solicitudes)}
       <div class="eyebrow">${escaparHtml(plantel.categoria)} <span class="der">${jugadores.length} jugador${jugadores.length === 1 ? '' : 'es'}</span></div>
       <div class="lista-2col" id="plantel-lista">${jugadores.map((j) => filaJugador(j, porJugador.get(j.id) ?? null)).join('')}</div>
     </div>
     <div class="pie-fijo"><button class="btn sec" id="btn-agregar-jugador">Agregar jugador a mano</button></div>
   `;
   $('btn-agregar-jugador').addEventListener('click', () => abrirAltaManual());
+  ligarSolicitudes(solicitudes, jugadores, club, plantel);
   contenedor().querySelectorAll('[data-jugador]').forEach((boton) => {
     boton.addEventListener('click', () => abrirFicha(boton.dataset.jugador));
   });

@@ -21,6 +21,7 @@ import { variacionHtml } from '../componentes/variacion.js';
 import { verDetallesHtml } from '../componentes/verDetalles.js';
 import { $ } from '../dom.js';
 import { avisoDeError, textoDeError } from '../errores.js';
+import { renderAccesoDeJugador } from './aprobarJugador.js';
 
 const contenedor = () => $('ficha-contenido');
 
@@ -275,11 +276,13 @@ export async function renderFicha() {
       </div>
     </div>
     <div class="pad" id="ficha-personales"></div>
+    <div class="pad" id="ficha-acceso"></div>
     <div class="pad" id="ficha-corporal"><div class="p">Cargando mediciones...</div></div>
     <div class="pad" id="ficha-historia"><div class="p">Cargando historia del jugador...</div></div>
   `;
 
   renderPersonales(jugador);
+  renderAccesoDeJugador(jugador);
   cargarCorporal(club.id, jugador.id);
 
   // Todo lo de acá abajo va en su propio try/catch: los datos básicos ya
