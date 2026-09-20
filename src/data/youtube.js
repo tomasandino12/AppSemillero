@@ -34,10 +34,15 @@ export function idDeYoutube(url) {
 
 /**
  * URL del reproductor: youtube-nocookie no deja cookies de seguimiento hasta
- * que se da play, y rel=0 limita las sugerencias al mismo canal. null si el
- * link no es un video de YouTube.
+ * que se da play, y rel=0 limita las sugerencias al mismo canal. Los demás
+ * parámetros sacan ruido de arriba del video (marca, anotaciones) y evitan que
+ * el celular lo abra a pantalla completa por su cuenta. `autoplay` es para
+ * cuando el profe recién tocó "Ver video": ya hubo un gesto suyo, no hace
+ * falta un segundo toque. null si el link no es un video de YouTube.
  */
-export function urlDeReproductor(url) {
+export function urlDeReproductor(url, { autoplay = false } = {}) {
   const id = idDeYoutube(url);
-  return id ? `https://www.youtube-nocookie.com/embed/${id}?rel=0` : null;
+  if (!id) return null;
+  const extra = autoplay ? '&autoplay=1' : '';
+  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1${extra}`;
 }

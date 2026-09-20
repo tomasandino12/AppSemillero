@@ -8,12 +8,12 @@ import { abrirHoja } from './hoja.js';
  * agregado y no lo reemplaza. La CSP (frame-src) sólo deja cargar
  * youtube-nocookie.
  */
-export function reproductorHtml(enlace, titulo) {
-  const src = urlDeReproductor(enlace);
+export function reproductorHtml(enlace, titulo, opciones) {
+  const src = urlDeReproductor(enlace, opciones);
   if (!src) return '';
   return `
     <div class="video-embed">
-      <iframe src="${escaparHtml(src)}" title="Video: ${escaparHtml(titulo)}" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <iframe src="${escaparHtml(src)}" title="Video: ${escaparHtml(titulo)}" loading="lazy" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
   `;
 }
@@ -35,7 +35,7 @@ export function abrirVideo(enlace, titulo) {
   abrirHoja({
     titulo,
     cuerpo: `
-      ${reproductorHtml(enlace, titulo)}
+      ${reproductorHtml(enlace, titulo, { autoplay: true })}
       <a class="enlace-rec" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener noreferrer">Abrir en YouTube</a>
     `,
   });

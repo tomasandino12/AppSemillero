@@ -52,7 +52,9 @@ test('vacío, null y no-strings dan null', () => {
 });
 
 test('urlDeReproductor arma el embed sin cookies, o null si no es un video', () => {
-  assert.equal(urlDeReproductor(`https://youtu.be/${ID}`), `https://www.youtube-nocookie.com/embed/${ID}?rel=0`);
+  const base = `https://www.youtube-nocookie.com/embed/${ID}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`;
+  assert.equal(urlDeReproductor(`https://youtu.be/${ID}`), base);
+  assert.equal(urlDeReproductor(`https://youtu.be/${ID}`, { autoplay: true }), `${base}&autoplay=1`);
   assert.equal(urlDeReproductor('https://example.com/video.mp4'), null);
 });
 

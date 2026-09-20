@@ -417,6 +417,9 @@ svg.g{width:100%;display:block;overflow:visible}
 /* Task 8: campos opcionales con valor, en un bloque menor que Descripción y Notas */
 .video-embed{position:relative;aspect-ratio:16/9;margin-bottom:var(--sp-4);background:#000;border-radius:var(--r);overflow:hidden}
 .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+/* En la hoja el video va de borde a borde (le saca el padding de .pad): en
+   vertical el ancho de la pantalla es lo único que lo agranda. */
+.hoja .video-embed{margin-inline:calc(-1 * var(--sp-4));border-radius:0}
 .detalle-menor{margin-top:var(--sp-5);padding-top:var(--sp-3);border-top:1px solid var(--linea)}
 .fila-menor{display:flex;gap:var(--sp-3);padding:.25rem 0;font-size:var(--fs-125)}
 .fila-menor .k{flex:0 0 6rem;color:var(--gris-cl);text-transform:uppercase;letter-spacing:.05em;font-size:var(--fs-100)}

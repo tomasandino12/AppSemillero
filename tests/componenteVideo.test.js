@@ -6,7 +6,7 @@ const ID = 'dQw4w9WgXcQ';
 
 test('un video de YouTube da un iframe de youtube-nocookie', () => {
   const h = reproductorHtml(`https://youtu.be/${ID}`, 'Tiro libre');
-  assert.ok(h.includes(`<iframe src="https://www.youtube-nocookie.com/embed/${ID}?rel=0"`), h);
+  assert.ok(h.includes(`<iframe src="https://www.youtube-nocookie.com/embed/${ID}?rel=0&amp;`), h);
   assert.equal(esVideoEmbebible(`https://youtu.be/${ID}`), true);
 });
 

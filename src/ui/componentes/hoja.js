@@ -26,7 +26,11 @@ export function abrirHoja({ titulo, cuerpo, alCerrar }) {
 
 export function cerrarHoja() {
   $('velo').classList.remove('on');
-  $('hoja').classList.remove('on');
+  const hoja = $('hoja');
+  hoja.classList.remove('on');
+  // La hoja sólo se oculta, no se vacía: un video abierto seguiría sonando
+  // desde adentro. Sacar los iframes lo corta.
+  hoja.querySelectorAll('iframe').forEach((f) => f.remove());
   // Se limpia ANTES de invocar, no después: si alCerrar() abriera otra hoja
   // (que fijaría su propio alCerrarActual), limpiar después la pisaría a
   // ciegas. Así, además, un cierre por Escape mientras el velo ya disparó no
