@@ -12,9 +12,9 @@ import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
 import {
   TIPOS_RECURSO, SIN_TIPO, RANGO_FRECUENCIA, RANGO_MINUTOS,
-  etiquetaDeTipo, validarMetadatos, contarPorTipo, filtrarPorTipo, claseDeEnlace, alcanceDeRecurso, resumenDeImpacto,
+  etiquetaDeTipo, validarMetadatos, contarPorTipo, filtrarPorTipo, alcanceDeRecurso, resumenDeImpacto,
 } from '../../data/recursos.js';
-import { urlDeMiniatura } from '../../data/youtube.js';
+import { miniaturaDeRecurso, quitarImagenesRotas } from '../componentes/miniaturaRecurso.js';
 
 const contenedor = () => $('recursos-contenido');
 const contenedorJugadores = () => $('recursos-jugadores');
@@ -24,24 +24,6 @@ function hoyLocal() {
   // devuelve el día siguiente.
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-const ETIQUETA_SIN_MINIATURA = { drive: 'Drive', pdf: 'PDF', otro: 'Link', youtube: 'Video' };
-
-function miniatura(r) {
-  const src = urlDeMiniatura(r.enlace);
-  if (esVideoEmbebible(r.enlace) && src) {
-    return html`
-      <button class="rec-mini" type="button" data-ver-video="${r.id}" aria-label="Ver video: ${r.titulo}">
-        <img src="${src}" alt="" loading="lazy" referrerpolicy="no-referrer">
-        <span class="rec-play" aria-hidden="true"></span>
-      </button>`;
-  }
-  const clase = claseDeEnlace(r.enlace);
-  return html`
-    <div class="rec-mini sin-img" aria-hidden="true">
-      <span class="rec-mini-et">${clase ? ETIQUETA_SIN_MINIATURA[clase] : 'Instrucciones'}</span>
-    </div>`;
 }
 
 // Un dato que el profe no cargó no se muestra: ni cajita vacía ni "0".
@@ -97,7 +79,7 @@ function tarjetaRecurso(r, alcance) {
   const eyebrow = [etiquetaDeTipo(r.tipo), formatearFechaCorta(r.creadoEn.slice(0, 10))].filter(Boolean).join(' · ');
   return html`
     <article class="rec-tarj">
-      ${miniatura(r)}
+      ${miniaturaDeRecurso(r)}
       <div class="rec-cuerpo">
         <div class="rec-eyebrow">${eyebrow}</div>
         <div class="t">${r.titulo}</div>
@@ -413,12 +395,7 @@ async function renderSeccionJugadores() {
       renderSeccionJugadores();
     });
   });
-  // Un link de video que ya no existe (o sin conexión a YouTube) deja la imagen
-  // rota; se la saca y queda el fondo con el play, que sigue abriendo el video.
-  // El CSP no permite un onerror en el HTML, por eso se engancha acá.
-  contenedorJugadores().querySelectorAll('.rec-mini img').forEach((img) => {
-    img.addEventListener('error', () => img.remove(), { once: true });
-  });
+  quitarImagenesRotas(contenedorJugadores());
   contenedorJugadores().querySelectorAll('[data-ver-video]').forEach((b) => {
     b.addEventListener('click', () => {
       const recurso = recursos.find((r) => r.id === b.dataset.verVideo);
