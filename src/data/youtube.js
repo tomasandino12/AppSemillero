@@ -46,3 +46,13 @@ export function urlDeReproductor(url, { autoplay = false } = {}) {
   const extra = autoplay ? '&autoplay=1' : '';
   return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1${extra}`;
 }
+
+/**
+ * Miniatura del video, para la tarjeta. Sale del CDN de imágenes de YouTube y
+ * no ejecuta nada de terceros; el ID ya pasó la validación estricta, así que
+ * no puede colar otra ruta. null si el link no es un video de YouTube.
+ */
+export function urlDeMiniatura(url) {
+  const id = idDeYoutube(url);
+  return id ? `https://i.ytimg.com/vi/${id}/mqdefault.jpg` : null;
+}

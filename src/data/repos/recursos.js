@@ -6,7 +6,7 @@ export async function obtenerRecursos(clubId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('recurso')
-    .select('id, titulo, descripcion, enlace, creado_en, envio_recurso(jugador_id, fecha)')
+    .select('id, titulo, descripcion, enlace, tipo, frecuencia_semanal, minutos, creado_en, envio_recurso(jugador_id, fecha)')
     .eq('club_id', clubId)
     .order('creado_en', { ascending: false });
   if (error) throw error;
@@ -15,6 +15,9 @@ export async function obtenerRecursos(clubId) {
     titulo: f.titulo,
     descripcion: f.descripcion,
     enlace: f.enlace,
+    tipo: f.tipo,
+    frecuenciaSemanal: f.frecuencia_semanal,
+    minutos: f.minutos,
     creadoEn: f.creado_en,
     envios: (f.envio_recurso ?? []).map((e) => ({ jugadorId: e.jugador_id, fecha: e.fecha })),
   }));

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { idDeYoutube, urlDeReproductor } from '../src/data/youtube.js';
+import { idDeYoutube, urlDeReproductor, urlDeMiniatura } from '../src/data/youtube.js';
 
 const ID = 'dQw4w9WgXcQ';
 
@@ -64,4 +64,11 @@ test('vercel.json deja embeber youtube-nocookie y sólo eso', () => {
   const csp = vercel.headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy').value;
   const frame = csp.split(';').map((s) => s.trim()).find((s) => s.startsWith('frame-src '));
   assert.equal(frame, 'frame-src https://www.youtube-nocookie.com');
+});
+
+test('miniatura sólo con ID válido', () => {
+  assert.equal(urlDeMiniatura(`https://youtu.be/${ID}`), `https://i.ytimg.com/vi/${ID}/mqdefault.jpg`);
+  assert.equal(urlDeMiniatura('https://youtube.com.evil.com/watch?v=' + ID), null);
+  assert.equal(urlDeMiniatura('https://youtu.be/corto'), null);
+  assert.equal(urlDeMiniatura(null), null);
 });
