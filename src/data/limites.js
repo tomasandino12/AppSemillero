@@ -30,6 +30,7 @@ export const LIMITE = {
   nombreLinea: 200,
   notasLinea: 1000,
   detalleMaterial: 120,
+  notaPaso: 300,
 };
 
 /** 'tabla.columna' → largo máximo. Es el espejo exacto de 0028. */
