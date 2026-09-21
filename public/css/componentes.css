@@ -9,13 +9,13 @@
 .btn{
   display:flex;align-items:center;justify-content:center;gap:var(--sp-2);
   width:100%;min-height:var(--tap);
-  background:var(--primario);color:#fff;padding:var(--sp-4);
+  background:var(--primario);color:var(--sobre-club);padding:var(--sp-4);
   border-radius:var(--r);font-family:var(--ff-titulo);font-size:var(--fs-190);
   font-weight:600;letter-spacing:.1em;text-transform:uppercase;
   transition:transform 120ms ease-out,background 120ms ease-out;
 }
 .btn:active{background:var(--primario-osc);transform:scale(.97)}
-.btn:disabled{background:#C9C5BE;color:#fff;transform:none}
+.btn:disabled{background:var(--deshabilitado);color:var(--blanco);transform:none}
 /* El secundario: blanco con borde, en el mismo lenguaje que las tarjetas. Antes
    era un contorno negro de 1.5px, y tres seguidos se leían como tres losas.
    El borde es --gris-cl a propósito: 4.50:1 contra --papel y 5.08:1 contra el
@@ -31,7 +31,7 @@
 .btn.sec:active{background:var(--papel)}
 @media (hover:hover){
   .btn:not(:disabled):hover{background:var(--primario-osc)}
-  .btn.sec:not(:disabled):hover{background:rgba(19,19,22,.06)}
+  .btn.sec:not(:disabled):hover{background:var(--toque-claro)}
 }
 
 /* ---- campos ---- */
@@ -43,8 +43,8 @@
 }
 .campo input,.campo textarea{
   width:100%;min-height:var(--tap);padding:var(--sp-3);
-  border-radius:.5625rem;border:1px solid var(--linea);
-  font-size:var(--fs-160);font-family:var(--ff-mono);background:#fff;
+  border-radius:var(--r-m);border:1px solid var(--linea);
+  font-size:var(--fs-160);font-family:var(--ff-mono);background:var(--blanco);
 }
 .campo textarea{resize:vertical}
 .campo .ayuda{font-size:var(--fs-115);color:var(--gris);margin-top:var(--sp-1)}
@@ -122,15 +122,15 @@
   border-radius:.375rem;border:2px solid var(--linea);
   display:flex;align-items:center;justify-content:center;
 }
-.jug-fila .chk.on{background:var(--primario);border-color:var(--primario);color:#fff;font-weight:700}
+.jug-fila .chk.on{background:var(--primario);border-color:var(--primario);color:var(--sobre-club);font-weight:700}
 
 .jug-sugerencia{background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
 .jug-sugerencia .decision{display:flex;gap:var(--sp-2);margin-top:var(--sp-2)}
 .jug-sugerencia .decision button{
-  flex:1;min-height:var(--tap);padding:var(--sp-2) 0;border-radius:.5rem;background:#EFECE6;
+  flex:1;min-height:var(--tap);padding:var(--sp-2) 0;border-radius:.5rem;background:var(--fondo-chip);
   font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;text-transform:uppercase;
 }
-.jug-sugerencia .decision button.on{background:var(--negro);color:#fff}
+.jug-sugerencia .decision button.on{background:var(--negro);color:var(--sobre-oscuro)}
 
 /* ---- fila de jugador clicable (PLANTEL) ---- */
 .jug{
@@ -145,28 +145,28 @@
 .jug .der{margin-left:auto;display:flex;align-items:center;gap:var(--sp-2)}
 .av{
   width:2.125rem;height:2.125rem;flex:0 0 auto;border-radius:50%;
-  background:var(--negro);color:#fff;display:flex;align-items:center;justify-content:center;
+  background:var(--negro);color:var(--sobre-oscuro);display:flex;align-items:center;justify-content:center;
   font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-125);
 }
 .chip{
   font-family:var(--ff-mono);font-size:var(--fs-115);font-weight:600;
-  padding:.1875rem .375rem;border-radius:.3125rem;background:#EFECE6;color:var(--gris);white-space:nowrap;
+  padding:.1875rem .375rem;border-radius:var(--r-s);background:var(--fondo-chip);color:var(--gris);white-space:nowrap;
 }
-.chip.sube{background:#E1F0E9;color:var(--sube)}
-.chip.baja{background:#F6ECD9;color:var(--baja)}
-.chip.sin{background:#EFECE6;color:var(--gris-cl);font-style:italic}
+.chip.sube{background:var(--sube-fondo);color:var(--sube)}
+.chip.baja{background:var(--baja-fondo);color:var(--baja)}
+.chip.sin{background:var(--fondo-chip);color:var(--gris-cl);font-style:italic}
 .flecha{color:var(--gris-cl);font-size:var(--fs-170);line-height:1}
 
 /* ---- datos de la ficha ---- */
 .datos-ficha{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-3)}
-.dato{flex:1 1 7rem;background:var(--sup-1);border-radius:.5625rem;padding:var(--sp-2) var(--sp-3)}
+.dato{flex:1 1 7rem;background:var(--sup-1);border-radius:var(--r-m);padding:var(--sp-2) var(--sp-3)}
 .dato .k{
   font-family:var(--ff-titulo);font-size:var(--fs-100);letter-spacing:.11em;
   text-transform:uppercase;color:var(--gris-osc);font-weight:400;
 }
-.dato .v{font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600;margin-top:.125rem;color:#fff}
+.dato .v{font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600;margin-top:.125rem;color:var(--sobre-oscuro)}
 .dato .v.sin{color:var(--gris-osc);font-style:italic;font-size:var(--fs-135)}
-.ficha-top{background:var(--negro);color:#fff;padding:var(--sp-4)}
+.ficha-top{background:var(--negro);color:var(--sobre-oscuro);padding:var(--sp-4)}
 .ficha-top .nom{font-family:var(--ff-titulo);font-size:var(--fs-titulo);font-weight:700;line-height:1;text-transform:uppercase}
 .ficha-top .sub{font-size:var(--fs-115);color:var(--gris-osc);margin-top:var(--sp-2);font-family:var(--ff-mono)}
 
@@ -177,19 +177,19 @@
   box-shadow:var(--sombra);width:100%;text-align:left;min-height:var(--tap);
 }
 .test-fila .ic{
-  width:1.875rem;height:1.875rem;border-radius:.5rem;background:#EFECE6;
+  width:1.875rem;height:1.875rem;border-radius:.5rem;background:var(--fondo-chip);
   display:flex;align-items:center;justify-content:center;flex:0 0 auto;
   font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-125);color:var(--gris);
 }
-.test-fila.hecho .ic{background:var(--sube);color:#fff}
+.test-fila.hecho .ic{background:var(--sube);color:var(--blanco)}
 .test-fila .t{font-weight:600;font-size:var(--fs-145)}
 .test-fila .d{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem;font-family:var(--ff-mono)}
 .rec{background:var(--blanco);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
 .rec .t{font-weight:600;font-size:var(--fs-145)}
 .rec .d{font-size:var(--fs-125);color:var(--gris);margin-top:.1875rem;line-height:1.4}
 .rec .m{display:flex;gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap}
-.tag{font-family:var(--ff-mono);font-size:var(--fs-100);color:var(--gris);background:#EFECE6;padding:.1875rem .4375rem;border-radius:.3125rem}
-.tag.rojo{background:#FBE4E8;color:var(--primario-osc)}
+.tag{font-family:var(--ff-mono);font-size:var(--fs-100);color:var(--gris);background:var(--fondo-chip);padding:.1875rem .4375rem;border-radius:var(--r-s)}
+.tag.rojo{background:var(--primario-tenue);color:var(--primario-osc)}
 
 /* ---- gráficos portados del prototipo ---- */
 svg.g{width:100%;display:block;overflow:visible}
@@ -221,64 +221,64 @@ svg.g{width:100%;display:block;overflow:visible}
 .al:active,.opt:active,.test-fila:active{transform:scale(.97)}
 
 /* Etapa 4 — barras de reparto */
-.barras{display:flex;flex-direction:column;gap:8px;margin:12px 0}
-.barra{display:grid;grid-template-columns:minmax(0,7.5rem) 1fr auto;align-items:center;gap:8px}
+.barras{display:flex;flex-direction:column;gap:var(--sp-2);margin:var(--sp-3) 0}
+.barra{display:grid;grid-template-columns:minmax(0,7.5rem) 1fr auto;align-items:center;gap:var(--sp-2)}
 .barra .et{font-size:var(--fs-135);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .barra .pista{height:14px;background:var(--linea);border-radius:7px;overflow:hidden}
 .barra .relleno{height:100%;background:var(--primario);border-radius:7px}
-.barra .val{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-125);color:var(--gris-cl)}
+.barra .val{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
 
 /* Etapa 4 — muestra chica: atenuada y marcada. La marca es texto, no sólo
    color, para que no dependa de que alguien distinga dos grises. */
 .poco{opacity:.55}
-.poco-tag{display:inline-block;margin-left:6px;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.poco-tag{display:inline-block;margin-left:6px;font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 
 /* Etapa 4 — acciones dentro de un aviso */
-.acciones-al{display:flex;gap:8px;margin-top:10px}
+.acciones-al{display:flex;gap:var(--sp-2);margin-top:10px}
 .btn.chico{min-height:var(--tap);padding:0 14px;font-size:var(--fs-135);width:auto}
 
 /* Etapa 4 — carga de la batería en cancha.
    Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
    a la pantalla. La tira envuelve sola en dos líneas a 375px. */
 .tira{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.tira .num{min-height:48px;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);font-weight:600}
-.tira .num.on{background:var(--primario);border-color:var(--primario);color:#fff}
-.posiciones{display:flex;flex-direction:column;gap:16px;margin:14px 0}
+.tira .num{min-height:48px;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600}
+.tira .num.on{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
+.posiciones{display:flex;flex-direction:column;gap:var(--sp-4);margin:14px 0}
 .posicion .et{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:var(--fs-135);color:var(--tinta)}
-.posicion .et .de{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.jug-actual{margin:12px 0 4px}
+.posicion .et .de{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.jug-actual{margin:var(--sp-3) 0 var(--sp-1)}
 .jug-actual .nom{font-size:var(--fs-220);font-weight:700;color:var(--tinta)}
 .jug-actual .sub{font-size:var(--fs-125);color:var(--gris-cl)}
-.progreso-tira{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
-.progreso-tira .paso{min-width:38px;min-height:38px;padding:0 4px;border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-115)}
-.progreso-tira .paso.completo{background:var(--primario);border-color:var(--primario);color:#fff}
+.progreso-tira{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-bottom:var(--sp-2)}
+.progreso-tira .paso{min-width:38px;min-height:38px;padding:0 var(--sp-1);border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--gris-cl);font-family:var(--ff-mono);font-size:var(--fs-115)}
+.progreso-tira .paso.completo{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
 .progreso-tira .paso.parcial{border-color:var(--primario);color:var(--primario)}
 .progreso-tira .paso.ausente{border-style:dashed}
 .progreso-tira .paso.on{outline:2px solid var(--tinta);outline-offset:1px}
-.acciones-bateria{display:flex;gap:8px;margin-top:16px}
+.acciones-bateria{display:flex;gap:var(--sp-2);margin-top:var(--sp-4)}
 .acciones-bateria .btn{flex:1}
 
 /* Etapa 4 — carga de velocidad */
-.lista-vel{display:flex;flex-direction:column;margin:12px 0}
+.lista-vel{display:flex;flex-direction:column;margin:var(--sp-3) 0}
 .vel-fila{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;width:100%;min-height:56px;padding:6px 2px;border:0;border-bottom:1px solid var(--linea);background:none;text-align:left}
 .vel-fila .nom{font-size:var(--fs-145);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.vel-fila .caja{min-width:4.5rem;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--linea);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-190);font-weight:600}
+.vel-fila .caja{min-width:4.5rem;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--linea);color:var(--gris-cl);font-family:var(--ff-mono);font-size:var(--fs-190);font-weight:600}
 .vel-fila .caja.si{background:var(--primario-cl);color:var(--tinta)}
 .vel-fila.on .caja{outline:2px solid var(--primario);outline-offset:1px;color:var(--tinta)}
-.vel-fila .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.vel-fila .u{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 
 /* Teclado propio, portado del prototipo. Teclas grandes para cargar de pie en
    la cancha, y sólo dígitos y una coma: nada de tipear precisión falsa. */
-.kb{position:fixed;left:0;right:0;bottom:0;z-index:45;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:var(--linea);transform:translateY(110%);transition:transform 180ms ease-out}
+.kb{position:fixed;left:0;right:0;bottom:0;z-index:45;display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);padding:var(--sp-2);padding-bottom:calc(var(--sp-2) + env(safe-area-inset-bottom));background:var(--linea);transform:translateY(110%);transition:transform 180ms ease-out}
 .kb.on{transform:translateY(0)}
-.kb button{min-height:56px;border:0;border-radius:9px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-220);font-weight:600}
+.kb button{min-height:56px;border:0;border-radius:9px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-220);font-weight:600}
 .kb button.ac{background:var(--negro);color:var(--papel);font-size:var(--fs-190)}
-.kb button.ok{grid-column:1 / -1;background:var(--primario);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.08em;text-transform:uppercase}
+.kb button.ok{grid-column:1 / -1;background:var(--primario);color:var(--sobre-club);font-family:var(--ff-titulo);font-size:var(--fs-160);letter-spacing:.08em;text-transform:uppercase}
 
 /* Etapa 4 — evolución del equipo */
 .tabla-ev{display:flex;flex-direction:column;gap:6px;margin-top:10px}
-.fila-ev{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}
-.fila-ev .f{font-family:'IBM Plex Mono',monospace;color:var(--gris-cl)}
+.fila-ev{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:var(--sp-2);align-items:baseline;padding:var(--sp-2) 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}
+.fila-ev .f{font-family:var(--ff-mono);color:var(--gris-cl)}
 .fila-ev .sin{color:var(--gris-cl)}
 .fila-ev.dos{grid-template-columns:auto 1fr}
 
@@ -294,7 +294,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .leyenda .linea-partido::before{border-top-color:var(--primario);border-top-style:dashed}
 /* El último dato de cada fuente, a la vista; el historial va en el colapsable. */
 .resumen-serie{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-3)}
-.resumen-fuente{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--sp-2)}
+.resumen-fuente{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-1) var(--sp-2)}
 .resumen-fuente .k{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 /* La etiqueta es también la leyenda de su curva: misma marca que en .leyenda,
    dicha una sola vez. */
@@ -303,13 +303,13 @@ svg.g{width:100%;display:block;overflow:visible}
 .resumen-fuente .k.linea-partido::before{border-top-color:var(--primario);border-top-style:dashed}
 
 /* Etapa 4 — ficha del jugador: partido a partido */
-.tabla-part{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.tabla-part{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:10px}
 .fila-part{background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);box-shadow:var(--sombra)}
-.fila-part .cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fila-part .cab{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-2)}
 .fila-part .riv{font-weight:600;font-size:var(--fs-145)}
 .fila-part .f{font-family:var(--ff-mono);font-size:var(--fs-115);color:var(--gris-cl)}
-.fila-part .nums{display:flex;gap:12px;margin-top:4px;font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--tinta)}
-.fila-part .tiros{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:var(--fs-115);color:var(--gris-cl)}
+.fila-part .nums{display:flex;gap:var(--sp-3);margin-top:var(--sp-1);font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--tinta)}
+.fila-part .tiros{display:flex;gap:var(--sp-3);flex-wrap:wrap;margin-top:6px;font-size:var(--fs-115);color:var(--gris-cl)}
 
 /* Etapa 4 — evolución del equipo: series de tiro (2P/3P/TL). Mismo patrón
    que .linea-practica/.linea-partido: color Y trazo, nunca sólo color. */
@@ -319,7 +319,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .leyenda .sl::before{border-top-color:var(--gris-cl);border-top-style:dashed}
 
 /* Etapa 4 — RECURSOS: selección múltiple de jugadores para un envío */
-.lista-chk{display:flex;flex-direction:column;max-height:40vh;overflow-y:auto;margin:8px 0}
+.lista-chk{display:flex;flex-direction:column;max-height:40vh;overflow-y:auto;margin:var(--sp-2) 0}
 .chk-fila{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 2px;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
 .chk-fila input{width:22px;height:22px;flex:0 0 auto}
 .enlace-rec{display:inline-block;margin-top:6px;font-size:var(--fs-135);color:var(--primario)}
@@ -329,10 +329,10 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Histórico de altura y peso en la ficha del jugador (0012) */
 .tabla-corporal{display:flex;flex-direction:column;margin:10px 0}
-.fila-corporal{display:grid;grid-template-columns:auto 1fr 1fr 2.5rem;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
-.fila-corporal .f{font-family:'IBM Plex Mono',monospace;color:var(--gris-cl)}
+.fila-corporal{display:grid;grid-template-columns:auto 1fr 1fr 2.5rem;gap:var(--sp-2);align-items:center;padding:10px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
+.fila-corporal .f{font-family:var(--ff-mono);color:var(--gris-cl)}
 .fila-corporal .sin{color:var(--gris-cl);font-size:var(--fs-125)}
-.fila-corporal.cab{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.fila-corporal.cab{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 .fila-corporal .borrar{min-width:40px;min-height:40px;border:0;border-radius:8px;background:none;color:var(--gris-cl);font-size:var(--fs-145)}
 .campos-par{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
@@ -343,76 +343,76 @@ svg.g{width:100%;display:block;overflow:visible}
 /* El número que el entrenador se lleva de la card. Tiene que leerse a un
    metro de distancia, así que es el elemento más grande de la pantalla. */
 .cabecera-tiro{margin:0 0 18px}
-.cabecera-tiro .k{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.cabecera-tiro .n{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--tinta)}
+.cabecera-tiro .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.cabecera-tiro .n{font-family:var(--ff-mono);font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--tinta)}
 .cabecera-tiro .n .u{font-size:var(--fs-190);color:var(--gris-cl)}
-.cabecera-tiro .frac{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-135);color:var(--gris-cl);margin-top:2px}
-.cabecera-tiro .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-top:6px}
-.metas-resumen{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--gris-cl)}
+.cabecera-tiro .frac{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--gris-cl);margin-top:2px}
+.cabecera-tiro .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px var(--sp-3);margin-top:6px}
+.metas-resumen{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--gris-cl)}
 
 /* La lectura de zonas flojas: una línea, no un bloque. Sigue diciendo la
    verdad, incluso cuando la verdad es "no alcanza para elegir una". */
 .foco-linea{font-size:var(--fs-135);color:var(--gris-cl);margin:10px 0}
 .foco-linea b{color:var(--tinta)}
 
-.zona-pie{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-top:4px}
-.marca-meta{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
+.zona-pie{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-1) 10px;margin-top:var(--sp-1)}
+.marca-meta{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
 .marca-meta.si{color:var(--tinta)}
 .marca-meta.no{color:var(--gris-cl)}
-.acciones-hoy{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--linea)}
+.acciones-hoy{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--linea)}
 
 /* Edición de metas */
-.metas-lista{display:flex;flex-direction:column;margin:12px 0}
+.metas-lista{display:flex;flex-direction:column;margin:var(--sp-3) 0}
 .meta-fila{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--linea)}
 .meta-fila .et{display:flex;flex-direction:column;min-width:0}
 .meta-fila .nom{font-size:var(--fs-145);color:var(--tinta)}
 .meta-fila .hoy{font-size:var(--fs-125);color:var(--gris-cl)}
 .campo-meta{display:flex;align-items:center;gap:6px;flex:0 0 auto}
-.campo-meta input{width:4.5rem;min-height:48px;text-align:right;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);padding:0 10px}
-.campo-meta .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-135);color:var(--gris-cl)}
+.campo-meta input{width:4.5rem;min-height:48px;text-align:right;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-160);padding:0 10px}
+.campo-meta .u{font-family:var(--ff-titulo);font-size:var(--fs-135);color:var(--gris-cl)}
 .zonas{display:flex;flex-direction:column;gap:14px;margin:10px 0}
-.zona-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:var(--fs-145);color:var(--tinta)}
-.zona-cab .frac{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-125);color:var(--gris-cl)}
-.zona-barra{display:grid;grid-template-columns:1fr 2.75rem;align-items:center;gap:8px;margin-top:4px}
+.zona-cab{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-2);font-size:var(--fs-145);color:var(--tinta)}
+.zona-cab .frac{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
+.zona-barra{display:grid;grid-template-columns:1fr 2.75rem;align-items:center;gap:var(--sp-2);margin-top:var(--sp-1)}
 .zona-barra .pista{position:relative;height:16px;background:var(--linea);border-radius:8px;overflow:hidden}
 .zona-barra .relleno{height:100%;background:var(--primario);border-radius:8px}
 .zona-barra .meta{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--negro)}
 .zona-barra .relleno.llego{background:var(--negro)}
-.zona-barra .pct{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-145);font-weight:600;color:var(--tinta);text-align:right}
-.var{display:inline-block;margin-top:4px;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
+.zona-barra .pct{font-family:var(--ff-mono);font-size:var(--fs-145);font-weight:600;color:var(--tinta);text-align:right}
+.var{display:inline-block;margin-top:var(--sp-1);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
 .var.sube{color:var(--primario)}
 .var.baja{color:var(--negro)}
 .var.neutra{color:var(--gris-cl)}
 .sep{height:1px;background:var(--linea);margin:18px 0}
-.pie-hoy{margin-top:18px;padding-top:12px;border-top:1px solid var(--linea)}
-.pie-hoy .k{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.pie-hoy .d{font-size:var(--fs-135);color:var(--tinta);margin:4px 0 8px}
-.total-arco{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:10px 0;padding:10px 12px;border-radius:var(--r);background:var(--linea)}
-.total-arco .k{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.pie-hoy{margin-top:18px;padding-top:var(--sp-3);border-top:1px solid var(--linea)}
+.pie-hoy .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.pie-hoy .d{font-size:var(--fs-135);color:var(--tinta);margin:var(--sp-1) 0 var(--sp-2)}
+.total-arco{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:10px 0;padding:10px var(--sp-3);border-radius:var(--r);background:var(--linea)}
+.total-arco .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 .total-arco .v{font-size:var(--fs-170);font-weight:700;color:var(--tinta)}
 
 /* Curvas de evolución. La de HOY no le compite en tamaño al número grande. */
 .curva{display:block;width:100%;margin-top:10px;padding:0;border:0;background:none;text-align:left}
 .curva .chispa{width:100%;display:block}
-.curva-pie{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:var(--fs-125);color:var(--gris-cl)}
+.curva-pie{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-1) 10px;font-size:var(--fs-125);color:var(--gris-cl)}
 .curva-pie .ver{color:var(--primario);white-space:nowrap}
-.curva-zona{margin:16px 0}
-.btn-zona-recurso{border:0;background:none;padding:0;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
+.curva-zona{margin:var(--sp-4) 0}
+.btn-zona-recurso{border:0;background:none;padding:0;font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
 
 /* Etapa 5 — pestañas internas de RECURSOS. No es navegación: no se agrega un
    sexto ítem a la barra de abajo, que en celular ya está al límite. */
 .pestanas{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--linea)}
-.pest{min-height:48px;border:0;background:none;color:var(--gris-cl);font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid transparent}
+.pest{min-height:48px;border:0;background:none;color:var(--gris-cl);font-family:var(--ff-titulo);font-size:var(--fs-160);letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid transparent}
 .pest.on{color:var(--tinta);border-bottom-color:var(--primario)}
 
 /* Etapa 5 — lista de ejercicios */
 .chips-tema{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-.chip-tema{min-height:40px;padding:0 12px;border:1px solid var(--linea);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
-.chip-tema.on{background:var(--primario);border-color:var(--primario);color:#fff}
-.ejercicio{display:block;width:100%;text-align:left;padding:12px 0;border:0;border-bottom:1px solid var(--linea);background:none}
-.ejercicio .cab{display:flex;align-items:baseline;gap:8px}
-.ejercicio .tema{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.ejercicio .probado{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
+.chip-tema{min-height:40px;padding:0 var(--sp-3);border:1px solid var(--linea);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
+.chip-tema.on{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
+.ejercicio{display:block;width:100%;text-align:left;padding:var(--sp-3) 0;border:0;border-bottom:1px solid var(--linea);background:none}
+.ejercicio .cab{display:flex;align-items:baseline;gap:var(--sp-2)}
+.ejercicio .tema{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.ejercicio .probado{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
 .ejercicio .tit{font-size:var(--fs-160);color:var(--tinta);margin:2px 0}
 .ejercicio .autor{font-size:var(--fs-125);color:var(--gris-cl)}
 
@@ -431,7 +431,7 @@ svg.g{width:100%;display:block;overflow:visible}
 #btn-ej-agregar-nota{margin:var(--sp-2) 0 var(--sp-5)}
 
 /* Task 8: campos opcionales con valor, en un bloque menor que Descripción y Notas */
-.video-embed{position:relative;aspect-ratio:16/9;margin-bottom:var(--sp-4);background:#000;border-radius:var(--r);overflow:hidden}
+.video-embed{position:relative;aspect-ratio:16/9;margin-bottom:var(--sp-4);background:var(--negro-puro);border-radius:var(--r);overflow:hidden}
 .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 /* En la hoja el video va de borde a borde (le saca el padding de .pad): en
    vertical el ancho de la pantalla es lo único que lo agranda. */
@@ -451,7 +451,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .tarjeta-cat .chip.sin{display:inline-block;margin-top:var(--sp-2)}
 .serie-cat{border-top:1px solid var(--linea);margin-top:var(--sp-3);padding-top:var(--sp-3)}
 .serie-cat .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.serie-cat .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.serie-cat .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px var(--sp-3)}
 .fila-ev.tres{grid-template-columns:auto 1fr auto}
 .profe{background:var(--blanco);border-radius:var(--r);box-shadow:var(--sombra);padding:var(--sp-3);margin-bottom:var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-2);min-width:0}
 .profe .nom{font-weight:600;font-size:var(--fs-145)}
@@ -461,11 +461,11 @@ svg.g{width:100%;display:block;overflow:visible}
 .casilla{width:100%;text-align:left;cursor:pointer}
 
 /* ---- mi perfil ---- */
-.perfil-cab{display:flex;align-items:center;gap:var(--sp-4);background:var(--negro);color:#fff;border-radius:var(--r);padding:var(--sp-5) var(--sp-4);margin-bottom:var(--sp-3)}
-.perfil-avatar{flex:0 0 auto;width:4.5rem;height:4.5rem;border-radius:50%;border:3px solid var(--primario);background:var(--sup-2);display:flex;align-items:center;justify-content:center;font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;color:#fff}
+.perfil-cab{display:flex;align-items:center;gap:var(--sp-4);background:var(--negro);color:var(--sobre-oscuro);border-radius:var(--r);padding:var(--sp-5) var(--sp-4);margin-bottom:var(--sp-3)}
+.perfil-avatar{flex:0 0 auto;width:4.5rem;height:4.5rem;border-radius:50%;border:3px solid var(--primario);background:var(--sup-2);display:flex;align-items:center;justify-content:center;font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;color:var(--sobre-oscuro)}
 .perfil-id{min-width:0}
 .perfil-roles{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
-.perfil-rol{font-family:var(--ff-titulo);font-size:var(--fs-100);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;border:1px solid var(--primario);border-radius:999px;padding:.125rem .5rem}
+.perfil-rol{font-family:var(--ff-titulo);font-size:var(--fs-100);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--sobre-oscuro);border:1px solid var(--primario);border-radius:var(--r-full);padding:.125rem .5rem}
 .perfil-nombre{font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;text-transform:uppercase;line-height:1.05;margin-top:var(--sp-2);overflow-wrap:anywhere}
 .perfil-cab .sin{color:var(--gris-osc);font-style:italic;text-transform:none;font-weight:500;font-size:var(--fs-190)}
 .perfil-cab .det{color:var(--gris-osc);font-size:var(--fs-125);margin-top:var(--sp-1)}
@@ -509,7 +509,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .hoja .cerrar-detalles{margin-top:var(--sp-5)}
 /* Un ejercicio del detalle de cargas: el nombre puede ser largo ("Barra Ol +
    10 kg…"), así que va en su propio renglón y los números abajo. */
-.fila-carga{padding:8px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}
+.fila-carga{padding:var(--sp-2) 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}
 .fila-carga .det{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl);margin-top:2px}
 .fila-ev .rival{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gris-cl)}
 /* En la fila de un partido cede el rival, nunca la fracción: un nombre largo

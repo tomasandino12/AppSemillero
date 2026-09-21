@@ -11,7 +11,7 @@
    ===================================================================== */
 
 .publico{
-  min-height:100dvh;background:var(--negro);color:#fff;
+  min-height:100dvh;background:var(--negro);color:var(--sobre-oscuro);
   display:flex;flex-direction:column;
 }
 .publico[hidden]{display:none}
@@ -68,21 +68,21 @@
 }
 .campo-osc input{
   width:100%;min-height:3rem;padding:var(--sp-3) var(--sp-3) var(--sp-3) 2.75rem;
-  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:.5625rem;
-  color:#fff;font-size:var(--fs-160);font-family:var(--ff-mono);
+  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:var(--r-m);
+  color:var(--sobre-oscuro);font-size:var(--fs-160);font-family:var(--ff-mono);
 }
 .campo-osc select{
   width:100%;min-height:3rem;padding:var(--sp-3);
-  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:.5625rem;
-  color:#fff;font-size:var(--fs-160);
+  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:var(--r-m);
+  color:var(--sobre-oscuro);font-size:var(--fs-160);
 }
 .campo-osc select:focus{border-color:var(--primario)}
-.campo-osc input::placeholder{color:#7C7870}
+.campo-osc input::placeholder{color:var(--placeholder-osc)}
 .campo-osc input:focus{border-color:var(--primario)}
 .campo-osc .ayuda{font-size:var(--fs-115);color:var(--gris-osc);margin-top:var(--sp-1)}
 
 /* El aviso de la app es blanco sobre papel; acá tiene que vivir en oscuro. */
-.publico .al{background:var(--sup-1);color:#fff;box-shadow:none}
+.publico .al{background:var(--sup-1);color:var(--sobre-oscuro);box-shadow:none}
 .publico .al .mt{color:var(--gris-osc)}
 
 /* El secundario sobre el negro. La regla global de .btn.sec lo pinta blanco
@@ -93,10 +93,10 @@
    contra --negro. El que había, --linea-osc, daba 1.65:1: el botón se
    reconocía sólo por el texto, y en este proyecto el borde tiene que alcanzar
    solo. Sin sombra: --sombra está pensada para superficies claras. */
-.publico .btn.sec{background:transparent;border-color:var(--gris-osc);color:#fff;box-shadow:none}
+.publico .btn.sec{background:transparent;border-color:var(--gris-osc);color:var(--sobre-oscuro);box-shadow:none}
 /* Tampoco hereda el :active global, que pinta --papel: con texto blanco, un
    secundario apretado se volvía invisible justo mientras se lo toca. */
-.publico .btn.sec:active{background:rgba(255,255,255,.12)}
+.publico .btn.sec:active{background:var(--presion-osc)}
 
 .o{display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0;color:var(--gris-osc);font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;letter-spacing:.14em;text-transform:uppercase}
 .o::before,.o::after{content:"";flex:1;height:1px;background:var(--linea-osc)}
@@ -104,13 +104,13 @@
 .btn-google{
   display:flex;align-items:center;justify-content:center;gap:var(--sp-3);
   width:100%;min-height:var(--tap);padding:var(--sp-3) var(--sp-4);
-  background:#fff;color:#1F1F1F;border-radius:var(--r);
+  background:var(--blanco);color:var(--google-texto);border-radius:var(--r);
   font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;
   letter-spacing:.06em;text-transform:uppercase;
   transition:transform 120ms ease-out,background 120ms ease-out;
 }
 .btn-google svg{width:1.125rem;height:1.125rem;flex:0 0 auto}
-.btn-google:active{transform:scale(.97);background:#EDEDED}
+.btn-google:active{transform:scale(.97);background:var(--google-hover)}
 .btn-google:disabled{background:var(--sup-2);color:var(--gris-osc);transform:none}
 
 .enlaces{display:flex;flex-direction:column;align-items:center;margin-top:var(--sp-5)}
@@ -139,7 +139,7 @@
 }
 
 @media (hover:hover){
-  .publico .btn.sec:not(:disabled):hover{background:rgba(255,255,255,.08)}
-  .btn-google:not(:disabled):hover{background:#EDEDED}
-  .enlaces button:hover b{color:#fff}
+  .publico .btn.sec:not(:disabled):hover{background:var(--toque-osc)}
+  .btn-google:not(:disabled):hover{background:var(--google-hover)}
+  .enlaces button:hover b{color:var(--sobre-oscuro)}
 }

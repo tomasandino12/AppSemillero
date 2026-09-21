@@ -6,6 +6,7 @@
     'padding', 'margin', 'border-radius', 'box-shadow', 'transition-property', 'transition-duration',
     'transition-timing-function', 'opacity', 'width', 'height', 'gap', 'fill', 'stroke'];
   const PSEUDO = ['::before', '::after'];
+  window.PROPS_ESTILOS = PROPS;
   window.dumpEstilos = () => {
     const out = {};
     let i = 0;

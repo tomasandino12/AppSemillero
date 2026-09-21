@@ -10,7 +10,7 @@
      --club y --sobre-club son LOS ÚNICOS dos valores que cambia un club (el
      texto que va encima del color, blanco o negro, lo elige quien carga el
      color: sólo él sabe cuál llega a 4.5:1). Todo lo demás sale de ahí.
-     Los tres derivados llevan un valor literal de respaldo, el del color por
+     Los cuatro derivados llevan un valor literal de respaldo, el del color por
      defecto: sin color-mix (Android WebView anterior a Chrome 111) el
      derivado quedaría inválido y el botón apretado se vería transparente. */
   --club:#D9122E;
@@ -18,6 +18,7 @@
   --primario:var(--club);
   --primario-osc:#A00D22;                    /* apretado y hover */
   --primario-cl:#FFEBEE;                     /* fondo suave */
+  --primario-tenue:#FBE5E8;                  /* fondo de una etiqueta del club */
   --primario-brillo:rgba(217,18,46,.35);     /* resplandor de la landing */
 
   /* ---- neutros ---- */
@@ -29,6 +30,11 @@
   --gris:#6E6B66;
   --gris-cl:#726E65;      /* 4.50:1 sobre --papel */
   --gris-osc:#A9A5A0;     /* sobre fondo oscuro */
+  --sobre-oscuro:#fff;    /* texto sobre --negro y --sup-* */
+  --fondo-chip:#EFECE6;   /* chips, etiquetas y fondos de ícono en reposo */
+  --deshabilitado:#C9C5BE;
+  --negro-puro:#000;      /* letterbox del video */
+  --placeholder-osc:#7C7870;
 
   /* ---- superficies sobre fondo oscuro ---- */
   --sup-1:#22222A;
@@ -40,11 +46,26 @@
   --baja:#985E0C;
   --aviso:#7A4E00;        /* franja de "datos de ejemplo" */
   --aviso-fondo:#FFE9A8;  /* 8.4:1 con --aviso */
+  --sube-fondo:#E1F0E9;
+  --baja-fondo:#F6ECD9;
 
   /* ---- sombra / radio ---- */
   --sombra:0 1px 2px rgba(19,19,22,.05),0 6px 18px rgba(19,19,22,.05);
   --sombra-alta:0 2px 4px rgba(19,19,22,.10),0 10px 26px rgba(19,19,22,.14);
   --r:0.6875rem;
+  --r-s:0.3125rem;        /* chips y etiquetas */
+  --r-m:0.5625rem;        /* campos y píldoras de categoría */
+  --r-full:999px;
+
+  /* ---- capas translúcidas ---- */
+  --velo:rgba(19,19,22,.5);
+  --toque-claro:rgba(19,19,22,.06);    /* hover de un secundario sobre papel */
+  --toque-osc:rgba(255,255,255,.08);   /* hover sobre fondo oscuro */
+  --presion-osc:rgba(255,255,255,.12); /* apretado sobre fondo oscuro */
+
+  /* ---- botón de Google: los colores los fija su guía de marca ---- */
+  --google-texto:#1F1F1F;
+  --google-hover:#EDEDED;
 
   /* ---- tipografías ---- */
   --ff-titulo:'Barlow Condensed',system-ui,sans-serif;
@@ -96,6 +117,7 @@
   :root{
     --primario-osc:color-mix(in srgb,var(--club) 73.7%,black);
     --primario-cl:color-mix(in oklab,var(--club) 9%,white);
+    --primario-tenue:color-mix(in srgb,var(--club) 11%,white);
     --primario-brillo:color-mix(in oklab,var(--club) 35%,transparent);
   }
 }

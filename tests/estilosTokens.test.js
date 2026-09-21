@@ -63,3 +63,16 @@ test('los derivados del club tienen un respaldo literal para navegadores sin col
     assert.match(fueraDeSupports, new RegExp(`${nombre}\\s*:`), nombre);
   }
 });
+
+test('no hay colores fuera de tokens.css', () => {
+  // Hex y rgb()/rgba() sueltos: cada color vive en un token con nombre, así
+  // cambiar una superficie o el color de un club es tocar un solo archivo.
+  const sueltos = [];
+  for (const [nombre, texto] of Object.entries(css)) {
+    if (nombre === 'tokens') continue;
+    for (const m of sinComentarios(texto).matchAll(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/g)) {
+      sueltos.push(`${nombre}.css: ${m[0]}`);
+    }
+  }
+  assert.deepEqual(sueltos, []);
+});

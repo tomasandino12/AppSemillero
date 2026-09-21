@@ -37,6 +37,10 @@ async function abrir(vista, ancho, { cpu = 1, reducido = false } = {}) {
   return p;
 }
 
+// Sólo la primera familia: la lista de respaldo (ui-monospace, sans-serif...) puede cambiar a propósito.
+const IDX_FUENTE = 7;
+const norm = (v) => v && v.split('|').map((x, i) => (i === IDX_FUENTE ? x.split(',')[0] : x)).join('|');
+
 const cmd = process.argv[2];
 try {
   mkdirSync(RAIZ, { recursive: true });
@@ -52,13 +56,19 @@ try {
       for (const ancho of ANCHOS) {
         const p = await abrir(vista, ancho);
         const dump = await p.evaluate(() => window.dumpEstilos());
+        const nombres = await p.evaluate(() => window.PROPS_ESTILOS);
         const f = `${RAIZ}/base/${vista}-${ancho}.json`;
         if (cmd === 'base') { writeFileSync(f, JSON.stringify(dump)); total += Object.keys(dump).length; continue; }
         const base = JSON.parse(readFileSync(f, 'utf8'));
         const dif = [];
-        for (const k of new Set([...Object.keys(base), ...Object.keys(dump)])) if (base[k] !== dump[k]) dif.push(`${k}\n    antes: ${base[k]}\n    ahora: ${dump[k]}`);
+        for (const k of new Set([...Object.keys(base), ...Object.keys(dump)])) {
+          const a = norm(base[k]), b = norm(dump[k]);
+          if (a === b) continue;
+          const [va, vb] = [a?.split('|') ?? [], b?.split('|') ?? []];
+          dif.push(`${k}: ` + (nombres.map((n, i) => (va[i] !== vb[i] ? `${n} ${va[i]} -> ${vb[i]}` : null)).filter(Boolean).join(' ; ') || 'elemento distinto'));
+        }
         console.log(`${vista}@${ancho}: ${Object.keys(dump).length} elementos, ${dif.length} con diferencias`);
-        dif.slice(0, 6).forEach((d) => console.log('  ' + d));
+        dif.slice(0, 8).forEach((d) => console.log('  ' + d.slice(0, 260)));
         await p.close();
       }
     }
