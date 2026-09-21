@@ -253,6 +253,7 @@ button.rec-mini:active .rec-play{transform:translate(-50%,-50%) scale(.92)}
 .rec-dato .v{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--tinta)}
 .rec-acciones{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)}
 .rec-acciones:empty{display:none}
+.rec-acciones a.btn{text-decoration:none}
 /* El botón de reenviar queda siempre al pie de la tarjeta: en la grilla las
    tarjetas de una fila miden lo mismo y los botones se alinean. */
 .rec-cuerpo > .btn.sec{margin-top:auto}
