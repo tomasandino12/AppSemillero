@@ -152,3 +152,29 @@ export function resumenDeImpacto(recursos, resumen) {
     tendencia: hayDatoDelMes && mesAnterior > 0 ? { esteMes, mesAnterior, delta: esteMes - mesAnterior } : null,
   };
 }
+
+/**
+ * A quién de UN plantel le llegó un recurso. Un recurso es del club, así que
+ * `envios` puede traer jugadores de otros planteles: sólo cuentan los del
+ * `jugadores` que se pasa.
+ *   estado  'sin-plantel' | 'ninguno' | 'parcial' | 'todos'
+ *   faltan  los jugadores del plantel que todavía no lo recibieron
+ * Es lo que evita ofrecer de nuevo a quien ya lo tiene.
+ */
+export function estadoDeEnvio(envios, jugadores) {
+  const ids = new Set(jugadores.map((j) => j.id));
+  const delPlantel = envios.filter((e) => ids.has(e.jugadorId));
+  const recibieron = new Set(delPlantel.map((e) => e.jugadorId));
+  const faltan = jugadores.filter((j) => !recibieron.has(j.id));
+  let estado = 'parcial';
+  if (jugadores.length === 0) estado = 'sin-plantel';
+  else if (recibieron.size === 0) estado = 'ninguno';
+  else if (faltan.length === 0) estado = 'todos';
+  return {
+    estado,
+    total: jugadores.length,
+    enviados: recibieron.size,
+    faltan,
+    ultimaFecha: delPlantel.length ? delPlantel.map((e) => e.fecha).sort().at(-1) : null,
+  };
+}

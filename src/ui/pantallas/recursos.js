@@ -12,7 +12,7 @@ import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
 import {
   TIPOS_RECURSO, SIN_TIPO, RANGO_FRECUENCIA, RANGO_MINUTOS,
-  etiquetaDeTipo, validarMetadatos, contarPorTipo, filtrarPorTipo, alcanceDeRecurso, resumenDeImpacto,
+  etiquetaDeTipo, validarMetadatos, contarPorTipo, filtrarPorTipo, alcanceDeRecurso, resumenDeImpacto, estadoDeEnvio,
 } from '../../data/recursos.js';
 import { miniaturaDeRecurso, quitarImagenesRotas } from '../componentes/miniaturaRecurso.js';
 
@@ -73,9 +73,26 @@ function alcanceDeTarjeta(alcance) {
     </div>`;
 }
 
-function tarjetaRecurso(r, alcance) {
-  const cuantos = r.envios.length;
-  const ultima = cuantos ? r.envios.map((e) => e.fecha).sort().at(-1) : null;
+// A quién le llegó, medido contra el plantel que se está mirando: un recurso es
+// del club y sus envíos pueden ser de otras categorías. Si no se dice contra
+// qué plantel es, "3 jugadores" no le dice nada al profe.
+function etiquetaDeEnvio(envio, categoria) {
+  const cat = categoria ? ` ${categoria}` : '';
+  if (envio.estado === 'todos') return `Enviado a todo el plantel${cat}`;
+  if (envio.estado === 'parcial') return `Enviado a ${envio.enviados} de ${envio.total}${cat}`;
+  return `Sin enviar al plantel${cat}`;
+}
+
+function botonDeEnvio(r, envio) {
+  if (envio.estado === 'todos') {
+    return html`<button class="btn sec" type="button" disabled>Ya lo recibieron todos</button>`;
+  }
+  const texto = envio.estado === 'parcial' ? `Enviar a los ${envio.faltan.length} que faltan` : 'Enviar a jugadores';
+  return html`<button class="btn sec" type="button" data-reenviar="${r.id}">${texto}</button>`;
+}
+
+function tarjetaRecurso(r, alcance, envio, categoria) {
+  const ultima = envio.ultimaFecha;
   const eyebrow = [etiquetaDeTipo(r.tipo), formatearFechaCorta(r.creadoEn.slice(0, 10))].filter(Boolean).join(' · ');
   return html`
     <article class="rec-tarj">
@@ -86,7 +103,7 @@ function tarjetaRecurso(r, alcance) {
         <div class="d">${r.descripcion}</div>
         ${datosDeDedicacion(r)}
         <div class="m">
-          <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
+          <span class="tag ${envio.estado === 'ninguno' ? '' : 'rojo'}">${etiquetaDeEnvio(envio, categoria)}</span>
           ${ultima && html`<span class="tag">Último envío ${formatearFechaCorta(ultima)}</span>`}
         </div>
         ${alcanceDeTarjeta(alcance)}
@@ -94,13 +111,13 @@ function tarjetaRecurso(r, alcance) {
           ${esVideoEmbebible(r.enlace) && html`<button class="btn chico" type="button" data-ver-video="${r.id}">Ver video</button>`}
           ${esEnlaceWeb(r.enlace) && html`<a class="btn contorno chico" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Material</a>`}
         </div>
-        <button class="btn sec" type="button" data-reenviar="${r.id}">Enviar a más jugadores</button>
+        ${botonDeEnvio(r, envio)}
       </div>
     </article>
   `;
 }
 
-function cuerpoDeHoja(jugadores, { conCampos }) {
+function cuerpoDeHoja(jugadores, { conCampos, categoria, yaLoTienen }) {
   return html`
     ${conCampos && html`
       <div class="campo"><label for="in-rec-titulo">Título</label>
@@ -120,7 +137,8 @@ function cuerpoDeHoja(jugadores, { conCampos }) {
           <input id="in-rec-min" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="${RANGO_MINUTOS.min} a ${RANGO_MINUTOS.max}"></div>
       </div>
     `}
-    <div class="eyebrow">A quién <button class="btn sec chico" id="btn-todos" type="button">Todo el plantel</button></div>
+    <div class="eyebrow">A quién${categoria ? ` · ${categoria}` : ''} <button class="btn sec chico" id="btn-todos" type="button">${conCampos ? 'Todo el plantel' : 'Todos los que faltan'}</button></div>
+    ${yaLoTienen > 0 && html`<div class="p">Ya lo recibieron ${yaLoTienen}: no aparecen en la lista.</div>`}
     <div class="lista-chk">
       ${jugadores.map((j) => html`
         <label class="chk-fila">
@@ -157,15 +175,18 @@ function avisarPlantelVacio() {
   });
 }
 
-function abrirAltaDeRecurso(recursoId, jugadores) {
+// `jugadores` son los que se pueden elegir: en un recurso nuevo, todo el
+// plantel; al reenviar, sólo los que todavía no lo recibieron (`yaLoTienen` es
+// cuántos quedaron afuera, para decirlo).
+function abrirAltaDeRecurso(recursoId, jugadores, yaLoTienen = 0) {
   if (!jugadores.length) {
     avisarPlantelVacio();
     return;
   }
   const esNuevo = recursoId == null;
   abrirHoja({
-    titulo: esNuevo ? 'Ofrecer un recurso' : 'Enviar a más jugadores',
-    cuerpo: cuerpoDeHoja(jugadores, { conCampos: esNuevo }),
+    titulo: esNuevo ? 'Ofrecer un recurso' : 'Enviar a los que faltan',
+    cuerpo: cuerpoDeHoja(jugadores, { conCampos: esNuevo, categoria: obtenerPlantelActivo()?.categoria, yaLoTienen }),
   });
   $('btn-todos').addEventListener('click', () => {
     document.querySelectorAll('.chk-jug').forEach((c) => { c.checked = true; });
@@ -252,7 +273,7 @@ async function confirmarEnvio(recursoId) {
     return;
   }
   cerrarHoja();
-  toast('Envío registrado');
+  toast(`Enviado a ${jugadorIds.length} jugador${jugadorIds.length === 1 ? '' : 'es'}`);
   // No renderRecursos(): eso reconstruye el armazón entero y con él los dos
   // contenedores hermanos, no sólo el activo. Acá siempre estamos en la
   // pestaña Jugadores (avisarPlantelVacio() y esta hoja sólo se abren desde
@@ -384,7 +405,7 @@ async function renderSeccionJugadores() {
         <button class="btn chico" id="btn-ofrecer" type="button">Ofrecer un recurso</button>
       </div>
       ${chipsDeTipo(recursos)}
-      <div class="rec-grilla">${visibles.map((r) => tarjetaRecurso(r, alcanceDeRecurso(filaDe(r.id))))}</div>
+      <div class="rec-grilla">${visibles.map((r) => tarjetaRecurso(r, alcanceDeRecurso(filaDe(r.id)), estadoDeEnvio(r.envios, jugadores), plantel.categoria))}</div>
       ${panelDeImpacto(resumenDeImpacto(recursos, resumen))}
     </div>
   `;
@@ -403,7 +424,12 @@ async function renderSeccionJugadores() {
     });
   });
   contenedorJugadores().querySelectorAll('[data-reenviar]').forEach((b) => {
-    b.addEventListener('click', () => abrirAltaDeRecurso(b.dataset.reenviar, jugadores));
+    b.addEventListener('click', () => {
+      const recurso = recursos.find((r) => r.id === b.dataset.reenviar);
+      if (!recurso) return;
+      const { faltan } = estadoDeEnvio(recurso.envios, jugadores);
+      abrirAltaDeRecurso(recurso.id, faltan, jugadores.length - faltan.length);
+    });
   });
 }
 

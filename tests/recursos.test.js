@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validarMetadatos, contarPorTipo, filtrarPorTipo, claseDeEnlace, etiquetaDeTipo, alcanceDeRecurso, resumenDeImpacto, SIN_TIPO } from '../src/data/recursos.js';
+import { validarMetadatos, contarPorTipo, filtrarPorTipo, claseDeEnlace, etiquetaDeTipo, alcanceDeRecurso, resumenDeImpacto, estadoDeEnvio, SIN_TIPO } from '../src/data/recursos.js';
 
 test('valida frecuencia y minutos con decimalEstricto', () => {
   assert.deepEqual(validarMetadatos({ tipo: 'tiro', frecuenciaSemanal: '3', minutos: '20' }).valor, { tipo: 'tiro', frecuenciaSemanal: 3, minutos: 20 });
@@ -95,4 +95,33 @@ test('tendencia null si no hay mes anterior', () => {
 
 test('sin resumen el panel muestra sólo cuántos recursos hay', () => {
   assert.deepEqual(resumenDeImpacto(CATALOGO, null), { ofrecidos: 3, conCuenta: null, abrieronAlguno: null, masAbierto: null, tendencia: null });
+});
+
+const PLANTEL = [{ id: 'j1' }, { id: 'j2' }, { id: 'j3' }];
+
+test('enviado a todo el plantel: nadie falta y no hay a quién ofrecerle de nuevo', () => {
+  const e = estadoDeEnvio([{ jugadorId: 'j1', fecha: '2026-09-01' }, { jugadorId: 'j2', fecha: '2026-09-03' }, { jugadorId: 'j3', fecha: '2026-09-01' }], PLANTEL);
+  assert.equal(e.estado, 'todos');
+  assert.deepEqual(e.faltan, []);
+  assert.equal(e.enviados, 3);
+  assert.equal(e.ultimaFecha, '2026-09-03');
+});
+
+test('enviado a algunos: faltan los demás', () => {
+  const e = estadoDeEnvio([{ jugadorId: 'j2', fecha: '2026-09-01' }], PLANTEL);
+  assert.equal(e.estado, 'parcial');
+  assert.deepEqual(e.faltan.map((j) => j.id), ['j1', 'j3']);
+  assert.equal(e.total, 3);
+});
+
+test('los envíos a jugadores de otros planteles no cuentan en éste', () => {
+  const e = estadoDeEnvio([{ jugadorId: 'otro', fecha: '2026-09-10' }], PLANTEL);
+  assert.equal(e.estado, 'ninguno');
+  assert.equal(e.enviados, 0);
+  assert.equal(e.ultimaFecha, null);
+  assert.equal(e.faltan.length, 3);
+});
+
+test('plantel sin jugadores: no hay estado de envío que mostrar', () => {
+  assert.equal(estadoDeEnvio([], []).estado, 'sin-plantel');
 });
