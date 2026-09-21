@@ -79,7 +79,16 @@ function alcanceDeTarjeta(alcance) {
     'pocos': 'Hay pocos jugadores con cuenta para mostrar cuántos abrieron sin señalar a nadie.',
     'sin-resumen': 'No se pudo leer cuántos abrieron.',
   }[alcance.estado];
-  return html`<div class="rec-alcance"><div class="rec-alcance-tx sin">${motivo}</div></div>`;
+  // La pista va rayada y con un guion: se ve dónde va a aparecer la barra sin
+  // que una pista vacía se lea como "0 %".
+  return html`
+    <div class="rec-alcance">
+      <div class="rec-alcance-tx sin">${motivo}</div>
+      <div class="zona-barra sin-dato">
+        <div class="pista" role="img" aria-label="Sin datos de aperturas"></div>
+        <span class="pct">—</span>
+      </div>
+    </div>`;
 }
 
 function tarjetaRecurso(r, alcance) {
@@ -270,12 +279,20 @@ async function confirmarEnvio(recursoId) {
   await renderSeccionJugadores();
 }
 
+// Es la identidad del piloto: cuando entre un segundo club, esto sale de la base.
+const CULTURA_DEL_CLUB = 'Cultura Leprosa';
+
 const filosofia = html`
-  <section class="tarj rec-filosofia">
-    <div class="eyebrow">Para qué sirve</div>
-    <div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>
-    <div class="p">Se comparten links, la app no guarda archivos:</div>
-    <div class="rec-aceptados"><span class="chip">Video de YouTube (no listado)</span><span class="chip">Google Drive</span><span class="chip">PDF</span></div>
+  <section class="rec-filosofia">
+    <div class="rec-filo-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>
+    </div>
+    <div class="rec-filo-cuerpo">
+      <div class="rec-filo-cab"><span class="rec-filo-sello">${CULTURA_DEL_CLUB}</span><span class="rec-filo-sub">Material de Autonomía</span></div>
+      <h2 class="rec-filo-t">Filosofía de Trabajo Individual</h2>
+      <p class="rec-filo-tx">"Material que dejás disponible para que el que quiera progrese por su cuenta. <strong>No es obligación ni control.</strong> El crecimiento se construye con la constancia individual."</p>
+      <p class="rec-filo-nota">Se comparten links (YouTube no listado, Google Drive o PDF): la app no guarda archivos.</p>
+    </div>
   </section>`;
 
 function panelDeImpacto(impacto) {
@@ -395,6 +412,12 @@ async function renderSeccionJugadores() {
       filtroTipo = b.dataset.filtro;
       renderSeccionJugadores();
     });
+  });
+  // Un link de video que ya no existe (o sin conexión a YouTube) deja la imagen
+  // rota; se la saca y queda el fondo con el play, que sigue abriendo el video.
+  // El CSP no permite un onerror en el HTML, por eso se engancha acá.
+  contenedorJugadores().querySelectorAll('.rec-mini img').forEach((img) => {
+    img.addEventListener('error', () => img.remove(), { once: true });
   });
   contenedorJugadores().querySelectorAll('[data-ver-video]').forEach((b) => {
     b.addEventListener('click', () => {
