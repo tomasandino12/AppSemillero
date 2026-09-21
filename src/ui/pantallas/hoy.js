@@ -255,7 +255,7 @@ export async function renderHoy() {
       ${totalActual ? `
         <div class="cabecera-tiro">
           <div class="k">Tiro de campo · todo el arco</div>
-          <div class="n">${totalActual.pct}<span class="u">%</span></div>
+          <div class="cifra">${totalActual.pct}<span class="u">%</span></div>
           <div class="frac">${totalActual.anotados}/${totalActual.intentos} tiros</div>
           <div class="sub">
             ${variacionHtml(totalVariacion) || '<span class="var neutra">Primera batería: todavía no hay con qué comparar</span>'}

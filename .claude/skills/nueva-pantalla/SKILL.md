@@ -39,4 +39,6 @@ export async function renderX() {
 5. **Guardados**: `mensajeAlGuardar(e, { reglas, permiso })` de `../errores.js` para el toast de error; deshabilitar el botón mientras guarda.
 6. Correr `npm run test:q` y `graphify update .`.
 
+Lo visual (tokens, componentes y checklist de pantalla nueva) está en `DESIGN.md`: seguí su checklist antes de dar la pantalla por terminada.
+
 Lo que puede ver o hacer cada rol lo decide la base (RLS): la pantalla sólo evita ofrecer lo que la base rechazaría.

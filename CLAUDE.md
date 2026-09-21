@@ -17,6 +17,7 @@ App móvil para clubes formadores de básquet (piloto: Newell's, multi-club desd
 - `src/data/*.js`: lógica pura y testeable (validar, agrupar, preparar payloads, calcular). Sin red ni DOM.
 - `src/parser/`: parsers de xlsx (`parserCabb.js`, `parserFisico.js`). Contrato en `PARSER.md`.
 - `src/ui/main.js`: navegación (`registrarPantalla`, `ir`, `volver`, `refrescar`). `src/ui/pantallas/*.js`: una pantalla por archivo. Helpers de UI: `dom.js` (`$`), `errores.js` (mensajes de error), `html.js` (plantilla que escapa), `nav.js` (toast, escaparHtml, formatos).
+- `DESIGN.md`: sistema de diseño (tokens, reglas de movimiento, componentes, checklist de pantalla nueva). Leerlo antes de tocar CSS o armar una pantalla.
 - `supabase/migrations/`: numeradas. `supabase/ESQUEMA.md` documenta el modelo (le faltan las tablas de 0020–0022). `docs/COORDINACION.md`: roles y despliegue.
 
 ## Arquitectura: reglas que verifica `tests/arquitectura.test.js`

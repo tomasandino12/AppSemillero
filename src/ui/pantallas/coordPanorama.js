@@ -67,7 +67,7 @@ function aCargoHtml(t) {
  * El resumen de una fuente: último valor grande, su fracción al lado, y la
  * variación contra el punto anterior de la MISMA fuente y categoría.
  *
- * El número va en --rojo SIEMPRE, con cualquier valor: es jerarquía, no una
+ * El número va en --primario SIEMPRE, con cualquier valor: es jerarquía, no una
  * señal. La única señal de mejora sigue siendo variacionHtml, con su flecha.
  * Un estado vacío nunca usa el estilo del número.
  */

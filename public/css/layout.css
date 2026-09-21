@@ -20,7 +20,7 @@
 /* ---- cabecera ---- */
 .cabecera{
   grid-area:cabecera;
-  background:var(--negro);color:#fff;
+  background:var(--negro);color:var(--sobre-oscuro);
   padding:calc(var(--sp-3) + env(safe-area-inset-top)) var(--sp-4) var(--sp-2);
   display:flex;align-items:center;gap:var(--sp-3);
 }
@@ -59,11 +59,11 @@
   margin-left:auto;flex:0 0 auto;
   width:var(--tap);height:var(--tap);border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  background:var(--sup-2);color:#fff;border:2px solid var(--rojo);
+  background:var(--sup-2);color:var(--sobre-oscuro);border:2px solid var(--primario);
   font-family:var(--ff-titulo);font-size:var(--fs-145);font-weight:600;letter-spacing:.04em;
 }
 .cabecera .perfil svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:2}
-.cabecera .perfil.on{background:var(--rojo)}
+.cabecera .perfil.on{background:var(--primario);color:var(--sobre-club)}
 
 /* La pantalla actual es un bloque aparte del escudo, separado por una línea:
    la flecha de volver pertenece al título, no a la marca. */
@@ -84,7 +84,7 @@
   text-transform:uppercase;margin-top:.1875rem;font-weight:500;
 }
 .cabecera .atras{
-  font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:600;color:#fff;
+  font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:600;color:var(--sobre-oscuro);
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
 }
 
@@ -96,23 +96,24 @@
   grid-area:cats;
   background:var(--negro);padding:0 var(--sp-3) var(--sp-3);
   display:flex;gap:var(--sp-2);overflow-x:auto;
-  border-bottom:3px solid var(--rojo);
+  border-bottom:3px solid var(--primario);
   scrollbar-width:none;
 }
 .cats::-webkit-scrollbar{display:none}
 .cats:empty{display:none}
 .cat{
-  flex:0 0 auto;background:var(--sup-1);border-radius:.5625rem;
+  flex:0 0 auto;background:var(--sup-1);border-radius:var(--r-m);
   padding:var(--sp-2) var(--sp-3);min-height:var(--tap);
   display:flex;align-items:center;
 }
-.cat.on{background:var(--rojo)}
-.cat .sig{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-145);color:#fff;line-height:1}
+.cat.on{background:var(--primario)}
+.cat.on .sig{color:var(--sobre-club)}
+.cat .sig{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-145);color:var(--sobre-oscuro);line-height:1}
 .cat .mini{
   font-family:var(--ff-titulo);font-size:var(--fs-100);color:var(--gris-osc);
   letter-spacing:.05em;text-transform:uppercase;margin-top:.125rem;font-weight:600;
 }
-.cat.on .mini{color:var(--rojo-cl)}
+.cat.on .mini{color:var(--primario-cl)}
 
 /* ---- cuerpo y pantallas ---- */
 .cuerpo{
@@ -120,7 +121,18 @@
   overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
 }
 .pant{display:none}
-.pant.on{display:block;padding-bottom:var(--sp-5)}
+/* La pantalla entra con un fade, una vez por navegación
+   (mostrarPantalla alterna la clase: refrescar no la toca, así que un cambio de
+   categoría no la repite). El @keyframes sólo define "from": con
+   prefers-reduced-motion la animación se apaga y la pantalla queda en su estado
+   final, nunca invisible.
+
+   Sólo opacidad, sin subida: con transform el navegador arma una capa del tamaño
+   de la pantalla (medido: hasta 3 frames largos más en el primer recorrido con
+   CPU 4x, contra 2 con opacidad sola) y un ancestro transformado se vuelve el
+   contenedor de los hijos position:fixed, como el teclado de MEDIR. */
+.pant.on{display:block;padding-bottom:var(--sp-5);animation:entrar-pantalla var(--dur-2) var(--ease-salida)}
+@keyframes entrar-pantalla{from{opacity:0}}
 .pad{padding:var(--sp-4)}
 
 /* Franja inferior pegajosa para la acción principal de una pantalla.
@@ -150,7 +162,7 @@
 /* ---- navegación ---- */
 .nav{
   grid-area:nav;
-  display:flex;background:var(--negro);border-top:3px solid var(--rojo);
+  display:flex;background:var(--negro);border-top:3px solid var(--primario);
   padding-bottom:env(safe-area-inset-bottom);user-select:none;
 }
 .nav:empty{display:none}
@@ -166,7 +178,7 @@
    activo, el activo lleva dos señales: ícono rojo y etiqueta en bold.
    --fs-115 es el tamaño más grande que deja margen a 320px: RECURSOS en
    bold ocupa ~48px de los 53px de su tab. */
-.nav button.on svg{stroke:var(--rojo)}
+.nav button.on svg{stroke:var(--primario)}
 .nav button.on span{font-weight:700}
 .nav svg{width:1.125rem;height:1.125rem;stroke:var(--blanco);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .nav span{
@@ -176,29 +188,31 @@
 
 /* ---- velo, hoja y toast ---- */
 .velo{
-  position:fixed;inset:0;background:rgba(19,19,22,.5);
-  opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;
+  position:fixed;inset:0;background:var(--velo);
+  opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease-entrada);z-index:40;
 }
-.velo.on{opacity:1;pointer-events:auto}
+.velo.on{opacity:1;pointer-events:auto;transition-timing-function:var(--ease-salida)}
 .hoja{
   position:fixed;left:0;right:0;bottom:0;z-index:50;
   background:var(--papel);border-radius:1rem 1rem 0 0;
-  transform:translateY(103%);transition:transform .25s cubic-bezier(.3,.9,.3,1);
+  transform:translateY(103%);transition:transform var(--dur-3) var(--ease-salida);
   max-height:88dvh;overflow-y:auto;
   padding-bottom:calc(var(--sp-4) + env(safe-area-inset-bottom));
 }
 .hoja.on{transform:translateY(0)}
+/* Al cerrar, visibility corta de golpe: sólo se ve la animación de entrada, por
+   eso hoja y toast usan --ease-salida en los dos sentidos. */
 .hoja:not(.on){visibility:hidden}
 .hoja .asa{width:2.375rem;height:.25rem;background:var(--linea);border-radius:.1875rem;margin:var(--sp-2) auto var(--sp-1)}
 .hoja h2{margin:var(--sp-2) var(--sp-4)}
 .toast{
   position:fixed;left:var(--sp-4);right:var(--sp-4);
   bottom:calc(var(--sp-5) + env(safe-area-inset-bottom));
-  background:var(--negro);color:#fff;padding:var(--sp-3) var(--sp-4);
+  background:var(--negro);color:var(--sobre-oscuro);padding:var(--sp-3) var(--sp-4);
   border-radius:var(--r);font-size:var(--fs-135);z-index:60;
-  transform:translateY(150%);transition:transform 150ms ease;
+  transform:translateY(150%);transition:transform var(--dur-2) var(--ease-salida);
 }
-.toast.on{transform:translateY(0);transition:transform 250ms ease}
+.toast.on{transform:translateY(0)}
 .toast:not(.on){visibility:hidden}
 
 /* =====================================================================
@@ -253,7 +267,7 @@
   }
   .nav{
     flex-direction:column;justify-content:flex-start;gap:var(--sp-1);
-    border-top:0;border-right:3px solid var(--rojo);
+    border-top:0;border-right:3px solid var(--primario);
     padding:var(--sp-4) var(--sp-2);
   }
   .nav button{
@@ -270,12 +284,12 @@
     display:flex;flex-direction:row;align-items:center;gap:var(--sp-3);
     padding:var(--sp-2) var(--sp-3) var(--sp-4);margin-bottom:var(--sp-3);
     border-bottom:1px solid var(--linea-osc);border-radius:0;
-    text-align:left;color:#fff;
+    text-align:left;color:var(--sobre-oscuro);
   }
   .nav .marca-nav .escudo{width:2.5rem;height:2.5rem;flex:0 0 auto;object-fit:contain}
   .nav .marca-nav .club{
     font-family:var(--ff-titulo);font-size:var(--fs-145);font-weight:700;
-    letter-spacing:.06em;text-transform:uppercase;line-height:1.1;color:#fff;
+    letter-spacing:.06em;text-transform:uppercase;line-height:1.1;color:var(--sobre-oscuro);
   }
   .cabecera .inicio{display:none}
   .cabecera .pantalla-actual{border-left:0;padding-left:0}
@@ -351,7 +365,7 @@
 @media (hover:hover){
   /* El texto ya es blanco siempre: el hover no puede aclararlo. */
   .nav button:hover span{text-decoration:underline;text-underline-offset:.2em}
-  .cabecera .salir:hover{color:#fff}
+  .cabecera .salir:hover{color:var(--sobre-oscuro)}
   .cat:hover{background:var(--sup-2)}
-  .cat.on:hover{background:var(--rojo-osc)}
+  .cat.on:hover{background:var(--primario-osc)}
 }

@@ -11,8 +11,19 @@
    ===================================================================== */
 
 .publico{
-  min-height:100dvh;background:var(--negro);color:#fff;
+  min-height:100dvh;background:var(--pub-fondo);color:var(--sobre-oscuro);
   display:flex;flex-direction:column;
+  position:relative;isolation:isolate;
+}
+/* El resplandor del color del club arriba de todo, detrás de la marca y del
+   hero. Estático. Va en un pseudo-elemento y la intensidad en opacity porque
+   el gradiente con color-mix() (--club mezclado con transparente) costó
+   ~+450 ms de FCP y ~+900 ms de LCP en Lighthouse mobile; con var(--club) puro
+   y opacity, que compone la GPU, el costo desaparece. */
+.publico::before{
+  content:"";position:absolute;inset:0 0 auto;height:22rem;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 100% at 50% 0,var(--club),transparent);
+  opacity:.28;
 }
 .publico[hidden]{display:none}
 .vista{display:none}
@@ -27,26 +38,39 @@
 /* ---- landing ---- */
 .hero{padding:var(--sp-6) var(--sp-4) var(--sp-5);text-align:center}
 .hero h1{font-size:clamp(1.75rem,1.35rem + 2vw,2.75rem);line-height:1.03;letter-spacing:.01em}
-.hero h1 .r{color:var(--rojo)}
+.hero h1 .r{color:var(--primario)}
 .hero .bajada{color:var(--gris-osc);font-size:var(--fs-170);line-height:1.45;margin:var(--sp-4) auto 0;max-width:34rem}
 
 .acciones-landing{display:flex;flex-direction:column;gap:var(--sp-3);padding:0 var(--sp-4) var(--sp-6);max-width:24rem;margin-inline:auto;width:100%}
 
 .beneficios{display:grid;gap:var(--sp-3);padding:0 var(--sp-4) var(--sp-6)}
-.ben{background:var(--sup-1);border:1px solid var(--linea-osc);border-radius:var(--r);padding:var(--sp-4)}
+/* Cada beneficio lleva un filete del color del club a la izquierda: marca la
+   jerarquía sin sumar fondo. NO entran animados: se probó un fade escalonado y
+   subía el LCP de la landing ~+316 ms (+2.6 %) en Lighthouse mobile, porque un
+   párrafo de estas tarjetas es el elemento más grande y no cuenta hasta que se
+   ve. Sin la animación el LCP queda igual que antes. */
+.ben{
+  position:relative;background:var(--pub-tarjeta);border:1px solid var(--pub-borde);
+  border-radius:var(--r);padding:var(--sp-4);
+}
+.ben::before{
+  content:"";position:absolute;left:-1px;top:var(--sp-4);bottom:var(--sp-4);width:3px;
+  background:var(--primario);border-radius:0 2px 2px 0;
+}
+
 .ben .t{
   font-family:var(--ff-titulo);font-size:var(--fs-170);font-weight:600;
   text-transform:uppercase;letter-spacing:.04em;line-height:1.15;
   display:flex;align-items:baseline;gap:var(--sp-2);
 }
-.ben .t::before{content:"";width:.4375rem;height:.4375rem;background:var(--rojo);flex:0 0 auto;transform:translateY(-.15em)}
+.ben .t::before{content:"";width:.4375rem;height:.4375rem;background:var(--primario);flex:0 0 auto;transform:translateY(-.15em)}
 .ben .d{color:var(--gris-osc);font-size:var(--fs-135);line-height:1.5;margin-top:var(--sp-2)}
 
 /* Lo único que se dice del futuro, y se dice separado de lo que ya anda. */
 .futuro{
   color:var(--gris-osc);font-size:var(--fs-125);text-align:center;
   padding:0 var(--sp-4) var(--sp-8);max-width:34rem;margin-inline:auto;
-  border-top:1px solid var(--linea-osc);padding-top:var(--sp-5);margin-top:var(--sp-2);
+  border-top:1px solid var(--pub-borde);padding-top:var(--sp-5);margin-top:var(--sp-2);
 }
 
 /* ---- caja de autenticación ---- */
@@ -68,21 +92,21 @@
 }
 .campo-osc input{
   width:100%;min-height:3rem;padding:var(--sp-3) var(--sp-3) var(--sp-3) 2.75rem;
-  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:.5625rem;
-  color:#fff;font-size:var(--fs-160);font-family:var(--ff-mono);
+  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:var(--r-m);
+  color:var(--sobre-oscuro);font-size:var(--fs-160);font-family:var(--ff-mono);
 }
 .campo-osc select{
   width:100%;min-height:3rem;padding:var(--sp-3);
-  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:.5625rem;
-  color:#fff;font-size:var(--fs-160);
+  background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:var(--r-m);
+  color:var(--sobre-oscuro);font-size:var(--fs-160);
 }
-.campo-osc select:focus{border-color:var(--rojo)}
-.campo-osc input::placeholder{color:#7C7870}
-.campo-osc input:focus{border-color:var(--rojo)}
+.campo-osc select:focus{border-color:var(--primario)}
+.campo-osc input::placeholder{color:var(--placeholder-osc)}
+.campo-osc input:focus{border-color:var(--primario)}
 .campo-osc .ayuda{font-size:var(--fs-115);color:var(--gris-osc);margin-top:var(--sp-1)}
 
 /* El aviso de la app es blanco sobre papel; acá tiene que vivir en oscuro. */
-.publico .al{background:var(--sup-1);color:#fff;box-shadow:none}
+.publico .al{background:var(--sup-1);color:var(--sobre-oscuro);box-shadow:none}
 .publico .al .mt{color:var(--gris-osc)}
 
 /* El secundario sobre el negro. La regla global de .btn.sec lo pinta blanco
@@ -93,10 +117,10 @@
    contra --negro. El que había, --linea-osc, daba 1.65:1: el botón se
    reconocía sólo por el texto, y en este proyecto el borde tiene que alcanzar
    solo. Sin sombra: --sombra está pensada para superficies claras. */
-.publico .btn.sec{background:transparent;border-color:var(--gris-osc);color:#fff;box-shadow:none}
+.publico .btn.sec{background:transparent;border-color:var(--gris-osc);color:var(--sobre-oscuro);box-shadow:none}
 /* Tampoco hereda el :active global, que pinta --papel: con texto blanco, un
    secundario apretado se volvía invisible justo mientras se lo toca. */
-.publico .btn.sec:active{background:rgba(255,255,255,.12)}
+.publico .btn.sec:active{background:var(--presion-osc)}
 
 .o{display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0;color:var(--gris-osc);font-family:var(--ff-titulo);font-size:var(--fs-135);font-weight:600;letter-spacing:.14em;text-transform:uppercase}
 .o::before,.o::after{content:"";flex:1;height:1px;background:var(--linea-osc)}
@@ -104,13 +128,13 @@
 .btn-google{
   display:flex;align-items:center;justify-content:center;gap:var(--sp-3);
   width:100%;min-height:var(--tap);padding:var(--sp-3) var(--sp-4);
-  background:#fff;color:#1F1F1F;border-radius:var(--r);
+  background:var(--blanco);color:var(--google-texto);border-radius:var(--r);
   font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;
   letter-spacing:.06em;text-transform:uppercase;
-  transition:transform 120ms ease-out,background 120ms ease-out;
+  transition:transform var(--dur-1) var(--ease-salida);
 }
 .btn-google svg{width:1.125rem;height:1.125rem;flex:0 0 auto}
-.btn-google:active{transform:scale(.97);background:#EDEDED}
+.btn-google:active{transform:scale(.97);background:var(--google-hover)}
 .btn-google:disabled{background:var(--sup-2);color:var(--gris-osc);transform:none}
 
 .enlaces{display:flex;flex-direction:column;align-items:center;margin-top:var(--sp-5)}
@@ -118,7 +142,7 @@
   min-height:var(--tap);display:flex;align-items:center;padding:0 var(--sp-2);
   color:var(--gris-osc);font-size:var(--fs-135);
 }
-.enlaces button b{color:var(--rojo);font-family:var(--ff-titulo);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-left:.35em}
+.enlaces button b{color:var(--primario);font-family:var(--ff-titulo);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-left:.35em}
 
 /* ---- cuenta sin club ---- */
 .sin-club{max-width:28rem;margin-inline:auto;width:100%;padding:var(--sp-6) var(--sp-4) var(--sp-8);text-align:center}
@@ -126,7 +150,7 @@
   width:3.5rem;height:3.5rem;margin:0 auto var(--sp-4);border-radius:50%;
   background:var(--sup-1);border:1px solid var(--linea-osc);
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:700;color:var(--rojo);
+  font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:700;color:var(--primario);
 }
 .sin-club .btn + .d{margin-top:var(--sp-5)}
 .sin-club .d + .btn{margin-top:var(--sp-2)}
@@ -139,7 +163,7 @@
 }
 
 @media (hover:hover){
-  .publico .btn.sec:not(:disabled):hover{background:rgba(255,255,255,.08)}
-  .btn-google:not(:disabled):hover{background:#EDEDED}
-  .enlaces button:hover b{color:#fff}
+  .publico .btn.sec:not(:disabled):hover{background:var(--toque-osc)}
+  .btn-google:not(:disabled):hover{background:var(--google-hover)}
+  .enlaces button:hover b{color:var(--sobre-oscuro)}
 }

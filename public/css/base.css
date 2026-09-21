@@ -39,11 +39,11 @@ h2{font-size:var(--fs-titulo-chico)}
   letter-spacing:.13em;text-transform:uppercase;color:var(--gris);
   display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-5) 0 var(--sp-2);
 }
-.eyebrow::before{content:"";width:.4375rem;height:.4375rem;background:var(--rojo);flex:0 0 auto}
-.eyebrow .der{margin-left:auto;color:var(--rojo);letter-spacing:.05em}
+.eyebrow::before{content:"";width:.4375rem;height:.4375rem;background:var(--primario);flex:0 0 auto}
+.eyebrow .der{margin-left:auto;color:var(--primario);letter-spacing:.05em}
 
 .mono{font-family:var(--ff-mono)}
 .sr{position:absolute;top:0;left:0;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
-*:focus-visible{outline:2px solid var(--rojo);outline-offset:2px}
+*:focus-visible{outline:2px solid var(--primario);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
