@@ -81,4 +81,40 @@ Otras decisiones tomadas midiendo: la entrada de pantalla es sólo fade (con `tr
 
 ## Después (T9)
 
-_Se completa al cerrar la rama._
+Medido sobre `8a1f3d8` (código idéntico al de `0d6ffcc`, el último commit que toca CSS o JS), con el mismo procedimiento que T1.
+
+**Landing, Lighthouse mobile, mediana de 3** (corridas: 59/57/58):
+
+| Métrica | Antes | Después | Delta |
+|---|---|---|---|
+| Performance | 58 | 58 | = |
+| LCP | 12 319 ms | 12 478 ms (10 606 / 12 478 / 12 482) | +1,3 % |
+| FCP | 7 482 ms | 7 556 ms | +1,0 % |
+| CLS | 0,036 | 0,036 | = |
+| TBT | 14 ms | 15 ms (22 / 15 / 14) | +1 ms |
+
+LCP dentro de la tolerancia (±5 %) y CLS igual. El TBT sube 1 ms: en porcentaje pasa el 5 %, pero 1 ms está por debajo del ruido entre corridas (22 / 15 / 14).
+
+**Peso transferido:**
+
+| Recurso | Antes | Después | Delta |
+|---|---|---|---|
+| CSS propio (5 archivos) | 68 091 B | 76 035 B | +7 944 B (+11,7 %) |
+| · tokens / base / layout / componentes / publico | 2 700 / 2 424 / 16 738 / 38 252 / 7 977 | 5 918 / 2 436 / 17 914 / 40 413 / 9 354 | +3 218 / +12 / +1 176 / +2 161 / +1 377 |
+| Fuentes | 166 104 B en 7 archivos | sin cambios | `public/index.html` no difiere de `3e5e082` (T8 no encontró pesos que quitar) |
+
+Los bytes de CSS son del servidor de desarrollo, sin compresión; en Vercel viajan comprimidos. Casi todo el aumento son los tokens nuevos (movimiento, sombras, escala tipográfica) y los estilos de la cifra, la meta, la tarjeta tocable y la landing. En la landing bajan hoy 93 008 B de fuentes (Inter 48 256 + Barlow 600 y 700).
+
+**Recorrido con CPU 4x, 375 px** (3 corridas por pasada, 4 pasadas; cada renglón es una pasada con página nueva):
+
+| Pasada | Corrida 1 (en frío) LoAF >50 ms / peor | Corridas 2 y 3 | rAF >25 ms (corrida 1) / peor |
+|---|---|---|---|
+| Antes (T1) | 1 / 60 ms | 0 / 0 en ambas | 4 / 67 ms |
+| Después, a | 2 / 69 ms | 0 / 0 en ambas | 4 / 67 ms |
+| Después, b | 4 / 78 ms | 0 y 0 (una con 1 frame rAF de 27 ms) | 4 / 67 ms |
+| Después, c | 3 / 75 ms | 0 / 0 | 4 / 67 ms |
+| Después, d | 3 / 70 ms | 0 / 0 | 4 / 67 ms |
+
+- En régimen (corridas 2 y 3) no hay frames largos, igual que antes. Los frames de `requestAnimationFrame` de la corrida 1 son idénticos (4, peor 67 ms).
+- **La corrida en frío empeoró un poco**: 2–4 frames largos contra el 1 de T1 (que es una sola muestra). Para ver si eran las animaciones se repitió la corrida en frío 5 veces con animaciones y 5 con `prefers-reduced-motion` (que las apaga, `base.css`): con animaciones 1–2 frames largos (bloqueo de 10 a 50 ms), sin animaciones siempre 1 (bloqueo de 8 a 23 ms). Es decir, hay un frame largo de arranque que no viene de la rama y, como mucho, otro más que sí, en el primer cambio de pantalla, en un CPU 4x. Todas las animaciones son `transform` y `opacity`.
+- Queda anotado y no se corrigió: es menos de un frame de diferencia, sólo en frío, y quitar el fade de entrada para ganarlo iría contra el objetivo de la rama.
