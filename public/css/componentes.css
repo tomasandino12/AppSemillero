@@ -212,6 +212,49 @@
 .tag{font-family:var(--ff-mono);font-size:var(--fs-100);color:var(--gris);background:var(--fondo-chip);padding:.1875rem .4375rem;border-radius:var(--r-s)}
 .tag.rojo{background:var(--primario-tenue);color:var(--primario-osc)}
 
+/* ---- RECURSOS: tarjeta con miniatura, filosofía y grilla ---- */
+.rec-filosofia{margin-bottom:var(--sp-2)}
+.rec-filosofia .eyebrow{margin-top:0}
+.rec-aceptados{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-2)}
+.rec-grilla{display:grid;gap:var(--sp-4)}
+.rec-tarj{display:flex;flex-direction:column;background:var(--blanco);border-radius:var(--r);box-shadow:var(--sombra);overflow:hidden}
+.rec-mini{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;padding:0;background:var(--negro);overflow:hidden}
+.rec-mini img{display:block;width:100%;height:100%;object-fit:cover}
+button.rec-mini{cursor:pointer}
+.rec-play{
+  position:absolute;left:50%;top:50%;width:3.25rem;height:3.25rem;border-radius:var(--r-full);
+  background:var(--primario);transform:translate(-50%,-50%);transition:transform var(--dur-1) var(--ease-salida);
+}
+button.rec-mini:active .rec-play{transform:translate(-50%,-50%) scale(.92)}
+/* El triángulo de play, con bordes, en el color que se lee sobre el club. */
+.rec-play::before{
+  content:"";position:absolute;left:54%;top:50%;transform:translate(-50%,-50%);
+  border-style:solid;border-width:.6rem 0 .6rem 1rem;border-color:transparent transparent transparent var(--sobre-club);
+}
+.rec-mini.sin-img{display:flex;align-items:center;justify-content:center;background:var(--sup-1)}
+.rec-mini-et{font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gris-osc)}
+.rec-cuerpo{display:flex;flex-direction:column;flex:1;padding:var(--sp-4)}
+.rec-cuerpo .t{font-weight:600;font-size:var(--fs-160)}
+.rec-cuerpo .d{font-size:var(--fs-135);color:var(--gris);margin-top:var(--sp-1);line-height:1.4}
+.rec-cuerpo .m{display:flex;gap:var(--sp-2);margin:var(--sp-3) 0;flex-wrap:wrap}
+.rec-eyebrow{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.1em;text-transform:uppercase;color:var(--gris);margin-bottom:var(--sp-1)}
+.rec-eyebrow:empty{display:none}
+.rec-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(7rem,1fr));gap:var(--sp-2);margin-top:var(--sp-3)}
+.rec-dato{display:flex;flex-direction:column;gap:var(--sp-1);background:var(--papel);border-radius:var(--r-s);padding:var(--sp-2) var(--sp-3)}
+.rec-dato .et{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.08em;text-transform:uppercase;color:var(--gris-cl)}
+.rec-dato .v{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--tinta)}
+.rec-acciones{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-3)}
+.rec-acciones:empty{display:none}
+/* El botón de reenviar queda siempre al pie de la tarjeta: en la grilla las
+   tarjetas de una fila miden lo mismo y los botones se alinean. */
+.rec-cuerpo > .btn.sec{margin-top:auto}
+.btn.contorno{background:transparent;color:var(--tinta);border:1px solid var(--tinta);text-decoration:none}
+.campo .etiqueta{
+  font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.11em;
+  text-transform:uppercase;color:var(--gris);font-weight:500;
+  display:block;margin-bottom:var(--sp-2);
+}
+
 /* ---- gráficos portados del prototipo ---- */
 svg.g{width:100%;display:block;overflow:visible}
 .leyenda{

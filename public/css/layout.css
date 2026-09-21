@@ -219,10 +219,13 @@
    ≥640px — más aire y listas en dos columnas donde tenga sentido.
    La navegación sigue abajo.
    ===================================================================== */
+/* Grilla de RECURSOS: una columna en celular (acá, porque componentes.css se carga después y pisaría el corte de abajo). */
+.rec-grilla{grid-template-columns:minmax(0,1fr)}
 @media (min-width:40rem){
   .pad{padding:var(--sp-5) var(--sp-6)}
   .hoja .video-embed{margin-inline:calc(-1 * var(--sp-6))}
   .lista-2col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3)}
+  .rec-grilla{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lista-2col > *{margin-bottom:0}
   .pie-fijo{padding-inline:var(--sp-6)}
   /* Las categorías una al lado de la otra. Todas iguales en tamaño y en orden

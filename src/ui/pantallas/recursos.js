@@ -10,6 +10,11 @@ import { renderSeccionEjercicios } from './ejercicios.js';
 import { $ } from '../dom.js';
 import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
+import {
+  TIPOS_RECURSO, SIN_TIPO, RANGO_FRECUENCIA, RANGO_MINUTOS,
+  etiquetaDeTipo, validarMetadatos, contarPorTipo, filtrarPorTipo, claseDeEnlace,
+} from '../../data/recursos.js';
+import { urlDeMiniatura } from '../../data/youtube.js';
 
 const contenedor = () => $('recursos-contenido');
 const contenedorJugadores = () => $('recursos-jugadores');
@@ -21,6 +26,34 @@ function hoyLocal() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+const ETIQUETA_SIN_MINIATURA = { drive: 'Drive', pdf: 'PDF', otro: 'Link', youtube: 'Video' };
+
+function miniatura(r) {
+  const src = urlDeMiniatura(r.enlace);
+  if (esVideoEmbebible(r.enlace) && src) {
+    return html`
+      <button class="rec-mini" type="button" data-ver-video="${r.id}" aria-label="Ver video: ${r.titulo}">
+        <img src="${src}" alt="" loading="lazy" referrerpolicy="no-referrer">
+        <span class="rec-play" aria-hidden="true"></span>
+      </button>`;
+  }
+  const clase = claseDeEnlace(r.enlace);
+  return html`
+    <div class="rec-mini sin-img" aria-hidden="true">
+      <span class="rec-mini-et">${clase ? ETIQUETA_SIN_MINIATURA[clase] : 'Instrucciones'}</span>
+    </div>`;
+}
+
+// Un dato que el profe no cargó no se muestra: ni cajita vacía ni "0".
+function datosDeDedicacion(r) {
+  if (r.frecuenciaSemanal == null && r.minutos == null) return '';
+  return html`
+    <div class="rec-datos">
+      ${r.frecuenciaSemanal != null && html`<div class="rec-dato"><span class="et">Frecuencia</span><span class="v">${r.frecuenciaSemanal} por semana</span></div>`}
+      ${r.minutos != null && html`<div class="rec-dato"><span class="et">Dedicación</span><span class="v">${r.minutos} min</span></div>`}
+    </div>`;
+}
+
 /**
  * Un recurso muestra a cuántos se les mandó y cuándo. NO muestra quién lo
  * mira, ni una seguidilla de envíos, ni marcas de lectura: con adolescentes,
@@ -30,18 +63,26 @@ function hoyLocal() {
 function tarjetaRecurso(r) {
   const cuantos = r.envios.length;
   const ultima = cuantos ? r.envios.map((e) => e.fecha).sort().at(-1) : null;
+  const eyebrow = [etiquetaDeTipo(r.tipo), formatearFechaCorta(r.creadoEn.slice(0, 10))].filter(Boolean).join(' · ');
   return html`
-    <div class="rec">
-      <div class="t">${r.titulo}</div>
-      <div class="d">${r.descripcion}</div>
-      ${esVideoEmbebible(r.enlace) && html`<button class="btn sec chico" data-ver-video="${r.id}">Ver video</button>`}
-      ${esEnlaceWeb(r.enlace) && html`<a class="enlace-rec" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Abrir el material</a>`}
-      <div class="m">
-        <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
-        ${ultima && html`<span class="tag">${formatearFechaCorta(ultima)}</span>`}
+    <article class="rec-tarj">
+      ${miniatura(r)}
+      <div class="rec-cuerpo">
+        <div class="rec-eyebrow">${eyebrow}</div>
+        <div class="t">${r.titulo}</div>
+        <div class="d">${r.descripcion}</div>
+        ${datosDeDedicacion(r)}
+        <div class="m">
+          <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
+          ${ultima && html`<span class="tag">Último envío ${formatearFechaCorta(ultima)}</span>`}
+        </div>
+        <div class="rec-acciones">
+          ${esVideoEmbebible(r.enlace) && html`<button class="btn chico" type="button" data-ver-video="${r.id}">Ver video</button>`}
+          ${esEnlaceWeb(r.enlace) && html`<a class="btn contorno chico" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Material</a>`}
+        </div>
+        <button class="btn sec" type="button" data-reenviar="${r.id}">Enviar a más jugadores</button>
       </div>
-      <button class="btn sec chico" data-reenviar="${r.id}">Enviar a más jugadores</button>
-    </div>
+    </article>
   `;
 }
 
@@ -54,6 +95,16 @@ function cuerpoDeHoja(jugadores, { conCampos }) {
         <textarea id="in-rec-desc" rows="3" maxlength="${LIMITE.descripcion}"></textarea></div>
       <div class="campo"><label for="in-rec-link">Link (opcional)</label>
         <input id="in-rec-link" type="url" maxlength="${LIMITE.enlace}" autocomplete="off" inputmode="url" placeholder="https://"></div>
+      <div class="campo"><span class="etiqueta" id="et-rec-tipo">Tipo (opcional)</span>
+        <div class="chips-tema" id="rec-tipos" role="group" aria-labelledby="et-rec-tipo">
+          ${TIPOS_RECURSO.map((t) => html`<button class="chip-tema" type="button" data-tipo="${t.clave}" aria-pressed="false">${t.etiqueta}</button>`)}
+        </div></div>
+      <div class="campos-par">
+        <div class="campo"><label for="in-rec-frec">Veces por semana (opcional)</label>
+          <input id="in-rec-frec" type="text" inputmode="numeric" maxlength="1" autocomplete="off" placeholder="${RANGO_FRECUENCIA.min} a ${RANGO_FRECUENCIA.max}"></div>
+        <div class="campo"><label for="in-rec-min">Minutos (opcional)</label>
+          <input id="in-rec-min" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="${RANGO_MINUTOS.min} a ${RANGO_MINUTOS.max}"></div>
+      </div>
     `}
     <div class="eyebrow">A quién <button class="btn sec chico" id="btn-todos" type="button">Todo el plantel</button></div>
     <div class="lista-chk">
@@ -107,11 +158,26 @@ function abrirAltaDeRecurso(recursoId, jugadores) {
   });
   $('btn-rec-confirmar').addEventListener('click', () => confirmarEnvio(recursoId));
   if (esNuevo) {
+    // Un solo tipo a la vez; tocar el elegido lo saca (el tipo es opcional).
+    $('rec-tipos').addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-tipo]');
+      if (!chip) return;
+      const estaba = chip.classList.contains('on');
+      $('rec-tipos').querySelectorAll('[data-tipo]').forEach((c) => {
+        c.classList.remove('on');
+        c.setAttribute('aria-pressed', 'false');
+      });
+      if (!estaba) {
+        chip.classList.add('on');
+        chip.setAttribute('aria-pressed', 'true');
+      }
+    });
     $('in-rec-titulo').focus();
     // Enter en un campo de una sola línea es la otra entrada al mismo submit
     // que el click del botón; confirmarEnvio() cubre las dos con su guarda.
-    $('in-rec-titulo').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarEnvio(recursoId); });
-    $('in-rec-link').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarEnvio(recursoId); });
+    for (const id of ['in-rec-titulo', 'in-rec-link', 'in-rec-frec', 'in-rec-min']) {
+      $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarEnvio(recursoId); });
+    }
   }
 }
 
@@ -125,6 +191,11 @@ async function confirmarEnvio(recursoId) {
   const titulo = recursoId ? null : $('in-rec-titulo').value.trim();
   const descripcion = recursoId ? null : $('in-rec-desc').value.trim();
   const enlace = recursoId ? null : ($('in-rec-link').value.trim() || null);
+  const metadatos = recursoId ? { valor: {} } : validarMetadatos({
+    tipo: $('rec-tipos').querySelector('.on')?.dataset.tipo,
+    frecuenciaSemanal: $('in-rec-frec').value,
+    minutos: $('in-rec-min').value,
+  });
 
   if (!recursoId && (!titulo || !descripcion)) {
     $('rec-aviso').innerHTML = html`<div class="al"><div class="tx">Poné un título y las instrucciones.</div></div>`;
@@ -134,6 +205,10 @@ async function confirmarEnvio(recursoId) {
   // "javascript:..." o cualquier otro esquema: eso se rechaza acá.
   if (enlace && !esEnlaceWeb(enlace)) {
     $('rec-aviso').innerHTML = html`<div class="al"><div class="tx">${MENSAJE_ENLACE_NO_WEB}</div></div>`;
+    return;
+  }
+  if (metadatos.error) {
+    $('rec-aviso').innerHTML = html`<div class="al"><div class="tx">${metadatos.error}</div></div>`;
     return;
   }
   if (!jugadorIds.length) {
@@ -150,6 +225,7 @@ async function confirmarEnvio(recursoId) {
       titulo,
       descripcion,
       enlace,
+      ...metadatos.valor,
       fecha: hoyLocal(),
       jugadorIds,
     });
@@ -171,7 +247,29 @@ async function confirmarEnvio(recursoId) {
   await renderSeccionJugadores();
 }
 
-const encabezado = html`<div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>`;
+const filosofia = html`
+  <section class="tarj rec-filosofia">
+    <div class="eyebrow">Para qué sirve</div>
+    <div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>
+    <div class="p">Se comparten links, la app no guarda archivos:</div>
+    <div class="rec-aceptados"><span class="chip">Video de YouTube (no listado)</span><span class="chip">Google Drive</span><span class="chip">PDF</span></div>
+  </section>`;
+
+// Se recuerda mientras dure la sesión: al enviar un recurso la lista se vuelve
+// a pintar y no tiene que saltar de vuelta a "Todos".
+let filtroTipo = 'todos';
+
+function chipsDeTipo(recursos) {
+  const cuenta = contarPorTipo(recursos);
+  const chips = [{ clave: 'todos', etiqueta: 'Todos' }, ...TIPOS_RECURSO, { clave: SIN_TIPO, etiqueta: 'Sin tipo' }]
+    .filter((c) => c.clave === 'todos' || cuenta[c.clave] > 0);
+  // Con un solo tipo en juego, filtrar no sirve de nada.
+  if (chips.length <= 2) return '';
+  return html`
+    <div class="chips-tema" role="group" aria-label="Filtrar por tipo">
+      ${chips.map((c) => html`<button class="chip-tema ${c.clave === filtroTipo ? 'on' : ''}" type="button" data-filtro="${c.clave}" aria-pressed="${c.clave === filtroTipo}">${c.etiqueta} <span class="mono">${cuenta[c.clave]}</span></button>`)}
+    </div>`;
+}
 
 async function renderSeccionJugadores() {
   const club = obtenerClubActual();
@@ -183,8 +281,8 @@ async function renderSeccionJugadores() {
 
   contenedorJugadores().innerHTML = html`
     <div class="pad">
-      ${encabezado}
-      <div class="eyebrow">Ofrecidos</div>
+      ${filosofia}
+      <div class="seccion-cab"><div class="eyebrow">Ofrecidos</div></div>
       <div class="p" id="recursos-estado">Cargando recursos...</div>
     </div>
   `;
@@ -211,7 +309,7 @@ async function renderSeccionJugadores() {
   if (!recursos.length) {
     contenedorJugadores().innerHTML = html`
       <div class="pad">
-        ${encabezado}
+        ${filosofia}
         <div class="estado-vacio">
           <h2>Todavía no compartiste ningún recurso</h2>
           <div class="p">El chico lo recibe por donde ya se hablan hoy (WhatsApp). Lo que hace la app es dejar registrado qué se mandó, a quién y cuándo — que es justo lo que se pierde cuando cambia el entrenador.</div>
@@ -223,15 +321,29 @@ async function renderSeccionJugadores() {
     return;
   }
 
+  // Un filtro que ya no tiene recursos (por ejemplo tras cambiar de plantel)
+  // no puede dejar la pantalla vacía sin salida.
+  if (filtroTipo !== 'todos' && !filtrarPorTipo(recursos, filtroTipo).length) filtroTipo = 'todos';
+  const visibles = filtrarPorTipo(recursos, filtroTipo);
+
   contenedorJugadores().innerHTML = html`
     <div class="pad">
-      ${encabezado}
-      <div class="eyebrow">Ofrecidos</div>
-      ${recursos.map(tarjetaRecurso)}
+      ${filosofia}
+      <div class="seccion-cab">
+        <div class="eyebrow">Ofrecidos</div>
+        <button class="btn chico" id="btn-ofrecer" type="button">Ofrecer un recurso</button>
+      </div>
+      ${chipsDeTipo(recursos)}
+      <div class="rec-grilla">${visibles.map(tarjetaRecurso)}</div>
     </div>
-    <div class="pie-fijo"><button class="btn sec" id="btn-ofrecer">Ofrecer un recurso</button></div>
   `;
   $('btn-ofrecer').addEventListener('click', () => abrirAltaDeRecurso(null, jugadores));
+  contenedorJugadores().querySelectorAll('[data-filtro]').forEach((b) => {
+    b.addEventListener('click', () => {
+      filtroTipo = b.dataset.filtro;
+      renderSeccionJugadores();
+    });
+  });
   contenedorJugadores().querySelectorAll('[data-ver-video]').forEach((b) => {
     b.addEventListener('click', () => {
       const recurso = recursos.find((r) => r.id === b.dataset.verVideo);
