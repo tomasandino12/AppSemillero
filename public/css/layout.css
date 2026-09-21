@@ -178,17 +178,19 @@
 /* ---- velo, hoja y toast ---- */
 .velo{
   position:fixed;inset:0;background:var(--velo);
-  opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;
+  opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease-entrada);z-index:40;
 }
-.velo.on{opacity:1;pointer-events:auto}
+.velo.on{opacity:1;pointer-events:auto;transition-timing-function:var(--ease-salida)}
 .hoja{
   position:fixed;left:0;right:0;bottom:0;z-index:50;
   background:var(--papel);border-radius:1rem 1rem 0 0;
-  transform:translateY(103%);transition:transform .25s cubic-bezier(.3,.9,.3,1);
+  transform:translateY(103%);transition:transform var(--dur-3) var(--ease-salida);
   max-height:88dvh;overflow-y:auto;
   padding-bottom:calc(var(--sp-4) + env(safe-area-inset-bottom));
 }
 .hoja.on{transform:translateY(0)}
+/* Al cerrar, visibility corta de golpe: sólo se ve la animación de entrada, por
+   eso hoja y toast usan --ease-salida en los dos sentidos. */
 .hoja:not(.on){visibility:hidden}
 .hoja .asa{width:2.375rem;height:.25rem;background:var(--linea);border-radius:.1875rem;margin:var(--sp-2) auto var(--sp-1)}
 .hoja h2{margin:var(--sp-2) var(--sp-4)}
@@ -197,9 +199,9 @@
   bottom:calc(var(--sp-5) + env(safe-area-inset-bottom));
   background:var(--negro);color:var(--sobre-oscuro);padding:var(--sp-3) var(--sp-4);
   border-radius:var(--r);font-size:var(--fs-135);z-index:60;
-  transform:translateY(150%);transition:transform 150ms ease;
+  transform:translateY(150%);transition:transform var(--dur-2) var(--ease-salida);
 }
-.toast.on{transform:translateY(0);transition:transform 250ms ease}
+.toast.on{transform:translateY(0)}
 .toast:not(.on){visibility:hidden}
 
 /* =====================================================================

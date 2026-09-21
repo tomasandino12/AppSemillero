@@ -76,3 +76,65 @@ test('no hay colores fuera de tokens.css', () => {
   }
   assert.deepEqual(sueltos, []);
 });
+
+// ---- movimiento ----
+const PERMITIDAS = new Set(['transform', 'opacity']);
+
+/** Parte por comas de primer nivel: cubic-bezier(a,b,c,d) no se corta. */
+function partirPorComas(texto) {
+  const partes = [];
+  let nivel = 0, actual = '';
+  for (const c of texto) {
+    if (c === '(') nivel++;
+    if (c === ')') nivel--;
+    if (c === ',' && nivel === 0) { partes.push(actual); actual = ''; } else actual += c;
+  }
+  partes.push(actual);
+  return partes.map((p) => p.trim()).filter(Boolean);
+}
+
+/** Propiedades animadas por cada `transition:` / `transition-property:` de los CSS. */
+function propiedadesDeTransiciones() {
+  const halladas = [];
+  for (const [nombre, texto] of Object.entries(css)) {
+    for (const m of sinComentarios(texto).matchAll(/(?<![\w-])transition(-property)?\s*:\s*([^;}]+)/g)) {
+      const valor = m[2].replace(/!important/, '').trim();
+      if (valor === 'none') continue;
+      for (const parte of partirPorComas(valor)) {
+        // En el atajo la propiedad es la primera palabra; en transition-property es todo el segmento.
+        halladas.push({ archivo: nombre, propiedad: parte.split(/\s+/)[0], declaracion: m[0] });
+      }
+    }
+  }
+  return halladas;
+}
+
+test('las transiciones sólo animan transform u opacity', () => {
+  const cargas = propiedadesDeTransiciones();
+  assert.ok(cargas.length > 0, 'no se encontró ninguna transición: ¿cambió el parser?');
+  const malas = cargas.filter((t) => !PERMITIDAS.has(t.propiedad)).map((t) => `${t.archivo}.css: ${t.declaracion}`);
+  assert.deepEqual(malas, []);
+});
+
+test('no hay transition: all', () => {
+  for (const [nombre, texto] of Object.entries(css)) {
+    assert.doesNotMatch(sinComentarios(texto), /transition[^;}]*\ball\b/, `${nombre}.css`);
+  }
+});
+
+test('los keyframes sólo tocan transform u opacity', () => {
+  const malos = [];
+  for (const [nombre, texto] of Object.entries(css)) {
+    const limpio = sinComentarios(texto);
+    for (const m of limpio.matchAll(/@keyframes\s+([\w-]+)\s*\{/g)) {
+      // Se recorre el bloque contando llaves hasta cerrar el @keyframes.
+      let nivel = 1, i = m.index + m[0].length;
+      const inicio = i;
+      while (nivel > 0 && i < limpio.length) { if (limpio[i] === '{') nivel++; if (limpio[i] === '}') nivel--; i++; }
+      for (const d of limpio.slice(inicio, i - 1).matchAll(/([\w-]+)\s*:/g)) {
+        if (!PERMITIDAS.has(d[1])) malos.push(`${nombre}.css @keyframes ${m[1]}: ${d[1]}`);
+      }
+    }
+  }
+  assert.deepEqual(malos, []);
+});

@@ -107,7 +107,7 @@
   background:var(--blanco);color:var(--google-texto);border-radius:var(--r);
   font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;
   letter-spacing:.06em;text-transform:uppercase;
-  transition:transform 120ms ease-out,background 120ms ease-out;
+  transition:transform var(--dur-1) var(--ease-salida);
 }
 .btn-google svg{width:1.125rem;height:1.125rem;flex:0 0 auto}
 .btn-google:active{transform:scale(.97);background:var(--google-hover)}

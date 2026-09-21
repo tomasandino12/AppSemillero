@@ -12,7 +12,7 @@
   background:var(--primario);color:var(--sobre-club);padding:var(--sp-4);
   border-radius:var(--r);font-family:var(--ff-titulo);font-size:var(--fs-190);
   font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-  transition:transform 120ms ease-out,background 120ms ease-out;
+  transition:transform var(--dur-1) var(--ease-salida);
 }
 .btn:active{background:var(--primario-osc);transform:scale(.97)}
 .btn:disabled{background:var(--deshabilitado);color:var(--blanco);transform:none}
@@ -67,7 +67,7 @@
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-1);
   background:var(--blanco);padding:var(--sp-4) var(--sp-3);border-radius:var(--r);
   width:100%;text-align:center;box-shadow:var(--sombra);
-  border:2px solid transparent;min-height:4rem;transition:transform 120ms ease-out;
+  border:2px solid transparent;min-height:4rem;transition:transform var(--dur-1) var(--ease-salida);
 }
 .opt:active{transform:scale(.97)}
 .opt.on{border-color:var(--primario);background:var(--primario-cl)}
@@ -137,7 +137,7 @@
   display:flex;align-items:center;gap:var(--sp-3);background:var(--blanco);
   padding:var(--sp-3);border-radius:var(--r);margin-bottom:var(--sp-2);
   box-shadow:var(--sombra);width:100%;text-align:left;min-height:var(--tap);
-  transition:transform 120ms ease-out;
+  transition:transform var(--dur-1) var(--ease-salida);
 }
 .jug:active{transform:scale(.985)}
 .jug .nom{font-weight:600;font-size:var(--fs-145);line-height:1.15}
@@ -207,7 +207,7 @@ svg.g{width:100%;display:block;overflow:visible}
   padding:var(--sp-3) 0;min-height:var(--tap);cursor:pointer;list-style:none;
 }
 .pesos-bloque summary::-webkit-details-marker{display:none}
-.pesos-bloque summary::after{content:"›";font-size:var(--fs-190);color:var(--gris);transition:transform .15s}
+.pesos-bloque summary::after{content:"›";font-size:var(--fs-190);color:var(--gris);transition:transform var(--dur-1) var(--ease-salida)}
 .pesos-bloque[open] summary::after{transform:rotate(90deg)}
 .pesos-bloque summary .t{font-family:var(--ff-titulo);font-size:var(--fs-145);font-weight:600;text-transform:uppercase;letter-spacing:.05em;flex:1}
 .pesos-bloque summary .n{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris)}
@@ -217,7 +217,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .pesos-det{font-size:var(--fs-115);color:var(--gris);text-align:right}
 
 /* Feedback de presión (auditoría de accesibilidad del prototipo, punto 8) */
-.al,.opt,.test-fila,.jug,.btn{transition:transform 120ms ease-out}
+.al,.opt,.test-fila,.jug,.btn{transition:transform var(--dur-1) var(--ease-salida)}
 .al:active,.opt:active,.test-fila:active{transform:scale(.97)}
 
 /* Etapa 4 — barras de reparto */
@@ -269,7 +269,7 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Teclado propio, portado del prototipo. Teclas grandes para cargar de pie en
    la cancha, y sólo dígitos y una coma: nada de tipear precisión falsa. */
-.kb{position:fixed;left:0;right:0;bottom:0;z-index:45;display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);padding:var(--sp-2);padding-bottom:calc(var(--sp-2) + env(safe-area-inset-bottom));background:var(--linea);transform:translateY(110%);transition:transform 180ms ease-out}
+.kb{position:fixed;left:0;right:0;bottom:0;z-index:45;display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);padding:var(--sp-2);padding-bottom:calc(var(--sp-2) + env(safe-area-inset-bottom));background:var(--linea);transform:translateY(110%);transition:transform var(--dur-2) var(--ease-salida)}
 .kb.on{transform:translateY(0)}
 .kb button{min-height:56px;border:0;border-radius:9px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-220);font-weight:600}
 .kb button.ac{background:var(--negro);color:var(--papel);font-size:var(--fs-190)}

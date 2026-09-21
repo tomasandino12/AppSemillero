@@ -101,6 +101,17 @@
   --sp-6:1.5rem;
   --sp-8:2rem;
 
+  /* ---- movimiento ----
+     Sólo se anima transform y opacity (lo hace el compositor, sin repintar):
+     lo verifica tests/estilosTokens.test.js. Nada de width, height,
+     box-shadow, background ni transition:all. Con prefers-reduced-motion
+     base.css apaga todo. */
+  --dur-1:120ms;          /* feedback al apretar */
+  --dur-2:200ms;          /* entrada de pantalla, toast, velo */
+  --dur-3:280ms;          /* hoja y barras */
+  --ease-salida:cubic-bezier(.16,1,.3,1);   /* frena al llegar: entra */
+  --ease-entrada:cubic-bezier(.3,0,.8,.15); /* acelera al irse: sale */
+
   /* ---- layout ---- */
   --tap:2.75rem;          /* 44px: mínimo táctil del layout base */
   --max-ancho:52rem;      /* 832px: una sola columna. Elegido mirando contra 46
