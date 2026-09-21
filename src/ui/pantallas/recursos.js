@@ -77,7 +77,7 @@ function alcanceDeTarjeta(alcance) {
 // del club y sus envíos pueden ser de otras categorías. Si no se dice contra
 // qué plantel es, "3 jugadores" no le dice nada al profe.
 function etiquetaDeEnvio(envio, categoria) {
-  const cat = categoria ? ` ${categoria}` : '';
+  const cat = categoria ? ` (${categoria})` : '';
   if (envio.estado === 'todos') return `Enviado a todo el plantel${cat}`;
   if (envio.estado === 'parcial') return `Enviado a ${envio.enviados} de ${envio.total}${cat}`;
   return `Sin enviar al plantel${cat}`;
@@ -138,7 +138,7 @@ function cuerpoDeHoja(jugadores, { conCampos, categoria, yaLoTienen }) {
       </div>
     `}
     <div class="eyebrow">A quién${categoria ? ` · ${categoria}` : ''} <button class="btn sec chico" id="btn-todos" type="button">${conCampos ? 'Todo el plantel' : 'Todos los que faltan'}</button></div>
-    ${yaLoTienen > 0 && html`<div class="p">Ya lo recibieron ${yaLoTienen}: no aparecen en la lista.</div>`}
+    ${yaLoTienen > 0 && html`<div class="p">${yaLoTienen === 1 ? 'Ya lo recibió 1 jugador' : `Ya lo recibieron ${yaLoTienen} jugadores`}: no aparece${yaLoTienen === 1 ? '' : 'n'} en la lista.</div>`}
     <div class="lista-chk">
       ${jugadores.map((j) => html`
         <label class="chk-fila">
