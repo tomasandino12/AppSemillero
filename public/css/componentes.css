@@ -29,8 +29,19 @@
 /* Propio, para no heredar el --primario-osc de .btn:active: sobre fondo blanco con
    texto casi negro, apretar un secundario lo hacía destellar rojo oscuro. */
 .btn.sec:active{background:var(--papel)}
+/* Con mouse el botón se enciende: sube 2px y aparece el brillo del club. Al
+   volver usa la duración corta de la base (--dur-1), así suelta rápido. El
+   brillo vive en un ::after y sólo cambia de opacity (regla de DESIGN.md).
+   :not(:active) para que apretar siga achicando aunque el mouse esté encima. */
+.btn{position:relative}
+.btn::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:var(--brillo-club);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
+}
+.btn.sec::after{box-shadow:var(--anillo-club)}
 @media (hover:hover){
-  .btn:not(:disabled):hover{background:var(--primario-osc)}
+  .btn:not(:disabled):not(:active):hover{transform:translateY(-2px);transition-duration:var(--dur-2)}
+  .btn:not(:disabled):hover::after{opacity:1}
   .btn.sec:not(:disabled):hover{background:var(--toque-claro)}
 }
 
@@ -54,15 +65,18 @@
 /* Tarjeta tocable: al pasar el mouse sube 2px y aparece la sombra alta. La
    sombra no se anima (repintaría): vive en un ::after que sólo cambia de
    opacidad. En táctil no hay hover, sólo el achique al apretar. */
-.tarj.tocable{position:relative;cursor:pointer;transition:transform var(--dur-1) var(--ease-salida)}
-.tarj.tocable::after{
+.tarj.tocable,.opt,.jug{position:relative}
+.tarj.tocable{cursor:pointer;transition:transform var(--dur-1) var(--ease-salida)}
+.tarj.tocable::after,.opt::after,.jug::after{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  box-shadow:var(--sombra-alta);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
+  box-shadow:var(--anillo-club),var(--sombra-alta);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
 }
 .tarj.tocable:active{transform:scale(.985)}
 @media (hover:hover){
-  .tarj.tocable:hover{transform:translateY(-2px)}
-  .tarj.tocable:hover::after{opacity:1}
+  .tarj.tocable:not(:active):hover,.opt:not(:active):hover,.jug:not(:active):hover{
+    transform:translateY(-3px);transition-duration:var(--dur-2);
+  }
+  .tarj.tocable:hover::after,.opt:hover::after,.jug:hover::after{opacity:1}
 }
 .tarj-h{display:flex;align-items:baseline;gap:var(--sp-2)}
 .tarj-h .t{font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;letter-spacing:.03em;text-transform:uppercase}

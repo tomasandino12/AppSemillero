@@ -139,7 +139,7 @@ Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (ey
 
 **Lo que NO se hace, y por qué (medido):**
 - **`color-mix()` adentro de un `radial-gradient`**: costó ~+450 ms de FCP y ~+900 ms de LCP en Lighthouse mobile. El resplandor del club va en un `::before` con `var(--club)` puro e intensidad por `opacity`.
-- **Entrada escalonada de tarjetas en la landing**: sumaba ~+316 ms de LCP (+2,6 %), porque un párrafo de `.ben` es el LCP y no cuenta hasta que se ve. Contenido que puede ser LCP no entra animado.
+- **Entrada de las tarjetas de la landing con `opacity`**: sumaba ~+316 ms de LCP (+2,6 %), porque un párrafo de `.ben` es el LCP y no cuenta hasta que se ve. Hoy entran subiendo con `translateY` y sin `opacity` (no ocultan nada, así que se pintan desde el primer frame).
 - **`translateY` en la entrada de pantalla**: el navegador arma una capa del tamaño de la pantalla (más frames largos con CPU 4x) y un ancestro transformado re-ancla a los hijos `position:fixed` (el teclado de MEDIR). La entrada es sólo fade.
 - **Animar `width`, `height`, `top`/`left`, `box-shadow`, `background`, `filter` o `backdrop-filter`**: repintan cada frame. Una barra crece con `scaleX` desde el ancho final, no animando el ancho.
 - **Animaciones infinitas, parallax, marquee, blur de fondo, marcas de agua**: decorado de sitio institucional; el blur cuesta en Android gama baja y una marca de agua no escala a multi-club.
