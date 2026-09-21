@@ -40,7 +40,7 @@ const hoy = `
   <div class="contexto">U17M · batería del 10/09 · 14 jugadores midieron</div>
   <div class="cabecera-tiro">
     <div class="k">Tiro de campo · todo el arco</div>
-    <div class="n">30<span class="u">%</span></div>
+    <div class="cifra">30<span class="u">%</span></div>
     <div class="frac">213/700 tiros</div>
     <div class="sub"><span class="var sube">▲ +8 pp</span><span class="metas-resumen">3 de 5 zonas llegó a su meta</span></div>
   </div>
@@ -64,7 +64,7 @@ const plantel = `<div class="pad"><h2 class="h2">Plantel</h2>${apellidos.map(jug
 const barras = `
 <div class="pad"><h2 class="h2">Reparto de minutos</h2><div class="barras">${apellidos.slice(0, 8).map((a, i) => `
   <div class="barra"><div class="et">${a}</div><div class="pista"><div class="relleno" style="width:${100 - i * 11}%"></div></div><div class="val">${240 - i * 25} min</div></div>`).join('')}</div>
-  <div class="tarj"><div class="tarj-h"><span class="t">Una tarjeta</span><span class="n">12</span></div><div class="p">Texto de apoyo de la tarjeta.</div></div>
+  <div class="tarj tocable" role="button" tabindex="0"><div class="tarj-h"><span class="t">Una tarjeta tocable</span><span class="n">12</span></div><div class="p">Texto de apoyo de la tarjeta.</div></div>
   <div class="al"><span class="ico">!</span><div class="tx">Un aviso<div class="mt">con detalle</div></div></div>
   <div class="chips"><span class="chip">neutro</span> <span class="chip sube">sube</span> <span class="chip baja">baja</span> <span class="chip sin">sin medir</span></div>
   <button class="btn" style="margin-top:1rem">Botón primario</button>

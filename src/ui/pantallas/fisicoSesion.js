@@ -92,7 +92,7 @@ function tarjetaDeLinea(l, pasos) {
   const paso = pasoDeLinea(l.nombreOriginal, pasos)?.paso ?? null;
   const detalle = detalleDeLinea(l);
   return `
-    <div class="tarj linea-fisico" data-linea="${escaparHtml(l.id)}" role="button" tabindex="0">
+    <div class="tarj tocable linea-fisico" data-linea="${escaparHtml(l.id)}" role="button" tabindex="0">
       <div style="display:flex;gap:var(--sp-2)">
         <div class="nom">${l.orden != null ? `${l.orden} · ` : ''}${escaparHtml(l.nombreOriginal)}</div>
         <div aria-hidden="true">›</div>

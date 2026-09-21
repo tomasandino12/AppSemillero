@@ -51,6 +51,19 @@
 
 /* ---- tarjetas ---- */
 .tarj{background:var(--blanco);border-radius:var(--r);padding:var(--sp-4);margin-bottom:var(--sp-3);box-shadow:var(--sombra)}
+/* Tarjeta tocable: al pasar el mouse sube 2px y aparece la sombra alta. La
+   sombra no se anima (repintaría): vive en un ::after que sólo cambia de
+   opacidad. En táctil no hay hover, sólo el achique al apretar. */
+.tarj.tocable{position:relative;cursor:pointer;transition:transform var(--dur-1) var(--ease-salida)}
+.tarj.tocable::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:var(--sombra-alta);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
+}
+.tarj.tocable:active{transform:scale(.985)}
+@media (hover:hover){
+  .tarj.tocable:hover{transform:translateY(-2px)}
+  .tarj.tocable:hover::after{opacity:1}
+}
 .tarj-h{display:flex;align-items:baseline;gap:var(--sp-2)}
 .tarj-h .t{font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
 .tarj-h .n{margin-left:auto;font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600}
@@ -344,8 +357,11 @@ svg.g{width:100%;display:block;overflow:visible}
    metro de distancia, así que es el elemento más grande de la pantalla. */
 .cabecera-tiro{margin:0 0 18px}
 .cabecera-tiro .k{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.cabecera-tiro .n{font-family:var(--ff-mono);font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--tinta)}
-.cabecera-tiro .n .u{font-size:var(--fs-190);color:var(--gris-cl)}
+/* La cifra héroe: el número que el entrenador se lleva de una card, en el
+   tamaño más grande de la pantalla, con la unidad en el color del club.
+   tabular-nums para que al cambiar de batería los dígitos no bailen. */
+.cifra{font-family:var(--ff-mono);font-size:var(--fs-cifra);font-weight:600;line-height:1;color:var(--tinta);font-variant-numeric:tabular-nums}
+.cifra .u{font-size:.5em;color:var(--primario);margin-left:.08em}
 .cabecera-tiro .frac{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--gris-cl);margin-top:2px}
 .cabecera-tiro .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px var(--sp-3);margin-top:6px}
 .metas-resumen{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--gris-cl)}
@@ -379,7 +395,10 @@ svg.g{width:100%;display:block;overflow:visible}
 /* El ancho ya viene puesto en línea (style="width:X%"): la barra se escala desde
    cero en X en vez de animar el ancho, que repintaría cada frame. */
 @keyframes llenar-barra{from{transform:scaleX(0)}}
-.zona-barra .meta{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--negro)}
+/* El halo del color del papel es lo que deja ver la marca sobre el relleno negro de
+   una zona que ya llegó: sin él, negro sobre negro, la meta desaparece justo cuando
+   se cumple. Estático: no se anima. */
+.zona-barra .meta{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--negro);box-shadow:0 0 0 1px var(--papel)}
 .zona-barra .relleno.llego{background:var(--negro)}
 .zona-barra .pct{font-family:var(--ff-mono);font-size:var(--fs-145);font-weight:600;color:var(--tinta);text-align:right}
 .var{display:inline-block;margin-top:var(--sp-1);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}

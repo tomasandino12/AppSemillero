@@ -89,6 +89,7 @@
   --fs-300:1.875rem;
 
   /* ---- títulos fluidos ---- */
+  --fs-cifra:clamp(2.5rem,2rem + 2.4vw,3.5rem);   /* el número héroe de una card */
   --fs-titulo:clamp(1.5rem,1.25rem + 1.2vw,2rem);
   --fs-titulo-chico:clamp(1.1875rem,1.05rem + .6vw,1.5rem);
 
