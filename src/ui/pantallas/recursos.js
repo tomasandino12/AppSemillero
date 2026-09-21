@@ -56,7 +56,7 @@ function datosDeDedicacion(r) {
 
 /**
  * Un recurso muestra a cuántos se les mandó y cuándo. NO muestra quién lo
- * mira, ni una seguidilla de envíos, ni marcas de lectura: con adolescentes,
+ * mira, ni una seguidilla de envíos, ni marcas por jugador: con adolescentes,
  * el control estricto convierte una herramienta de desarrollo en una de
  * vigilancia.
  */

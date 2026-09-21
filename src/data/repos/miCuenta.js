@@ -53,6 +53,19 @@ export async function obtenerMiFicha() {
   };
 }
 
+/**
+ * Anota que el jugador abrió un recurso (la primera vez cuenta; la base ignora
+ * las siguientes y también lo que no se le envió). El profe ve sólo cuántos
+ * abrieron, nunca quién (0034). No es algo que el jugador espere: nunca lanza.
+ */
+export async function registrarAperturaDeRecurso(recursoId) {
+  try {
+    await obtenerCliente().rpc('registrar_apertura', { p_recurso_id: recursoId });
+  } catch {
+    // Sin conexión o cualquier falla: el recurso se abre igual.
+  }
+}
+
 export async function obtenerMisRecursos() {
   const supabase = obtenerCliente();
   const { data, error } = await supabase.rpc('mis_recursos');

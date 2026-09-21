@@ -1,4 +1,4 @@
-import { obtenerMisRecursos } from '../../data/repositorio.js';
+import { obtenerMisRecursos, registrarAperturaDeRecurso } from '../../data/repositorio.js';
 import { esEnlaceWeb } from '../../data/enlaces.js';
 import { abrirVideo, esVideoEmbebible } from '../componentes/video.js';
 import { html } from '../html.js';
@@ -10,7 +10,9 @@ const contenedor = () => $('jug-recursos-contenido');
 
 /**
  * Lo que le mandó el profe, sin nada más: ni cuántos otros lo recibieron ni si
- * lo miró. El jugador ve la lista, no un tablero de seguimiento.
+ * lo miró. El jugador ve la lista, no un tablero de seguimiento. Abrir un
+ * recurso se anota, y el profe ve sólo cuántos abrieron, nunca quién (0034):
+ * por eso el aviso de arriba de la lista.
  */
 const tarjeta = (r) => html`
   <div class="rec">
@@ -18,7 +20,7 @@ const tarjeta = (r) => html`
     <div class="d">${r.descripcion}</div>
     ${esVideoEmbebible(r.enlace) && html`<button class="btn sec chico" data-ver-video="${r.id}">Ver video</button>`}
     ${!esVideoEmbebible(r.enlace) && esEnlaceWeb(r.enlace)
-      && html`<a class="enlace-rec" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Abrir el material</a>`}
+      && html`<a class="enlace-rec" data-abrir-material="${r.id}" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Abrir el material</a>`}
     <div class="m"><span class="tag">${formatearFechaCorta(r.fecha)}</span></div>
   </div>
 `;
@@ -51,13 +53,20 @@ export async function renderJugRecursos() {
   contenedor().innerHTML = html`
     <div class="pad">
       <div class="eyebrow">Lo que te mandó tu profe</div>
+      <div class="p">Tu profe ve cuántos abrieron cada recurso, no quién.</div>
       ${recursos.map(tarjeta)}
     </div>
   `;
   contenedor().querySelectorAll('[data-ver-video]').forEach((b) => {
     b.addEventListener('click', () => {
       const recurso = recursos.find((r) => r.id === b.dataset.verVideo);
-      if (recurso) abrirVideo(recurso.enlace, recurso.titulo);
+      if (!recurso) return;
+      registrarAperturaDeRecurso(recurso.id);
+      abrirVideo(recurso.enlace, recurso.titulo);
     });
+  });
+  // El link sigue su camino (se abre en otra pestaña); sólo se anota.
+  contenedor().querySelectorAll('[data-abrir-material]').forEach((a) => {
+    a.addEventListener('click', () => registrarAperturaDeRecurso(a.dataset.abrirMaterial));
   });
 }

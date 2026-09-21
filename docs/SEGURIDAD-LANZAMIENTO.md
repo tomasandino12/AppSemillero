@@ -79,6 +79,25 @@ de darle acceso a un chico real:
   progreso (partidos, tiro, velocidad). **No** ve medidas corporales ni datos de
   otro jugador, ni siquiera un promedio del plantel.
 
+## Aperturas de recursos (0033 y 0034)
+
+El jugador con cuenta deja anotado que abrió un recurso; el profe ve **cuántos**
+abrieron, nunca **quién**. Lo impone la base, no la pantalla:
+
+- `apertura_recurso` no tiene grants ni policies: ni el chico ni el cuerpo
+  técnico la leen ni la escriben directo. El chico escribe por
+  `registrar_apertura()` (sólo un recurso que se le envió) y el profe lee por
+  `resumen_recursos()`, que devuelve conteos y ningún id de jugador.
+- **Piso de 3 cuentas:** con menos de 3 jugadores con cuenta en el plantel el
+  resumen no dice cuántos abrieron, porque con 1 o 2 el profe sabe quiénes son.
+- Sólo cuenta a los que tienen cuenta: no dice nada de los demás.
+- El chico ve un aviso en su lista de recursos: "tu profe ve cuántos abrieron,
+  no quién".
+- **Pendiente:** aplicar 0033 y 0034 (`npx supabase db push`, pide
+  confirmación) y correr `tests/verificarAperturaRecurso.sql` en el SQL
+  Editor: los 7 casos tienen que dar OK. Se escribió sin una base local: esa
+  corrida es la primera vez que se ejecuta.
+
 ## Datos de menores
 
 La app guarda nombres, fecha de nacimiento, altura y peso de menores. Antes de

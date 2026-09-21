@@ -47,3 +47,28 @@ export async function guardarRecurso(payload) {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Conteos de aperturas del plantel, sin nombres: la base los arma con
+ * resumen_recursos() y no devuelve ningún id de jugador. Los conteos de
+ * aperturas vienen en null cuando hay muy pocas cuentas para que no delaten a
+ * nadie (ver 0034). Null si quien llama no es entrenador del plantel.
+ */
+export async function obtenerResumenRecursos(plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('resumen_recursos', { p_plantel_id: plantelId });
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    conCuenta: data.conCuenta,
+    abrieronAlguno: data.abrieronAlguno,
+    recursos: data.recursos.map((r) => ({
+      recursoId: r.recursoId,
+      enviados: r.enviados,
+      conCuenta: r.conCuenta,
+      abrieron: r.abrieron,
+      primerasEsteMes: r.primerasEsteMes,
+      primerasMesAnterior: r.primerasMesAnterior,
+    })),
+  };
+}
