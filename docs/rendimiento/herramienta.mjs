@@ -2,7 +2,7 @@
 // la galería generada (hacer-galeria.mjs) y puppeteer-core: `npm i --no-save puppeteer-core`.
 // Variables opcionales: CHROME (ruta a chrome.exe) y SALIDA (carpeta de bases y capturas).
 // Se corre desde la raíz del repo:
-//   node docs/rendimiento/herramienta.mjs recorrido            -> frames largos con CPU 4x, 375px
+//   node docs/rendimiento/herramienta.mjs recorrido            -> frames largos con CPU 4x, 375px (CORRIDAS=n)
 //   node docs/rendimiento/herramienta.mjs base                 -> guarda los estilos computados actuales como base
 //   node docs/rendimiento/herramienta.mjs comparar             -> compara contra la base
 //   node docs/rendimiento/herramienta.mjs capturas <carpeta>   -> PNGs de cada vista a 375 y 1280
@@ -47,8 +47,9 @@ try {
   if (cmd === 'recorrido') {
     const p = await abrir('hoy', 375, { cpu: 4 });
     const res = [];
-    for (let i = 0; i < 3; i++) res.push(await p.evaluate(() => window.recorrido()));
-    console.log(JSON.stringify(res.map((r) => ({ largos: r.largos, peor: r.peor, rafTotal: r.rafTotal, raf25: r.raf25, rafPeor: r.rafPeor }))));
+    for (let i = 0; i < Number(process.env.CORRIDAS ?? 3); i++) res.push(await p.evaluate(() => window.recorrido()));
+    // bloqueo = lo que cada frame largo pasa de 50 ms, sumado: mide cuánto, no sólo cuántos.
+    console.log(JSON.stringify(res.map((r) => ({ largos: r.largos, peor: r.peor, bloqueo: r.frames.reduce((a, d) => a + Math.max(0, d - 50), 0), raf25: r.raf25, rafPeor: r.rafPeor }))));
   } else if (cmd === 'base' || cmd === 'comparar') {
     mkdirSync(`${RAIZ}/base`, { recursive: true });
     let total = 0;
