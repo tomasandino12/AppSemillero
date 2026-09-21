@@ -148,7 +148,7 @@
 .btn-google{
   display:flex;align-items:center;justify-content:center;gap:var(--sp-3);
   width:100%;min-height:var(--tap);padding:var(--sp-3) var(--sp-4);
-  background:var(--blanco);color:var(--google-texto);border-radius:var(--r);
+  background:var(--blanco);color:var(--google-texto);border-radius:var(--r-btn);
   font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;
   letter-spacing:.06em;text-transform:uppercase;
   transition:transform var(--dur-1) var(--ease-salida);

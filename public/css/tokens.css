@@ -65,6 +65,7 @@
   --brillo-club:0 0 0 1px var(--primario),0 10px 28px -6px var(--primario);
   --anillo-club:0 0 0 1px var(--primario),0 8px 20px -10px var(--primario);
   --r:0.6875rem;
+  --r-btn:0.125rem;       /* botones: casi rectos, como el sitio del club */
   --r-s:0.3125rem;        /* chips y etiquetas */
   --r-m:0.5625rem;        /* campos y píldoras de categoría */
   --r-full:999px;
@@ -103,7 +104,7 @@
   /* ---- títulos fluidos ---- */
   --fs-cifra:clamp(2.5rem,2rem + 2.4vw,3.5rem);   /* el número héroe de una card */
   --fs-titulo:clamp(1.5rem,1.25rem + 1.2vw,2rem);
-  --fs-titulo-chico:clamp(1.1875rem,1.05rem + .6vw,1.5rem);
+  --fs-titulo-chico:clamp(1.5rem,1.3rem + 1vw,2rem);
 
   /* ---- espaciado ---- */
   --sp-1:0.25rem;

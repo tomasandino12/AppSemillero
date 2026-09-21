@@ -142,7 +142,10 @@ export async function renderDatos() {
   contenedor().innerHTML = `
     <div class="pad">
       <h2 class="h2">Partidos</h2>
-      <div class="eyebrow">Partidos de ${escaparHtml(plantel.categoria)}</div>
+      <div class="seccion-cab">
+        <div class="eyebrow">Partidos de ${escaparHtml(plantel.categoria)}</div>
+        <button class="btn chico" id="btn-cargar-partido">Cargar partido</button>
+      </div>
       <div class="p" id="datos-estado">Cargando partidos...</div>
       <div id="datos-lista"></div>
       <div id="datos-equipo"></div>
@@ -156,7 +159,6 @@ export async function renderDatos() {
       <div class="eyebrow">Velocidad y resistencia</div>
       <div class="p">Próximamente.</div>
     </div>
-    <div class="pie-fijo"><button class="btn" id="btn-cargar-partido">Cargar partido</button></div>
   `;
   $('btn-cargar-partido').addEventListener('click', () => $('input-archivo').click());
 
