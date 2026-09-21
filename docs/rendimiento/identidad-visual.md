@@ -70,6 +70,13 @@ Cada uno se midió con Lighthouse mobile sobre la landing (1 corrida por variant
 | Resplandor en un `::before` con `var(--club)` y `opacity` | 7 706 | 12 633 | Adoptado (con la animación de las tarjetas) |
 | Igual, **sin** la animación escalonada de `.ben` | 7 546 | 12 317 | **Adoptado:** la animación sumaba ~+316 ms de LCP (un párrafo de las tarjetas es el LCP y no cuenta hasta que se ve) |
 
+**T8, pesos de fuente: no hay nada que quitar.** Cruzando `font-family` × `font-weight` de los CSS y mirando qué archivos descarga cada vista (`docs/rendimiento/fuentes.mjs`):
+
+- La landing baja sólo Barlow 600 y 700 e Inter: el navegador ya pide de forma perezosa sólo las caras que se usan, así que quitar pesos del `<link>` no achica la landing.
+- Las pantallas de la app usan los 4 pesos de Barlow (400 en HOY y en la hoja, 500 en PLANTEL y DATOS, 600, 700) y los 2 de IBM Plex Mono.
+- Inter es una fuente variable: un solo archivo (48 KB) cubre 400–700, así que sacar pesos no ahorra un byte.
+- Hallazgo para decidir aparte: se pide Plex Mono 500 y 600, pero ningún CSS declara 500. Los ~22 textos mono sin peso explícito (400) caen en el archivo 500 por la regla de emparejamiento de fuentes. Pedir 400 en lugar de 500 los aliviaría visualmente: es una decisión de diseño, no de rendimiento, y no se tocó.
+
 Otras decisiones tomadas midiendo: la entrada de pantalla es sólo fade (con `translateY` sumaba frames largos en el recorrido con CPU 4x y re-ancla a los hijos `position:fixed`).
 
 ## Después (T9)
