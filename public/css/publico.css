@@ -21,9 +21,9 @@
    ~+450 ms de FCP y ~+900 ms de LCP en Lighthouse mobile; con var(--club) puro
    y opacity, que compone la GPU, el costo desaparece. */
 .publico::before{
-  content:"";position:absolute;inset:0 0 auto;height:22rem;z-index:-1;pointer-events:none;
-  background:radial-gradient(ellipse 70% 100% at 50% 0,var(--club),transparent);
-  opacity:.28;
+  content:"";position:absolute;inset:0 0 auto;height:28rem;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 75% 100% at 50% 0,var(--club),transparent);
+  opacity:.4;
 }
 .publico[hidden]{display:none}
 .vista{display:none}
@@ -52,10 +52,27 @@
 .ben{
   position:relative;background:var(--pub-tarjeta);border:1px solid var(--pub-borde);
   border-radius:var(--r);padding:var(--sp-4);
+  transition:transform var(--dur-2) var(--ease-salida);
+  animation:subir-ben var(--dur-3) var(--ease-salida) backwards;
 }
+/* Entran subiendo, pero SIN opacity: con opacity 0 el párrafo (que es el LCP)
+   no contaba hasta verse y costaba ~+316 ms. Un translateY no oculta nada, así
+   que se pinta desde el primer frame. Sólo escalonan las 6 de la landing. */
+@keyframes subir-ben{from{transform:translateY(.75rem)}}
+.ben:nth-child(2){animation-delay:60ms}
+.ben:nth-child(3){animation-delay:120ms}
+.ben:nth-child(4){animation-delay:180ms}
+.ben:nth-child(5){animation-delay:240ms}
+.ben:nth-child(6){animation-delay:300ms}
 .ben::before{
   content:"";position:absolute;left:-1px;top:var(--sp-4);bottom:var(--sp-4);width:3px;
   background:var(--primario);border-radius:0 2px 2px 0;
+  transition:transform var(--dur-2) var(--ease-salida);
+}
+/* Anillo y resplandor del club, que aparecen con opacity. */
+.ben::after{
+  content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+  box-shadow:var(--brillo-club);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
 }
 
 .ben .t{
@@ -63,7 +80,10 @@
   text-transform:uppercase;letter-spacing:.04em;line-height:1.15;
   display:flex;align-items:baseline;gap:var(--sp-2);
 }
-.ben .t::before{content:"";width:.4375rem;height:.4375rem;background:var(--primario);flex:0 0 auto;transform:translateY(-.15em)}
+.ben .t::before{
+  content:"";width:.4375rem;height:.4375rem;background:var(--primario);flex:0 0 auto;
+  transform:translateY(-.15em);transition:transform var(--dur-2) var(--ease-salida);
+}
 .ben .d{color:var(--gris-osc);font-size:var(--fs-135);line-height:1.5;margin-top:var(--sp-2)}
 
 /* Lo único que se dice del futuro, y se dice separado de lo que ya anda. */
@@ -128,7 +148,7 @@
 .btn-google{
   display:flex;align-items:center;justify-content:center;gap:var(--sp-3);
   width:100%;min-height:var(--tap);padding:var(--sp-3) var(--sp-4);
-  background:var(--blanco);color:var(--google-texto);border-radius:var(--r);
+  background:var(--blanco);color:var(--google-texto);border-radius:var(--r-btn);
   font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;
   letter-spacing:.06em;text-transform:uppercase;
   transition:transform var(--dur-1) var(--ease-salida);
@@ -162,8 +182,16 @@
   margin-bottom:var(--sp-5);word-break:break-all;
 }
 
+/* El botón principal de la landing lleva un brillo suave en reposo y se
+   enciende del todo al pasar el mouse (la regla de :hover lo pisa). */
+.acciones-landing .btn:not(.sec)::after{opacity:.4}
+
 @media (hover:hover){
+  .ben:hover{transform:translateY(-4px)}
+  .ben:hover::after{opacity:1}
+  .ben:hover::before{transform:scaleY(1.25)}
+  .ben:hover .t::before{transform:translateY(-.15em) rotate(45deg) scale(1.3)}
   .publico .btn.sec:not(:disabled):hover{background:var(--toque-osc)}
-  .btn-google:not(:disabled):hover{background:var(--google-hover)}
+  .btn-google:not(:disabled):not(:active):hover{background:var(--google-hover);transform:translateY(-2px);transition-duration:var(--dur-2)}
   .enlaces button:hover b{color:var(--sobre-oscuro)}
 }

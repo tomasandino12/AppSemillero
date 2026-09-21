@@ -91,7 +91,7 @@ Todos viven en `public/css/tokens.css`, en `:root`. Es el único archivo con val
 | `--ff-mono` | `'IBM Plex Mono'` | Todo número: cifras, fracciones, porcentajes, chips. |
 | `--fs-cifra` | `clamp(2.5rem,2rem + 2.4vw,3.5rem)` | Sólo la cifra héroe. |
 | `--fs-titulo` | `clamp(1.5rem,1.25rem + 1.2vw,2rem)` | `h1`. |
-| `--fs-titulo-chico` | `clamp(1.1875rem,1.05rem + .6vw,1.5rem)` | `h2` y `.h2` (título de sección). |
+| `--fs-titulo-chico` | `clamp(1.5rem,1.3rem + 1vw,2rem)` | `h2` y `.h2` (título de sección; `.h2` lleva una barra roja debajo). Los `.eyebrow` (subtítulos) van en `--fs-190`, en `--tinta`, nunca en gris. |
 | `--fs-100` … `--fs-300` | `0.625rem` … `1.875rem` | Escala fija; el número es el px del prototipo ×10 (`--fs-160` = 1rem). |
 
 Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (eyebrow, etiquetas en mayúsculas), `--fs-135` (texto de tarjeta y avisos), `--fs-145` (texto de fila), `--fs-160` (cuerpo), `--fs-190` (botón). Pesos cargados: Barlow 400–700, Inter 400–700 (variable, un archivo), Plex Mono 500 y 600.
@@ -103,6 +103,7 @@ Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (ey
 | `--sp-1` … `--sp-6` | `0.25rem` … `1.5rem` (pasos de 0.25) | Todo margen, padding y gap. `--sp-4` es el padding de tarjeta y de `.pad`. |
 | `--sp-8` | `2rem` | Separación grande (landing, secciones). No hay `--sp-7`. |
 | `--r` | `0.6875rem` | Tarjetas, botones, avisos, toast. |
+| `--r-btn` | `0.125rem` | Botones: casi rectos, como el sitio del club. |
 | `--r-m` | `0.5625rem` | Campos y píldoras de categoría. |
 | `--r-s` | `0.3125rem` | Chips y etiquetas. |
 | `--r-full` | `999px` | Píldoras. |
@@ -139,7 +140,7 @@ Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (ey
 
 **Lo que NO se hace, y por qué (medido):**
 - **`color-mix()` adentro de un `radial-gradient`**: costó ~+450 ms de FCP y ~+900 ms de LCP en Lighthouse mobile. El resplandor del club va en un `::before` con `var(--club)` puro e intensidad por `opacity`.
-- **Entrada escalonada de tarjetas en la landing**: sumaba ~+316 ms de LCP (+2,6 %), porque un párrafo de `.ben` es el LCP y no cuenta hasta que se ve. Contenido que puede ser LCP no entra animado.
+- **Entrada de las tarjetas de la landing con `opacity`**: sumaba ~+316 ms de LCP (+2,6 %), porque un párrafo de `.ben` es el LCP y no cuenta hasta que se ve. Hoy entran subiendo con `translateY` y sin `opacity` (no ocultan nada, así que se pintan desde el primer frame).
 - **`translateY` en la entrada de pantalla**: el navegador arma una capa del tamaño de la pantalla (más frames largos con CPU 4x) y un ancestro transformado re-ancla a los hijos `position:fixed` (el teclado de MEDIR). La entrada es sólo fade.
 - **Animar `width`, `height`, `top`/`left`, `box-shadow`, `background`, `filter` o `backdrop-filter`**: repintan cada frame. Una barra crece con `scaleX` desde el ancho final, no animando el ancho.
 - **Animaciones infinitas, parallax, marquee, blur de fondo, marcas de agua**: decorado de sitio institucional; el blur cuesta en Android gama baja y una marca de agua no escala a multi-club.
@@ -218,3 +219,9 @@ Presupuesto de la rama: ninguna regresión contra la medición previa, con toler
 - **Valores que difieren del spec**: `--r-s` es `0.3125rem` (el spec decía .375 rem); `--primario-osc` y `--primario-tenue` se mezclan en `srgb` y sólo `--primario-cl` en `oklab` (el spec decía todo en oklab); la hoja usa `1rem` de radio y el `h1` del hero un `clamp` propio, fuera de la escala.
 - **Las pantallas que muestran la cifra y la meta (`hoy.js`) todavía escriben HTML con `escaparHtml` a mano**: los fragmentos de este documento son el estilo al que migrar, no copia literal de esa pantalla.
 - **No hay componente de estado vacío ni de carga**: cada pantalla usa `.p` con su texto, y `.vacio` sólo existe dentro de `.fuente`.
+
+## Botones y títulos (segunda vuelta de la identidad)
+
+- **Botón principal `.btn`**: rojo del club, letras blancas, casi recto (`--r-btn`), mayúsculas con `letter-spacing:.14em`. **Secundario `.btn.sec`**: negro macizo con letras blancas; con mouse pasa a rojo. Los dos suben 2 px y muestran el brillo del club en el `::after` al pasar el mouse. Sobre fondo oscuro (`.publico`) el secundario sigue siendo contorno.
+- **Títulos**: `.h2` grande, en `--tinta` y con barra roja debajo; `.eyebrow` en `--fs-190`, `--tinta`, negrita. `--gris-osc` es para fondo oscuro: no usarlo sobre papel.
+- **Acción de un bloque**: `.seccion-cab` pone el botón (`.btn.chico`) a la derecha del título del bloque que afecta (ej. "Cargar partido" en DATOS), en vez de una barra fija abajo.

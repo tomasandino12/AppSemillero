@@ -10,28 +10,33 @@
   display:flex;align-items:center;justify-content:center;gap:var(--sp-2);
   width:100%;min-height:var(--tap);
   background:var(--primario);color:var(--sobre-club);padding:var(--sp-4);
-  border-radius:var(--r);font-family:var(--ff-titulo);font-size:var(--fs-190);
-  font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  border-radius:var(--r-btn);font-family:var(--ff-titulo);font-size:var(--fs-190);
+  font-weight:700;letter-spacing:.14em;text-transform:uppercase;
   transition:transform var(--dur-1) var(--ease-salida);
 }
 .btn:active{background:var(--primario-osc);transform:scale(.97)}
 .btn:disabled{background:var(--deshabilitado);color:var(--blanco);transform:none}
-/* El secundario: blanco con borde, en el mismo lenguaje que las tarjetas. Antes
-   era un contorno negro de 1.5px, y tres seguidos se leían como tres losas.
-   El borde es --gris-cl a propósito: 4.50:1 contra --papel y 5.08:1 contra el
-   blanco, arriba del 3:1 que pide WCAG 1.4.11 para el contorno de un control.
-   Tiene que alcanzar SOLO: la sombra es lo primero que se pierde con poco brillo, así
-   que es un refuerzo, nunca la única señal de que ahí hay un botón. */
+/* El secundario es negro macizo con letras blancas: rojo y negro son los dos
+   colores del club, y un botón blanco sobre papel se perdía en el fondo. Con
+   el mouse pasa a rojo. El borde del mismo negro está para que .publico
+   (fondo oscuro) pueda pintarlo de otro color sin tener que crearlo. */
 .btn.sec{
-  background:var(--blanco);color:var(--tinta);
-  border:1px solid var(--gris-cl);box-shadow:var(--sombra);font-size:var(--fs-145);
+  background:var(--tinta);color:var(--sobre-oscuro);border:1px solid var(--tinta);
 }
-/* Propio, para no heredar el --primario-osc de .btn:active: sobre fondo blanco con
-   texto casi negro, apretar un secundario lo hacía destellar rojo oscuro. */
-.btn.sec:active{background:var(--papel)}
+.btn.sec:disabled{background:var(--deshabilitado);border-color:var(--deshabilitado);color:var(--blanco)}
+/* Con mouse el botón se enciende: sube 2px y aparece el brillo del club. Al
+   volver usa la duración corta de la base (--dur-1), así suelta rápido. El
+   brillo vive en un ::after y sólo cambia de opacity (regla de DESIGN.md).
+   :not(:active) para que apretar siga achicando aunque el mouse esté encima. */
+.btn{position:relative}
+.btn::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:var(--brillo-club);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
+}
 @media (hover:hover){
-  .btn:not(:disabled):hover{background:var(--primario-osc)}
-  .btn.sec:not(:disabled):hover{background:var(--toque-claro)}
+  .btn:not(:disabled):not(:active):hover{transform:translateY(-2px);transition-duration:var(--dur-2)}
+  .btn:not(:disabled):hover::after{opacity:1}
+  .btn.sec:not(:disabled):hover{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
 }
 
 /* ---- campos ---- */
@@ -54,15 +59,18 @@
 /* Tarjeta tocable: al pasar el mouse sube 2px y aparece la sombra alta. La
    sombra no se anima (repintaría): vive en un ::after que sólo cambia de
    opacidad. En táctil no hay hover, sólo el achique al apretar. */
-.tarj.tocable{position:relative;cursor:pointer;transition:transform var(--dur-1) var(--ease-salida)}
-.tarj.tocable::after{
+.tarj.tocable,.opt,.jug{position:relative}
+.tarj.tocable{cursor:pointer;transition:transform var(--dur-1) var(--ease-salida)}
+.tarj.tocable::after,.opt::after,.jug::after{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  box-shadow:var(--sombra-alta);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
+  box-shadow:var(--anillo-club),var(--sombra-alta);opacity:0;transition:opacity var(--dur-2) var(--ease-salida);
 }
 .tarj.tocable:active{transform:scale(.985)}
 @media (hover:hover){
-  .tarj.tocable:hover{transform:translateY(-2px)}
-  .tarj.tocable:hover::after{opacity:1}
+  .tarj.tocable:not(:active):hover,.opt:not(:active):hover,.jug:not(:active):hover{
+    transform:translateY(-3px);transition-duration:var(--dur-2);
+  }
+  .tarj.tocable:hover::after,.opt:hover::after,.jug:hover::after{opacity:1}
 }
 .tarj-h{display:flex;align-items:baseline;gap:var(--sp-2)}
 .tarj-h .t{font-family:var(--ff-titulo);font-size:var(--fs-160);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
@@ -248,7 +256,7 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Etapa 4 — acciones dentro de un aviso */
 .acciones-al{display:flex;gap:var(--sp-2);margin-top:10px}
-.btn.chico{min-height:var(--tap);padding:0 14px;font-size:var(--fs-135);width:auto}
+.btn.chico{min-height:var(--tap);padding:0 14px;font-size:var(--fs-145);width:auto}
 
 /* Etapa 4 — carga de la batería en cancha.
    Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
@@ -563,7 +571,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .escalon-fila .btn.chico{min-width:var(--tap);padding:0}
 
 /* Inventario: el tipo encima de sus filas, y el contador de cantidad. */
-.inv-grupo{margin:var(--sp-3) 0 var(--sp-1);font-weight:600;font-size:var(--fs-125);color:var(--gris-osc)}
+.inv-grupo{margin:var(--sp-4) 0 var(--sp-2);font-weight:700;font-size:var(--fs-160);color:var(--tinta)}
 /* Un botón no se estira solo aunque sea flex: la fila editable ocupa el ancho
    como la de lectura, con la cantidad a la derecha. */
 .inv-fila{width:100%;text-align:left;font:inherit;color:inherit;border:0}
