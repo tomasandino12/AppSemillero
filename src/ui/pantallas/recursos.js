@@ -1,4 +1,4 @@
-import { obtenerRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
+import { obtenerRecursos, obtenerResumenRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { toast, formatearFechaCorta } from '../nav.js';
 import { html } from '../html.js';
@@ -12,7 +12,7 @@ import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
 import {
   TIPOS_RECURSO, SIN_TIPO, RANGO_FRECUENCIA, RANGO_MINUTOS,
-  etiquetaDeTipo, validarMetadatos, contarPorTipo, filtrarPorTipo, claseDeEnlace,
+  etiquetaDeTipo, validarMetadatos, contarPorTipo, filtrarPorTipo, claseDeEnlace, alcanceDeRecurso, resumenDeImpacto,
 } from '../../data/recursos.js';
 import { urlDeMiniatura } from '../../data/youtube.js';
 
@@ -60,7 +60,29 @@ function datosDeDedicacion(r) {
  * el control estricto convierte una herramienta de desarrollo en una de
  * vigilancia.
  */
-function tarjetaRecurso(r) {
+// Cuántos abrieron: un número y una barra, nunca quiénes. Si falta el dato se
+// dice por qué en vez de dibujar una barra vacía (que se leería como 0 %).
+function alcanceDeTarjeta(alcance) {
+  if (alcance.estado === 'ok') {
+    return html`
+      <div class="rec-alcance">
+        <div class="rec-alcance-tx">Abrieron <span class="mono">${alcance.abrieron}</span> de los <span class="mono">${alcance.conCuenta}</span> con cuenta</div>
+        <div class="zona-barra">
+          <div class="pista" role="img" aria-label="Abrieron ${alcance.abrieron} de ${alcance.conCuenta}"><div class="relleno" style="width:${alcance.porcentaje}%"></div></div>
+          <span class="pct">${alcance.porcentaje}%</span>
+        </div>
+      </div>`;
+  }
+  const motivo = {
+    'sin-envios': 'Todavía no se lo enviaste a nadie de este plantel.',
+    'sin-cuentas': 'Sin datos: ningún jugador con cuenta lo recibió.',
+    'pocos': 'Hay pocos jugadores con cuenta para mostrar cuántos abrieron sin señalar a nadie.',
+    'sin-resumen': 'No se pudo leer cuántos abrieron.',
+  }[alcance.estado];
+  return html`<div class="rec-alcance"><div class="rec-alcance-tx sin">${motivo}</div></div>`;
+}
+
+function tarjetaRecurso(r, alcance) {
   const cuantos = r.envios.length;
   const ultima = cuantos ? r.envios.map((e) => e.fecha).sort().at(-1) : null;
   const eyebrow = [etiquetaDeTipo(r.tipo), formatearFechaCorta(r.creadoEn.slice(0, 10))].filter(Boolean).join(' · ');
@@ -76,6 +98,7 @@ function tarjetaRecurso(r) {
           <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
           ${ultima && html`<span class="tag">Último envío ${formatearFechaCorta(ultima)}</span>`}
         </div>
+        ${alcanceDeTarjeta(alcance)}
         <div class="rec-acciones">
           ${esVideoEmbebible(r.enlace) && html`<button class="btn chico" type="button" data-ver-video="${r.id}">Ver video</button>`}
           ${esEnlaceWeb(r.enlace) && html`<a class="btn contorno chico" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Material</a>`}
@@ -255,6 +278,29 @@ const filosofia = html`
     <div class="rec-aceptados"><span class="chip">Video de YouTube (no listado)</span><span class="chip">Google Drive</span><span class="chip">PDF</span></div>
   </section>`;
 
+function panelDeImpacto(impacto) {
+  const { ofrecidos, conCuenta, abrieronAlguno, masAbierto, tendencia } = impacto;
+  const dato = (etiqueta, valor) => html`<div class="rec-dato"><span class="et">${etiqueta}</span><span class="v">${valor}</span></div>`;
+  const sinDato = html`<span class="sin">sin datos</span>`;
+  let tend = sinDato;
+  if (tendencia) {
+    const signo = tendencia.delta > 0 ? '+' : '';
+    tend = `${tendencia.esteMes} este mes, ${tendencia.mesAnterior} el anterior (${signo}${tendencia.delta})`;
+  }
+  return html`
+    <section class="tarj rec-impacto">
+      <div class="eyebrow">Impacto</div>
+      <div class="rec-datos">
+        ${dato('Ofrecidos', ofrecidos)}
+        ${dato('Con cuenta', conCuenta ?? sinDato)}
+        ${dato('Abrieron alguno', abrieronAlguno == null ? sinDato : `${abrieronAlguno} de ${conCuenta}`)}
+        ${dato('Más abierto', masAbierto ? `${masAbierto.titulo} (${masAbierto.abrieron})` : sinDato)}
+        ${dato('Primeras aperturas', tend)}
+      </div>
+      <div class="p">Son conteos del plantel y sólo de los jugadores con cuenta. No hay nombres: la base no los entrega.</div>
+    </section>`;
+}
+
 // Se recuerda mientras dure la sesión: al enviar un recurso la lista se vuelve
 // a pintar y no tiene que saltar de vuelta a "Todos".
 let filtroTipo = 'todos';
@@ -287,11 +333,13 @@ async function renderSeccionJugadores() {
     </div>
   `;
 
-  let recursos, jugadores;
+  let recursos, jugadores, resumen;
   try {
-    [recursos, jugadores] = await Promise.all([
+    [recursos, jugadores, resumen] = await Promise.all([
       obtenerRecursos(club.id),
       obtenerJugadoresDelPlantel(club.id, plantel.id),
+      // Los conteos son un agregado: si fallan, la lista de recursos sale igual.
+      obtenerResumenRecursos(plantel.id).catch(() => null),
     ]);
   } catch (e) {
     // Que falle la lectura no puede dejar la pantalla sin su acción principal:
@@ -325,6 +373,9 @@ async function renderSeccionJugadores() {
   // no puede dejar la pantalla vacía sin salida.
   if (filtroTipo !== 'todos' && !filtrarPorTipo(recursos, filtroTipo).length) filtroTipo = 'todos';
   const visibles = filtrarPorTipo(recursos, filtroTipo);
+  const filasPorRecurso = new Map((resumen?.recursos ?? []).map((f) => [f.recursoId, f]));
+  // Con resumen, un recurso sin fila es uno que no se envió a este plantel.
+  const filaDe = (id) => (resumen ? filasPorRecurso.get(id) ?? { enviados: 0, conCuenta: 0, abrieron: null } : null);
 
   contenedorJugadores().innerHTML = html`
     <div class="pad">
@@ -334,7 +385,8 @@ async function renderSeccionJugadores() {
         <button class="btn chico" id="btn-ofrecer" type="button">Ofrecer un recurso</button>
       </div>
       ${chipsDeTipo(recursos)}
-      <div class="rec-grilla">${visibles.map(tarjetaRecurso)}</div>
+      <div class="rec-grilla">${visibles.map((r) => tarjetaRecurso(r, alcanceDeRecurso(filaDe(r.id))))}</div>
+      ${panelDeImpacto(resumenDeImpacto(recursos, resumen))}
     </div>
   `;
   $('btn-ofrecer').addEventListener('click', () => abrirAltaDeRecurso(null, jugadores));

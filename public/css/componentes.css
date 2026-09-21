@@ -248,6 +248,12 @@ button.rec-mini:active .rec-play{transform:translate(-50%,-50%) scale(.92)}
 /* El botón de reenviar queda siempre al pie de la tarjeta: en la grilla las
    tarjetas de una fila miden lo mismo y los botones se alinean. */
 .rec-cuerpo > .btn.sec{margin-top:auto}
+.rec-alcance{margin-top:var(--sp-3)}
+.rec-alcance-tx{font-size:var(--fs-125);color:var(--gris)}
+.rec-alcance-tx.sin{font-style:italic}
+.rec-impacto{margin-top:var(--sp-4)}
+.rec-impacto .eyebrow{margin-top:0}
+.rec-impacto .rec-datos{margin-bottom:var(--sp-2)}
 .btn.contorno{background:transparent;color:var(--tinta);border:1px solid var(--tinta);text-decoration:none}
 .campo .etiqueta{
   font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.11em;

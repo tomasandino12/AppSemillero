@@ -86,3 +86,69 @@ export function claseDeEnlace(enlace) {
   if (u.pathname.toLowerCase().endsWith('.pdf')) return 'pdf';
   return 'otro';
 }
+
+/**
+ * Cuánto llegó un recurso, a partir de la fila anónima de resumen_recursos()
+ * (nunca hay nombres). `estado` dice por qué falta el porcentaje:
+ *   'ok'           hay porcentaje
+ *   'sin-envios'   no se lo enviaron a nadie de este plantel
+ *   'sin-cuentas'  ningún jugador con cuenta a quien se lo enviaron: no hay dato
+ *   'pocos'        hay cuentas pero muy pocas: la base no informa cuántos abrieron
+ *   'sin-resumen'  no se pudo leer el resumen
+ * Sin datos no es 0 %: `porcentaje` es null.
+ */
+export function alcanceDeRecurso(fila) {
+  if (!fila) return { estado: 'sin-resumen', enviados: null, conCuenta: null, abrieron: null, porcentaje: null };
+  const { enviados, conCuenta, abrieron } = fila;
+  if (enviados === 0) return { estado: 'sin-envios', enviados, conCuenta: 0, abrieron: null, porcentaje: null };
+  if (conCuenta === 0) return { estado: 'sin-cuentas', enviados, conCuenta, abrieron: null, porcentaje: null };
+  if (abrieron == null) return { estado: 'pocos', enviados, conCuenta, abrieron: null, porcentaje: null };
+  return { estado: 'ok', enviados, conCuenta, abrieron, porcentaje: Math.round((abrieron / conCuenta) * 100) };
+}
+
+/**
+ * Panel de impacto de RECURSOS: todo agregado, sin nombres de jugadores.
+ *   ofrecidos         cuántos recursos hay
+ *   conCuenta         jugadores del plantel con cuenta (el denominador honesto)
+ *   abrieronAlguno    jugadores que abrieron al menos uno (null si son pocos)
+ *   masAbierto        { recursoId, titulo, abrieron } o null; empata el más reciente
+ *   tendencia         { esteMes, mesAnterior, delta } o null si no hay mes anterior
+ *
+ * `recursos` son los de obtenerRecursos() y `resumen` el de
+ * obtenerResumenRecursos() (null si no se pudo leer o no es entrenador).
+ */
+export function resumenDeImpacto(recursos, resumen) {
+  const base = { ofrecidos: recursos.length, conCuenta: null, abrieronAlguno: null, masAbierto: null, tendencia: null };
+  if (!resumen) return base;
+
+  const porId = new Map(resumen.recursos.map((f) => [f.recursoId, f]));
+  let masAbierto = null;
+  let esteMes = 0;
+  let mesAnterior = 0;
+  let hayDatoDelMes = false;
+  for (const r of recursos) {
+    const fila = porId.get(r.id);
+    if (!fila) continue;
+    if (fila.abrieron != null && fila.abrieron > 0) {
+      const gana = !masAbierto
+        || fila.abrieron > masAbierto.abrieron
+        || (fila.abrieron === masAbierto.abrieron && r.creadoEn > masAbierto.creadoEn);
+      if (gana) masAbierto = { recursoId: r.id, titulo: r.titulo, abrieron: fila.abrieron, creadoEn: r.creadoEn };
+    }
+    if (fila.primerasEsteMes != null && fila.primerasMesAnterior != null) {
+      hayDatoDelMes = true;
+      esteMes += fila.primerasEsteMes;
+      mesAnterior += fila.primerasMesAnterior;
+    }
+  }
+
+  return {
+    ...base,
+    conCuenta: resumen.conCuenta,
+    abrieronAlguno: resumen.abrieronAlguno,
+    masAbierto: masAbierto && { recursoId: masAbierto.recursoId, titulo: masAbierto.titulo, abrieron: masAbierto.abrieron },
+    // Sin aperturas el mes anterior no hay contra qué comparar (y dividir por
+    // cero o mostrar "+∞" sería inventar).
+    tendencia: hayDatoDelMes && mesAnterior > 0 ? { esteMes, mesAnterior, delta: esteMes - mesAnterior } : null,
+  };
+}
