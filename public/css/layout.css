@@ -121,7 +121,18 @@
   overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
 }
 .pant{display:none}
-.pant.on{display:block;padding-bottom:var(--sp-5)}
+/* La pantalla entra con un fade, una vez por navegación
+   (mostrarPantalla alterna la clase: refrescar no la toca, así que un cambio de
+   categoría no la repite). El @keyframes sólo define "from": con
+   prefers-reduced-motion la animación se apaga y la pantalla queda en su estado
+   final, nunca invisible.
+
+   Sólo opacidad, sin subida: con transform el navegador arma una capa del tamaño
+   de la pantalla (medido: hasta 3 frames largos más en el primer recorrido con
+   CPU 4x, contra 2 con opacidad sola) y un ancestro transformado se vuelve el
+   contenedor de los hijos position:fixed, como el teclado de MEDIR. */
+.pant.on{display:block;padding-bottom:var(--sp-5);animation:entrar-pantalla var(--dur-2) var(--ease-salida)}
+@keyframes entrar-pantalla{from{opacity:0}}
 .pad{padding:var(--sp-4)}
 
 /* Franja inferior pegajosa para la acción principal de una pantalla.

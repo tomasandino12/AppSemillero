@@ -6,7 +6,7 @@
 //   node docs/rendimiento/herramienta.mjs base                 -> guarda los estilos computados actuales como base
 //   node docs/rendimiento/herramienta.mjs comparar             -> compara contra la base
 //   node docs/rendimiento/herramienta.mjs capturas <carpeta>   -> PNGs de cada vista a 375 y 1280
-//   node docs/rendimiento/herramienta.mjs js <vista> <ancho> "<expr>"  -> evalúa una expresión (REDUCIDO=1 emula prefers-reduced-motion)
+//   node docs/rendimiento/herramienta.mjs js <vista> <ancho> "<expr>"  -> evalúa una expresión (REDUCIDO=1 emula prefers-reduced-motion; CAPTURA=ruta.png saca un PNG al final)
 import puppeteer from 'puppeteer-core';
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 
@@ -83,8 +83,9 @@ try {
     }
     console.log('capturas en', dir);
   } else if (cmd === 'js') {
-    const p = await abrir(process.argv[3], Number(process.argv[4]), { reducido: process.env.REDUCIDO === '1' });
+    const p = await abrir(process.argv[3], Number(process.argv[4]), { reducido: process.env.REDUCIDO === '1', cpu: Number(process.env.CPU ?? 1) });
     console.log(JSON.stringify(await p.evaluate(process.argv[5]), null, 1));
+    if (process.env.CAPTURA) await p.screenshot({ path: process.env.CAPTURA });
   }
 } finally {
   await navegador.close();

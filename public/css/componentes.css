@@ -225,7 +225,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .barra{display:grid;grid-template-columns:minmax(0,7.5rem) 1fr auto;align-items:center;gap:var(--sp-2)}
 .barra .et{font-size:var(--fs-135);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .barra .pista{height:14px;background:var(--linea);border-radius:7px;overflow:hidden}
-.barra .relleno{height:100%;background:var(--primario);border-radius:7px}
+.barra .relleno{height:100%;background:var(--primario);border-radius:7px;transform-origin:left;animation:llenar-barra var(--dur-3) var(--ease-salida)}
 .barra .val{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
 
 /* Etapa 4 — muestra chica: atenuada y marcada. La marca es texto, no sólo
@@ -375,7 +375,10 @@ svg.g{width:100%;display:block;overflow:visible}
 .zona-cab .frac{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
 .zona-barra{display:grid;grid-template-columns:1fr 2.75rem;align-items:center;gap:var(--sp-2);margin-top:var(--sp-1)}
 .zona-barra .pista{position:relative;height:16px;background:var(--linea);border-radius:8px;overflow:hidden}
-.zona-barra .relleno{height:100%;background:var(--primario);border-radius:8px}
+.zona-barra .relleno{height:100%;background:var(--primario);border-radius:8px;transform-origin:left;animation:llenar-barra var(--dur-3) var(--ease-salida)}
+/* El ancho ya viene puesto en línea (style="width:X%"): la barra se escala desde
+   cero en X en vez de animar el ancho, que repintaría cada frame. */
+@keyframes llenar-barra{from{transform:scaleX(0)}}
 .zona-barra .meta{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--negro)}
 .zona-barra .relleno.llego{background:var(--negro)}
 .zona-barra .pct{font-family:var(--ff-mono);font-size:var(--fs-145);font-weight:600;color:var(--tinta);text-align:right}

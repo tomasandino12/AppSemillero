@@ -138,3 +138,20 @@ test('los keyframes sólo tocan transform u opacity', () => {
   }
   assert.deepEqual(malos, []);
 });
+
+test('los keyframes sólo definen "from": con reduced-motion el estado final queda visible', () => {
+  // Sin `to` ni porcentajes, cuando la animación se apaga (animation:none) el
+  // elemento queda con sus estilos normales y no oculto en el primer cuadro.
+  const malos = [];
+  for (const [nombre, texto] of Object.entries(css)) {
+    const limpio = sinComentarios(texto);
+    for (const m of limpio.matchAll(/@keyframes\s+([\w-]+)\s*\{/g)) {
+      let nivel = 1, i = m.index + m[0].length;
+      const inicio = i;
+      while (nivel > 0 && i < limpio.length) { if (limpio[i] === '{') nivel++; if (limpio[i] === '}') nivel--; i++; }
+      const cuerpo = limpio.slice(inicio, i - 1).trim();
+      if (!/^from\s*\{[^{}]*\}$/.test(cuerpo)) malos.push(`${nombre}.css @keyframes ${m[1]}`);
+    }
+  }
+  assert.deepEqual(malos, []);
+});

@@ -40,7 +40,7 @@
 Sólo `transform` y `opacity`, y sólo estas:
 
 1. **Apretar:** `scale(.97)` en `--dur-1` (ya existe).
-2. **Entrada de pantalla:** `.pant.on` entra con opacidad 0→1 y `translateY(.5rem)`→0 en `--dur-2`. Una vez por navegación.
+2. **Entrada de pantalla:** `.pant.on` entra con opacidad 0→1 en `--dur-2`. Una vez por navegación. Sin `translateY` (decidido midiendo en T5): con transform el navegador arma una capa del tamaño de la pantalla y suma frames largos en el primer recorrido con CPU 4x; además un ancestro transformado re-ancla a los hijos `position:fixed` (teclado de MEDIR).
 3. **Relleno de barras:** `scaleX(0)`→1 con origen a la izquierda, en `--dur-3`, al dibujar la barra por primera vez.
 4. **Levantar en hover** (`@media (hover:hover)`): `translateY(-2px)` + la opacidad de un `::after` que lleva `--sombra-alta`.
 5. **Hoja, velo y toast:** los que ya hay, con tokens.
