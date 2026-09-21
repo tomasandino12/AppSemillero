@@ -57,6 +57,21 @@ Inter es una fuente variable: un solo archivo cubre todos los pesos, así que qu
 
 La primera corrida incluye el arranque en frío del navegador; el criterio de T9 compara las corridas 2 y 3 y mira que la 1 no empeore.
 
+## Hallazgos durante la rama
+
+Cada uno se midió con Lighthouse mobile sobre la landing (1 corrida por variante; el entorno es tan estable que las 3 corridas de una misma variante difieren <2 %).
+
+| Variante | FCP | LCP | Decisión |
+|---|---|---|---|
+| Antes de la rama (T1) | 7 482 | 12 319 | — |
+| Fin de T6 (refactors + movimiento + cifra) | 7 331 | 11 876 | Sin regresión |
+| T7 con el resplandor como `radial-gradient(… color-mix(…), transparent)` | 7 850 | 13 071 | **Descartado:** el `color-mix()` adentro del gradiente cuesta ~+450 ms de FCP y ~+900 ms de LCP |
+| Mismo gradiente con `rgba()` literal | 7 545 | 12 318 | Sin costo, pero pierde el color del club |
+| Resplandor en un `::before` con `var(--club)` y `opacity` | 7 706 | 12 633 | Adoptado (con la animación de las tarjetas) |
+| Igual, **sin** la animación escalonada de `.ben` | 7 546 | 12 317 | **Adoptado:** la animación sumaba ~+316 ms de LCP (un párrafo de las tarjetas es el LCP y no cuenta hasta que se ve) |
+
+Otras decisiones tomadas midiendo: la entrada de pantalla es sólo fade (con `translateY` sumaba frames largos en el recorrido con CPU 4x y re-ancla a los hijos `position:fixed`).
+
 ## Después (T9)
 
 _Se completa al cerrar la rama._

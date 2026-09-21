@@ -59,7 +59,7 @@ test('los derivados del club tienen un respaldo literal para navegadores sin col
   // Fuera del @supports: si sólo existieran adentro, sin color-mix quedarían
   // inválidos y un botón apretado se vería transparente.
   const fueraDeSupports = sinComentarios(tokens).replace(/@supports[^{]*\{[\s\S]*?\}\s*\}/, '');
-  for (const nombre of ['--primario-osc', '--primario-cl', '--primario-brillo']) {
+  for (const nombre of ['--primario-osc', '--primario-cl', '--primario-tenue']) {
     assert.match(fueraDeSupports, new RegExp(`${nombre}\\s*:`), nombre);
   }
 });
@@ -154,4 +154,20 @@ test('los keyframes sólo definen "from": con reduced-motion el estado final que
     }
   }
   assert.deepEqual(malos, []);
+});
+
+test('el texto de la landing llega a 4.5:1 sobre su tarjeta y su fondo', () => {
+  // El texto secundario es --gris-osc y el principal --sobre-oscuro. El
+  // resplandor del color del club sólo suma rojo oscuro atrás del hero: el peor
+  // caso es el fondo liso, que es lo que se mide.
+  const pares = [
+    ['--gris-osc', '--pub-tarjeta'], ['--gris-osc', '--pub-fondo'],
+    ['--sobre-oscuro', '--pub-tarjeta'], ['--sobre-oscuro', '--pub-fondo'],
+  ];
+  for (const [texto, fondo] of pares) {
+    const [t, f] = [valorDeToken(texto), valorDeToken(fondo)];
+    assert.ok(t && f, `${texto} y ${fondo} tienen que ser hex en tokens.css`);
+    const c = contraste(t, f);
+    assert.ok(c >= 4.5, `${texto} sobre ${fondo}: ${c.toFixed(2)}:1`);
+  }
 });

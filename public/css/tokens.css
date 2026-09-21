@@ -10,7 +10,7 @@
      --club y --sobre-club son LOS ÚNICOS dos valores que cambia un club (el
      texto que va encima del color, blanco o negro, lo elige quien carga el
      color: sólo él sabe cuál llega a 4.5:1). Todo lo demás sale de ahí.
-     Los cuatro derivados llevan un valor literal de respaldo, el del color por
+     Los tres derivados llevan un valor literal de respaldo, el del color por
      defecto: sin color-mix (Android WebView anterior a Chrome 111) el
      derivado quedaría inválido y el botón apretado se vería transparente. */
   --club:#D9122E;
@@ -19,7 +19,6 @@
   --primario-osc:#A00D22;                    /* apretado y hover */
   --primario-cl:#FFEBEE;                     /* fondo suave */
   --primario-tenue:#FBE5E8;                  /* fondo de una etiqueta del club */
-  --primario-brillo:rgba(217,18,46,.35);     /* resplandor de la landing */
 
   /* ---- neutros ---- */
   --negro:#131316;
@@ -40,6 +39,15 @@
   --sup-1:#22222A;
   --sup-2:#2C2C34;
   --linea-osc:#3A3A44;    /* borde sobre fondo oscuro: el par de --linea */
+
+  /* ---- superficies de la landing y la autenticación ----
+     Más profundas que --negro/--sup-1 (que siguen siendo las de la app por
+     dentro): la separación entre fondo, tarjeta y borde da profundidad sin
+     sombras, que sobre oscuro no se ven. --gris-osc sobre --pub-tarjeta da
+     7.4:1 (lo verifica tests/estilosTokens.test.js). */
+  --pub-fondo:#0D0D10;
+  --pub-tarjeta:#17171C;
+  --pub-borde:#2B2B34;
 
   /* ---- semántico ---- */
   --sube:#15794F;
@@ -130,6 +138,5 @@
     --primario-osc:color-mix(in srgb,var(--club) 73.7%,black);
     --primario-cl:color-mix(in oklab,var(--club) 9%,white);
     --primario-tenue:color-mix(in srgb,var(--club) 11%,white);
-    --primario-brillo:color-mix(in oklab,var(--club) 35%,transparent);
   }
 }

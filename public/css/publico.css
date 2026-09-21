@@ -11,8 +11,19 @@
    ===================================================================== */
 
 .publico{
-  min-height:100dvh;background:var(--negro);color:var(--sobre-oscuro);
+  min-height:100dvh;background:var(--pub-fondo);color:var(--sobre-oscuro);
   display:flex;flex-direction:column;
+  position:relative;isolation:isolate;
+}
+/* El resplandor del color del club arriba de todo, detrás de la marca y del
+   hero. Estático. Va en un pseudo-elemento y la intensidad en opacity porque
+   el gradiente con color-mix() (--club mezclado con transparente) costó
+   ~+450 ms de FCP y ~+900 ms de LCP en Lighthouse mobile; con var(--club) puro
+   y opacity, que compone la GPU, el costo desaparece. */
+.publico::before{
+  content:"";position:absolute;inset:0 0 auto;height:22rem;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 100% at 50% 0,var(--club),transparent);
+  opacity:.28;
 }
 .publico[hidden]{display:none}
 .vista{display:none}
@@ -33,7 +44,20 @@
 .acciones-landing{display:flex;flex-direction:column;gap:var(--sp-3);padding:0 var(--sp-4) var(--sp-6);max-width:24rem;margin-inline:auto;width:100%}
 
 .beneficios{display:grid;gap:var(--sp-3);padding:0 var(--sp-4) var(--sp-6)}
-.ben{background:var(--sup-1);border:1px solid var(--linea-osc);border-radius:var(--r);padding:var(--sp-4)}
+/* Cada beneficio lleva un filete del color del club a la izquierda: marca la
+   jerarquía sin sumar fondo. NO entran animados: se probó un fade escalonado y
+   subía el LCP de la landing ~+316 ms (+2.6 %) en Lighthouse mobile, porque un
+   párrafo de estas tarjetas es el elemento más grande y no cuenta hasta que se
+   ve. Sin la animación el LCP queda igual que antes. */
+.ben{
+  position:relative;background:var(--pub-tarjeta);border:1px solid var(--pub-borde);
+  border-radius:var(--r);padding:var(--sp-4);
+}
+.ben::before{
+  content:"";position:absolute;left:-1px;top:var(--sp-4);bottom:var(--sp-4);width:3px;
+  background:var(--primario);border-radius:0 2px 2px 0;
+}
+
 .ben .t{
   font-family:var(--ff-titulo);font-size:var(--fs-170);font-weight:600;
   text-transform:uppercase;letter-spacing:.04em;line-height:1.15;
@@ -46,7 +70,7 @@
 .futuro{
   color:var(--gris-osc);font-size:var(--fs-125);text-align:center;
   padding:0 var(--sp-4) var(--sp-8);max-width:34rem;margin-inline:auto;
-  border-top:1px solid var(--linea-osc);padding-top:var(--sp-5);margin-top:var(--sp-2);
+  border-top:1px solid var(--pub-borde);padding-top:var(--sp-5);margin-top:var(--sp-2);
 }
 
 /* ---- caja de autenticación ---- */

@@ -23,7 +23,7 @@
 
 ## Tokens
 
-- **Color de club.** `--club` (por defecto `#D9122E`) y `--sobre-club` (texto sobre el color del club, por defecto `#fff`) son **los únicos dos valores** que cambian por club. De esos dos salen los derivados con `color-mix(in oklab, …)`: `--primario`, `--primario-osc` (apretado/hover), `--primario-cl` (fondo suave) y `--primario-brillo` (resplandor de la landing). `--rojo*` se renombra a `--primario*`: un club de azul no puede tener un token que se llama rojo. Los semánticos (`--sube`, `--baja`, `--aviso`) **no** dependen del club: si el primario de un club fuera verde, "sube" se confundiría con la marca.
+- **Color de club.** `--club` (por defecto `#D9122E`) y `--sobre-club` (texto sobre el color del club, por defecto `#fff`) son **los únicos dos valores** que cambian por club. De esos dos salen los derivados con `color-mix(in oklab, …)`: `--primario`, `--primario-osc` (apretado/hover), `--primario-cl` (fondo suave) y `--primario-tenue` (fondo de etiqueta). El resplandor de la landing no lleva derivado: es un gradiente de `--club` con `opacity` en un pseudo-elemento (con `color-mix` adentro del gradiente costaba ~+450 ms de FCP en Lighthouse mobile). `--rojo*` se renombra a `--primario*`: un club de azul no puede tener un token que se llama rojo. Los semánticos (`--sube`, `--baja`, `--aviso`) **no** dependen del club: si el primario de un club fuera verde, "sube" se confundiría con la marca.
 - **Neutros:** no cambian. Se suman `--fondo-chip`, `--sube-fondo`, `--baja-fondo`, `--deshabilitado` y `--sobre-oscuro`, que reemplazan los hex sueltos. Superficies de `.publico`: `--pub-fondo`, `--pub-tarjeta`, `--pub-borde`. Se toma la profundidad de Stitch, pero se ajusta para que `--gris-osc` siga en ≥4.5:1.
 - **Tipografía:** las mismas tres familias. Se agregan `--fs-cifra` (clamp 2.5→3.5 rem) y `font-variant-numeric: tabular-nums` en números. Se cargan sólo los pesos que se usan (a medir; hoy se piden 4 de Barlow y 4 de Inter).
 - **Espaciado:** la escala actual `--sp-1…8` alcanza. Se agregan `--sp-10` (2.5 rem) y `--sp-12` (3 rem) para las secciones de la landing, y se reemplazan los `8px`/`12px`/`14px` sueltos.
@@ -44,7 +44,7 @@ Sólo `transform` y `opacity`, y sólo estas:
 3. **Relleno de barras:** `scaleX(0)`→1 con origen a la izquierda, en `--dur-3`, al dibujar la barra por primera vez.
 4. **Levantar en hover** (`@media (hover:hover)`): `translateY(-2px)` + la opacidad de un `::after` que lleva `--sombra-alta`.
 5. **Hoja, velo y toast:** los que ya hay, con tokens.
-6. **Landing:** los beneficios entran uno tras otro (fade + subida) una sola vez, con un `animation-delay` escalonado por índice.
+6. ~~**Landing:** los beneficios entran uno tras otro.~~ **Descartada en T7:** medida en Lighthouse mobile subía el LCP ~+316 ms (+2,6 %); sin ella el LCP queda igual que antes.
 
 **Prohibido:** animar `width`, `height`, `top/left`, `box-shadow`, `background`, `filter`, `backdrop-filter`; `transition: all`; animaciones infinitas (salvo un spinner si alguna vez hace falta); parallax; marquee.
 
