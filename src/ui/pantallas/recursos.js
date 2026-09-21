@@ -1,6 +1,7 @@
 import { obtenerRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
-import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
+import { toast, formatearFechaCorta } from '../nav.js';
+import { html } from '../html.js';
 import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { abrirVideo, esVideoEmbebible } from '../componentes/video.js';
@@ -29,15 +30,15 @@ function hoyLocal() {
 function tarjetaRecurso(r) {
   const cuantos = r.envios.length;
   const ultima = cuantos ? r.envios.map((e) => e.fecha).sort().at(-1) : null;
-  return `
+  return html`
     <div class="rec">
-      <div class="t">${escaparHtml(r.titulo)}</div>
-      <div class="d">${escaparHtml(r.descripcion)}</div>
-      ${esVideoEmbebible(r.enlace) ? `<button class="btn sec chico" data-ver-video="${r.id}">Ver video</button>` : ''}
-      ${esEnlaceWeb(r.enlace) ? `<a class="enlace-rec" href="${escaparHtml(r.enlace)}" target="_blank" rel="noopener noreferrer">Abrir el material</a>` : ''}
+      <div class="t">${r.titulo}</div>
+      <div class="d">${r.descripcion}</div>
+      ${esVideoEmbebible(r.enlace) && html`<button class="btn sec chico" data-ver-video="${r.id}">Ver video</button>`}
+      ${esEnlaceWeb(r.enlace) && html`<a class="enlace-rec" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Abrir el material</a>`}
       <div class="m">
         <span class="tag rojo">${cuantos} jugador${cuantos === 1 ? '' : 'es'}</span>
-        ${ultima ? `<span class="tag">${escaparHtml(formatearFechaCorta(ultima))}</span>` : ''}
+        ${ultima && html`<span class="tag">${formatearFechaCorta(ultima)}</span>`}
       </div>
       <button class="btn sec chico" data-reenviar="${r.id}">Enviar a más jugadores</button>
     </div>
@@ -45,23 +46,23 @@ function tarjetaRecurso(r) {
 }
 
 function cuerpoDeHoja(jugadores, { conCampos }) {
-  return `
-    ${conCampos ? `
+  return html`
+    ${conCampos && html`
       <div class="campo"><label for="in-rec-titulo">Título</label>
         <input id="in-rec-titulo" type="text" maxlength="${LIMITE.titulo}" autocomplete="off"></div>
       <div class="campo"><label for="in-rec-desc">Instrucciones</label>
         <textarea id="in-rec-desc" rows="3" maxlength="${LIMITE.descripcion}"></textarea></div>
       <div class="campo"><label for="in-rec-link">Link (opcional)</label>
         <input id="in-rec-link" type="url" maxlength="${LIMITE.enlace}" autocomplete="off" inputmode="url" placeholder="https://"></div>
-    ` : ''}
+    `}
     <div class="eyebrow">A quién <button class="btn sec chico" id="btn-todos" type="button">Todo el plantel</button></div>
     <div class="lista-chk">
-      ${jugadores.map((j) => `
+      ${jugadores.map((j) => html`
         <label class="chk-fila">
           <input type="checkbox" class="chk-jug" value="${j.id}">
-          <span>${escaparHtml(j.nombreLimpio)}</span>
+          <span>${j.nombreLimpio}</span>
         </label>
-      `).join('')}
+      `)}
     </div>
     <div id="rec-aviso"></div>
     <button class="btn" id="btn-rec-confirmar">Registrar el envío</button>
@@ -80,8 +81,8 @@ function avisarPlantelVacio() {
   const categoria = plantel?.categoria ? ` (${plantel.categoria})` : '';
   abrirHoja({
     titulo: 'Todavía no hay jugadores',
-    cuerpo: `
-      <div class="p">Para enviar un recurso hace falta elegir a quién mandárselo, y este plantel${escaparHtml(categoria)} todavía no tiene jugadores cargados.</div>
+    cuerpo: html`
+      <div class="p">Para enviar un recurso hace falta elegir a quién mandárselo, y este plantel${categoria} todavía no tiene jugadores cargados.</div>
       <button class="btn" id="btn-rec-ir-plantel">Ir a PLANTEL</button>
     `,
   });
@@ -126,17 +127,17 @@ async function confirmarEnvio(recursoId) {
   const enlace = recursoId ? null : ($('in-rec-link').value.trim() || null);
 
   if (!recursoId && (!titulo || !descripcion)) {
-    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">Poné un título y las instrucciones.</div></div>`;
+    $('rec-aviso').innerHTML = html`<div class="al"><div class="tx">Poné un título y las instrucciones.</div></div>`;
     return;
   }
-  // escaparHtml evita romper el atributo href, pero no frena un
+  // html`` evita romper el atributo href, pero no frena un
   // "javascript:..." o cualquier otro esquema: eso se rechaza acá.
   if (enlace && !esEnlaceWeb(enlace)) {
-    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">${MENSAJE_ENLACE_NO_WEB}</div></div>`;
+    $('rec-aviso').innerHTML = html`<div class="al"><div class="tx">${MENSAJE_ENLACE_NO_WEB}</div></div>`;
     return;
   }
   if (!jugadorIds.length) {
-    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">Elegí al menos un jugador.</div></div>`;
+    $('rec-aviso').innerHTML = html`<div class="al"><div class="tx">Elegí al menos un jugador.</div></div>`;
     return;
   }
 
@@ -153,7 +154,7 @@ async function confirmarEnvio(recursoId) {
       jugadorIds,
     });
   } catch (e) {
-    $('rec-aviso').innerHTML = `<div class="al"><div class="tx">${
+    $('rec-aviso').innerHTML = html`<div class="al"><div class="tx">${
       textoDeError(e, 'No se pudo registrar el envío.')
     }</div></div>`;
     boton.disabled = false;
@@ -170,17 +171,17 @@ async function confirmarEnvio(recursoId) {
   await renderSeccionJugadores();
 }
 
-const encabezado = `<div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>`;
+const encabezado = html`<div class="p">Material que dejás disponible para que el que quiera progrese por su cuenta. No es obligación ni control.</div>`;
 
 async function renderSeccionJugadores() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
   if (!club || !plantel) {
-    contenedorJugadores().innerHTML = `<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
+    contenedorJugadores().innerHTML = html`<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
     return;
   }
 
-  contenedorJugadores().innerHTML = `
+  contenedorJugadores().innerHTML = html`
     <div class="pad">
       ${encabezado}
       <div class="eyebrow">Ofrecidos</div>
@@ -197,7 +198,7 @@ async function renderSeccionJugadores() {
   } catch (e) {
     // Que falle la lectura no puede dejar la pantalla sin su acción principal:
     // el entrenador tiene que poder reintentar sin salir y volver a entrar.
-    $('recursos-estado').outerHTML = `
+    $('recursos-estado').outerHTML = html`
       <div class="al"><div class="tx">${
         textoDeError(e, 'No se pudieron cargar los recursos.')
       }</div></div>
@@ -208,7 +209,7 @@ async function renderSeccionJugadores() {
   }
 
   if (!recursos.length) {
-    contenedorJugadores().innerHTML = `
+    contenedorJugadores().innerHTML = html`
       <div class="pad">
         ${encabezado}
         <div class="estado-vacio">
@@ -222,11 +223,11 @@ async function renderSeccionJugadores() {
     return;
   }
 
-  contenedorJugadores().innerHTML = `
+  contenedorJugadores().innerHTML = html`
     <div class="pad">
       ${encabezado}
       <div class="eyebrow">Ofrecidos</div>
-      ${recursos.map(tarjetaRecurso).join('')}
+      ${recursos.map(tarjetaRecurso)}
     </div>
     <div class="pie-fijo"><button class="btn sec" id="btn-ofrecer">Ofrecer un recurso</button></div>
   `;
@@ -254,11 +255,11 @@ export async function renderRecursos() {
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
   if (!club || !plantel) {
-    contenedor().innerHTML = `<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
+    contenedor().innerHTML = html`<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
     return;
   }
 
-  contenedor().innerHTML = `
+  contenedor().innerHTML = html`
     <div class="pestanas" role="tablist">
       <button class="pest ${seccionActiva === 'jugadores' ? 'on' : ''}" data-seccion="jugadores" role="tab" aria-selected="${seccionActiva === 'jugadores'}">Jugadores</button>
       <button class="pest ${seccionActiva === 'ejercicios' ? 'on' : ''}" data-seccion="ejercicios" role="tab" aria-selected="${seccionActiva === 'ejercicios'}">Ejercicios</button>
