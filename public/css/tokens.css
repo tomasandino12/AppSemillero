@@ -6,10 +6,19 @@
    (los NOMBRES se conservan para que el CSS portado siga funcionando).
    ===================================================================== */
 :root{
-  /* ---- marca ---- */
-  --rojo:#D9122E;
-  --rojo-osc:#A00D22;
-  --rojo-cl:#FFEBEE;
+  /* ---- marca: el color del club ----
+     --club y --sobre-club son LOS ÚNICOS dos valores que cambia un club (el
+     texto que va encima del color, blanco o negro, lo elige quien carga el
+     color: sólo él sabe cuál llega a 4.5:1). Todo lo demás sale de ahí.
+     Los tres derivados llevan un valor literal de respaldo, el del color por
+     defecto: sin color-mix (Android WebView anterior a Chrome 111) el
+     derivado quedaría inválido y el botón apretado se vería transparente. */
+  --club:#D9122E;
+  --sobre-club:#fff;
+  --primario:var(--club);
+  --primario-osc:#A00D22;                    /* apretado y hover */
+  --primario-cl:#FFEBEE;                     /* fondo suave */
+  --primario-brillo:rgba(217,18,46,.35);     /* resplandor de la landing */
 
   /* ---- neutros ---- */
   --negro:#131316;
@@ -77,4 +86,16 @@
                              y 58: a 46 sobra margen a 1900px; a 58 la barra de
                              una zona vuelve a ser una cinta de 830px. */
   --lateral-w:14rem;      /* navegación lateral a partir de 1024px */
+}
+
+/* Derivados del color del club. El 73,7 % en srgb da exactamente #A00D22 con el
+   rojo por defecto; el 9 % en oklab da #FFEDEC (a 2 unidades de #FFEBEE, que
+   no es un tinte puro del rojo). Con otro --club, oklab reparte el claro y el
+   oscuro parejo entre tonos. */
+@supports (color:color-mix(in oklab,red,blue)){
+  :root{
+    --primario-osc:color-mix(in srgb,var(--club) 73.7%,black);
+    --primario-cl:color-mix(in oklab,var(--club) 9%,white);
+    --primario-brillo:color-mix(in oklab,var(--club) 35%,transparent);
+  }
 }

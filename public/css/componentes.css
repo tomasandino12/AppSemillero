@@ -9,12 +9,12 @@
 .btn{
   display:flex;align-items:center;justify-content:center;gap:var(--sp-2);
   width:100%;min-height:var(--tap);
-  background:var(--rojo);color:#fff;padding:var(--sp-4);
+  background:var(--primario);color:#fff;padding:var(--sp-4);
   border-radius:var(--r);font-family:var(--ff-titulo);font-size:var(--fs-190);
   font-weight:600;letter-spacing:.1em;text-transform:uppercase;
   transition:transform 120ms ease-out,background 120ms ease-out;
 }
-.btn:active{background:var(--rojo-osc);transform:scale(.97)}
+.btn:active{background:var(--primario-osc);transform:scale(.97)}
 .btn:disabled{background:#C9C5BE;color:#fff;transform:none}
 /* El secundario: blanco con borde, en el mismo lenguaje que las tarjetas. Antes
    era un contorno negro de 1.5px, y tres seguidos se leían como tres losas.
@@ -26,11 +26,11 @@
   background:var(--blanco);color:var(--tinta);
   border:1px solid var(--gris-cl);box-shadow:var(--sombra);font-size:var(--fs-145);
 }
-/* Propio, para no heredar el --rojo-osc de .btn:active: sobre fondo blanco con
+/* Propio, para no heredar el --primario-osc de .btn:active: sobre fondo blanco con
    texto casi negro, apretar un secundario lo hacía destellar rojo oscuro. */
 .btn.sec:active{background:var(--papel)}
 @media (hover:hover){
-  .btn:not(:disabled):hover{background:var(--rojo-osc)}
+  .btn:not(:disabled):hover{background:var(--primario-osc)}
   .btn.sec:not(:disabled):hover{background:rgba(19,19,22,.06)}
 }
 
@@ -70,18 +70,18 @@
   border:2px solid transparent;min-height:4rem;transition:transform 120ms ease-out;
 }
 .opt:active{transform:scale(.97)}
-.opt.on{border-color:var(--rojo);background:var(--rojo-cl)}
+.opt.on{border-color:var(--primario);background:var(--primario-cl)}
 .opt .t{font-weight:600;font-size:var(--fs-145);line-height:1.2}
 .opt .d{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
 .equipos{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
 
 /* ---- avisos ---- */
 .al{
-  background:var(--blanco);border-left:3px solid var(--rojo);
+  background:var(--blanco);border-left:3px solid var(--primario);
   border-radius:0 var(--r) var(--r) 0;padding:var(--sp-3);
   margin-bottom:var(--sp-3);display:flex;gap:var(--sp-3);box-shadow:var(--sombra-alta);
 }
-.al .ico{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-145);color:var(--rojo)}
+.al .ico{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-145);color:var(--primario)}
 .al .tx{font-size:var(--fs-135);line-height:1.4}
 .al .mt{font-size:var(--fs-115);color:var(--gris);margin-top:.125rem}
 /* Un aviso con una acción al lado (p. ej. "Revisar" en PLANTEL): el texto cede, el botón no se parte. */
@@ -122,7 +122,7 @@
   border-radius:.375rem;border:2px solid var(--linea);
   display:flex;align-items:center;justify-content:center;
 }
-.jug-fila .chk.on{background:var(--rojo);border-color:var(--rojo);color:#fff;font-weight:700}
+.jug-fila .chk.on{background:var(--primario);border-color:var(--primario);color:#fff;font-weight:700}
 
 .jug-sugerencia{background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
 .jug-sugerencia .decision{display:flex;gap:var(--sp-2);margin-top:var(--sp-2)}
@@ -189,7 +189,7 @@
 .rec .d{font-size:var(--fs-125);color:var(--gris);margin-top:.1875rem;line-height:1.4}
 .rec .m{display:flex;gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap}
 .tag{font-family:var(--ff-mono);font-size:var(--fs-100);color:var(--gris);background:#EFECE6;padding:.1875rem .4375rem;border-radius:.3125rem}
-.tag.rojo{background:#FBE4E8;color:var(--rojo-osc)}
+.tag.rojo{background:#FBE4E8;color:var(--primario-osc)}
 
 /* ---- gráficos portados del prototipo ---- */
 svg.g{width:100%;display:block;overflow:visible}
@@ -197,7 +197,7 @@ svg.g{width:100%;display:block;overflow:visible}
   display:flex;gap:var(--sp-4);font-size:var(--fs-115);font-weight:400;color:var(--gris);
   margin-top:var(--sp-2);font-family:var(--ff-mono);flex-wrap:wrap;
 }
-.leyenda i{display:inline-block;width:.875rem;height:.15625rem;background:var(--rojo);vertical-align:middle;margin-right:.3125rem}
+.leyenda i{display:inline-block;width:.875rem;height:.15625rem;background:var(--primario);vertical-align:middle;margin-right:.3125rem}
 .leyenda i.pt{background:none;border-top:.15625rem dashed var(--gris-cl)}
 
 /* ---- progresión de pesos: un desplegable por bloque del plan ---- */
@@ -225,7 +225,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .barra{display:grid;grid-template-columns:minmax(0,7.5rem) 1fr auto;align-items:center;gap:8px}
 .barra .et{font-size:var(--fs-135);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .barra .pista{height:14px;background:var(--linea);border-radius:7px;overflow:hidden}
-.barra .relleno{height:100%;background:var(--rojo);border-radius:7px}
+.barra .relleno{height:100%;background:var(--primario);border-radius:7px}
 .barra .val{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-125);color:var(--gris-cl)}
 
 /* Etapa 4 — muestra chica: atenuada y marcada. La marca es texto, no sólo
@@ -242,7 +242,7 @@ svg.g{width:100%;display:block;overflow:visible}
    a la pantalla. La tira envuelve sola en dos líneas a 375px. */
 .tira{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .tira .num{min-height:48px;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-160);font-weight:600}
-.tira .num.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.tira .num.on{background:var(--primario);border-color:var(--primario);color:#fff}
 .posiciones{display:flex;flex-direction:column;gap:16px;margin:14px 0}
 .posicion .et{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:var(--fs-135);color:var(--tinta)}
 .posicion .et .de{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
@@ -251,8 +251,8 @@ svg.g{width:100%;display:block;overflow:visible}
 .jug-actual .sub{font-size:var(--fs-125);color:var(--gris-cl)}
 .progreso-tira{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
 .progreso-tira .paso{min-width:38px;min-height:38px;padding:0 4px;border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-115)}
-.progreso-tira .paso.completo{background:var(--rojo);border-color:var(--rojo);color:#fff}
-.progreso-tira .paso.parcial{border-color:var(--rojo);color:var(--rojo)}
+.progreso-tira .paso.completo{background:var(--primario);border-color:var(--primario);color:#fff}
+.progreso-tira .paso.parcial{border-color:var(--primario);color:var(--primario)}
 .progreso-tira .paso.ausente{border-style:dashed}
 .progreso-tira .paso.on{outline:2px solid var(--tinta);outline-offset:1px}
 .acciones-bateria{display:flex;gap:8px;margin-top:16px}
@@ -263,8 +263,8 @@ svg.g{width:100%;display:block;overflow:visible}
 .vel-fila{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;width:100%;min-height:56px;padding:6px 2px;border:0;border-bottom:1px solid var(--linea);background:none;text-align:left}
 .vel-fila .nom{font-size:var(--fs-145);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vel-fila .caja{min-width:4.5rem;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--linea);color:var(--gris-cl);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-190);font-weight:600}
-.vel-fila .caja.si{background:var(--rojo-cl);color:var(--tinta)}
-.vel-fila.on .caja{outline:2px solid var(--rojo);outline-offset:1px;color:var(--tinta)}
+.vel-fila .caja.si{background:var(--primario-cl);color:var(--tinta)}
+.vel-fila.on .caja{outline:2px solid var(--primario);outline-offset:1px;color:var(--tinta)}
 .vel-fila .u{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 
 /* Teclado propio, portado del prototipo. Teclas grandes para cargar de pie en
@@ -273,7 +273,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .kb.on{transform:translateY(0)}
 .kb button{min-height:56px;border:0;border-radius:9px;background:var(--papel);color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-220);font-weight:600}
 .kb button.ac{background:var(--negro);color:var(--papel);font-size:var(--fs-190)}
-.kb button.ok{grid-column:1 / -1;background:var(--rojo);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.08em;text-transform:uppercase}
+.kb button.ok{grid-column:1 / -1;background:var(--primario);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.08em;text-transform:uppercase}
 
 /* Etapa 4 — evolución del equipo */
 .tabla-ev{display:flex;flex-direction:column;gap:6px;margin-top:10px}
@@ -291,7 +291,7 @@ svg.g{width:100%;display:block;overflow:visible}
    punteada), nunca sólo por color. */
 .leyenda .linea-practica,.leyenda .linea-partido{display:inline-flex;align-items:center;gap:.375rem}
 .leyenda .linea-practica::before,.leyenda .linea-partido::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--negro)}
-.leyenda .linea-partido::before{border-top-color:var(--rojo);border-top-style:dashed}
+.leyenda .linea-partido::before{border-top-color:var(--primario);border-top-style:dashed}
 /* El último dato de cada fuente, a la vista; el historial va en el colapsable. */
 .resumen-serie{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-3)}
 .resumen-fuente{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px var(--sp-2)}
@@ -300,7 +300,7 @@ svg.g{width:100%;display:block;overflow:visible}
    dicha una sola vez. */
 .resumen-fuente .k.linea-practica,.resumen-fuente .k.linea-partido{display:inline-flex;align-items:center;gap:.375rem}
 .resumen-fuente .k.linea-practica::before,.resumen-fuente .k.linea-partido::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--negro)}
-.resumen-fuente .k.linea-partido::before{border-top-color:var(--rojo);border-top-style:dashed}
+.resumen-fuente .k.linea-partido::before{border-top-color:var(--primario);border-top-style:dashed}
 
 /* Etapa 4 — ficha del jugador: partido a partido */
 .tabla-part{display:flex;flex-direction:column;gap:8px;margin-top:10px}
@@ -314,7 +314,7 @@ svg.g{width:100%;display:block;overflow:visible}
 /* Etapa 4 — evolución del equipo: series de tiro (2P/3P/TL). Mismo patrón
    que .linea-practica/.linea-partido: color Y trazo, nunca sólo color. */
 .leyenda .s2,.leyenda .s3,.leyenda .sl{display:inline-flex;align-items:center;gap:.375rem}
-.leyenda .s2::before,.leyenda .s3::before,.leyenda .sl::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--rojo)}
+.leyenda .s2::before,.leyenda .s3::before,.leyenda .sl::before{content:"";display:inline-block;width:.875rem;height:0;border-top:.15625rem solid var(--primario)}
 .leyenda .s3::before{border-top-color:var(--negro)}
 .leyenda .sl::before{border-top-color:var(--gris-cl);border-top-style:dashed}
 
@@ -322,7 +322,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .lista-chk{display:flex;flex-direction:column;max-height:40vh;overflow-y:auto;margin:8px 0}
 .chk-fila{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 2px;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
 .chk-fila input{width:22px;height:22px;flex:0 0 auto}
-.enlace-rec{display:inline-block;margin-top:6px;font-size:var(--fs-135);color:var(--rojo)}
+.enlace-rec{display:inline-block;margin-top:6px;font-size:var(--fs-135);color:var(--primario)}
 /* Con el teclado abierto, las últimas filas de la lista quedarían debajo de
    él. Este hueco las deja alcanzables scrolleando. */
 .espacio-kb{height:17rem}
@@ -375,12 +375,12 @@ svg.g{width:100%;display:block;overflow:visible}
 .zona-cab .frac{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-125);color:var(--gris-cl)}
 .zona-barra{display:grid;grid-template-columns:1fr 2.75rem;align-items:center;gap:8px;margin-top:4px}
 .zona-barra .pista{position:relative;height:16px;background:var(--linea);border-radius:8px;overflow:hidden}
-.zona-barra .relleno{height:100%;background:var(--rojo);border-radius:8px}
+.zona-barra .relleno{height:100%;background:var(--primario);border-radius:8px}
 .zona-barra .meta{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--negro)}
 .zona-barra .relleno.llego{background:var(--negro)}
 .zona-barra .pct{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-145);font-weight:600;color:var(--tinta);text-align:right}
 .var{display:inline-block;margin-top:4px;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase}
-.var.sube{color:var(--rojo)}
+.var.sube{color:var(--primario)}
 .var.baja{color:var(--negro)}
 .var.neutra{color:var(--gris-cl)}
 .sep{height:1px;background:var(--linea);margin:18px 0}
@@ -395,24 +395,24 @@ svg.g{width:100%;display:block;overflow:visible}
 .curva{display:block;width:100%;margin-top:10px;padding:0;border:0;background:none;text-align:left}
 .curva .chispa{width:100%;display:block}
 .curva-pie{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;font-size:var(--fs-125);color:var(--gris-cl)}
-.curva-pie .ver{color:var(--rojo);white-space:nowrap}
+.curva-pie .ver{color:var(--primario);white-space:nowrap}
 .curva-zona{margin:16px 0}
-.btn-zona-recurso{border:0;background:none;padding:0;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--rojo)}
+.btn-zona-recurso{border:0;background:none;padding:0;font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
 
 /* Etapa 5 — pestañas internas de RECURSOS. No es navegación: no se agrega un
    sexto ítem a la barra de abajo, que en celular ya está al límite. */
 .pestanas{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--linea)}
 .pest{min-height:48px;border:0;background:none;color:var(--gris-cl);font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-160);letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid transparent}
-.pest.on{color:var(--tinta);border-bottom-color:var(--rojo)}
+.pest.on{color:var(--tinta);border-bottom-color:var(--primario)}
 
 /* Etapa 5 — lista de ejercicios */
 .chips-tema{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .chip-tema{min-height:40px;padding:0 12px;border:1px solid var(--linea);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
-.chip-tema.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.chip-tema.on{background:var(--primario);border-color:var(--primario);color:#fff}
 .ejercicio{display:block;width:100%;text-align:left;padding:12px 0;border:0;border-bottom:1px solid var(--linea);background:none}
 .ejercicio .cab{display:flex;align-items:baseline;gap:8px}
 .ejercicio .tema{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.ejercicio .probado{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--rojo)}
+.ejercicio .probado{font-family:'Barlow Condensed',sans-serif;font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
 .ejercicio .tit{font-size:var(--fs-160);color:var(--tinta);margin:2px 0}
 .ejercicio .autor{font-size:var(--fs-125);color:var(--gris-cl)}
 
@@ -440,7 +440,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .fila-menor{display:flex;gap:var(--sp-3);padding:.25rem 0;font-size:var(--fs-125)}
 .fila-menor .k{flex:0 0 6rem;color:var(--gris-cl);text-transform:uppercase;letter-spacing:.05em;font-size:var(--fs-100)}
 .fila-menor .v{color:var(--tinta)}
-.fila-menor a{color:var(--rojo)}
+.fila-menor a{color:var(--primario)}
 
 /* ---- coordinación ---- */
 .panorama{display:grid;gap:var(--sp-4)}
@@ -462,10 +462,10 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* ---- mi perfil ---- */
 .perfil-cab{display:flex;align-items:center;gap:var(--sp-4);background:var(--negro);color:#fff;border-radius:var(--r);padding:var(--sp-5) var(--sp-4);margin-bottom:var(--sp-3)}
-.perfil-avatar{flex:0 0 auto;width:4.5rem;height:4.5rem;border-radius:50%;border:3px solid var(--rojo);background:var(--sup-2);display:flex;align-items:center;justify-content:center;font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;color:#fff}
+.perfil-avatar{flex:0 0 auto;width:4.5rem;height:4.5rem;border-radius:50%;border:3px solid var(--primario);background:var(--sup-2);display:flex;align-items:center;justify-content:center;font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;color:#fff}
 .perfil-id{min-width:0}
 .perfil-roles{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
-.perfil-rol{font-family:var(--ff-titulo);font-size:var(--fs-100);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;border:1px solid var(--rojo);border-radius:999px;padding:.125rem .5rem}
+.perfil-rol{font-family:var(--ff-titulo);font-size:var(--fs-100);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;border:1px solid var(--primario);border-radius:999px;padding:.125rem .5rem}
 .perfil-nombre{font-family:var(--ff-titulo);font-size:var(--fs-250);font-weight:700;text-transform:uppercase;line-height:1.05;margin-top:var(--sp-2);overflow-wrap:anywhere}
 .perfil-cab .sin{color:var(--gris-osc);font-style:italic;text-transform:none;font-weight:500;font-size:var(--fs-190)}
 .perfil-cab .det{color:var(--gris-osc);font-size:var(--fs-125);margin-top:var(--sp-1)}
@@ -488,7 +488,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .fuente .k{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
 .fuente .numero{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--sp-2);margin-top:.125rem}
 /* Jerarquía, no señal: el mismo rojo con cualquier valor (spec §6). */
-.fuente .n{font-family:var(--ff-mono);font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--rojo)}
+.fuente .n{font-family:var(--ff-mono);font-size:var(--fs-300);font-weight:600;line-height:1;color:var(--primario)}
 .fuente .n .u{font-size:var(--fs-190);color:var(--gris-cl)}
 .fuente .frac{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--gris-cl)}
 .fuente .vacio{font-size:var(--fs-135);color:var(--gris-cl);margin-top:var(--sp-1)}

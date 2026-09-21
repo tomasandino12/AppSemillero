@@ -27,7 +27,7 @@
 /* ---- landing ---- */
 .hero{padding:var(--sp-6) var(--sp-4) var(--sp-5);text-align:center}
 .hero h1{font-size:clamp(1.75rem,1.35rem + 2vw,2.75rem);line-height:1.03;letter-spacing:.01em}
-.hero h1 .r{color:var(--rojo)}
+.hero h1 .r{color:var(--primario)}
 .hero .bajada{color:var(--gris-osc);font-size:var(--fs-170);line-height:1.45;margin:var(--sp-4) auto 0;max-width:34rem}
 
 .acciones-landing{display:flex;flex-direction:column;gap:var(--sp-3);padding:0 var(--sp-4) var(--sp-6);max-width:24rem;margin-inline:auto;width:100%}
@@ -39,7 +39,7 @@
   text-transform:uppercase;letter-spacing:.04em;line-height:1.15;
   display:flex;align-items:baseline;gap:var(--sp-2);
 }
-.ben .t::before{content:"";width:.4375rem;height:.4375rem;background:var(--rojo);flex:0 0 auto;transform:translateY(-.15em)}
+.ben .t::before{content:"";width:.4375rem;height:.4375rem;background:var(--primario);flex:0 0 auto;transform:translateY(-.15em)}
 .ben .d{color:var(--gris-osc);font-size:var(--fs-135);line-height:1.5;margin-top:var(--sp-2)}
 
 /* Lo único que se dice del futuro, y se dice separado de lo que ya anda. */
@@ -76,9 +76,9 @@
   background:var(--sup-2);border:1px solid var(--linea-osc);border-radius:.5625rem;
   color:#fff;font-size:var(--fs-160);
 }
-.campo-osc select:focus{border-color:var(--rojo)}
+.campo-osc select:focus{border-color:var(--primario)}
 .campo-osc input::placeholder{color:#7C7870}
-.campo-osc input:focus{border-color:var(--rojo)}
+.campo-osc input:focus{border-color:var(--primario)}
 .campo-osc .ayuda{font-size:var(--fs-115);color:var(--gris-osc);margin-top:var(--sp-1)}
 
 /* El aviso de la app es blanco sobre papel; acá tiene que vivir en oscuro. */
@@ -118,7 +118,7 @@
   min-height:var(--tap);display:flex;align-items:center;padding:0 var(--sp-2);
   color:var(--gris-osc);font-size:var(--fs-135);
 }
-.enlaces button b{color:var(--rojo);font-family:var(--ff-titulo);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-left:.35em}
+.enlaces button b{color:var(--primario);font-family:var(--ff-titulo);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-left:.35em}
 
 /* ---- cuenta sin club ---- */
 .sin-club{max-width:28rem;margin-inline:auto;width:100%;padding:var(--sp-6) var(--sp-4) var(--sp-8);text-align:center}
@@ -126,7 +126,7 @@
   width:3.5rem;height:3.5rem;margin:0 auto var(--sp-4);border-radius:50%;
   background:var(--sup-1);border:1px solid var(--linea-osc);
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:700;color:var(--rojo);
+  font-family:var(--ff-titulo);font-size:var(--fs-260);font-weight:700;color:var(--primario);
 }
 .sin-club .btn + .d{margin-top:var(--sp-5)}
 .sin-club .d + .btn{margin-top:var(--sp-2)}
