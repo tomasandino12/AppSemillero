@@ -65,19 +65,22 @@ function puntosTriangulo(cx, cy, r) {
   ].map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 }
 
-function dibujarFicha(ficha, p, alto) {
+/** El color depende de quién es "nosotros" en esta jugada; la forma y el número siguen atados a ficha.tipo. */
+function dibujarFicha(ficha, p, alto, nosotrosDefiende = false) {
   const x = p.x * W;
   const y = p.y * alto;
   const id = `data-ficha-id="${ficha.id}"`;
   if (ficha.tipo === 'cono') {
     return `<polygon points="${puntosTriangulo(x, y, R_FICHA * 0.6)}" class="pz-cono" ${id}/>`;
   }
+  const esNuestra = nosotrosDefiende ? ficha.tipo === 'defensa' : ficha.tipo === 'ataque';
+  const claseColor = esNuestra ? 'pz-nosotros' : 'pz-rival';
   if (ficha.tipo === 'defensa') {
-    let g = `<polygon points="${puntosTriangulo(x, y, R_FICHA + 2)}" class="pz-defensa" ${id}/>`;
+    let g = `<polygon points="${puntosTriangulo(x, y, R_FICHA + 2)}" class="${claseColor}" ${id}/>`;
     if (ficha.numero != null) g += `<text x="${x}" y="${y + 5}" class="pz-numero pz-numero-defensa" ${id}>${ficha.numero}</text>`;
     return g;
   }
-  let g = `<circle cx="${x}" cy="${y}" r="${R_FICHA}" class="pz-ataque" ${id}/>`;
+  let g = `<circle cx="${x}" cy="${y}" r="${R_FICHA}" class="${claseColor}" ${id}/>`;
   if (ficha.numero != null) g += `<text x="${x}" y="${y + 4}" class="pz-numero pz-numero-ataque" ${id}>${ficha.numero}</text>`;
   return g;
 }
@@ -205,7 +208,7 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
   g += fondoDeCancha(datos.cancha);
   g += dibujarAcciones(datos, opciones.paso, alto, uid);
   for (const ficha of datos.fichas) {
-    g += dibujarFicha(ficha, estado.posiciones.get(ficha.id) ?? ficha, alto);
+    g += dibujarFicha(ficha, estado.posiciones.get(ficha.id) ?? ficha, alto, opciones.nosotrosDefiende);
   }
   if (pelotaEn) g += dibujarPelota(pelotaEn, estado.posiciones, alto);
 

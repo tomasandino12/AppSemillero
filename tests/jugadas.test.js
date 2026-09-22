@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TOPES, jugadaVacia, validarJugada, estadoAlInicioDelPaso, aplicarAccion,
-  duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion, etiquetaDeTipo,
+  duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion, etiquetaDeTipo, nosotrosDefiende,
   proximoNumeroLibre, agregarFicha, quitarFicha, moverFicha, quitarAccion,
   fijarControlDeAccion, agregarPaso, quitarPaso, fijarNotaDePaso,
 } from '../src/data/jugadas.js';
@@ -141,6 +141,14 @@ test('etiquetaDeTipo devuelve la etiqueta o el valor crudo', () => {
   assert.equal(etiquetaDeTipo('lateral'), 'Salida de lateral');
   assert.equal(etiquetaDeTipo('inventado'), 'inventado');
   assert.equal(etiquetaDeTipo(null), '');
+});
+
+test('nosotrosDefiende sólo en Presión y Defensa', () => {
+  assert.equal(nosotrosDefiende('presion'), true);
+  assert.equal(nosotrosDefiende('defensa'), true);
+  assert.equal(nosotrosDefiende('ataque'), false);
+  assert.equal(nosotrosDefiende('lateral'), false);
+  assert.equal(nosotrosDefiende('otro'), false);
 });
 
 test('proximoNumeroLibre da el más bajo libre y null si están los cinco', () => {

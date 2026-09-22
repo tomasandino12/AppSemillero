@@ -4,7 +4,9 @@
  * completa, pensado para el celular.
  */
 import { misJugadas } from '../../data/repositorio.js';
-import { TIPOS_JUGADA, etiquetaDeTipo, estadoAlInicioDelPaso } from '../../data/jugadas.js';
+import {
+  TIPOS_JUGADA, etiquetaDeTipo, estadoAlInicioDelPaso, nosotrosDefiende,
+} from '../../data/jugadas.js';
 import { dibujarPizarra } from '../componentes/pizarra.js';
 import { montarVisor } from '../componentes/visorJugada.js';
 import { html, crudo } from '../html.js';
@@ -24,7 +26,7 @@ function cerrarVisorCompleto() {
 
 function abrirVisorCompleto(jugada) {
   $('jug-visor-completo').hidden = false;
-  visorActivo = montarVisor($('jug-visor-completo-cuerpo'), jugada.datos);
+  visorActivo = montarVisor($('jug-visor-completo-cuerpo'), jugada.datos, nosotrosDefiende(jugada.tipo));
 }
 
 /** Se cablea una sola vez: el botón de cerrar vive siempre en el DOM (index.html), como #hoja. */
@@ -86,7 +88,7 @@ export async function renderJugJugadas() {
   contenedor().querySelectorAll('[data-jugada]').forEach((el) => {
     const jugada = jugadas.find((j) => j.id === el.dataset.jugada);
     if (!jugada) return;
-    dibujarPizarra(el.querySelector('svg.pz'), jugada.datos, estadoAlInicioDelPaso(jugada.datos, 0), {});
+    dibujarPizarra(el.querySelector('svg.pz'), jugada.datos, estadoAlInicioDelPaso(jugada.datos, 0), { nosotrosDefiende: nosotrosDefiende(jugada.tipo) });
     el.addEventListener('click', () => abrirVisorCompleto(jugada));
   });
 }

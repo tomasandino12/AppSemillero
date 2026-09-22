@@ -649,8 +649,8 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .pz-linea{stroke:var(--linea);stroke-width:1.5}
 .pz-aro{stroke:var(--tinta);stroke-width:2}
 .pz-tablero{stroke:var(--tinta);stroke-width:2}
-.pz-ataque{fill:var(--primario)}
-.pz-defensa{fill:var(--tinta)}
+.pz-nosotros{fill:var(--primario)}
+.pz-rival{fill:var(--tinta)}
 .pz-cono{fill:var(--gris-cl);stroke:var(--gris);stroke-width:1}
 .pz-pelota{fill:var(--tinta)}
 .pz-numero{text-anchor:middle;font-family:var(--ff-mono);font-size:var(--fs-115);font-weight:600}

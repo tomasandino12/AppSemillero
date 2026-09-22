@@ -6,7 +6,7 @@
 import {
   obtenerJugada, guardarJugada, borrarJugada, crearJugada, plantelesDeJugada, asignarJugada,
 } from '../../data/repositorio.js';
-import { etiquetaDeTipo, duplicarDatos } from '../../data/jugadas.js';
+import { etiquetaDeTipo, duplicarDatos, nosotrosDefiende } from '../../data/jugadas.js';
 import { LIMITE } from '../../data/limites.js';
 import { obtenerClubActual, obtenerPlanteles } from '../sesion.js';
 import { nombreDe } from '../perfil.js';
@@ -53,7 +53,7 @@ function pintarJugada(club, jugada) {
     </div>
   `;
 
-  visorActual = montarVisor($('jugada-visor'), jugada.datos);
+  visorActual = montarVisor($('jugada-visor'), jugada.datos, nosotrosDefiende(jugada.tipo));
 
   if (jugada.esMia) {
     $('btn-jug-editar').addEventListener('click', () => abrirEditorDeJugada(jugada.id));
@@ -62,7 +62,7 @@ function pintarJugada(club, jugada) {
   $('btn-jug-duplicar').addEventListener('click', () => duplicarJugada(club, jugada));
   $('btn-jug-asignar').addEventListener('click', () => abrirAsignacion(club, jugada));
   $('btn-jug-descargar').addEventListener('click', () => descargarPasoVisible(jugada));
-  $('btn-jug-imprimir').addEventListener('click', () => imprimirJugada(jugada.datos, jugada.nombre));
+  $('btn-jug-imprimir').addEventListener('click', () => imprimirJugada(jugada.datos, jugada.nombre, jugada.tipo));
   if (jugada.esMia) {
     $('btn-jug-borrar').addEventListener('click', () => confirmarBorrado(club, jugada));
   }

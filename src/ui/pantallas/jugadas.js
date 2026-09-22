@@ -6,7 +6,7 @@
  */
 import { listarJugadas, crearJugada } from '../../data/repositorio.js';
 import {
-  TIPOS_JUGADA, etiquetaDeTipo, pantallaAptaParaEditar, estadoAlInicioDelPaso,
+  TIPOS_JUGADA, etiquetaDeTipo, pantallaAptaParaEditar, estadoAlInicioDelPaso, nosotrosDefiende,
 } from '../../data/jugadas.js';
 import { FORMACIONES } from '../../data/formaciones.js';
 import { obtenerClubActual } from '../sesion.js';
@@ -76,7 +76,7 @@ function pintarMiniaturas(jugadas) {
   contenedor().querySelectorAll('[data-jugada]').forEach((el) => {
     const jugada = jugadas.find((j) => j.id === el.dataset.jugada);
     const svg = el.querySelector('svg.pz');
-    if (jugada && svg) dibujarPizarra(svg, jugada.datos, estadoAlInicioDelPaso(jugada.datos, 0), {});
+    if (jugada && svg) dibujarPizarra(svg, jugada.datos, estadoAlInicioDelPaso(jugada.datos, 0), { nosotrosDefiende: nosotrosDefiende(jugada.tipo) });
   });
 }
 

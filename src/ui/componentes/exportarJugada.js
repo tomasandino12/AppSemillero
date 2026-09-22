@@ -5,7 +5,7 @@
  * PNG necesita entrar en img-src de vercel.json (riesgo del spec).
  */
 import { dibujarPizarra } from './pizarra.js';
-import { estadoAlInicioDelPaso } from '../../data/jugadas.js';
+import { estadoAlInicioDelPaso, nosotrosDefiende } from '../../data/jugadas.js';
 import { escaparHtml } from '../nav.js';
 import { $ } from '../dom.js';
 
@@ -73,16 +73,17 @@ export async function descargarPaso(svg, { nombre, paso, totalPasos }) {
  * sus trazos) y llama a window.print(). El contenedor vive siempre en
  * index.html, oculto salvo en @media print (componentes.css).
  */
-export function imprimirJugada(datos, nombre) {
+export function imprimirJugada(datos, nombre, tipo) {
   const contenedor = $('jugada-impresion');
   const totalPasos = datos.pasos.length;
+  const opcionesColor = { nosotrosDefiende: nosotrosDefiende(tipo) };
   const tiles = [
-    { titulo: 'Formación inicial', nota: '', estado: estadoAlInicioDelPaso(datos, 0), opciones: {} },
+    { titulo: 'Formación inicial', nota: '', estado: estadoAlInicioDelPaso(datos, 0), opciones: opcionesColor },
     ...datos.pasos.map((p, k) => ({
       titulo: `Paso ${k + 1} de ${totalPasos}`,
       nota: p.nota,
       estado: estadoAlInicioDelPaso(datos, k + 1),
-      opciones: { paso: k },
+      opciones: { paso: k, ...opcionesColor },
     })),
   ];
 

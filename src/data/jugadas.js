@@ -25,6 +25,11 @@ export function etiquetaDeTipo(tipo) {
   return TIPOS_JUGADA.find((t) => t.clave === tipo)?.etiqueta ?? String(tipo ?? '');
 }
 
+/** En Presión/Defensa "nosotros" somos el triángulo (defensa); en el resto, el círculo (ataque). */
+export function nosotrosDefiende(tipoJugada) {
+  return tipoJugada === 'presion' || tipoJugada === 'defensa';
+}
+
 const CANCHAS = ['media', 'entera'];
 const TIPOS_FICHA = ['ataque', 'defensa', 'cono'];
 // Acciones que desplazan a la ficha hasta `hasta`.

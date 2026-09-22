@@ -11,7 +11,7 @@ import { estadoEn, DURACION_PASO_MS } from '../../data/animacionJugada.js';
 
 const VELOCIDADES = [0.5, 1, 2];
 
-export function montarVisor(contenedor, datos) {
+export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
   const totalPasos = datos.pasos.length;
   let paso = 0;
   let t = 0;
@@ -49,7 +49,7 @@ export function montarVisor(contenedor, datos) {
   if (!totalPasos) btnJugar.style.display = 'none';
 
   function dibujar() {
-    dibujarPizarra(svg, datos, estadoEn(datos, paso, t), { paso });
+    dibujarPizarra(svg, datos, estadoEn(datos, paso, t), { paso, nosotrosDefiende });
     notaEl.textContent = datos.pasos[paso]?.nota || '';
     indicador.textContent = totalPasos ? `Paso ${paso + 1} de ${totalPasos}` : 'Formación inicial';
   }

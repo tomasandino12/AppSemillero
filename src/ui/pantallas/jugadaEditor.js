@@ -8,7 +8,7 @@ import { obtenerJugada, guardarJugada } from '../../data/repositorio.js';
 import {
   pantallaAptaParaEditar, estadoAlInicioDelPaso, aplicarAccion, proximoNumeroLibre,
   agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion,
-  agregarPaso, quitarPaso, fijarNotaDePaso,
+  agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende,
 } from '../../data/jugadas.js';
 import {
   dibujarPizarra, puntoDesdeEvento, fichaEnPunto, resaltoDeFicha, puntoDeControl, asaDeControl,
@@ -94,7 +94,10 @@ function pintarCancha(datos) {
   const svg = $('jed-svg');
   if (!svg) return;
   const estado = estadoAlInicioDelPaso(datos, pasoActual);
-  dibujarPizarra(svg, datos, estado, { paso: pasoActual < datos.pasos.length ? pasoActual : undefined });
+  dibujarPizarra(svg, datos, estado, {
+    paso: pasoActual < datos.pasos.length ? pasoActual : undefined,
+    nosotrosDefiende: nosotrosDefiende(jugadaMeta.tipo),
+  });
   if (origenAccion) {
     svg.insertAdjacentHTML('beforeend', resaltoDeFicha(datos, estado, origenAccion));
   } else if (seleccion?.tipo === 'ficha') {
@@ -353,7 +356,7 @@ function abrirAnimacion() {
     cuerpo: html`<div id="jed-visor-modal"></div>`,
     alCerrar: () => { visorAnimacion?.desmontar(); visorAnimacion = null; },
   });
-  visorAnimacion = montarVisor($('jed-visor-modal'), datosActuales());
+  visorAnimacion = montarVisor($('jed-visor-modal'), datosActuales(), nosotrosDefiende(jugadaMeta.tipo));
 }
 
 async function guardar() {

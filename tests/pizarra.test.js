@@ -1,7 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { iconoDeAccion } from '../src/ui/componentes/pizarra.js';
-import { TIPOS_ACCION } from '../src/data/jugadas.js';
+import { iconoDeAccion, dibujarPizarra } from '../src/ui/componentes/pizarra.js';
+import { TIPOS_ACCION, jugadaVacia, estadoAlInicioDelPaso } from '../src/data/jugadas.js';
+
+/** dibujarPizarra sólo necesita estos miembros de un <svg> real. */
+function svgFalso() {
+  return { dataset: {}, style: {}, setAttribute() {}, innerHTML: '' };
+}
+
+const conUnDefensor = () => ({
+  ...jugadaVacia(),
+  fichas: [{ id: 'd1', tipo: 'defensa', numero: 1, x: 0.5, y: 0.5 }],
+});
 
 test('iconoDeAccion usa las clases del trazo real', () => {
   for (const tipo of TIPOS_ACCION) {
@@ -49,4 +59,19 @@ test('el ícono no trae trazo de toque', () => {
 test('todos los íconos comparten el viewBox', () => {
   const viewBoxes = TIPOS_ACCION.map((tipo) => iconoDeAccion(tipo).match(/viewBox="([^"]+)"/)[1]);
   for (const vb of viewBoxes) assert.equal(vb, viewBoxes[0]);
+});
+
+test('el color de un defensor depende de nosotrosDefiende', () => {
+  const datos = conUnDefensor();
+  const estado = estadoAlInicioDelPaso(datos, 0);
+
+  const rival = svgFalso();
+  dibujarPizarra(rival, datos, estado, {});
+  assert.ok(rival.innerHTML.includes('class="pz-rival" data-ficha-id="d1"'));
+  assert.ok(!rival.innerHTML.includes('pz-nosotros'));
+
+  const nuestro = svgFalso();
+  dibujarPizarra(nuestro, datos, estado, { nosotrosDefiende: true });
+  assert.ok(nuestro.innerHTML.includes('class="pz-nosotros" data-ficha-id="d1"'));
+  assert.ok(!nuestro.innerHTML.includes('pz-rival'));
 });
