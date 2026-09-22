@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TOPES, jugadaVacia, validarJugada, estadoAlInicioDelPaso, aplicarAccion,
-  duplicarDatos, pantallaAptaParaEditar,
+  duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion,
 } from '../src/data/jugadas.js';
 import { LIMITE } from '../src/data/limites.js';
 
@@ -125,4 +125,11 @@ test('pantallaAptaParaEditar usa el lado corto', () => {
   assert.equal(pantallaAptaParaEditar(768, 1024), true);
   assert.equal(pantallaAptaParaEditar(375, 812), false);
   assert.equal(pantallaAptaParaEditar(1000, 599), false);
+});
+
+test('asignacion calcula altas y bajas', () => {
+  assert.deepEqual(diferenciaDeAsignacion(['p1', 'p2'], ['p2', 'p3']), { altas: ['p3'], bajas: ['p1'] });
+  assert.deepEqual(diferenciaDeAsignacion([], ['p1']), { altas: ['p1'], bajas: [] });
+  assert.deepEqual(diferenciaDeAsignacion(['p1'], []), { altas: [], bajas: ['p1'] });
+  assert.deepEqual(diferenciaDeAsignacion(['p1'], ['p1']), { altas: [], bajas: [] });
 });

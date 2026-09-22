@@ -171,3 +171,13 @@ export function aplicarAccion(datos, k, accion) {
   if (!ok) throw new Error(errores[0]);
   return nuevos;
 }
+
+/** Qué planteles hay que sumar y sacar para que `actuales` termine igual a `deseados`. */
+export function diferenciaDeAsignacion(actuales, deseados) {
+  const actualesSet = new Set(actuales);
+  const deseadosSet = new Set(deseados);
+  return {
+    altas: deseados.filter((id) => !actualesSet.has(id)),
+    bajas: actuales.filter((id) => !deseadosSet.has(id)),
+  };
+}
