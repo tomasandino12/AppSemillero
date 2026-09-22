@@ -132,6 +132,8 @@ function svgDeTrazo({ tipo, desde, hasta, control }, alto, idFlecha, extra = '')
 }
 
 function dibujarTrazo(a, indice, inicio, cancha, alto, uid) {
+  // 'ajuste' es un arrastre invisible: reposiciona la ficha sin dejar flecha ni trazo de toque.
+  if (a.tipo === 'ajuste') return '';
   const desde = inicio.posiciones.get(a.ficha);
   const hasta = a.tipo === 'tiro' ? (AROS[cancha] ?? AROS.media)
     : (a.tipo === 'pase' || a.tipo === 'handoff') ? inicio.posiciones.get(a.a)

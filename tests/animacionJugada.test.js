@@ -82,6 +82,14 @@ test('trazo de dribbling es zigzag', () => {
   assert.ok(lados.every((s, i) => i === 0 || s !== lados[i - 1]), 'alterna de lado en cada diente');
 });
 
+test('ajuste interpola igual que corte (recta sin control)', () => {
+  const base = jugada();
+  const conCorte = { ...base, pasos: [{ acciones: [{ tipo: 'corte', ficha: 'a2', hasta: { x: 0.4, y: 0.4 } }], nota: '' }] };
+  const conAjuste = { ...base, pasos: [{ acciones: [{ tipo: 'ajuste', ficha: 'a2', hasta: { x: 0.4, y: 0.4 } }], nota: '' }] };
+  igualPunto(estadoEn(conAjuste, 0, 0.5).posiciones.get('a2'), estadoEn(conCorte, 0, 0.5).posiciones.get('a2'));
+  igualPunto(estadoEn(conAjuste, 0, 1).posiciones.get('a2'), { x: 0.4, y: 0.4 });
+});
+
 test('t se recorta a 0–1', () => {
   igualPunto(puntoEnTrazo({ x: 0, y: 0 }, { x: 1, y: 1 }, null, -3), { x: 0, y: 0 });
   igualPunto(puntoEnTrazo({ x: 0, y: 0 }, { x: 1, y: 1 }, null, 7), { x: 1, y: 1 });

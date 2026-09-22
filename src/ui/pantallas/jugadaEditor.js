@@ -7,7 +7,7 @@
 import { obtenerJugada, guardarJugada } from '../../data/repositorio.js';
 import {
   pantallaAptaParaEditar, estadoAlInicioDelPaso, aplicarAccion, proximoNumeroLibre,
-  agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion,
+  agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion, ajustarFicha,
   agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende,
 } from '../../data/jugadas.js';
 import {
@@ -245,12 +245,8 @@ function alPunteroBajar(evento) {
   if (herramienta === 'seleccionar') {
     if (fichaId) {
       seleccion = { tipo: 'ficha', id: fichaId };
-      if (pasoActual === 0) {
-        svg.setPointerCapture(evento.pointerId);
-        arrastre = { tipo: 'ficha', id: fichaId, datosBase: datos };
-      } else {
-        toast('Las posiciones salen de los pasos anteriores.');
-      }
+      svg.setPointerCapture(evento.pointerId);
+      arrastre = { tipo: 'ficha', id: fichaId, datosBase: datos };
       render();
       return;
     }
@@ -285,7 +281,9 @@ function alPunteroMover(evento) {
   let vista;
   try {
     vista = arrastre.tipo === 'ficha'
-      ? moverFicha(arrastre.datosBase, arrastre.id, punto.x, punto.y)
+      ? (pasoActual === 0
+        ? moverFicha(arrastre.datosBase, arrastre.id, punto.x, punto.y)
+        : ajustarFicha(arrastre.datosBase, pasoActual, arrastre.id, punto.x, punto.y))
       : fijarControlDeAccion(arrastre.datosBase, pasoActual, seleccion.indice, { x: punto.x, y: punto.y });
   } catch {
     return; // un punto momentáneamente fuera de rango no aborta el arrastre: se recorta y sigue.

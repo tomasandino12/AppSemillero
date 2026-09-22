@@ -19,6 +19,9 @@ export const TIPOS_JUGADA = [
 ];
 
 export const TIPOS_ACCION = ['corte', 'dribbling', 'pase', 'cortina', 'tiro', 'handoff'];
+// 'ajuste' no es una herramienta de la barra (no entra en TIPOS_ACCION): es el
+// arrastre libre de "Seleccionar" en un paso >0, invisible en la cancha.
+const TIPOS_ACCION_VALIDOS = [...TIPOS_ACCION, 'ajuste'];
 
 /** El nombre para mostrar. Si el tipo no está en la lista devuelve el valor crudo. */
 export function etiquetaDeTipo(tipo) {
@@ -33,7 +36,7 @@ export function nosotrosDefiende(tipoJugada) {
 const CANCHAS = ['media', 'entera'];
 const TIPOS_FICHA = ['ataque', 'defensa', 'cono'];
 // Acciones que desplazan a la ficha hasta `hasta`.
-const DE_MOVIMIENTO = ['corte', 'dribbling', 'cortina'];
+const DE_MOVIMIENTO = ['corte', 'dribbling', 'cortina', 'ajuste'];
 // Acciones que sólo puede hacer quien tiene la pelota.
 const CON_PELOTA = ['dribbling', 'pase', 'tiro', 'handoff'];
 // Acciones que le entregan la pelota a otra ficha (`a`).
@@ -119,7 +122,7 @@ export function validarJugada(datos) {
     let conPelotaDespues = conPelota;
     let usoPelota = false;
     for (const a of acciones) {
-      if (!a || !TIPOS_ACCION.includes(a.tipo)) { errores.push(`Hay una acción desconocida en el paso ${n}.`); continue; }
+      if (!a || !TIPOS_ACCION_VALIDOS.includes(a.tipo)) { errores.push(`Hay una acción desconocida en el paso ${n}.`); continue; }
       const ficha = porId.get(a.ficha);
       if (!ficha) { errores.push(`Una acción del paso ${n} es de una ficha que no existe.`); continue; }
 
@@ -218,6 +221,24 @@ export function moverFicha(datos, fichaId, x, y) {
   if (!ficha) throw new Error('Esa ficha no existe.');
   ficha.x = x;
   ficha.y = y;
+  return conValidacion(nuevos);
+}
+
+/**
+ * Arrastre libre de una ficha en cualquier paso, sin dejar trazo. En el paso 0
+ * delega en moverFicha (ahí se guarda la posición base). En un paso >0 agrega
+ * o actualiza una acción invisible `ajuste`; si la ficha ya tiene un
+ * corte/dribbling/cortina en ese paso, la validación de "se mueve dos veces"
+ * la rechaza sola (DE_MOVIMIENTO ya incluye 'ajuste').
+ */
+export function ajustarFicha(datos, k, fichaId, x, y) {
+  if (k === 0) return moverFicha(datos, fichaId, x, y);
+  if (!Number.isInteger(k) || k < 0 || k >= datos.pasos.length) throw new Error('Ese paso no existe.');
+  const nuevos = duplicarDatos(datos);
+  const acciones = nuevos.pasos[k].acciones;
+  const existente = acciones.find((a) => a.tipo === 'ajuste' && a.ficha === fichaId);
+  if (existente) existente.hasta = { x, y };
+  else acciones.push({ tipo: 'ajuste', ficha: fichaId, hasta: { x, y } });
   return conValidacion(nuevos);
 }
 

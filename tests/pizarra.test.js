@@ -61,6 +61,25 @@ test('todos los íconos comparten el viewBox', () => {
   for (const vb of viewBoxes) assert.equal(vb, viewBoxes[0]);
 });
 
+test('un ajuste no dibuja ningún trazo, a diferencia de un corte', () => {
+  const datos = {
+    ...jugadaVacia(),
+    fichas: [{ id: 'd1', tipo: 'defensa', numero: 1, x: 0.5, y: 0.5 }],
+    pasos: [{ acciones: [{ tipo: 'ajuste', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } }], nota: '' }],
+  };
+  // data-accion-indice sólo lo agrega dibujarTrazo: la cancha de fondo también
+  // trae algún <path> (el arco de tres), por eso no alcanza con buscar "<path".
+  const svgAjuste = svgFalso();
+  dibujarPizarra(svgAjuste, datos, estadoAlInicioDelPaso(datos, 0), { paso: 0 });
+  assert.ok(!svgAjuste.innerHTML.includes('data-accion-indice'), 'un ajuste no debería dibujar el trazo de la acción');
+  assert.ok(!svgAjuste.innerHTML.includes('pz-trazo'), 'un ajuste no debería traer ninguna clase pz-trazo');
+
+  const conCorte = { ...datos, pasos: [{ acciones: [{ tipo: 'corte', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } }], nota: '' }] };
+  const svgCorte = svgFalso();
+  dibujarPizarra(svgCorte, conCorte, estadoAlInicioDelPaso(conCorte, 0), { paso: 0 });
+  assert.ok(svgCorte.innerHTML.includes('data-accion-indice'), 'un corte sí debería dibujar el trazo de la acción');
+});
+
 test('el color de un defensor depende de nosotrosDefiende', () => {
   const datos = conUnDefensor();
   const estado = estadoAlInicioDelPaso(datos, 0);

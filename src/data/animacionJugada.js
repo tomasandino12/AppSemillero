@@ -12,7 +12,7 @@ export const DURACION_PASO_MS = 1200;
 /** Posición del aro según la cancha (medidas FIBA reales, geometriaCancha.js); los ataques van hacia arriba (y chico). */
 export { AROS };
 
-const DE_MOVIMIENTO = ['corte', 'dribbling', 'cortina'];
+const DE_MOVIMIENTO = ['corte', 'dribbling', 'cortina', 'ajuste'];
 const DE_ENTREGA = ['pase', 'handoff'];
 
 // Zigzag del dribbling, en unidades de cancha (0–1).
