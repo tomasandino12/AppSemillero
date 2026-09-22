@@ -402,6 +402,13 @@
 <div class="jugada-impresion" id="jugada-impresion"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-tx"></span></div>
 
+<!-- Sesión cerrada sola (token vencido, revocado desde otro dispositivo): a
+     diferencia del toast, se queda fija hasta que la persona vuelve a entrar. -->
+<div class="aviso-sesion" id="aviso-sesion" role="alert">
+  <div class="tx">Tu sesión se cerró. Volvé a entrar: lo que cargaste sigue en el celular.</div>
+  <button class="btn chico" id="btn-aviso-sesion-entrar">Volver a entrar</button>
+</div>
+
 <input type="file" id="input-archivo" accept=".xlsx" class="sr" tabindex="-1" aria-hidden="true">
 <!-- Input propio y no #input-archivo: ése manda derecho a la confirmación de
      partido, y compartirlo obligaría a llevar estado de qué flujo lo abrió. -->

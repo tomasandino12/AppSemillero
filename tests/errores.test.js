@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  SIN_CONEXION, textoDeError, avisoDeError, mensajeAlGuardar,
+  SIN_CONEXION, SESION_CERRADA, textoDeError, avisoDeError, mensajeAlGuardar,
+  marcarSesionCerrada, desmarcarSesionCerrada,
 } from '../src/ui/errores.js';
 
 const errorDeRed = new TypeError('Failed to fetch');
@@ -35,4 +36,20 @@ test('mensajeAlGuardar: la pantalla puede decir qué mensaje cuenta como falta d
   const permiso = /NO_SE_PUDO/;
   assert.equal(mensajeAlGuardar(new Error('NO_SE_PUDO_X'), { permiso }), 'No tenés permiso para hacer eso.');
   assert.equal(mensajeAlGuardar(new Error('otra'), { permiso, generico: 'Falló.' }), 'Falló.');
+});
+
+test('con la sesión marcada como cerrada, un 42501 da SESION_CERRADA en vez de "sin permiso"', () => {
+  const permiso = { code: '42501', message: '' };
+  assert.equal(mensajeAlGuardar(permiso), 'No tenés permiso para hacer eso.');
+  marcarSesionCerrada();
+  try {
+    assert.equal(mensajeAlGuardar(permiso), SESION_CERRADA);
+    assert.equal(textoDeError(new Error('permission denied'), 'No se pudo cargar.'), SESION_CERRADA);
+    // Un error de red sigue siendo un error de red, marca puesta o no.
+    assert.equal(textoDeError(new TypeError('Failed to fetch'), 'No se pudo cargar.'), SIN_CONEXION);
+  } finally {
+    desmarcarSesionCerrada();
+  }
+  assert.equal(mensajeAlGuardar(permiso), 'No tenés permiso para hacer eso.');
+  assert.equal(textoDeError(new Error('permission denied'), 'No se pudo cargar.'), 'No se pudo cargar.');
 });

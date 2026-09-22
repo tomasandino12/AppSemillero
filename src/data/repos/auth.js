@@ -9,10 +9,28 @@ export async function iniciarSesion(email, password) {
   return data.session;
 }
 
+let saliendoVoluntariamente = false;
+
 export async function cerrarSesion() {
   const supabase = obtenerCliente();
+  saliendoVoluntariamente = true;
   const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  if (error) {
+    saliendoVoluntariamente = false;
+    throw error;
+  }
+}
+
+/**
+ * Si el SIGNED_OUT que sigue vino de cerrarSesion() y no de que el token se
+ * cayó solo (vencido, revocado desde otro dispositivo). Se consume al leerla:
+ * quien pregunta es el único que necesita saberlo, justo cuando llega el
+ * evento (ver alCambiarAuth en src/ui/publico.js).
+ */
+export function fueSalidaVoluntaria() {
+  const fue = saliendoVoluntariamente;
+  saliendoVoluntariamente = false;
+  return fue;
 }
 
 export async function obtenerSesionActual() {

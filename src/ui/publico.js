@@ -1,12 +1,12 @@
 import {
   iniciarSesion, crearCuenta, enviarRecuperacionDeClave, cambiarClave,
   entrarConGoogle, cerrarSesion, alCambiarAuth, guardarMiNombre,
-  miPedidoDescartado, volverAPedirAcceso,
+  miPedidoDescartado, volverAPedirAcceso, fueSalidaVoluntaria,
 } from '../data/repositorio.js';
 import { normalizarNombre } from '../data/cuenta.js';
 import { esErrorDeRed } from './nav.js';
 import { $ } from './dom.js';
-import { SIN_CONEXION, textoDeError } from './errores.js';
+import { SIN_CONEXION, textoDeError, marcarSesionCerrada, desmarcarSesionCerrada } from './errores.js';
 import {
   iniciarSolicitudJugador, abrirSolicitudJugador, solicitudPendiente, textoDeSolicitudPendiente,
 } from './pantallas/solicitudJugador.js';
@@ -338,6 +338,14 @@ async function salirDeLaCuenta() {
   mostrarLanding();
 }
 
+function mostrarAvisoSesionCerrada() {
+  $('aviso-sesion').classList.add('on');
+}
+
+function ocultarAvisoSesionCerrada() {
+  $('aviso-sesion').classList.remove('on');
+}
+
 /* ---------- cableado ---------- */
 
 function alApretarEnter(idCampo, fn) {
@@ -383,10 +391,29 @@ export function iniciarPublico({ onEntrar, onReintentarClub }) {
   });
   $('btn-sin-club-salir').addEventListener('click', salirDeLaCuenta);
 
+  $('btn-aviso-sesion-entrar').addEventListener('click', () => {
+    ocultarAvisoSesionCerrada();
+    mostrarLanding();
+  });
+
   // Supabase avisa con PASSWORD_RECOVERY cuando el usuario vuelve desde el
   // link del mail. main.js ya mira el hash antes de arrancar, así que esto es
   // el respaldo para el caso en que el evento llegue después.
+  //
+  // Un SIGNED_OUT que no vino de cerrarSesion() (salir() en main.js o
+  // salirDeLaCuenta() acá) es la sesión cayéndose sola: token vencido o
+  // cerrada desde otro dispositivo. Ahí la persona no tocó nada, así que "sin
+  // permiso" sería el mensaje equivocado en cualquier pantalla que pise un
+  // 42501 después.
   alCambiarAuth((evento) => {
     if (evento === 'PASSWORD_RECOVERY') mostrarPublico('v-nueva-clave');
+    if (evento === 'SIGNED_OUT' && !fueSalidaVoluntaria()) {
+      marcarSesionCerrada();
+      mostrarAvisoSesionCerrada();
+    }
+    if (evento === 'SIGNED_IN') {
+      desmarcarSesionCerrada();
+      ocultarAvisoSesionCerrada();
+    }
   });
 }

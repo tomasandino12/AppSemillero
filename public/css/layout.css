@@ -215,6 +215,15 @@
 .toast.on{transform:translateY(0)}
 .toast:not(.on){visibility:hidden}
 
+.aviso-sesion{
+  position:fixed;left:var(--sp-4);right:var(--sp-4);
+  top:calc(var(--sp-4) + env(safe-area-inset-top));
+  background:var(--negro);color:var(--sobre-oscuro);
+  padding:var(--sp-3) var(--sp-4);border-radius:var(--r);font-size:var(--fs-135);
+  z-index:70;display:flex;align-items:center;gap:var(--sp-3);justify-content:space-between;
+}
+.aviso-sesion:not(.on){display:none}
+
 /* =====================================================================
    ≥640px — más aire y listas en dos columnas donde tenga sentido.
    La navegación sigue abajo.

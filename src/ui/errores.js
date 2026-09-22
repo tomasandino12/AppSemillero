@@ -7,12 +7,33 @@ import { escaparHtml, esErrorDeRed } from './nav.js';
  */
 
 export const SIN_CONEXION = 'Sin conexión. Revisá tu wifi/datos e intentá de nuevo.';
+export const SESION_CERRADA = 'Tu sesión se cerró. Volvé a entrar: lo que cargaste sigue en el celular.';
 const SIN_PERMISO = 'No tenés permiso para hacer eso.';
 const SIN_PERMISO_EN_TEXTO = /row-level security|permission denied|42501/i;
 
-/** Error de red → el texto de "sin conexión"; cualquier otro → `generico`. */
+/*
+ * Un 42501 después de que Supabase cerró la sesión sola (token vencido,
+ * revocado desde otro dispositivo) no es "no tenés permiso": es que hay que
+ * volver a entrar. alCambiarAuth marca esto apenas ve un SIGNED_OUT que el
+ * usuario no pidió (src/ui/publico.js).
+ */
+let sesionCerrada = false;
+export function marcarSesionCerrada() {
+  sesionCerrada = true;
+}
+export function desmarcarSesionCerrada() {
+  sesionCerrada = false;
+}
+
+function esErrorDePermiso(e, permiso) {
+  return e?.code === '42501' || permiso.test(e?.message ?? '');
+}
+
+/** Error de red → "sin conexión"; permiso con la sesión marcada como cerrada → SESION_CERRADA; cualquier otro → `generico`. */
 export function textoDeError(e, generico) {
-  return esErrorDeRed(e) ? SIN_CONEXION : generico;
+  if (esErrorDeRed(e)) return SIN_CONEXION;
+  if (sesionCerrada && esErrorDePermiso(e, SIN_PERMISO_EN_TEXTO)) return SESION_CERRADA;
+  return generico;
 }
 
 /** El bloque de aviso que reemplaza el contenido de una pantalla que no pudo cargar. */
@@ -38,6 +59,6 @@ export function mensajeAlGuardar(e, {
   for (const [patron, mensaje] of reglas) {
     if (patron.test(texto)) return mensaje;
   }
-  if (e?.code === '42501' || permiso.test(texto)) return SIN_PERMISO;
+  if (esErrorDePermiso(e, permiso)) return sesionCerrada ? SESION_CERRADA : SIN_PERMISO;
   return generico;
 }
