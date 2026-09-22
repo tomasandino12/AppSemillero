@@ -680,6 +680,11 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .pz-numero{text-anchor:middle;font-family:var(--ff-mono);font-size:var(--fs-115);font-weight:600}
 .pz-numero-ataque{fill:var(--sobre-club)}
 .pz-numero-defensa{fill:var(--sobre-oscuro)}
+/* El fantasma de un ajuste (task 6): la misma ficha en su destino, tenue y
+   sin flecha. pointer-events:auto explícito porque .pz-trazo-toque (más
+   abajo) es invisible y ancha: sin esto un fantasma que cae sobre esa franja
+   quedaría por debajo suyo en el toque. */
+.pz-fantasma{opacity:.35;pointer-events:auto;cursor:grab}
 /* Un color de trazo por tipo de acción (--trazo-*, tokens.css): mismo color
    en la barra, la cancha, el visor y el PNG exportado (exportarJugada.js
    copia el estilo computado, así que basta con que esté acá). */

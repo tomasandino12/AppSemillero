@@ -225,18 +225,21 @@ export function moverFicha(datos, fichaId, x, y) {
 }
 
 /**
- * Arrastre libre de una ficha en cualquier paso, sin dejar trazo. En el paso 0
- * delega en moverFicha (ahí se guarda la posición base). En un paso >0 agrega
- * o actualiza una acción invisible `ajuste`; si la ficha ya tiene un
- * corte/dribbling/cortina en ese paso, la validación de "se mueve dos veces"
- * la rechaza sola (DE_MOVIMIENTO ya incluye 'ajuste').
+ * Arrastre libre de una ficha en cualquier paso: decide dónde termina el
+ * paso para esa ficha. En el paso 0 delega en moverFicha (ahí se guarda la
+ * posición base). En un paso >0: si la ficha ya tiene una acción que la
+ * mueve (corte/dribbling/cortina, o un `ajuste` anterior — DE_MOVIMIENTO las
+ * incluye a las cuatro), le cambia el destino y conserva todo lo demás (el
+ * `control` de la curva, por ejemplo); si no tenía ninguna, crea un `ajuste`
+ * invisible. Así nunca tira "se mueve dos veces": es la MISMA acción la que
+ * se corrige, no una nueva que compita con la que ya había.
  */
 export function ajustarFicha(datos, k, fichaId, x, y) {
   if (k === 0) return moverFicha(datos, fichaId, x, y);
   if (!Number.isInteger(k) || k < 0 || k >= datos.pasos.length) throw new Error('Ese paso no existe.');
   const nuevos = duplicarDatos(datos);
   const acciones = nuevos.pasos[k].acciones;
-  const existente = acciones.find((a) => a.tipo === 'ajuste' && a.ficha === fichaId);
+  const existente = acciones.find((a) => a.ficha === fichaId && DE_MOVIMIENTO.includes(a.tipo));
   if (existente) existente.hasta = { x, y };
   else acciones.push({ tipo: 'ajuste', ficha: fichaId, hasta: { x, y } });
   return conValidacion(nuevos);

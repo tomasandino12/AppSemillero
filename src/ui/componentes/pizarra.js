@@ -65,23 +65,44 @@ function puntosTriangulo(cx, cy, r) {
   ].map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 }
 
-/** El color depende de quién es "nosotros" en esta jugada; la forma y el número siguen atados a ficha.tipo. */
-function dibujarFicha(ficha, p, alto, nosotrosDefiende = false) {
+/**
+ * El color depende de quién es "nosotros" en esta jugada; la forma y el
+ * número siguen atados a ficha.tipo. `extraClase` (con espacio adelante) y
+ * `extra` (un atributo entero) son para el fantasma del ajuste: la misma
+ * ficha, con su clase `pz-fantasma` y `data-accion-indice` sumados.
+ */
+function dibujarFicha(ficha, p, alto, nosotrosDefiende = false, extraClase = '', extra = '') {
   const x = p.x * W;
   const y = p.y * alto;
-  const id = `data-ficha-id="${ficha.id}"`;
+  const atributos = `data-ficha-id="${ficha.id}"${extra ? ` ${extra}` : ''}`;
   if (ficha.tipo === 'cono') {
-    return `<polygon points="${puntosTriangulo(x, y, R_FICHA * 0.6)}" class="pz-cono" ${id}/>`;
+    return `<polygon points="${puntosTriangulo(x, y, R_FICHA * 0.6)}" class="pz-cono${extraClase}" ${atributos}/>`;
   }
   const esNuestra = nosotrosDefiende ? ficha.tipo === 'defensa' : ficha.tipo === 'ataque';
   const claseColor = esNuestra ? 'pz-nosotros' : 'pz-rival';
   if (ficha.tipo === 'defensa') {
-    let g = `<polygon points="${puntosTriangulo(x, y, R_FICHA + 2)}" class="${claseColor}" ${id}/>`;
-    if (ficha.numero != null) g += `<text x="${x}" y="${y + 5}" class="pz-numero pz-numero-defensa" ${id}>${ficha.numero}</text>`;
+    let g = `<polygon points="${puntosTriangulo(x, y, R_FICHA + 2)}" class="${claseColor}${extraClase}" ${atributos}/>`;
+    if (ficha.numero != null) g += `<text x="${x}" y="${y + 5}" class="pz-numero pz-numero-defensa${extraClase}" ${atributos}>${ficha.numero}</text>`;
     return g;
   }
-  let g = `<circle cx="${x}" cy="${y}" r="${R_FICHA}" class="${claseColor}" ${id}/>`;
-  if (ficha.numero != null) g += `<text x="${x}" y="${y + 4}" class="pz-numero pz-numero-ataque" ${id}>${ficha.numero}</text>`;
+  let g = `<circle cx="${x}" cy="${y}" r="${R_FICHA}" class="${claseColor}${extraClase}" ${atributos}/>`;
+  if (ficha.numero != null) g += `<text x="${x}" y="${y + 4}" class="pz-numero pz-numero-ataque${extraClase}" ${atributos}>${ficha.numero}</text>`;
+  return g;
+}
+
+/** Un fantasma por cada `ajuste` del paso visible: la misma ficha dibujada en su destino, sin flecha (task 6). Sólo lo pide el editor. */
+function dibujarFantasmas(datos, paso, alto, nosotrosDefiende) {
+  if (paso == null) return '';
+  const acciones = datos.pasos[paso]?.acciones;
+  if (!acciones) return '';
+  const porId = new Map(datos.fichas.map((f) => [f.id, f]));
+  let g = '';
+  acciones.forEach((a, indice) => {
+    if (a.tipo !== 'ajuste') return;
+    const ficha = porId.get(a.ficha);
+    if (!ficha || !a.hasta) return;
+    g += dibujarFicha(ficha, a.hasta, alto, nosotrosDefiende, ' pz-fantasma', `data-accion-indice="${indice}"`);
+  });
   return g;
 }
 
@@ -214,6 +235,7 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
   for (const ficha of datos.fichas) {
     g += dibujarFicha(ficha, estado.posiciones.get(ficha.id) ?? ficha, alto, opciones.nosotrosDefiende);
   }
+  if (opciones.fantasmas) g += dibujarFantasmas(datos, opciones.paso, alto, opciones.nosotrosDefiende);
   if (pelotaEn) g += dibujarPelota(pelotaEn, estado.posiciones, alto);
 
   svg.setAttribute('viewBox', `0 0 ${W} ${alto}`);

@@ -202,23 +202,29 @@ test('ajustarFicha en paso 0 delega en moverFicha', () => {
   assert.deepEqual(ajustarFicha(d, 0, 'a2', 0.7, 0.7), moverFicha(d, 'a2', 0.7, 0.7));
 });
 
-test('ajustarFicha en un paso >0 sin acción previa agrega un ajuste nuevo', () => {
+test('ajustarFicha sin movimiento crea un ajuste', () => {
   const d = dosPasos();
   const nuevo = ajustarFicha(d, 1, 'd1', 0.3, 0.3);
   assert.deepEqual(nuevo.pasos[1].acciones, [{ tipo: 'ajuste', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } }]);
   assert.equal(d.pasos[1].acciones.length, 0);
 });
 
-test('ajustarFicha en un paso >0 con un ajuste previo actualiza el destino en vez de agregar otro', () => {
+test('ajustarFicha dos veces actualiza el mismo ajuste', () => {
   const d = dosPasos([], [{ tipo: 'ajuste', ficha: 'd1', hasta: { x: 0.2, y: 0.2 } }]);
   const nuevo = ajustarFicha(d, 1, 'd1', 0.35, 0.35);
   assert.equal(nuevo.pasos[1].acciones.length, 1);
   assert.deepEqual(nuevo.pasos[1].acciones[0], { tipo: 'ajuste', ficha: 'd1', hasta: { x: 0.35, y: 0.35 } });
 });
 
-test('ajustarFicha con un corte previo de esa ficha en el paso tira el mismo aviso que dos movimientos', () => {
-  const d = dosPasos([], [{ tipo: 'corte', ficha: 'd1', hasta: { x: 0.2, y: 0.2 } }]);
-  assert.throws(() => ajustarFicha(d, 1, 'd1', 0.35, 0.35), /se mueve dos veces/);
+test('ajustarFicha con corte en el paso mueve la punta del corte', () => {
+  const d = dosPasos([], [{
+    tipo: 'corte', ficha: 'd1', hasta: { x: 0.2, y: 0.2 }, control: { x: 0.25, y: 0.15 },
+  }]);
+  const nuevo = ajustarFicha(d, 1, 'd1', 0.35, 0.35);
+  assert.equal(nuevo.pasos[1].acciones.length, 1, 'sigue siendo una sola acción, no una segunda que compita');
+  assert.deepEqual(nuevo.pasos[1].acciones[0], {
+    tipo: 'corte', ficha: 'd1', hasta: { x: 0.35, y: 0.35 }, control: { x: 0.25, y: 0.15 },
+  });
 });
 
 test('quitarAccion saca sólo esa acción del paso', () => {

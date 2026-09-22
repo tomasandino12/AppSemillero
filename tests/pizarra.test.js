@@ -80,6 +80,29 @@ test('un ajuste no dibuja ningún trazo, a diferencia de un corte', () => {
   assert.ok(svgCorte.innerHTML.includes('data-accion-indice'), 'un corte sí debería dibujar el trazo de la acción');
 });
 
+test('con fantasmas dibuja el ajuste en su destino', () => {
+  const datos = {
+    ...jugadaVacia(),
+    fichas: [{ id: 'd1', tipo: 'defensa', numero: 1, x: 0.5, y: 0.5 }],
+    pasos: [{ acciones: [{ tipo: 'ajuste', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } }], nota: '' }],
+  };
+  const svg = svgFalso();
+  dibujarPizarra(svg, datos, estadoAlInicioDelPaso(datos, 0), { paso: 0, fantasmas: true });
+  assert.ok(svg.innerHTML.includes('pz-fantasma'), 'debería dibujar el fantasma');
+  assert.ok(svg.innerHTML.includes('data-accion-indice="0"'), 'el fantasma lleva el índice de su ajuste');
+});
+
+test('sin fantasmas el ajuste no dibuja nada', () => {
+  const datos = {
+    ...jugadaVacia(),
+    fichas: [{ id: 'd1', tipo: 'defensa', numero: 1, x: 0.5, y: 0.5 }],
+    pasos: [{ acciones: [{ tipo: 'ajuste', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } }], nota: '' }],
+  };
+  const svg = svgFalso();
+  dibujarPizarra(svg, datos, estadoAlInicioDelPaso(datos, 0), { paso: 0 });
+  assert.ok(!svg.innerHTML.includes('pz-fantasma'), 'sin fantasmas:true no debería dibujar el fantasma');
+});
+
 test('cada tipo de acción usa su propio marker de flecha', () => {
   for (const tipo of TIPOS_ACCION) {
     const svg = iconoDeAccion(tipo);

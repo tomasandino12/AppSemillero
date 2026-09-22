@@ -97,14 +97,19 @@ function pintarCancha(datos) {
   dibujarPizarra(svg, datos, estado, {
     paso: pasoActual < datos.pasos.length ? pasoActual : undefined,
     nosotrosDefiende: nosotrosDefiende(jugadaMeta.tipo),
+    fantasmas: true,
   });
   if (origenAccion) {
     svg.insertAdjacentHTML('beforeend', resaltoDeFicha(datos, estado, origenAccion));
   } else if (seleccion?.tipo === 'ficha') {
     svg.insertAdjacentHTML('beforeend', resaltoDeFicha(datos, estado, seleccion.id));
   } else if (seleccion?.tipo === 'accion') {
-    const punto = puntoDeControl(datos, pasoActual, seleccion.indice);
-    if (punto) svg.insertAdjacentHTML('beforeend', asaDeControl(datos, punto));
+    const accion = datos.pasos[pasoActual]?.acciones?.[seleccion.indice];
+    // Un ajuste no tiene curva (no dibuja trazo): el asa de control no aplica.
+    if (accion?.tipo !== 'ajuste') {
+      const punto = puntoDeControl(datos, pasoActual, seleccion.indice);
+      if (punto) svg.insertAdjacentHTML('beforeend', asaDeControl(datos, punto));
+    }
   }
 }
 
@@ -245,6 +250,7 @@ function alPunteroBajar(evento) {
   const datos = datosActuales();
   const punto = puntoDesdeEvento(svg, datos, evento);
   const estado = estadoAlInicioDelPaso(datos, pasoActual);
+  const fantasmaEl = evento.target.closest('.pz-fantasma');
   const fichaId = evento.target.closest('[data-ficha-id]')?.dataset.fichaId
     ?? fichaEnPunto(datos, estado, punto.xSvg, punto.ySvg);
 
@@ -257,6 +263,18 @@ function alPunteroBajar(evento) {
   }
 
   if (herramienta === 'seleccionar') {
+    if (fantasmaEl) {
+      // El fantasma se selecciona como la acción (el ajuste), no como la
+      // ficha entera: Supr borra sólo el ajuste, no la ficha (borrarSeleccion).
+      // El fantasma también lleva data-ficha-id (dibujarFicha), así que
+      // fichaId ya es el de la ficha que ajusta: arrastrarlo llama a
+      // ajustarFicha igual que arrastrar la ficha misma.
+      seleccion = { tipo: 'accion', indice: Number(fantasmaEl.dataset.accionIndice) };
+      svg.setPointerCapture(evento.pointerId);
+      arrastre = { tipo: 'ficha', id: fichaId, datosBase: datos };
+      render();
+      return;
+    }
     if (fichaId) {
       seleccion = { tipo: 'ficha', id: fichaId };
       svg.setPointerCapture(evento.pointerId);
@@ -299,8 +317,15 @@ function alPunteroMover(evento) {
         ? moverFicha(arrastre.datosBase, arrastre.id, punto.x, punto.y)
         : ajustarFicha(arrastre.datosBase, pasoActual, arrastre.id, punto.x, punto.y))
       : fijarControlDeAccion(arrastre.datosBase, pasoActual, seleccion.indice, { x: punto.x, y: punto.y });
-  } catch {
-    return; // un punto momentáneamente fuera de rango no aborta el arrastre: se recorta y sigue.
+  } catch (e) {
+    // puntoDesdeEvento ya recorta x/y a la cancha, así que esto es una regla
+    // real rechazada, no un punto momentáneamente afuera: se avisa, pero una
+    // sola vez por arrastre (si no, el toast se reescribiría en cada cuadro).
+    if (!arrastre.avisoMostrado) {
+      arrastre.avisoMostrado = true;
+      toast(e.message || 'No se pudo mover.');
+    }
+    return;
   }
   arrastre.ultimaVista = vista;
   pintarCancha(vista);
