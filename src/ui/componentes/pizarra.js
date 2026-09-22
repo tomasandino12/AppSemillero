@@ -14,6 +14,7 @@ import { direccionFinal, trazoSvg } from '../../data/animacionJugada.js';
 import { W, altoDe, formasDeUnExtremo, AROS } from '../../data/geometriaCancha.js';
 
 const R_FICHA = 12;
+const LARGO_T = 9; // largo de la T de la cortina; también fija el alto del viewBox del ícono.
 
 let contador = 0;
 
@@ -104,9 +105,8 @@ function escalarPath(d, alto) {
 function dibujarT(hasta, dx, dy, alto, extra) {
   const x = hasta.x * W;
   const y = hasta.y * alto;
-  const largo = 9;
-  const px = -dy * largo;
-  const py = dx * largo;
+  const px = -dy * LARGO_T;
+  const py = dx * LARGO_T;
   return `<line x1="${x + px}" y1="${y + py}" x2="${x - px}" y2="${y - py}" class="pz-trazo pz-trazo-cortina" ${extra}/>`;
 }
 
@@ -151,8 +151,42 @@ function dibujarAcciones(datos, paso, alto, uid) {
   return acciones.map((a, i) => dibujarTrazo(a, i, inicio, datos.cancha, alto, uid)).join('');
 }
 
-function defs(uid) {
-  return `<defs><marker id="pz-flecha-${uid}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="pz-flecha"/></marker></defs>`;
+function defs(idFlecha) {
+  return `<defs><marker id="${idFlecha}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="pz-flecha"/></marker></defs>`;
+}
+
+// Segmento horizontal, en coordenadas de cancha (0–1) sobre `media`, que
+// arma el ícono de cada acción: mismo trazo que en la cancha, a escala 1:1.
+const DESDE_ICONO = { x: 0.44, y: 0.5 };
+const HASTA_ICONO = { x: 0.56, y: 0.5 };
+const MARGEN_ICONO_X = 4; // aire para que no se corte la punta de la flecha del corte
+const MARGEN_ICONO_Y = 2; // aire de trazo arriba/abajo de la T de la cortina
+
+/** viewBox que encierra el segmento del ícono con aire para la flecha y la T; igual para los seis tipos. */
+function viewBoxIcono() {
+  const alto = altoDe('media');
+  const xDesde = DESDE_ICONO.x * W;
+  const xHasta = HASTA_ICONO.x * W;
+  const yCentro = DESDE_ICONO.y * alto;
+  const semiAlto = LARGO_T + MARGEN_ICONO_Y;
+  return {
+    x: xDesde - MARGEN_ICONO_X,
+    y: yCentro - semiAlto,
+    ancho: xHasta - xDesde + MARGEN_ICONO_X * 2,
+    alto: semiAlto * 2,
+  };
+}
+
+/**
+ * Mini-ícono de una acción para la barra de herramientas: el mismo trazo que
+ * dibuja la cancha (mismo punteado, zigzag, flecha o T), a escala 1:1 — así
+ * el botón de "Corte" se ve exactamente como el corte que dibuja.
+ */
+export function iconoDeAccion(tipo) {
+  const { x, y, ancho, alto: altoVb } = viewBoxIcono();
+  const idFlecha = `pz-flecha-icono-${tipo}`;
+  const trazo = svgDeTrazo({ tipo, desde: DESDE_ICONO, hasta: HASTA_ICONO, control: null }, altoDe('media'), idFlecha);
+  return `<svg class="pz pz-icono" viewBox="${x} ${y} ${ancho} ${altoVb}" aria-hidden="true" focusable="false">${defs(idFlecha)}${trazo}</svg>`;
 }
 
 /**
@@ -167,7 +201,7 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
   const pelotaEn = estado.pelotaEn !== undefined ? estado.pelotaEn
     : estado.pelota != null ? estado.posiciones.get(estado.pelota) : null;
 
-  let g = defs(uid);
+  let g = defs(`pz-flecha-${uid}`);
   g += fondoDeCancha(datos.cancha);
   g += dibujarAcciones(datos, opciones.paso, alto, uid);
   for (const ficha of datos.fichas) {

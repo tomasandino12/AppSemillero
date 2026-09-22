@@ -4,9 +4,10 @@
  * que las llama con el estado actual y cablea los botones que insertan.
  * Separado sólo porque jugadaEditor.js ya pasaba las ~300 líneas (plan Task 8).
  */
-import { html } from '../html.js';
+import { html, crudo } from '../html.js';
 import { TIPOS_ACCION } from '../../data/jugadas.js';
 import { LIMITE } from '../../data/limites.js';
+import { iconoDeAccion } from '../componentes/pizarra.js';
 
 const ETIQUETA_ACCION = {
   corte: 'Corte', dribbling: 'Dribbling', pase: 'Pase', cortina: 'Cortina', tiro: 'Tiro', handoff: 'Handoff',
@@ -21,7 +22,7 @@ export function barraDeHerramientasHtml({ herramienta, puedeDeshacer, puedeRehac
         <span class="jed-grupo-titulo">Herramientas</span>
         <div class="jed-grupo-botones">
           <button type="button" class="chip-tema ${herramienta === 'seleccionar' ? 'on' : ''}" data-herramienta="seleccionar">Seleccionar</button>
-          ${TIPOS_ACCION.map((t) => html`<button type="button" class="chip-tema ${herramienta === t ? 'on' : ''}" data-herramienta="${t}" ${hayPasos ? '' : 'disabled'}>${ETIQUETA_ACCION[t]}</button>`)}
+          ${TIPOS_ACCION.map((t) => html`<button type="button" class="chip-tema ${herramienta === t ? 'on' : ''}" data-herramienta="${t}" ${hayPasos ? '' : 'disabled'}>${crudo(iconoDeAccion(t))}${ETIQUETA_ACCION[t]}</button>`)}
         </div>
       </div>
       <div class="jed-grupo" role="group" aria-label="Agregar">
