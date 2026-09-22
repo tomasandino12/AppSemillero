@@ -393,6 +393,22 @@
   .pant.ancha .jed-panel{flex:0 0 18rem}
 }
 
+/* Ficha de una jugada (p-jugada, NO .pant.ancha): la cancha se topa por alto
+   para que entre entera (media o entera) sin scroll. Prefijada con #p-jugada
+   porque el mismo markup .visor-jugada se reusa en el modal "Ver animación"
+   del editor (.jvc): ese modal no debe verse afectado. La resta aproxima
+   cabecera + barra de categorías + .ficha-top (tres franjas de --tap), el
+   padding de .pad y de .visor-jugada, y el bloque de nota+controles+
+   velocidades+indicador debajo de la cancha: no hay forma de medirlas exacto
+   acá porque .ficha-top y la nota las arma JS con datos de la jugada. Si en
+   algún ancho no cierra justo, se prefiere quedar corto (un poco de aire
+   abajo) antes que generar scroll. */
+@media (min-width:64rem){
+  #p-jugada .visor-jugada svg.pz{
+    max-height:calc(100dvh - var(--tap) * 4 - var(--sp-8) * 2 - var(--sp-5) - var(--sp-3) * 4);
+  }
+}
+
 /* Hover solo donde hay puntero fino: en táctil no debe ser señal de nada. */
 @media (hover:hover){
   /* El texto ya es blanco siempre: el hover no puede aclararlo. */
