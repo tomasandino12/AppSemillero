@@ -8,11 +8,13 @@ Origen: auditoría del 2026-09-22 (hallazgos #1–#8 y #10). Lo demás (#9 parci
 
 **Reglas que valen para todo:** migración aplicada no se edita (se agrega otra); tabla/columna nueva con `revoke` + grant mínimo por columna; funciones `security definer` con `set search_path = ''` y `revoke execute ... from public, anon`; código de error propio con `errcode = 'P0001'`; HTML nuevo con `html\`\``; errores al usuario con `mensajeAlGuardar`; `db push` sólo con confirmación del usuario.
 
-**Verificación SQL:** Docker está apagado y no hay base local. Cada migración lleva su `tests/verificarX.sql` que corre **como `authenticated`** (`set local role authenticated` + `request.jwt.claims`, modelo `tests/verificarAutorizacionPlantel.sql`), dentro de `begin … rollback`. Se corre en el SQL Editor después del push, o con `npx supabase start` si se prende Docker.
+**Verificación SQL:** Cada migración lleva su `tests/verificarX.sql` que corre **como `authenticated`** (`set local role authenticated` + `request.jwt.claims`, modelo `tests/verificarAutorizacionPlantel.sql`), dentro de `begin … rollback`. Se corre en el SQL Editor después del push, o con `npx supabase start` si se prende Docker.
 
 ---
 
 ## Bloque A — base (Opus)
+
+> Hecho. Lo implementado se aparta del texto de abajo en tres cosas: el código de solicitud es al azar (no se deriva del id, que el profe recibe); la baja apaga `es_entrenador` en vez de agregar `baja_en is null` a los helpers; y las pertenencias previas quedan con `-infinity`, no con `desde`. Lo que vale para B está en "Notas para el bloque B".
 
 ### A1. Crear jugadores sin `insert … returning` (#1, y la parte SQL de #9)
 - **Archivos:** `supabase/migrations/0036_crear_jugador_sin_returning.sql`; `src/data/repos/jugadores.js` (borrar `crearJugador`, que es código muerto con el mismo defecto); `tests/verificarAltaJugador.js` (sumar el camino feliz: alta real de un jugador de prueba como profe asignado y chequeo de que quedó con su pertenencia); `tests/verificarCrearJugador.sql`.
