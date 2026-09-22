@@ -43,17 +43,6 @@ export async function obtenerJugadoresDelClub(clubId) {
   }));
 }
 
-export async function crearJugador({ clubId, nombreClave, nombreLimpio, desambiguador = '' }) {
-  const supabase = obtenerCliente();
-  const { data, error } = await supabase
-    .from('jugador')
-    .insert({ club_id: clubId, nombre_clave: nombreClave, nombre_limpio: nombreLimpio, desambiguador })
-    .select('id')
-    .single();
-  if (error) throw error;
-  return data.id;
-}
-
 export async function crearPertenencia({ clubId, jugadorId, plantelId, temporadaId, desde }) {
   const supabase = obtenerCliente();
   const { error } = await supabase

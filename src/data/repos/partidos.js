@@ -53,8 +53,8 @@ export async function crearPartido({ clubId, plantelId, importacionId, fecha, co
 
 /**
  * Precondición: todo elemento de `estadisticas` debe traer `jugadorId` resuelto
- * (no null) — el caller es responsable de resolver cada uno vía crearJugador/
- * pertenencia antes de llamar acá, porque estadistica_jugador_partido.jugador_id
+ * (no null) — el caller es responsable de resolver cada uno (ficha y
+ * pertenencia) antes de llamar acá, porque estadistica_jugador_partido.jugador_id
  * es not null en el esquema.
  */
 export async function crearEstadisticas(clubId, partidoId, estadisticas) {
