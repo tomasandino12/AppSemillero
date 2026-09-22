@@ -117,6 +117,7 @@ function render() {
         puedeDeshacer: indiceHistorial > 0,
         puedeRehacer: indiceHistorial < historial.length - 1,
         hayPasos: datos.pasos.length > 0,
+        puedeAgregar: pasoActual === 0,
       })}
       <div class="jed-cuerpo">
         <div class="jed-cancha"><svg class="pz" id="jed-svg" role="img" aria-label="Pizarra táctica"></svg></div>

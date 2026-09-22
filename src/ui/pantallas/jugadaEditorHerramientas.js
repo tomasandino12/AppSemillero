@@ -12,26 +12,41 @@ const ETIQUETA_ACCION = {
   corte: 'Corte', dribbling: 'Dribbling', pase: 'Pase', cortina: 'Cortina', tiro: 'Tiro', handoff: 'Handoff',
 };
 
-export function barraDeHerramientasHtml({ herramienta, puedeDeshacer, puedeRehacer, hayPasos }) {
+const AYUDA_AGREGAR = 'Las fichas se suman en la formación inicial (paso 1).';
+
+export function barraDeHerramientasHtml({ herramienta, puedeDeshacer, puedeRehacer, hayPasos, puedeAgregar }) {
   return html`
     <div class="jed-herramientas">
       <div class="jed-grupo" role="group" aria-label="Herramientas">
-        <button type="button" class="chip-tema ${herramienta === 'seleccionar' ? 'on' : ''}" data-herramienta="seleccionar">Seleccionar</button>
-        ${TIPOS_ACCION.map((t) => html`<button type="button" class="chip-tema ${herramienta === t ? 'on' : ''}" data-herramienta="${t}" ${hayPasos ? '' : 'disabled'}>${ETIQUETA_ACCION[t]}</button>`)}
+        <span class="jed-grupo-titulo">Herramientas</span>
+        <div class="jed-grupo-botones">
+          <button type="button" class="chip-tema ${herramienta === 'seleccionar' ? 'on' : ''}" data-herramienta="seleccionar">Seleccionar</button>
+          ${TIPOS_ACCION.map((t) => html`<button type="button" class="chip-tema ${herramienta === t ? 'on' : ''}" data-herramienta="${t}" ${hayPasos ? '' : 'disabled'}>${ETIQUETA_ACCION[t]}</button>`)}
+        </div>
       </div>
-      <div class="jed-grupo" role="group" aria-label="Sumar ficha">
-        <button type="button" class="chip-tema" data-agregar="ataque">+ Atacante</button>
-        <button type="button" class="chip-tema" data-agregar="defensa">+ Defensor</button>
-        <button type="button" class="chip-tema" data-agregar="cono">+ Cono</button>
+      <div class="jed-grupo" role="group" aria-label="Agregar">
+        <span class="jed-grupo-titulo">Agregar</span>
+        <div class="jed-grupo-botones">
+          <button type="button" class="chip-tema" data-agregar="ataque" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? '' : AYUDA_AGREGAR}">+ Atacante</button>
+          <button type="button" class="chip-tema" data-agregar="defensa" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? '' : AYUDA_AGREGAR}">+ Defensor</button>
+          <button type="button" class="chip-tema" data-agregar="cono" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? '' : AYUDA_AGREGAR}">+ Cono</button>
+        </div>
+        ${puedeAgregar ? '' : html`<div class="ayuda">${AYUDA_AGREGAR}</div>`}
       </div>
-      <div class="jed-grupo">
-        <button type="button" class="btn sec chico" id="btn-jed-deshacer" ${puedeDeshacer ? '' : 'disabled'}>Deshacer</button>
-        <button type="button" class="btn sec chico" id="btn-jed-rehacer" ${puedeRehacer ? '' : 'disabled'}>Rehacer</button>
-        ${hayPasos ? html`<button type="button" class="btn sec chico" id="btn-jed-ver-animacion">Ver animación</button>` : ''}
+      <div class="jed-grupo" role="group" aria-label="Historial">
+        <span class="jed-grupo-titulo">Historial</span>
+        <div class="jed-grupo-botones">
+          <button type="button" class="btn sec chico" id="btn-jed-deshacer" ${puedeDeshacer ? '' : 'disabled'}>Deshacer</button>
+          <button type="button" class="btn sec chico" id="btn-jed-rehacer" ${puedeRehacer ? '' : 'disabled'}>Rehacer</button>
+          ${hayPasos ? html`<button type="button" class="btn sec chico" id="btn-jed-ver-animacion">Ver animación</button>` : ''}
+        </div>
       </div>
-      <div class="jed-grupo jed-grupo-fin">
-        <button type="button" class="btn sec chico" id="btn-jed-volver">Volver</button>
-        <button type="button" class="btn chico" id="btn-jed-guardar">Guardar</button>
+      <div class="jed-grupo" role="group" aria-label="Salir">
+        <span class="jed-grupo-titulo">Salir</span>
+        <div class="jed-grupo-botones">
+          <button type="button" class="btn sec chico" id="btn-jed-volver">Volver</button>
+          <button type="button" class="btn chico" id="btn-jed-guardar">Guardar</button>
+        </div>
       </div>
     </div>
   `;

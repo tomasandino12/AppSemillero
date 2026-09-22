@@ -675,9 +675,15 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
    columna en tablet vertical, en fila (cancha + panel fijo) desde 64rem
    (layout.css) ---- */
 .jed{display:flex;flex-direction:column;gap:var(--sp-3)}
-.jed-herramientas{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
-.jed-grupo{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
-.jed-grupo-fin{margin-left:auto}
+.jed-herramientas{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-4)}
+/* Cada grupo baja entero al renglón siguiente (flex:0 0 auto en vez de
+   wrap por botón suelto); el filete separa grupos, no el primero. */
+.jed-grupo{display:flex;flex-direction:column;gap:var(--sp-1);flex:0 0 auto;padding-left:var(--sp-4);border-left:1px solid var(--linea)}
+.jed-grupo:first-child{padding-left:0;border-left:0}
+.jed-grupo-titulo{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
+.jed-grupo-botones{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.jed-herramientas .chip-tema,.jed-herramientas .btn.chico{min-height:var(--tap)}
+.jed-grupo .ayuda{font-size:var(--fs-115);color:var(--gris-cl);margin-top:var(--sp-1);max-width:14rem}
 .jed-cuerpo{display:flex;flex-direction:column;gap:var(--sp-4)}
 .jed-cancha{flex:1;min-width:0}
 /* Pointer Events maneja el arrastre; sin esto el navegador hace scroll/zoom con el dedo sobre la cancha. */
