@@ -23,6 +23,9 @@ let fecha = null;
 // activo el teclado está arriba y el pie fijo queda escondido debajo.
 let activo = null;
 let buffer = '';
+// Se genera al crear el borrador y se reutiliza en cada reintento: ver el
+// comentario equivalente en medirBateria.js.
+let sesionId = null;
 
 function hoyLocal() {
   const d = new Date();
@@ -36,7 +39,7 @@ function clave() {
 }
 
 function persistir() {
-  guardarBorrador(clave(), { fecha, valores });
+  guardarBorrador(clave(), { fecha, valores, sesionId });
 }
 
 /**
@@ -161,7 +164,7 @@ async function guardarSesion() {
   const boton = $('btn-guardar-velocidad');
   if (boton.disabled) return;
 
-  const payload = prepararPayloadVelocidad({ clubId: club.id, plantelId: plantel.id, fecha, valores });
+  const payload = prepararPayloadVelocidad({ clubId: club.id, plantelId: plantel.id, fecha, valores, sesionId });
   if (!payload.mediciones.length) {
     $('velocidad-aviso').innerHTML = `<div class="al"><div class="tx">Todavía no cargaste ningún tiempo.</div></div>`;
     return;
@@ -222,6 +225,7 @@ export async function renderVelocidad() {
   const borrador = leerBorrador(clave());
   fecha = borrador?.fecha ?? hoyLocal();
   valores = borrador?.valores ?? {};
+  sesionId = borrador?.sesionId ?? crypto.randomUUID();
   activo = null;
   buffer = '';
   render();

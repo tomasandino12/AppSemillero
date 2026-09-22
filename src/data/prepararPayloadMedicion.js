@@ -13,7 +13,7 @@ import { decimalEstricto } from './numeros.js';
  *
  * Un 0 cargado SÍ genera fila: 0 de 10 es un dato real.
  */
-export function prepararPayloadBateria({ clubId, plantelId, fecha, valores }) {
+export function prepararPayloadBateria({ clubId, plantelId, fecha, valores, sesionId }) {
   const mediciones = [];
 
   for (const [jugadorId, datos] of Object.entries(valores ?? {})) {
@@ -30,7 +30,7 @@ export function prepararPayloadBateria({ clubId, plantelId, fecha, valores }) {
     }
   }
 
-  return { clubId, plantelId, fecha, tipo: 'tiro', mediciones };
+  return { clubId, plantelId, fecha, tipo: 'tiro', mediciones, sesionId };
 }
 
 /**
@@ -49,12 +49,12 @@ export function redondearSegundos(valor) {
 }
 
 /** Borrador de velocidad → payload. `valores` es { [jugadorId]: '4.7' }. */
-export function prepararPayloadVelocidad({ clubId, plantelId, fecha, valores }) {
+export function prepararPayloadVelocidad({ clubId, plantelId, fecha, valores, sesionId }) {
   const mediciones = [];
   for (const [jugadorId, crudo] of Object.entries(valores ?? {})) {
     const segundos = redondearSegundos(crudo);
     if (segundos == null) continue;
     mediciones.push({ jugadorId, segundos });
   }
-  return { clubId, plantelId, fecha, tipo: 'velocidad', mediciones };
+  return { clubId, plantelId, fecha, tipo: 'velocidad', mediciones, sesionId };
 }

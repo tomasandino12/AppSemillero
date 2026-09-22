@@ -20,6 +20,11 @@ import { miniaturaDeRecurso, quitarImagenesRotas } from '../componentes/miniatur
 const contenedor = () => $('recursos-contenido');
 const contenedorJugadores = () => $('recursos-jugadores');
 
+// Un id por formulario abierto ("Ofrecer un recurso"), no por click: si
+// confirmarEnvio falla por la red y el profe reintenta sin cerrar la hoja,
+// guardar_recurso (0038) ve el mismo id y no crea un recurso duplicado.
+let recursoIdNuevo = null;
+
 function hoyLocal() {
   // Fecha local, no UTC: después de las 21:00 en Argentina, toISOString() ya
   // devuelve el día siguiente.
@@ -185,6 +190,7 @@ function abrirAltaDeRecurso(recursoId, jugadores, yaLoTienen = 0) {
     return;
   }
   const esNuevo = recursoId == null;
+  recursoIdNuevo = esNuevo ? crypto.randomUUID() : null;
   abrirHoja({
     titulo: esNuevo ? 'Ofrecer un recurso' : 'Enviar a los que faltan',
     cuerpo: cuerpoDeHoja(jugadores, { conCampos: esNuevo, categoria: obtenerPlantelActivo()?.categoria, yaLoTienen }),
@@ -258,6 +264,7 @@ async function confirmarEnvio(recursoId) {
     await guardarRecurso({
       clubId: obtenerClubActual().id,
       recursoId: recursoId ?? null,
+      recursoIdNuevo: recursoId ? null : recursoIdNuevo,
       titulo,
       descripcion,
       enlace,

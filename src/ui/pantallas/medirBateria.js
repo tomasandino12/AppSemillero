@@ -15,6 +15,11 @@ let jugadores = [];
 let indice = 0;
 let valores = {};
 let fecha = null;
+// Se genera al crear el borrador y se reutiliza en cada reintento: si el
+// guardado anterior llegó a la base pero la respuesta se perdió (sin señal
+// en el gimnasio), guardar_sesion_medicion (0038) ve el mismo sesionId y
+// contesta yaGuardada sin duplicar filas.
+let sesionId = null;
 
 /** Fecha local, no UTC: después de las 21:00 en Argentina toISOString() ya da mañana. */
 function hoyLocal() {
@@ -30,7 +35,7 @@ function clave() {
 
 /** Se llama en CADA tap: la sesión en curso no puede depender de que el celular no se bloquee. */
 function persistir() {
-  guardarBorrador(clave(), { fecha, valores });
+  guardarBorrador(clave(), { fecha, valores, sesionId });
 }
 
 function estadoDeJugador(jugadorId) {
@@ -149,7 +154,7 @@ async function cerrarSesion() {
   const boton = $('btn-cerrar-sesion');
   if (boton.disabled) return;
 
-  const payload = prepararPayloadBateria({ clubId: club.id, plantelId: plantel.id, fecha, valores });
+  const payload = prepararPayloadBateria({ clubId: club.id, plantelId: plantel.id, fecha, valores, sesionId });
   if (!payload.mediciones.length) {
     $('bateria-aviso').innerHTML = `<div class="al"><div class="tx">Todavía no cargaste ninguna medición.</div></div>`;
     return;
@@ -209,6 +214,7 @@ export async function renderBateria() {
   const borrador = leerBorrador(clave());
   fecha = borrador?.fecha ?? hoyLocal();
   valores = borrador?.valores ?? {};
+  sesionId = borrador?.sesionId ?? crypto.randomUUID();
   indice = 0;
   render();
 }

@@ -39,6 +39,13 @@ test('lo que se guarda se lee igual', () => {
   assert.deepEqual(leerBorrador(clave, alm), estado);
 });
 
+test('el sesionId sobrevive a guardar y leer el borrador', () => {
+  const alm = almacenFalso();
+  const clave = claveBorrador('u1', 'c1', 'pl1', 'tiro');
+  guardarBorrador(clave, { version: 1, fecha: '2026-03-05', valores: {}, sesionId: 'sesion-1' }, alm);
+  assert.equal(leerBorrador(clave, alm).sesionId, 'sesion-1');
+});
+
 test('sin borrador guardado devuelve null', () => {
   assert.equal(leerBorrador(claveBorrador('u1', 'c1', 'pl1', 'tiro'), almacenFalso()), null);
 });

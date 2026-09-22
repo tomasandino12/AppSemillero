@@ -63,3 +63,10 @@ test('una velocidad inválida o vacía no genera fila', () => {
   assert.deepEqual(p.mediciones, [{ jugadorId: 'j2', segundos: 4.6 }]);
   assert.equal(p.tipo, 'velocidad');
 });
+
+test('el sesionId del borrador pasa al payload, en batería y en velocidad', () => {
+  const bateria = prepararPayloadBateria({ ...BASE, valores: { j1: { esq_izq: 7 } }, sesionId: 'sesion-1' });
+  assert.equal(bateria.sesionId, 'sesion-1');
+  const velocidad = prepararPayloadVelocidad({ ...BASE, valores: { j1: '4.7' }, sesionId: 'sesion-2' });
+  assert.equal(velocidad.sesionId, 'sesion-2');
+});
