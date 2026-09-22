@@ -637,4 +637,33 @@ svg.g{width:100%;display:block;overflow:visible}
    como la de lectura, con la cantidad a la derecha. */
 .inv-fila{width:100%;text-align:left;font:inherit;color:inherit;border:0}
 .inv-cantidad{display:flex;align-items:center;gap:var(--sp-2)}
+
+/* ---- pizarra táctica (jugadas): cancha, fichas y trazos, siempre por clase.
+   Un atributo fill/stroke con var() no lo interpreta el SVG: por eso
+   pizarra.js sólo escribe `class`, nunca color, acá vive el único valor. ---- */
+svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
+.pz-cancha{fill:var(--papel)}
+.pz-linea{stroke:var(--linea);stroke-width:1.5}
+.pz-aro{stroke:var(--tinta);stroke-width:2}
+.pz-tablero{stroke:var(--tinta);stroke-width:2}
+.pz-ataque{fill:var(--primario)}
+.pz-defensa{fill:var(--tinta)}
+.pz-cono{fill:var(--gris-cl);stroke:var(--gris);stroke-width:1}
+.pz-pelota{fill:var(--tinta)}
+.pz-numero{text-anchor:middle;font-family:var(--ff-mono);font-size:var(--fs-115);font-weight:600}
+.pz-numero-ataque{fill:var(--sobre-club)}
+.pz-numero-defensa{fill:var(--sobre-oscuro)}
+.pz-trazo{stroke:var(--gris);stroke-width:2}
+.pz-trazo-pase,.pz-trazo-handoff{stroke-dasharray:5 4}
+.pz-trazo-tiro{stroke-dasharray:2 3}
+.pz-trazo-cortina{stroke-width:2.5}
+.pz-flecha{fill:var(--gris)}
+
+/* Visor: cancha arriba, nota, transporte y velocidad debajo. */
+.visor-jugada{display:flex;flex-direction:column;gap:var(--sp-3)}
+.visor-nota{font-size:var(--fs-135);color:var(--gris);min-height:1.2em}
+.visor-controles{display:flex;align-items:center;gap:var(--sp-2)}
+.visor-controles .visor-jugar{flex:1}
+.visor-velocidades{display:flex;gap:var(--sp-2)}
+.visor-indicador{font-size:var(--fs-115);color:var(--gris-cl)}
 .inv-cantidad input{width:5rem;text-align:center}
