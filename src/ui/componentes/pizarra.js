@@ -101,13 +101,31 @@ function escalarPath(d, alto) {
   }).join(' ');
 }
 
-function dibujarT(hasta, dx, dy, alto, idx) {
+function dibujarT(hasta, dx, dy, alto, extra) {
   const x = hasta.x * W;
   const y = hasta.y * alto;
   const largo = 9;
   const px = -dy * largo;
   const py = dx * largo;
-  return `<line x1="${x + px}" y1="${y + py}" x2="${x - px}" y2="${y - py}" class="pz-trazo pz-trazo-cortina" ${idx}/>`;
+  return `<line x1="${x + px}" y1="${y + py}" x2="${x - px}" y2="${y - py}" class="pz-trazo pz-trazo-cortina" ${extra}/>`;
+}
+
+/**
+ * El SVG de un trazo (el `path` con la clase de su tipo, la flecha del corte
+ * vía `idFlecha` y la T de la cortina): lo usan la cancha y el ícono de la
+ * barra, para que un tipo de acción se vea igual en los dos. `desde`/`hasta`/
+ * `control` en 0–1; `extra` es el atributo que la cancha suma a cada
+ * elemento (`data-accion-indice="…"`), vacío para el ícono.
+ */
+function svgDeTrazo({ tipo, desde, hasta, control }, alto, idFlecha, extra = '') {
+  const d = escalarPath(trazoSvg(desde, hasta, control, tipo), alto);
+  const marcador = tipo === 'corte' ? ` marker-end="url(#${idFlecha})"` : '';
+  let g = `<path d="${d}" class="pz-trazo pz-trazo-${tipo}" fill="none"${marcador} ${extra}/>`;
+  if (tipo === 'cortina') {
+    const { dx, dy } = direccionFinal(desde, hasta, control);
+    g += dibujarT(hasta, dx, dy, alto, extra);
+  }
+  return g;
 }
 
 function dibujarTrazo(a, indice, inicio, cancha, alto, uid) {
@@ -116,18 +134,13 @@ function dibujarTrazo(a, indice, inicio, cancha, alto, uid) {
     : (a.tipo === 'pase' || a.tipo === 'handoff') ? inicio.posiciones.get(a.a)
     : a.hasta;
   if (!desde || !hasta) return '';
-  const d = escalarPath(trazoSvg(desde, hasta, a.control, a.tipo), alto);
-  const marcador = a.tipo === 'corte' ? ` marker-end="url(#pz-flecha-${uid})"` : '';
-  const idx = `data-accion-indice="${indice}"`;
+  const extra = `data-accion-indice="${indice}"`;
+  let g = svgDeTrazo({ tipo: a.tipo, desde, hasta, control: a.control }, alto, `pz-flecha-${uid}`, extra);
   // El trazo visible sigue siendo fino; un segundo trazo invisible y más
   // ancho es el que realmente se toca (una línea de 2px es imposible de
-  // acertar con el dedo).
-  let g = `<path d="${d}" class="pz-trazo pz-trazo-${a.tipo}" fill="none"${marcador} ${idx}/>`;
-  g += `<path d="${d}" class="pz-trazo-toque" fill="none" ${idx}/>`;
-  if (a.tipo === 'cortina') {
-    const { dx, dy } = direccionFinal(desde, hasta, a.control);
-    g += dibujarT(hasta, dx, dy, alto, idx);
-  }
+  // acertar con el dedo). Sólo lo agrega la cancha: el ícono no se toca.
+  const dToque = escalarPath(trazoSvg(desde, hasta, a.control, a.tipo), alto);
+  g += `<path d="${dToque}" class="pz-trazo-toque" fill="none" ${extra}/>`;
   return g;
 }
 
