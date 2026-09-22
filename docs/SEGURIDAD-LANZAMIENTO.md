@@ -98,6 +98,16 @@ abrieron, nunca **quién**. Lo impone la base, no la pantalla:
   Editor: los 7 casos tienen que dar OK. Se escribió sin una base local: esa
   corrida es la primera vez que se ejecuta.
 
+## Blindaje del 2026-09-22 (0036 a 0039)
+
+Auditoría pre-lanzamiento; plan en `docs/superpowers/plans/2026-09-22-blindaje-lanzamiento.md`.
+
+- **0036:** el alta manual y el import con jugadores nuevos fallaban para todo profe desde 0016 (`insert ... returning` contra `jugador_ver`).
+- **0037:** la lista "Esperando acceso" ya no muestra chicos, y aprobar una solicitud de jugador exige el código que el chico ve en su pantalla (el nombre del registro es texto libre).
+- **0038:** reintentar un guardado de medición o de recurso ya no duplica.
+- **0039:** se puede dar de baja a un profe, y sumar a un chico de otra categoría no abre sus medidas corporales cargadas antes.
+- **Pendiente:** `npx supabase db push` (pide confirmación) y correr en el SQL Editor `tests/verificarCrearJugador.sql`, `verificarPendientesYCodigo.sql`, `verificarIdempotencia.sql` y `verificarBajaProfe.sql`: todos los casos tienen que dar OK. Ya dieron OK en la base local, junto con las verificaciones anteriores. **El cliente de B5 (código de solicitud) tiene que deployarse el mismo día que 0037.**
+
 ## Datos de menores
 
 La app guarda nombres, fecha de nacimiento, altura y peso de menores. Antes de

@@ -2,6 +2,8 @@
 
 Origen: auditoría del 2026-09-22 (hallazgos #1–#8 y #10). Lo demás (#9 parcial, #11–#15) queda para después del lanzamiento.
 
+**Estado (2026-09-22):** bloque A **hecho** en la rama `blindaje-lanzamiento` (commits 697f1de, 847c1b8, 8e15841, d516ef1): 0036–0039 aplicadas y verificadas en la base **local**, con todos los `verificar*.sql` en OK. **Falta el `db push` a producción.** Sigue el bloque B, con las notas del final.
+
 **Cómo se ejecuta:** en la sesión, sin subagentes, una task = un commit, `npm run test:q` verde antes de cada commit. Bloque A (SQL/RLS) con **Opus**; bloque B (cliente) con **Sonnet**. B1–B3 no dependen de A. B4–B7 usan RPC nuevas: no se deployan hasta que el `db push` de A esté hecho y verificado.
 
 **Reglas que valen para todo:** migración aplicada no se edita (se agrega otra); tabla/columna nueva con `revoke` + grant mínimo por columna; funciones `security definer` con `set search_path = ''` y `revoke execute ... from public, anon`; código de error propio con `errcode = 'P0001'`; HTML nuevo con `html\`\``; errores al usuario con `mensajeAlGuardar`; `db push` sólo con confirmación del usuario.
@@ -40,7 +42,7 @@ Origen: auditoría del 2026-09-22 (hallazgos #1–#8 y #10). Lo demás (#9 parci
   - Columna `miembro_club.baja_en timestamptz` (sin grant al cliente). `es_entrenador_de`, `puede_ver_plantel` y `puede_escribir_plantel` exigen `baja_en is null`.
   - `dar_de_baja_profe(p_user_id, p_club_id)` (definer, coordinación de ese club, nunca a uno mismo): cierra todas sus asignaciones vigentes y sella `baja_en`. `asignar_planteles` sobre alguien dado de baja → `DADO_DE_BAJA` (reactivarlo queda por SQL).
   - `jugadores_del_club_para_dedup` exige además al menos una asignación vigente.
-  - `pertenencia.registrada_en timestamptz`: las filas existentes se completan con `desde` (nadie pierde nada de lo que ve hoy) y las nuevas toman `now()` por trigger. `corporal_ver` sólo muestra mediciones con `fecha_medicion >= registrada_en::date` de la pertenencia que da acceso. **Decisión pendiente del usuario** (ver abajo); si elige no tener ventana, se saca sólo esta parte.
+  - `pertenencia.registrada_en timestamptz`: las filas existentes se completan con `desde` (nadie pierde nada de lo que ve hoy) y las nuevas toman `now()` por trigger. `corporal_ver`, `corporal_editar` y `corporal_borrar` sólo alcanzan medidas con `creado_en >= registrada_en` (o cargadas por uno mismo), y `creado_en` lo sella un trigger.
 - **Aceptación:** un profe dado de baja no ve la lista de jugadores ni crea filas; si un profe "adopta" a un chico de otra categoría, no ve las medidas anteriores a la adopción.
 - **Test:** `tests/contratoBajaProfe.test.js`: los tres helpers mencionan `baja_en is null`; el dedup exige una asignación vigente; `DADO_DE_BAJA` existe; `baja_en` no aparece en ningún grant.
 
@@ -80,5 +82,15 @@ Origen: auditoría del 2026-09-22 (hallazgos #1–#8 y #10). Lo demás (#9 parci
 
 ---
 
-## Decisión pendiente (A4)
-Ventana del historial corporal: con ventana, un profe que suma a un chico citado (de U17 a U21) no ve las alturas y pesos de antes de sumarlo, y eso protege contra la "adopción" silenciosa. Sin ventana, el citado trae su historia completa. Si no hay respuesta, va con ventana.
+## Notas para el bloque B (lo que dejó hecho A)
+
+- **Base local:** `npx supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,logflare,vector,mailpit,postgres-meta,supavisor` (Docker con 2 GB no da para más). Verificar: `docker exec -i supabase_db_modelo-datos-supabase psql -U postgres < tests/verificarX.sql`.
+- **Nombres reales (usar tal cual):**
+  - `importar_partido` → errores `JUGADOR_YA_EXISTE: <nombreClave>` y `PERTENENCIA_YA_VIGENTE` (B3). El alta manual sigue con `JUGADOR_YA_EXISTE` exacto.
+  - `usuarios_pendientes()` mantiene la forma de siempre (`es_jugador` siempre false). `buscar_jugador_para_habilitar(p_club_id, p_email)` devuelve esas mismas columnas con `es_jugador = true` (B4).
+  - `mi_solicitud_jugador()` suma `codigo` (6 caracteres hexadecimales, mayúsculas). `solicitudes_del_plantel()` suma `email_enmascarado` y **no** trae el código. `aprobar_solicitud_jugador` exige `payload.codigo` (la base ya saca espacios y pasa a mayúsculas) y, si falta o es otro, responde `CODIGO_INCORRECTO` (B5).
+  - `guardar_sesion_medicion`: `payload.sesionId` → `{sesionId, filas, yaGuardada}`, error `SESION_AJENA`. `guardar_recurso`: `payload.recursoIdNuevo` → `{recursoId, yaGuardado}`, error `RECURSO_AJENO` (B6).
+  - `dar_de_baja_profe(p_user_id, p_club_id)` → `{asignacionesCerradas}`, con errores `NO_ES_UNO_MISMO`, `YA_DADO_DE_BAJA`, `ES_COORDINACION` y `NO_ES_DEL_CLUB`. `asignar_planteles` responde `DADO_DE_BAJA`, y `miembros_del_club` suma `baja_en`: en el panel hay que mostrarlo como "dado de baja" y no ofrecer asignarle (B7).
+- **Orden de deploy:** después del `db push` de 0037, aprobar una solicitud sin código falla. B5 tiene que salir el mismo día del push. B1–B3 se pueden deployar antes.
+- **Qué se sacó de A1:** no se sumó el camino feliz a `tests/verificarAltaJugador.js`, porque corre contra producción y dejaría una ficha que no se puede borrar. Lo cubre `tests/verificarCrearJugador.sql`.
+- **Decisión de A4 (resuelta):** la ventana se mide por **cuándo se cargó** la medida (`creado_en`), no por `fecha_medicion`. Quien suma a un chico no ve lo que otros cargaron antes; sí ve lo que carga él, aunque la fecha sea vieja. Nadie pierde lo que ve hoy.
