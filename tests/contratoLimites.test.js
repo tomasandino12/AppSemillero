@@ -8,13 +8,26 @@ import { LIMITE, LIMITES_POR_COLUMNA } from '../src/data/limites.js';
  * cumplir la base) y src/data/limites.js (lo que usa la interfaz para
  * `maxlength`). Este test lee el SQL y compara: si un número cambia de un lado
  * sólo, o falta una columna en uno de los dos, falla.
+ *
+ * Las tablas creadas después de 0028 llevan el check en línea, en su propio
+ * `create table`: sus migraciones van en TABLAS_NUEVAS.
  */
 
-const sql = readFileSync('supabase/migrations/0028_limites_de_largo.sql', 'utf8').replace(/\r\n/g, '\n');
+const leer = (archivo) => readFileSync(`supabase/migrations/${archivo}`, 'utf8').replace(/\r\n/g, '\n');
+const sql = leer('0028_limites_de_largo.sql');
 
 const enBase = {};
 for (const m of sql.matchAll(/alter table (\w+)\s+add constraint\s+\w+\s+check \(char_length\((\w+)\) <= (\d+)\) not valid;/g)) {
   enBase[`${m[1]}.${m[2]}`] = Number(m[3]);
+}
+
+const TABLAS_NUEVAS = ['0035_jugadas.sql'];
+for (const archivo of TABLAS_NUEVAS) {
+  for (const tabla of leer(archivo).matchAll(/create table (\w+) \(\n([\s\S]*?)\n\);/g)) {
+    for (const m of tabla[2].matchAll(/^\s+(\w+) text\b[^\n]*check \(char_length\(\1\) <= (\d+)\)/gm)) {
+      enBase[`${tabla[1]}.${m[1]}`] = Number(m[2]);
+    }
+  }
 }
 
 test('la base y la interfaz limitan exactamente las mismas columnas', () => {

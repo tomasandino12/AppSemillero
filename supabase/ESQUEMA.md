@@ -3,7 +3,7 @@
 Estado al día de la migración `0019_nombre_y_categorias.sql`, más la sección de
 escalones de fuerza de `0023_escalones_fuerza.sql`, el inventario de
 `0026_material.sql`, la cuenta de jugador de `0029` y `0030` y los errores del
-cliente de `0031_error_cliente.sql`. Las tablas del plan físico de 0020–0022
+cliente de `0031_error_cliente.sql` y las jugadas de `0035_jugadas.sql`. Las tablas del plan físico de 0020–0022
 todavía no están documentadas acá (ver la Tarea 7 del
 plan de import).
 
@@ -215,6 +215,15 @@ unidades sueltas (dos mancuernas de 10 kg son `cantidad = 2`).
 - La lee cualquier miembro del club; la escribe sólo `es_coordinador_de`, tenga
   o no además el rol de entrenador. Insert y update con grant por columna: el
   tipo y el club de una fila no cambian.
+
+### `jugada` y `jugada_plantel` (0035)
+La pizarra táctica del club (spec `docs/superpowers/specs/2026-09-21-jugadas-design.md`). No hay datos de menores.
+
+- `jugada`: `nombre` (≤ 150), `tipo` (`ataque`, `presion`, `defensa`, `lateral`, `otro`, igual que `TIPOS_JUGADA`) y `datos jsonb` con la jugada entera (cancha, fichas, pelota y pasos). **La forma de `datos` la valida `src/data/jugadas.js`**. La base sólo impone que sea un objeto, que no pase de 65536 bytes (`TOPES.bytes`, medido sobre `datos::text`) y que ninguna `pasos[].nota` pase de 300 caracteres (`jugada_notas_validas`, inmutable). `tests/contratoJugada.test.js` compara los números con el JS.
+- La ve todo el cuerpo técnico del club (`es_entrenador_de`); la crea cualquier entrenador y **sólo el autor** la edita o la borra (quien quiera otra versión la duplica). Update por columna: `nombre`, `tipo`, `datos`. Un trigger sella `creado_por`, `creado_en` y `actualizado_en`, y no deja cambiar `club_id`. Sin `actualizado_por`: siempre sería el autor.
+- `jugada_plantel` (`club_id`, `jugada_id`, `plantel_id`, PK de los dos ids, FKs compuestas por club): a qué planteles se le muestra. La escribe quien tiene el plantel a cargo (`puede_escribir_plantel`), sea o no el autor: asignar no modifica la jugada. No se edita: se borra y se vuelve a crear. Borrar la jugada borra sus asignaciones (cascade).
+- El jugador no tiene acceso a las tablas: lee por `mis_jugadas()` (`security definer`, arranca por `mi_jugador()`), que devuelve `jugada_id`, `nombre`, `tipo` y `datos` de lo asignado a sus planteles con pertenencia vigente. Nunca el autor. No está en `accesoJugador.js` porque ese contrato es de 0029 y 0030; lo cubre `contratoJugada.test.js`.
+- Verificación contra la base: `tests/verificarJugadas.sql` en el SQL Editor.
 
 ## Políticas RLS
 

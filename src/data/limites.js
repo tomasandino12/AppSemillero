@@ -33,7 +33,7 @@ export const LIMITE = {
   notaPaso: 300,
 };
 
-/** 'tabla.columna' → largo máximo. Es el espejo exacto de 0028. */
+/** 'tabla.columna' → largo máximo. Es el espejo exacto de 0028 y de los checks en línea de las tablas nuevas (0035). */
 export const LIMITES_POR_COLUMNA = {
   'jugador.nombre_clave': LIMITE.nombrePersona,
   'jugador.nombre_limpio': LIMITE.nombrePersona,
@@ -65,4 +65,5 @@ export const LIMITES_POR_COLUMNA = {
   'ejercicio_asignado.notas': LIMITE.notasLinea,
   'paso_fuerza.nombre': LIMITE.titulo,
   'material.detalle': LIMITE.detalleMaterial,
+  'jugada.nombre': LIMITE.titulo,
 };
