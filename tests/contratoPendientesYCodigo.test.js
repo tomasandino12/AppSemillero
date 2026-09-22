@@ -46,3 +46,8 @@ test('aprobar exige el código antes de tocar nada', () => {
   assert.ok(chequeo < cuerpo.indexOf('insert into'), 'el código se chequea después de escribir');
   assert.doesNotMatch(cuerpo, /select \* into/, 'select * falla: quien aprueba no lee la columna codigo');
 });
+
+test('el repo llama a buscar_jugador_para_habilitar con club y mail', () => {
+  const repo = leer('src/data/repos/coordinacion.js');
+  assert.match(repo, /\.rpc\(\s*'buscar_jugador_para_habilitar'\s*,\s*\{\s*p_club_id:\s*clubId,\s*p_email:\s*email\s*\}\s*\)/);
+});

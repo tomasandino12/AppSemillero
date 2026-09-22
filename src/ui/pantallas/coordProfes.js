@@ -2,6 +2,7 @@ import {
   obtenerPlantelesDelClub, obtenerCatalogoDeCategorias, obtenerTemporadasDelClub,
   obtenerMiembrosDelClub, obtenerAsignacionesDelClub, obtenerUsuariosPendientes,
   obtenerUsuarioActual, asignarPlanteles, cerrarAsignacion, descartarCuenta,
+  buscarJugadorParaHabilitar,
 } from '../../data/repositorio.js';
 import { armarProfes } from '../../data/coordinacion.js';
 import { obtenerClubActual } from '../sesion.js';
@@ -317,6 +318,13 @@ export async function renderProfes() {
       <div class="eyebrow">Esperando acceso <span class="der">${vista.pendientes.length}</span></div>
       ${pendientesHtml(vista.pendientes)}
 
+      <div class="campo">
+        <label for="in-buscar-jugador">¿Un jugador va a ser profe? Buscalo por mail</label>
+        <input id="in-buscar-jugador" type="email" autocomplete="off" spellcheck="false" placeholder="mail@ejemplo.com">
+        <button class="btn sec chico" id="btn-buscar-jugador">Buscar</button>
+        <div id="buscar-jugador-resultado"></div>
+      </div>
+
       <div class="eyebrow">Categorías sin profe</div>
       ${sinProfeHtml(vista.sinProfe)}
 
@@ -341,4 +349,28 @@ export async function renderProfes() {
     const profe = vista.profes.find((p) => p.userId === b.dataset.profe);
     abrirQuitar(profe, profe.categorias.find((c) => c.asignacionId === b.dataset.quitar));
   }));
+
+  $('btn-buscar-jugador').addEventListener('click', buscarJugadorPorMail);
+}
+
+async function buscarJugadorPorMail() {
+  const club = obtenerClubActual();
+  const email = $('in-buscar-jugador').value.trim();
+  const resultado = $('buscar-jugador-resultado');
+  if (!email) return;
+  const boton = $('btn-buscar-jugador');
+  boton.disabled = true;
+  resultado.textContent = '';
+  try {
+    const encontrado = await buscarJugadorParaHabilitar({ clubId: club.id, email });
+    if (!encontrado) {
+      resultado.textContent = 'No encontramos ningún jugador con ese mail en el club.';
+    } else {
+      abrirHabilitar(encontrado);
+    }
+  } catch (e) {
+    resultado.textContent = mensajeDeError(e);
+  } finally {
+    boton.disabled = false;
+  }
 }

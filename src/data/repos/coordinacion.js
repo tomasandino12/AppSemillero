@@ -15,6 +15,20 @@ export async function obtenerUsuariosPendientes() {
 }
 
 /**
+ * La única puerta para "un jugador va a ser profe" (0032): busca una cuenta
+ * de jugador vigente de este club por su mail exacto. null si no hay
+ * ninguna — no es un error, es "no lo encontramos".
+ */
+export async function buscarJugadorParaHabilitar({ clubId, email }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('buscar_jugador_para_habilitar', { p_club_id: clubId, p_email: email });
+  if (error) throw error;
+  const f = data[0];
+  if (!f) return null;
+  return { userId: f.user_id, email: f.email, nombre: f.nombre, registradoEn: f.registrado_en, esJugador: f.es_jugador };
+}
+
+/**
  * Rechaza un pedido de acceso. Reversible: la cuenta rechazada puede volver a
  * pedir (volverAPedirAcceso) y reaparece en la lista. No borra nada.
  */
