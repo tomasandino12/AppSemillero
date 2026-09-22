@@ -177,6 +177,82 @@ export function aplicarAccion(datos, k, accion) {
   return nuevos;
 }
 
+function conValidacion(nuevos) {
+  const { ok, errores } = validarJugada(nuevos);
+  if (!ok) throw new Error(errores[0]);
+  return nuevos;
+}
+
+/** El número libre más bajo (1 a 5) entre las fichas de ese tipo; null si los cinco están usados. */
+export function proximoNumeroLibre(datos, tipo) {
+  const usados = new Set(datos.fichas.filter((f) => f.tipo === tipo && f.numero != null).map((f) => f.numero));
+  for (let n = AMBITO_NUMERO.min; n <= AMBITO_NUMERO.max; n++) if (!usados.has(n)) return n;
+  return null;
+}
+
+/** Agrega una ficha nueva (con su id ya generado por quien llama); lanza si no valida (tope de 12, por ejemplo). */
+export function agregarFicha(datos, ficha) {
+  const nuevos = duplicarDatos(datos);
+  nuevos.fichas.push(structuredClone(ficha));
+  return conValidacion(nuevos);
+}
+
+/** Saca una ficha y, con ella, toda acción de cualquier paso que la nombre: si no, quedarían apuntando a nada. */
+export function quitarFicha(datos, fichaId) {
+  const nuevos = duplicarDatos(datos);
+  nuevos.fichas = nuevos.fichas.filter((f) => f.id !== fichaId);
+  nuevos.pasos = nuevos.pasos.map((p) => ({ ...p, acciones: p.acciones.filter((a) => a.ficha !== fichaId && a.a !== fichaId) }));
+  if (nuevos.pelota === fichaId) nuevos.pelota = null;
+  return conValidacion(nuevos);
+}
+
+/** Sólo tiene sentido en el paso 0: es el único que guarda posiciones. */
+export function moverFicha(datos, fichaId, x, y) {
+  const nuevos = duplicarDatos(datos);
+  const ficha = nuevos.fichas.find((f) => f.id === fichaId);
+  if (!ficha) throw new Error('Esa ficha no existe.');
+  ficha.x = x;
+  ficha.y = y;
+  return conValidacion(nuevos);
+}
+
+export function quitarAccion(datos, k, indice) {
+  if (!Number.isInteger(k) || k < 0 || k >= datos.pasos.length) throw new Error('Ese paso no existe.');
+  const nuevos = duplicarDatos(datos);
+  nuevos.pasos[k].acciones.splice(indice, 1);
+  return conValidacion(nuevos);
+}
+
+/** El punto de control de una acción ya cargada: la curva del trazo. null la vuelve recta. */
+export function fijarControlDeAccion(datos, k, indice, control) {
+  if (!Number.isInteger(k) || k < 0 || k >= datos.pasos.length) throw new Error('Ese paso no existe.');
+  const nuevos = duplicarDatos(datos);
+  const accion = nuevos.pasos[k].acciones[indice];
+  if (!accion) throw new Error('Esa acción no existe.');
+  accion.control = control;
+  return conValidacion(nuevos);
+}
+
+export function agregarPaso(datos) {
+  const nuevos = duplicarDatos(datos);
+  nuevos.pasos.push({ acciones: [], nota: '' });
+  return conValidacion(nuevos);
+}
+
+export function quitarPaso(datos, k) {
+  if (!Number.isInteger(k) || k < 0 || k >= datos.pasos.length) throw new Error('Ese paso no existe.');
+  const nuevos = duplicarDatos(datos);
+  nuevos.pasos.splice(k, 1);
+  return conValidacion(nuevos);
+}
+
+export function fijarNotaDePaso(datos, k, nota) {
+  if (!Number.isInteger(k) || k < 0 || k >= datos.pasos.length) throw new Error('Ese paso no existe.');
+  const nuevos = duplicarDatos(datos);
+  nuevos.pasos[k].nota = nota;
+  return conValidacion(nuevos);
+}
+
 /** Qué planteles hay que sumar y sacar para que `actuales` termine igual a `deseados`. */
 export function diferenciaDeAsignacion(actuales, deseados) {
   const actualesSet = new Set(actuales);

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   TOPES, jugadaVacia, validarJugada, estadoAlInicioDelPaso, aplicarAccion,
   duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion, etiquetaDeTipo,
+  proximoNumeroLibre, agregarFicha, quitarFicha, moverFicha, quitarAccion,
+  fijarControlDeAccion, agregarPaso, quitarPaso, fijarNotaDePaso,
 } from '../src/data/jugadas.js';
 import { LIMITE } from '../src/data/limites.js';
 
@@ -139,4 +141,80 @@ test('etiquetaDeTipo devuelve la etiqueta o el valor crudo', () => {
   assert.equal(etiquetaDeTipo('lateral'), 'Salida de lateral');
   assert.equal(etiquetaDeTipo('inventado'), 'inventado');
   assert.equal(etiquetaDeTipo(null), '');
+});
+
+test('proximoNumeroLibre da el más bajo libre y null si están los cinco', () => {
+  const d = base(); // ataque 1 y 2 usados, defensa 1 usado
+  assert.equal(proximoNumeroLibre(d, 'ataque'), 3);
+  assert.equal(proximoNumeroLibre(d, 'defensa'), 2);
+  for (let n = 1; n <= 5; n++) if (n !== 1 && n !== 2) d.fichas.push({ id: `a${n}`, tipo: 'ataque', numero: n, x: 0.1, y: 0.1 });
+  assert.equal(proximoNumeroLibre(d, 'ataque'), null);
+});
+
+test('agregarFicha suma sin mutar y respeta el tope', () => {
+  const d = base();
+  const nuevo = agregarFicha(d, { id: 'c1', tipo: 'cono', x: 0.1, y: 0.1 });
+  assert.equal(d.fichas.length, 3);
+  assert.equal(nuevo.fichas.length, 4);
+  assert.throws(() => agregarFicha(nuevo, { id: 'c1', tipo: 'cono', x: 0.1, y: 0.1 }), /repetida/);
+
+  const lleno = base();
+  for (let i = lleno.fichas.length; i < TOPES.fichas; i++) lleno.fichas.push({ id: `x${i}`, tipo: 'cono', x: 0.1, y: 0.1 });
+  assert.throws(() => agregarFicha(lleno, { id: 'de-mas', tipo: 'cono', x: 0.1, y: 0.1 }), /fichas/);
+});
+
+test('quitarFicha borra la ficha y las acciones que la nombraban', () => {
+  const d = conPaso([
+    { tipo: 'corte', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } },
+    { tipo: 'pase', ficha: 'a1', a: 'a2' },
+  ]);
+  const nuevo = quitarFicha(d, 'a2');
+  assert.ok(!nuevo.fichas.some((f) => f.id === 'a2'));
+  assert.deepEqual(nuevo.pasos[0].acciones, [{ tipo: 'corte', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } }]);
+
+  const conPelota = quitarFicha(base(), 'a1');
+  assert.equal(conPelota.pelota, null);
+});
+
+test('moverFicha cambia sólo esa ficha', () => {
+  const d = base();
+  const nuevo = moverFicha(d, 'a2', 0.7, 0.7);
+  assert.deepEqual(nuevo.fichas.find((f) => f.id === 'a2'), { id: 'a2', tipo: 'ataque', numero: 2, x: 0.7, y: 0.7 });
+  assert.equal(d.fichas.find((f) => f.id === 'a2').x, 0.2);
+  assert.throws(() => moverFicha(d, 'fantasma', 0.5, 0.5), /no existe/);
+  assert.throws(() => moverFicha(d, 'a2', 2, 0.5), /fuera de la cancha/);
+});
+
+test('quitarAccion saca sólo esa acción del paso', () => {
+  const d = conPaso([
+    { tipo: 'corte', ficha: 'a2', hasta: { x: 0.3, y: 0.3 } },
+    { tipo: 'corte', ficha: 'd1', hasta: { x: 0.4, y: 0.4 } },
+  ]);
+  const nuevo = quitarAccion(d, 0, 0);
+  assert.equal(nuevo.pasos[0].acciones.length, 1);
+  assert.equal(nuevo.pasos[0].acciones[0].ficha, 'd1');
+  assert.throws(() => quitarAccion(d, 5, 0), /no existe/);
+});
+
+test('fijarControlDeAccion ajusta la curva de una acción cargada', () => {
+  const d = conPaso([{ tipo: 'corte', ficha: 'a2', hasta: { x: 0.3, y: 0.3 } }]);
+  const nuevo = fijarControlDeAccion(d, 0, 0, { x: 0.4, y: 0.5 });
+  assert.deepEqual(nuevo.pasos[0].acciones[0].control, { x: 0.4, y: 0.5 });
+  assert.throws(() => fijarControlDeAccion(d, 0, 9, { x: 0.1, y: 0.1 }), /no existe/);
+  assert.throws(() => fijarControlDeAccion(d, 0, 0, { x: 2, y: 0 }), /fuera de la cancha/);
+});
+
+test('agregarPaso y quitarPaso', () => {
+  const d = conPaso([]);
+  const conDos = agregarPaso(d);
+  assert.equal(conDos.pasos.length, 2);
+  assert.deepEqual(conDos.pasos[1], { acciones: [], nota: '' });
+  assert.equal(quitarPaso(conDos, 0).pasos.length, 1);
+  assert.throws(() => quitarPaso(d, 9), /no existe/);
+});
+
+test('fijarNotaDePaso guarda el texto del paso', () => {
+  const d = conPaso([]);
+  assert.equal(fijarNotaDePaso(d, 0, 'Pase y corte').pasos[0].nota, 'Pase y corte');
+  assert.throws(() => fijarNotaDePaso(d, 0, 'x'.repeat(LIMITE.notaPaso + 1)), /nota/);
 });

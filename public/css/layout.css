@@ -364,6 +364,14 @@
   .publico .beneficios{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
+/* Editor de jugadas: en tablet vertical (mobile-first, abajo del panel) el
+   panel de pasos va debajo de la cancha; desde acá pasa al costado. */
+@media (min-width:64rem){
+  .jed-cuerpo{flex-direction:row;align-items:flex-start}
+  .jed-cancha{flex:2}
+  .jed-panel{flex:1;max-width:20rem}
+}
+
 /* Hover solo donde hay puntero fino: en táctil no debe ser señal de nada. */
 @media (hover:hover){
   /* El texto ya es blanco siempre: el hover no puede aclararlo. */

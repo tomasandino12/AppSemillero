@@ -27,8 +27,8 @@ let abrirJugada = () => {};
 export function setAbrirJugada(fn) { abrirJugada = fn; }
 
 let jugadaParaEditor = null;
-/** El id que jugadaEditor.js va a leer para saber qué jugada cargar. */
-export function tomarJugadaParaEditor() { return jugadaParaEditor; }
+/** El id que jugadaEditor.js lee para saber qué jugada cargar. */
+export function jugadaParaEditorActual() { return jugadaParaEditor; }
 
 const MENSAJE_PANTALLA_CHICA = 'El editor de jugadas es para compu o tablet. Desde acá podés verlas, asignarlas y duplicarlas.';
 

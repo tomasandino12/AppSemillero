@@ -14,6 +14,7 @@ import { setAbrirEjercicio } from './ejercicios.js';
 import { renderEjercicio, abrirEjercicio } from './ejercicio.js';
 import { setAbrirJugada } from './jugadas.js';
 import { renderJugada, abrirJugada } from './jugada.js';
+import { renderJugadaEditor, iniciarJugadaEditor } from './jugadaEditor.js';
 import { renderMetas } from './metas.js';
 import { renderPanorama } from './coordPanorama.js';
 import { renderProfes } from './coordProfes.js';
@@ -51,6 +52,7 @@ export function registrarPantallas() {
   registrarPantalla('p-recursos', { titulo: 'Recursos', render: renderRecursos });
   registrarPantalla('p-ejercicio', { titulo: 'Ejercicio', render: renderEjercicio });
   registrarPantalla('p-jugada', { titulo: 'Jugada', render: renderJugada });
+  registrarPantalla('p-jugada-editor', { titulo: 'Editor de jugada', render: renderJugadaEditor });
   registrarPantalla('p-metas', { titulo: 'Metas', render: renderMetas });
   registrarPantalla('p-coord-panorama', { titulo: 'Panorama', render: renderPanorama });
   registrarPantalla('p-coord-profes', { titulo: 'Profes', render: renderProfes });
@@ -64,6 +66,7 @@ export function registrarPantallas() {
   setAbrirFicha(abrirFicha);
   setAbrirEjercicio(abrirEjercicio);
   setAbrirJugada(abrirJugada);
+  iniciarJugadaEditor();
   iniciarDatos();
   iniciarFisico();
   iniciarHoja();

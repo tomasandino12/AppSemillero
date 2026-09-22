@@ -658,6 +658,10 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .pz-trazo-tiro{stroke-dasharray:2 3}
 .pz-trazo-cortina{stroke-width:2.5}
 .pz-flecha{fill:var(--gris)}
+.pz-resalto{stroke:var(--primario);stroke-width:2;stroke-dasharray:3 2}
+.pz-asa{fill:var(--primario);stroke:var(--blanco);stroke-width:1.5;cursor:grab}
+/* Invisible pero ancha: un trazo de 2px es imposible de tocar con el dedo. Sólo el editor la usa. */
+.pz-trazo-toque{stroke:transparent;stroke-width:16;cursor:pointer}
 
 /* Tarjeta de jugada en la biblioteca: mismo molde que rec-tarj (miniatura +
    cuerpo), pero clicable entera en vez de sólo la miniatura. */
@@ -666,6 +670,19 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
    rec-mini (pensado para video) le dejaba franjas negras enormes a los costados. */
 .jugada-mini{aspect-ratio:1/1}
 .jugada-mini svg.pz{width:100%;height:100%}
+
+/* ---- editor de jugadas: herramientas arriba, cancha y panel de pasos abajo ---- */
+.jed{display:flex;flex-direction:column;gap:var(--sp-3)}
+.jed-herramientas{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.jed-grupo{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.jed-grupo-fin{margin-left:auto}
+.jed-cuerpo{display:flex;flex-direction:column;gap:var(--sp-4)}
+.jed-cancha{flex:1;min-width:0}
+/* Pointer Events maneja el arrastre; sin esto el navegador hace scroll/zoom con el dedo sobre la cancha. */
+.jed-cancha svg.pz{touch-action:none}
+.jed-panel{display:flex;flex-direction:column;gap:var(--sp-3)}
+.jed-panel-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.jed-paso-nav{display:flex;align-items:center;justify-content:center;gap:var(--sp-3)}
 
 /* Visor: cancha arriba, nota, transporte y velocidad debajo. */
 .visor-jugada{display:flex;flex-direction:column;gap:var(--sp-3)}

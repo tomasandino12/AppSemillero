@@ -68,16 +68,17 @@ function puntosTriangulo(cx, cy, r) {
 function dibujarFicha(ficha, p, alto) {
   const x = p.x * W;
   const y = p.y * alto;
+  const id = `data-ficha-id="${ficha.id}"`;
   if (ficha.tipo === 'cono') {
-    return `<polygon points="${puntosTriangulo(x, y, R_FICHA * 0.6)}" class="pz-cono"/>`;
+    return `<polygon points="${puntosTriangulo(x, y, R_FICHA * 0.6)}" class="pz-cono" ${id}/>`;
   }
   if (ficha.tipo === 'defensa') {
-    let g = `<polygon points="${puntosTriangulo(x, y, R_FICHA + 2)}" class="pz-defensa"/>`;
-    if (ficha.numero != null) g += `<text x="${x}" y="${y + 5}" class="pz-numero pz-numero-defensa">${ficha.numero}</text>`;
+    let g = `<polygon points="${puntosTriangulo(x, y, R_FICHA + 2)}" class="pz-defensa" ${id}/>`;
+    if (ficha.numero != null) g += `<text x="${x}" y="${y + 5}" class="pz-numero pz-numero-defensa" ${id}>${ficha.numero}</text>`;
     return g;
   }
-  let g = `<circle cx="${x}" cy="${y}" r="${R_FICHA}" class="pz-ataque"/>`;
-  if (ficha.numero != null) g += `<text x="${x}" y="${y + 4}" class="pz-numero pz-numero-ataque">${ficha.numero}</text>`;
+  let g = `<circle cx="${x}" cy="${y}" r="${R_FICHA}" class="pz-ataque" ${id}/>`;
+  if (ficha.numero != null) g += `<text x="${x}" y="${y + 4}" class="pz-numero pz-numero-ataque" ${id}>${ficha.numero}</text>`;
   return g;
 }
 
@@ -101,16 +102,16 @@ function escalarPath(d, alto) {
   }).join(' ');
 }
 
-function dibujarT(hasta, dx, dy, alto) {
+function dibujarT(hasta, dx, dy, alto, idx) {
   const x = hasta.x * W;
   const y = hasta.y * alto;
   const largo = 9;
   const px = -dy * largo;
   const py = dx * largo;
-  return `<line x1="${x + px}" y1="${y + py}" x2="${x - px}" y2="${y - py}" class="pz-trazo pz-trazo-cortina"/>`;
+  return `<line x1="${x + px}" y1="${y + py}" x2="${x - px}" y2="${y - py}" class="pz-trazo pz-trazo-cortina" ${idx}/>`;
 }
 
-function dibujarTrazo(a, inicio, cancha, alto, uid) {
+function dibujarTrazo(a, indice, inicio, cancha, alto, uid) {
   const desde = inicio.posiciones.get(a.ficha);
   const hasta = a.tipo === 'tiro' ? (AROS[cancha] ?? AROS.media)
     : (a.tipo === 'pase' || a.tipo === 'handoff') ? inicio.posiciones.get(a.a)
@@ -118,10 +119,15 @@ function dibujarTrazo(a, inicio, cancha, alto, uid) {
   if (!desde || !hasta) return '';
   const d = escalarPath(trazoSvg(desde, hasta, a.control, a.tipo), alto);
   const marcador = a.tipo === 'corte' ? ` marker-end="url(#pz-flecha-${uid})"` : '';
-  let g = `<path d="${d}" class="pz-trazo pz-trazo-${a.tipo}" fill="none"${marcador}/>`;
+  const idx = `data-accion-indice="${indice}"`;
+  // El trazo visible sigue siendo fino; un segundo trazo invisible y más
+  // ancho es el que realmente se toca (una línea de 2px es imposible de
+  // acertar con el dedo).
+  let g = `<path d="${d}" class="pz-trazo pz-trazo-${a.tipo}" fill="none"${marcador} ${idx}/>`;
+  g += `<path d="${d}" class="pz-trazo-toque" fill="none" ${idx}/>`;
   if (a.tipo === 'cortina') {
     const { dx, dy } = direccionFinal(desde, hasta, a.control);
-    g += dibujarT(hasta, dx, dy, alto);
+    g += dibujarT(hasta, dx, dy, alto, idx);
   }
   return g;
 }
@@ -130,7 +136,7 @@ function dibujarAcciones(datos, paso, alto, uid) {
   const acciones = datos.pasos[paso]?.acciones;
   if (paso == null || !acciones) return '';
   const inicio = estadoAlInicioDelPaso(datos, paso);
-  return acciones.map((a) => dibujarTrazo(a, inicio, datos.cancha, alto, uid)).join('');
+  return acciones.map((a, i) => dibujarTrazo(a, i, inicio, datos.cancha, alto, uid)).join('');
 }
 
 function defs(uid) {
@@ -160,4 +166,71 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
   svg.setAttribute('viewBox', `0 0 ${W} ${alto}`);
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   svg.innerHTML = g;
+}
+
+/**
+ * El punto de un click/touch sobre `svg`, en unidades del viewBox (`xSvg`,
+ * `ySvg`) y normalizado 0–1 (`x`, `y`, recortado a la cancha). El editor
+ * (task 8) lo usa para saber dónde tocó el profe; `preserveAspectRatio` deja
+ * franjas (letterbox) en el eje que sobra, por eso la escala es la MENOR de
+ * las dos (el mismo criterio que "meet").
+ */
+export function puntoDesdeEvento(svg, datos, evento) {
+  const rect = svg.getBoundingClientRect();
+  const alto = altoDe(datos.cancha);
+  const escala = Math.min(rect.width / W, rect.height / alto) || 1;
+  const margenX = (rect.width - W * escala) / 2;
+  const margenY = (rect.height - alto * escala) / 2;
+  const xSvg = (evento.clientX - rect.left - margenX) / escala;
+  const ySvg = (evento.clientY - rect.top - margenY) / escala;
+  return {
+    xSvg,
+    ySvg,
+    x: Math.min(1, Math.max(0, xSvg / W)),
+    y: Math.min(1, Math.max(0, ySvg / alto)),
+  };
+}
+
+/** La ficha más cercana a (xSvg, ySvg), dentro de un radio de toque; null si ninguna entra. */
+export function fichaEnPunto(datos, estado, xSvg, ySvg, radio = R_FICHA * 1.6) {
+  const alto = altoDe(datos.cancha);
+  let mejorId = null;
+  let mejorDistancia = radio;
+  for (const ficha of datos.fichas) {
+    const p = estado.posiciones.get(ficha.id) ?? ficha;
+    const d = Math.hypot(p.x * W - xSvg, p.y * alto - ySvg);
+    if (d <= mejorDistancia) {
+      mejorDistancia = d;
+      mejorId = ficha.id;
+    }
+  }
+  return mejorId;
+}
+
+/** El círculo punteado que marca la ficha de origen mientras se espera el segundo toque de una acción. */
+export function resaltoDeFicha(datos, estado, fichaId) {
+  const alto = altoDe(datos.cancha);
+  const p = estado.posiciones.get(fichaId);
+  if (!p) return '';
+  return `<circle cx="${p.x * W}" cy="${p.y * alto}" r="${R_FICHA + 5}" class="pz-resalto" fill="none"/>`;
+}
+
+/** El punto de control de una acción (el real, o el punto medio del trazo si todavía no tiene uno), para arrastrarlo. */
+export function puntoDeControl(datos, k, indice) {
+  const inicio = estadoAlInicioDelPaso(datos, k);
+  const a = datos.pasos[k]?.acciones?.[indice];
+  if (!a) return null;
+  if (a.control) return a.control;
+  const desde = inicio.posiciones.get(a.ficha);
+  const hasta = a.tipo === 'tiro' ? (AROS[datos.cancha] ?? AROS.media)
+    : (a.tipo === 'pase' || a.tipo === 'handoff') ? inicio.posiciones.get(a.a)
+    : a.hasta;
+  if (!desde || !hasta) return null;
+  return { x: (desde.x + hasta.x) / 2, y: (desde.y + hasta.y) / 2 };
+}
+
+/** El manija (asa) del punto de control, en píxeles del viewBox: para dibujarla y para calcular el radio de arrastre. */
+export function asaDeControl(datos, punto) {
+  const alto = altoDe(datos.cancha);
+  return `<circle cx="${punto.x * W}" cy="${punto.y * alto}" r="6" class="pz-asa"/>`;
 }
