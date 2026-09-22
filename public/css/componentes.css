@@ -669,6 +669,8 @@ svg.g{width:100%;display:block;overflow:visible}
    Un atributo fill/stroke con var() no lo interpreta el SVG: por eso
    pizarra.js sólo escribe `class`, nunca color, acá vive el único valor. ---- */
 svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
+/* La banda de afuera (saques): más apagada que la cancha, para que se lea el borde. */
+.pz-fuera{fill:var(--linea);opacity:.45}
 .pz-cancha{fill:var(--papel)}
 .pz-linea{stroke:var(--linea);stroke-width:1.5}
 .pz-aro{stroke:var(--tinta);stroke-width:2}

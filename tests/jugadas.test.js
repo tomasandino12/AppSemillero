@@ -42,8 +42,18 @@ test('rechaza coordenadas fuera de rango', () => {
   const d = base();
   d.fichas[0].x = 1.2;
   hayError(d, /fuera de la cancha/);
-  hayError(conPaso([{ tipo: 'corte', ficha: 'a2', hasta: { x: 0.5, y: -0.1 } }]), /fuera de la cancha/);
+  hayError(conPaso([{ tipo: 'corte', ficha: 'a2', hasta: { x: 0.5, y: -0.2 } }]), /fuera de la cancha/);
   hayError(conPaso([{ tipo: 'corte', ficha: 'a2', hasta: { x: 0.5, y: 0.5 }, control: { x: 2, y: 0 } }]), /control/);
+});
+
+test('acepta fichas en la banda de afuera (saque de lateral o de fondo)', () => {
+  const d = base();
+  d.fichas[1].x = -0.08;
+  d.fichas[0].y = 1.08;
+  assert.deepEqual(validarJugada(d), { ok: true, errores: [] });
+  const entera = { ...base(), cancha: 'entera' };
+  entera.fichas[0].y = 1.08; // en entera la banda es la misma en metros: menos en 0–1
+  hayError(entera, /fuera de la cancha/);
 });
 
 test('rechaza pase de quien no tiene la pelota', () => {

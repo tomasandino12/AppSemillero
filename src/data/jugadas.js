@@ -9,6 +9,7 @@
  */
 
 import { LIMITE } from './limites.js';
+import { limitesDe } from './geometriaCancha.js';
 
 export const TIPOS_JUGADA = [
   { clave: 'ataque', etiqueta: 'Ataque' },
@@ -60,7 +61,10 @@ export function duplicarDatos(datos) {
   return structuredClone(datos);
 }
 
-const esPunto = (p) => Boolean(p) && [p.x, p.y].every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1);
+// Vale la banda de afuera (limitesDe): el que saca de lateral está fuera de la cancha.
+const esNumero = (n) => typeof n === 'number' && Number.isFinite(n);
+const enRango = (p, l) => Boolean(p) && esNumero(p.x) && esNumero(p.y)
+  && p.x >= l.minX && p.x <= l.maxX && p.y >= l.minY && p.y <= l.maxY;
 const largoEnCaracteres = (texto) => [...texto].length;
 
 /** Devuelve `{ ok, errores }`; nunca lanza, aunque `datos` sea cualquier cosa. */
@@ -81,6 +85,8 @@ export function validarJugada(datos) {
   if (fichas.length > TOPES.fichas) errores.push(`Máximo ${TOPES.fichas} fichas por jugada.`);
   if (pasos.length > TOPES.pasos) errores.push(`Máximo ${TOPES.pasos} pasos por jugada.`);
 
+  const limites = limitesDe(datos.cancha);
+  const esPunto = (p) => enRango(p, limites);
   const porId = new Map();
   const numerosAtaque = new Set();
   for (const f of fichas) {

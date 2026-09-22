@@ -11,7 +11,7 @@
  */
 import { estadoAlInicioDelPaso, TIPOS_ACCION } from '../../data/jugadas.js';
 import { direccionFinal, trazoSvg } from '../../data/animacionJugada.js';
-import { W, altoDe, formasDeUnExtremo, AROS } from '../../data/geometriaCancha.js';
+import { W, altoDe, formasDeUnExtremo, AROS, MARGEN, limitesDe } from '../../data/geometriaCancha.js';
 
 const R_FICHA = 12;
 const LARGO_T = 9; // largo de la T de la cortina; también fija el alto del viewBox del ícono.
@@ -39,7 +39,8 @@ function mitadDeCancha() {
 function fondoDeCancha(cancha) {
   const alto = altoDe(cancha);
   const { circuloCentral } = formasDeUnExtremo();
-  let g = `<rect x="0" y="0" width="${W}" height="${alto}" class="pz-cancha"/>`;
+  let g = `<rect x="${-MARGEN}" y="${-MARGEN}" width="${W + MARGEN * 2}" height="${alto + MARGEN * 2}" class="pz-fuera"/>`;
+  g += `<rect x="0" y="0" width="${W}" height="${alto}" class="pz-cancha"/>`;
   g += `<rect x="1" y="1" width="${W - 2}" height="${alto - 2}" class="pz-linea" fill="none"/>`;
   if (cancha === 'entera') {
     const mitad = alto / 2;
@@ -238,18 +239,20 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
   if (opciones.fantasmas) g += dibujarFantasmas(datos, opciones.paso, alto, opciones.nosotrosDefiende);
   if (pelotaEn) g += dibujarPelota(pelotaEn, estado.posiciones, alto);
 
-  svg.setAttribute('viewBox', `0 0 ${W} ${alto}`);
+  // El viewBox arranca en -MARGEN: la banda de afuera (saques de lateral y
+  // de fondo) queda a la vista sin cambiar las coordenadas 0–1 de la cancha.
+  svg.setAttribute('viewBox', `${-MARGEN} ${-MARGEN} ${W + MARGEN * 2} ${alto + MARGEN * 2}`);
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   // Sin esto, un <svg> sin atributos width/height no tiene tamaño intrínseco
   // para el navegador: con max-height sola (editor en fila, ≥64rem) mediría
   // 0×0 en vez de escalar. width:100% (miniatura, visor) no lo necesita.
-  svg.style.aspectRatio = `${W} / ${alto}`;
+  svg.style.aspectRatio = `${W + MARGEN * 2} / ${alto + MARGEN * 2}`;
   svg.innerHTML = g;
 }
 
 /**
  * El punto de un click/touch sobre `svg`, en unidades del viewBox (`xSvg`,
- * `ySvg`) y normalizado 0–1 (`x`, `y`, recortado a la cancha). El editor
+ * `ySvg`) y normalizado 0–1 (`x`, `y`, recortado a la cancha más la banda de afuera). El editor
  * (task 8) lo usa para saber dónde tocó el profe; `preserveAspectRatio` deja
  * franjas (letterbox) en el eje que sobra, por eso la escala es la MENOR de
  * las dos (el mismo criterio que "meet").
@@ -257,16 +260,19 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
 export function puntoDesdeEvento(svg, datos, evento) {
   const rect = svg.getBoundingClientRect();
   const alto = altoDe(datos.cancha);
-  const escala = Math.min(rect.width / W, rect.height / alto) || 1;
-  const margenX = (rect.width - W * escala) / 2;
-  const margenY = (rect.height - alto * escala) / 2;
-  const xSvg = (evento.clientX - rect.left - margenX) / escala;
-  const ySvg = (evento.clientY - rect.top - margenY) / escala;
+  const anchoVb = W + MARGEN * 2;
+  const altoVb = alto + MARGEN * 2;
+  const escala = Math.min(rect.width / anchoVb, rect.height / altoVb) || 1;
+  const margenX = (rect.width - anchoVb * escala) / 2;
+  const margenY = (rect.height - altoVb * escala) / 2;
+  const xSvg = (evento.clientX - rect.left - margenX) / escala - MARGEN;
+  const ySvg = (evento.clientY - rect.top - margenY) / escala - MARGEN;
+  const l = limitesDe(datos.cancha);
   return {
     xSvg,
     ySvg,
-    x: Math.min(1, Math.max(0, xSvg / W)),
-    y: Math.min(1, Math.max(0, ySvg / alto)),
+    x: Math.min(l.maxX, Math.max(l.minX, xSvg / W)),
+    y: Math.min(l.maxY, Math.max(l.minY, ySvg / alto)),
   };
 }
 

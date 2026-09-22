@@ -18,12 +18,26 @@ const RADIO_TRIPLE_M = 6.75;
 const TRIPLE_DESDE_LATERAL_M = 0.9;
 const RADIO_CENTRAL_M = 1.8;
 const PX_POR_M = 20;
+// Banda alrededor de la cancha: ahí se para quien saca de lateral o de fondo.
+const FUERA_M = 1.5;
 
 export const W = ANCHO_M * PX_POR_M;
 export const ALTO = { media: MEDIA_M * PX_POR_M, entera: MEDIA_M * 2 * PX_POR_M };
 
 export function altoDe(cancha) {
   return ALTO[cancha] ?? ALTO.media;
+}
+
+/** Ancho de la banda de afuera, en px del viewBox (igual en los cuatro lados). */
+export const MARGEN = FUERA_M * PX_POR_M;
+
+/**
+ * Hasta dónde puede estar un punto, en coordenadas 0–1 de la cancha: un poco
+ * menos de 0 y un poco más de 1, lo que mide la banda de afuera en cada eje.
+ */
+export function limitesDe(cancha) {
+  const alto = altoDe(cancha);
+  return { minX: -MARGEN / W, maxX: 1 + MARGEN / W, minY: -MARGEN / alto, maxY: 1 + MARGEN / alto };
 }
 
 const Y_ARO = ARO_DESDE_FONDO_M * PX_POR_M;
