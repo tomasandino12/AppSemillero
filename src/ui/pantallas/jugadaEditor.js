@@ -116,15 +116,18 @@ function render() {
   const datos = datosActuales();
   contenedor().innerHTML = html`
     <div class="jed">
-      ${cabeceraEditorHtml(jugadaMeta.nombre)}
-      ${barraDeHerramientasHtml({
-        herramienta,
+      ${cabeceraEditorHtml({
+        nombre: jugadaMeta.nombre,
+        tipo: jugadaMeta.tipo,
         puedeDeshacer: indiceHistorial > 0,
         puedeRehacer: indiceHistorial < historial.length - 1,
-        hayPasos: datos.pasos.length > 0,
-        puedeAgregar: pasoActual === 0,
       })}
       <div class="jed-cuerpo">
+        ${barraDeHerramientasHtml({
+          herramienta,
+          hayPasos: datos.pasos.length > 0,
+          puedeAgregar: pasoActual === 0,
+        })}
         <div class="jed-cancha"><svg class="pz" id="jed-svg" role="img" aria-label="Pizarra táctica"></svg></div>
         ${panelDePasosHtml(datos, pasoActual)}
       </div>

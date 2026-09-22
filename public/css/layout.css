@@ -368,29 +368,33 @@
   .publico .beneficios{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
-/* Editor de jugadas: en tablet vertical (mobile-first, abajo del panel) el
-   panel de pasos va debajo de la cancha; desde acá pasa al costado.
-   Selectores con `.pant.ancha` (no sólo `.jed-cuerpo`/`.jed-cancha`/...) a
-   propósito: componentes.css se carga DESPUÉS de este archivo, así que sus
-   reglas base (una sola clase, sin media query) le ganarían por orden de
-   cascada a éstas si tuvieran la misma especificidad — el mismo motivo del
-   prefijo `.publico` más abajo. Sin el extra de especificidad, el editor
-   quedaba siempre en columna aunque el viewport matcheara: el bug original. */
+/* Editor de jugadas: en tablet vertical (mobile-first, la barra arriba como
+   fila de íconos y el panel abajo de la cancha) desde acá la barra pasa a
+   columna fija a la izquierda y el panel a columna fija a la derecha, los
+   tres en fila. Selectores con `.pant.ancha` (no sólo `.jed-cuerpo`/
+   `.jed-cancha`/...) a propósito: componentes.css se carga DESPUÉS de este
+   archivo, así que sus reglas base (una sola clase, sin media query) le
+   ganarían por orden de cascada a éstas si tuvieran la misma especificidad —
+   el mismo motivo del prefijo `.publico` más abajo. Sin el extra de
+   especificidad, el editor quedaba siempre en columna aunque el viewport
+   matcheara: el bug original. */
 @media (min-width:64rem){
   .pant.ancha .jed-cuerpo{flex-direction:row;align-items:flex-start}
+  .pant.ancha .jed-barra{flex:0 0 5rem;flex-direction:column;align-items:stretch}
   .pant.ancha .jed-cancha{flex:1;min-width:0;display:flex;justify-content:center}
   /* La cancha se topa por alto para que entre completa (media o entera) sin
-     scroll vertical. La resta aproxima cabecera + barra de categorías + barra
-     de herramientas con tokens (tres franjas de --tap, paddings de --sp-8, el
-     padding-top de .jed en componentes.css y el padding-bottom de .pant.on):
+     scroll vertical. La resta aproxima cabecera + barra de categorías con
+     tokens (dos franjas de --tap, ya no tres: la barra de herramientas es
+     una columna al costado, no una franja arriba) más paddings de --sp-8, el
+     padding-top de .jed en componentes.css y el padding-bottom de .pant.on:
      no hay forma de medirlas exacto acá porque las arma JS con datos de
      sesión. Si en algún ancho no cierra justo, se prefiere quedar corto (un
      poco de aire abajo) antes que generar scroll. */
   .pant.ancha .jed-cancha svg.pz{
-    max-height:calc(100dvh - var(--tap) * 3 - var(--sp-8) * 3 - var(--sp-5) - var(--sp-3));
+    max-height:calc(100dvh - var(--tap) * 2 - var(--sp-8) * 2 - var(--sp-5) - var(--sp-3));
     width:auto;max-width:100%;margin-inline:auto;
   }
-  .pant.ancha .jed-panel{flex:0 0 18rem}
+  .pant.ancha .jed-panel{flex:0 0 20rem}
 }
 
 /* Ficha de una jugada (p-jugada, NO .pant.ancha): la cancha se topa por alto

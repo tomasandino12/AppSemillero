@@ -18,11 +18,12 @@ export const ICONO = {
   imprimir: `<svg ${ATR}><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1"/><path d="M6 17v4h12v-4"/></svg>`,
   mas: `<svg ${ATR}><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
   reproducir: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" focusable="false"><path d="M7 4l13 8-13 8V4z"/></svg>',
+  cursor: `<svg ${ATR}><path d="M4 3l7.07 16.97 2.51-6.99 6.99-2.51z"/></svg>`,
 };
 
 /** Botón cuadrado con un solo ícono: `aria-label` y `title` cubren lo que en un botón de texto da la etiqueta. */
 export function botonIcono({
-  id, icono, etiqueta, extraClase = '',
+  id, icono, etiqueta, extraClase = '', disabled = false,
 }) {
-  return html`<button type="button" class="btn-icono${extraClase ? ` ${extraClase}` : ''}"${id ? html` id="${id}"` : ''} aria-label="${etiqueta}" title="${etiqueta}">${crudo(icono)}</button>`;
+  return html`<button type="button" class="btn-icono${extraClase ? ` ${extraClase}` : ''}"${id ? html` id="${id}"` : ''} aria-label="${etiqueta}" title="${etiqueta}"${disabled ? html` disabled` : ''}>${crudo(icono)}</button>`;
 }
