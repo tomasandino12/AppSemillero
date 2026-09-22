@@ -120,6 +120,7 @@ export function armarProfes({ planteles, catalogo, temporadas, miembros, asignac
       esEntrenador: m.esEntrenador,
       esCoordinador: m.esCoordinador,
       esUnoMismo: m.userId === usuarioActualId,
+      bajaEn: m.bajaEn ?? null,
       categorias: asignacionesVigentes
         .filter((a) => a.userId === m.userId && plantelesPorId.has(a.plantelId))
         .map((a) => ({ a, p: plantelesPorId.get(a.plantelId) }))

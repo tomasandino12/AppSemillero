@@ -2,7 +2,7 @@ import {
   obtenerPlantelesDelClub, obtenerCatalogoDeCategorias, obtenerTemporadasDelClub,
   obtenerMiembrosDelClub, obtenerAsignacionesDelClub, obtenerUsuariosPendientes,
   obtenerUsuarioActual, asignarPlanteles, cerrarAsignacion, descartarCuenta,
-  buscarJugadorParaHabilitar,
+  buscarJugadorParaHabilitar, darDeBajaProfe,
 } from '../../data/repositorio.js';
 import { armarProfes } from '../../data/coordinacion.js';
 import { obtenerClubActual } from '../sesion.js';
@@ -31,6 +31,10 @@ const mensajeDeError = (e) => mensajeAlGuardar(e, {
     [/NO_ES_ENTRENADOR/, 'Esa cuenta es de coordinación. Para que además entrene, hay que dárselo desde la base.'],
     [/YA_ES_DEL_CLUB/, 'Esa cuenta ya es del club. Actualizá la lista.'],
     [/ES_JUGADOR/, 'Esa cuenta es de un jugador: se la puede habilitar como profe, no rechazar.'],
+    [/DADO_DE_BAJA/, 'Esa cuenta está dada de baja: reactivarla no se hace desde acá.'],
+    [/ES_COORDINACION/, 'Esa cuenta es de coordinación: no se la puede dar de baja desde acá.'],
+    [/NO_ES_UNO_MISMO/, 'No podés darte de baja a vos mismo.'],
+    [/YA_DADO_DE_BAJA/, 'Esa cuenta ya está dada de baja.'],
   ],
   permiso: /NO_SE_PUDO_CERRAR|row-level security|permission denied|42501/i,
 });
@@ -64,8 +68,11 @@ function sinProfeHtml(sinProfe) {
 function profeHtml(p) {
   const roles = [p.esEntrenador && 'Entrenador', p.esCoordinador && 'Coordinación'].filter(Boolean).join(' · ');
   // El propio coordinador no se edita desde acá (la base lo rechaza), y a un
-  // coordinador puro no se le asignan categorías (NO_ES_ENTRENADOR).
-  const editable = p.esEntrenador && !p.esUnoMismo;
+  // coordinador puro no se le asignan categorías (NO_ES_ENTRENADOR). Un dado
+  // de baja tampoco: la base lo rechaza con DADO_DE_BAJA.
+  const editable = p.esEntrenador && !p.esUnoMismo && !p.bajaEn;
+  // dar_de_baja_profe rechaza a uno mismo y a coordinación (NO_ES_UNO_MISMO, ES_COORDINACION).
+  const sePuedeDarDeBaja = !p.esUnoMismo && !p.esCoordinador && !p.bajaEn;
   const categorias = p.categorias.map((c) => `
     <div class="profe-cat">
       <div style="flex:1;min-width:0">
@@ -77,10 +84,11 @@ function profeHtml(p) {
   `).join('');
   return `
     <div class="profe">
-      <div class="nom">${escaparHtml(p.etiqueta)}${p.esUnoMismo ? ' <span class="det">(vos)</span>' : ''}</div>
+      <div class="nom">${escaparHtml(p.etiqueta)}${p.esUnoMismo ? ' <span class="det">(vos)</span>' : ''}${p.bajaEn ? ' <span class="det">(dado de baja)</span>' : ''}</div>
       <div class="det">${roles}${p.etiqueta !== p.email ? ` · ${escaparHtml(p.email)}` : ''}</div>
-      ${categorias || (p.esEntrenador ? '<span class="chip sin">Sin categorías</span>' : '')}
+      ${categorias || (p.esEntrenador && !p.bajaEn ? '<span class="chip sin">Sin categorías</span>' : '')}
       ${editable ? `<button class="btn sec chico" data-asignar-a="${p.userId}">Asignar categorías</button>` : ''}
+      ${sePuedeDarDeBaja ? `<button class="btn sec chico" data-dar-de-baja="${p.userId}">Dar de baja</button>` : ''}
     </div>
   `;
 }
@@ -278,6 +286,41 @@ function abrirQuitar(profe, categoria) {
   });
 }
 
+/**
+ * A diferencia de Quitar (una sola categoría), esto cierra TODAS las
+ * asignaciones del profe y lo marca de baja: deja de ver el plantel entero.
+ * Lo que cargó no se toca. Lleva confirmación por lo mismo que Quitar: es lo
+ * que más duele si fue un dedazo.
+ */
+function abrirDarDeBaja(profe) {
+  const club = obtenerClubActual();
+  abrirHoja({
+    titulo: `Dar de baja a ${profe.etiqueta}`,
+    cuerpo: `
+      <div class="p">${escaparHtml(profe.etiqueta)} deja de ver el plantel entero desde ahora. Lo que cargó queda en el club; su historia no se borra.</div>
+      <div class="acciones">
+        <button class="btn" id="btn-confirmar-baja">Dar de baja</button>
+        <button class="btn sec" id="btn-cancelar-baja">Cancelar</button>
+      </div>
+    `,
+  });
+  $('btn-cancelar-baja').addEventListener('click', () => cerrarHoja());
+  $('btn-confirmar-baja').addEventListener('click', async () => {
+    const boton = $('btn-confirmar-baja');
+    if (boton.disabled) return;
+    boton.disabled = true;
+    try {
+      await darDeBajaProfe({ userId: profe.userId, clubId: club.id });
+      cerrarHoja();
+      toast(`Listo: ${profe.etiqueta} está dado de baja.`);
+      await renderProfes();
+    } catch (e) {
+      toast(mensajeDeError(e));
+      boton.disabled = false;
+    }
+  });
+}
+
 /* ---------- pantalla ---------- */
 
 export async function renderProfes() {
@@ -348,6 +391,9 @@ export async function renderProfes() {
   contenedor().querySelectorAll('[data-quitar]').forEach((b) => b.addEventListener('click', () => {
     const profe = vista.profes.find((p) => p.userId === b.dataset.profe);
     abrirQuitar(profe, profe.categorias.find((c) => c.asignacionId === b.dataset.quitar));
+  }));
+  contenedor().querySelectorAll('[data-dar-de-baja]').forEach((b) => b.addEventListener('click', () => {
+    abrirDarDeBaja(vista.profes.find((p) => p.userId === b.dataset.darDeBaja));
   }));
 
   $('btn-buscar-jugador').addEventListener('click', buscarJugadorPorMail);

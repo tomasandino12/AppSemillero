@@ -64,7 +64,21 @@ export async function obtenerMiembrosDelClub(clubId) {
     esEntrenador: f.es_entrenador,
     esCoordinador: f.es_coordinador,
     habilitadoEn: f.habilitado_en,
+    bajaEn: f.baja_en,
   }));
+}
+
+/**
+ * Cierra todas las asignaciones vigentes de un profe y lo marca de baja
+ * (baja_en, 0039): deja de ver el plantel, lo que cargó queda. Nunca a uno
+ * mismo ni a alguien de coordinación: la base lo rechaza con NO_ES_UNO_MISMO
+ * o ES_COORDINACION.
+ */
+export async function darDeBajaProfe({ userId, clubId }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase.rpc('dar_de_baja_profe', { p_user_id: userId, p_club_id: clubId });
+  if (error) throw error;
+  return { asignacionesCerradas: data.asignacionesCerradas };
 }
 
 /** Asignaciones vigentes del club. Las cerradas quedan en la base; el panel no las lista. */

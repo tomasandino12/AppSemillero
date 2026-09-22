@@ -51,3 +51,8 @@ test('registrada_en y creado_en los sella el servidor', () => {
   assert.match(cuerpoDe('sellar_medicion_corporal'), /new\.creado_en := old\.creado_en/);
   assert.match(sql, /update pertenencia set registrada_en = '-infinity';/);
 });
+
+test('el repo llama a dar_de_baja_profe con el profe y el club', () => {
+  const repo = readFileSync('src/data/repos/coordinacion.js', 'utf8');
+  assert.match(repo, /\.rpc\(\s*'dar_de_baja_profe'\s*,\s*\{\s*p_user_id:\s*userId,\s*p_club_id:\s*clubId\s*\}\s*\)/);
+});
