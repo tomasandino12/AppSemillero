@@ -140,9 +140,10 @@ export async function obtenerEstadisticasDelPlantel(clubId, plantelId) {
     const hasta = desde + TAMANIO_PAGINA - 1;
     const { data: pagina, error } = await supabase
       .from('estadistica_jugador_partido')
-      .select('partido_id, jugador_id, min_segundos, pts, dos_anotados, dos_intentados, tres_anotados, tres_intentados, libres_anotados, libres_intentados, partido!inner(plantel_id)')
+      .select('id, partido_id, jugador_id, min_segundos, pts, dos_anotados, dos_intentados, tres_anotados, tres_intentados, libres_anotados, libres_intentados, partido!inner(plantel_id)')
       .eq('club_id', clubId)
       .eq('partido.plantel_id', plantelId)
+      .order('id')
       .range(desde, hasta);
     if (error) throw error;
     data.push(...pagina);

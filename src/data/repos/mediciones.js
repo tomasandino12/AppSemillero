@@ -27,9 +27,10 @@ export async function obtenerMedicionesTiroDelPlantel(clubId, plantelId) {
     const hasta = desde + TAMANIO_PAGINA - 1;
     const { data: pagina, error } = await supabase
       .from('medicion_tiro')
-      .select('sesion_id, jugador_id, posicion, anotados, intentos, sesion_medicion!inner(plantel_id)')
+      .select('id, sesion_id, jugador_id, posicion, anotados, intentos, sesion_medicion!inner(plantel_id)')
       .eq('club_id', clubId)
       .eq('sesion_medicion.plantel_id', plantelId)
+      .order('id')
       .range(desde, hasta);
     if (error) throw error;
     data.push(...pagina);
@@ -110,6 +111,7 @@ export async function obtenerMedicionesCorporalesDelClub(clubId) {
       .from('medicion_corporal')
       .select('id, jugador_id, fecha_medicion, altura_cm, peso_kg')
       .eq('club_id', clubId)
+      .order('id')
       .range(desde, hasta);
     if (error) throw error;
     data.push(...pagina);
