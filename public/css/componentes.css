@@ -718,6 +718,11 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
   display:flex;align-items:center;justify-content:center;margin-left:auto;margin-bottom:var(--sp-2);
   width:var(--tap);height:var(--tap);border-radius:var(--r-full);background:var(--fondo-chip);font-size:var(--fs-160);color:var(--tinta);
 }
+/* El visor no comparte el tope de .pant.on (layout.css) porque .jvc no es
+   .cuerpo > .pant: sin esto se estira sin límite en pantallas grandes. */
+@media (min-width:64rem){
+  #jug-visor-completo-cuerpo{max-width:var(--max-ancho);margin-inline:auto}
+}
 
 /* Hoja de impresión de una jugada: vacía y oculta en pantalla; sólo existe
    para @media print (exportarJugada.js la llena antes de window.print()). */
