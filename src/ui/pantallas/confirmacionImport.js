@@ -3,11 +3,11 @@ import { calcularHashArchivo, mapearImportacion } from '../../data/mapearImporta
 import { obtenerPlantelesDelClub, obtenerJugadoresDelClub, buscarImportacionPorHash, importarPartido } from '../../data/repositorio.js';
 import { prepararPayloadImportacion } from '../../data/prepararPayloadImportacion.js';
 import { obtenerClubActual } from '../sesion.js';
-import { mostrarPantalla, toast, esErrorDeRed, escaparHtml } from '../nav.js';
+import { mostrarPantalla, toast, escaparHtml } from '../nav.js';
 import { mostrarResultado } from './resultadoImport.js';
 import { retornarDeImport } from './retornoImport.js';
 import { $ } from '../dom.js';
-import { SIN_CONEXION, textoDeError } from '../errores.js';
+import { textoDeError, mensajeAlGuardar } from '../errores.js';
 
 const contenedor = () => $('confirmacion-contenido');
 
@@ -218,6 +218,36 @@ async function avanzarAJugadores() {
   mostrarGrupos();
 }
 
+/**
+ * Vuelve a leer obtenerJugadoresDelClub y remapea con lo mismo que se leyó
+ * del archivo, para que el próximo guardado no choque contra el mismo
+ * jugador o pertenencia que se acaba de cargar mientras tanto. Si ni esto se
+ * puede, se deja el "Guardar" desactivado: el toast de arriba ya explicó qué
+ * pasó, y forzar un reintento con datos viejos repetiría el mismo error.
+ */
+async function refrescarJugadoresYRemapear() {
+  const club = obtenerClubActual();
+  let jugadoresExistentes;
+  try {
+    jugadoresExistentes = await obtenerJugadoresDelClub(club.id);
+  } catch {
+    return;
+  }
+  estado.jugadoresExistentes = jugadoresExistentes;
+
+  const plantel = estado.planteles.find((p) => p.id === estado.plantelId);
+  const resultadoMapeo = mapearImportacion(
+    estado.resultadoParser,
+    { condicionPropia: estado.condicionPropia, clubId: club.id, plantelId: estado.plantelId, temporadaId: plantel.temporadaId, fecha: estado.fecha },
+    jugadoresExistentes,
+  );
+  if (resultadoMapeo.error) return;
+  estado.resultadoMapeo = resultadoMapeo;
+  estado.decisionesSugerencias = {};
+  estado.nuevosExcluidos = new Set();
+  mostrarGrupos();
+}
+
 function mostrarGrupos() {
   const { resultadoMapeo } = estado;
   const yaCargados = resultadoMapeo.jugadoresCoincidentes.filter((c) => !c.requierePertenenciaNueva);
@@ -368,16 +398,24 @@ async function guardar() {
   try {
     await importarPartido(payload);
   } catch (e) {
-    if (e?.message === 'IMPORTACION_DUPLICADA') {
-      toast('Este partido ya fue importado.');
-    } else if (esErrorDeRed(e)) {
-      toast(SIN_CONEXION);
-    } else {
-      toast('No se pudo guardar. Intentá de nuevo.');
-    }
     estado.guardando = false;
-    boton.disabled = false;
-    boton.textContent = textoOriginal;
+    const texto = e?.message ?? '';
+    const reglas = [
+      [/^IMPORTACION_DUPLICADA$/, 'Este partido ya fue importado.'],
+      [/^JUGADOR_YA_EXISTE:/, 'Alguien más acaba de cargar a ese jugador. Revisá la lista actualizada y guardá de nuevo.'],
+      [/^PERTENENCIA_YA_VIGENTE$/, 'Alguien más acaba de sumar a ese jugador a esta categoría. Revisá la lista actualizada y guardá de nuevo.'],
+    ];
+    toast(mensajeAlGuardar(e, { reglas, generico: 'No se pudo guardar. Intentá de nuevo.' }));
+    // El dedup se hizo con una lista de jugadores que ya quedó vieja (alguien
+    // más cargó al mismo chico mientras tanto): reintentar con el mismo
+    // resultadoMapeo repetiría el mismo choque. Se vuelve a leer y remapear
+    // antes de dejar tocar "Guardar" de nuevo.
+    if (/^(JUGADOR_YA_EXISTE:|PERTENENCIA_YA_VIGENTE)/.test(texto)) {
+      await refrescarJugadoresYRemapear();
+    } else {
+      boton.disabled = false;
+      boton.textContent = textoOriginal;
+    }
     return;
   }
 

@@ -29,6 +29,23 @@ function esErrorDePermiso(e, permiso) {
   return e?.code === '42501' || permiso.test(e?.message ?? '');
 }
 
+/*
+ * Quién se entera de un error que sí se le mostró a la persona (a diferencia
+ * de src/ui/reporteDeErrores.js, que atrapa lo que nadie atrapó). Sirve para
+ * mandar a guardarErrorDeCliente sin que este módulo sepa nada de red ni de
+ * club: main.js registra el reportero de verdad (ver alReportarError).
+ */
+let reportero = null;
+export function alReportarError(fn) {
+  reportero = fn;
+}
+function reportar(e) {
+  reportero?.({ codigo: e?.code ?? null, mensaje: e?.message ?? '' });
+}
+function conCodigo(texto, e) {
+  return e?.code ? `${texto} (código ${e.code})` : texto;
+}
+
 /** Error de red → "sin conexión"; permiso con la sesión marcada como cerrada → SESION_CERRADA; cualquier otro → `generico`. */
 export function textoDeError(e, generico) {
   if (esErrorDeRed(e)) return SIN_CONEXION;
@@ -59,6 +76,10 @@ export function mensajeAlGuardar(e, {
   for (const [patron, mensaje] of reglas) {
     if (patron.test(texto)) return mensaje;
   }
-  if (esErrorDePermiso(e, permiso)) return sesionCerrada ? SESION_CERRADA : SIN_PERMISO;
-  return generico;
+  if (esErrorDePermiso(e, permiso)) {
+    reportar(e);
+    return conCodigo(sesionCerrada ? SESION_CERRADA : SIN_PERMISO, e);
+  }
+  reportar(e);
+  return conCodigo(generico, e);
 }

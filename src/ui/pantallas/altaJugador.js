@@ -6,7 +6,7 @@ import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir } from '../main.js';
 import { $ } from '../dom.js';
 import { LIMITE } from '../../data/limites.js';
-import { textoDeError } from '../errores.js';
+import { mensajeAlGuardar, textoDeError } from '../errores.js';
 
 function hoyLocal() {
   // Fecha local, no UTC: después de las 21:00 en Argentina, toISOString() ya
@@ -99,7 +99,7 @@ async function confirmarAlta() {
     if (e?.message === 'JUGADOR_YA_EXISTE') {
       aviso.innerHTML = `<div class="al"><div class="tx">Ese nombre ya existe en el club. Cerrá y volvé a abrir para ver la opción de sumarlo a esta categoría.</div></div>`;
     } else {
-      aviso.innerHTML = `<div class="al"><div class="tx">${textoDeError(e, 'No se pudo agregar el jugador.')}</div></div>`;
+      aviso.innerHTML = `<div class="al"><div class="tx">${mensajeAlGuardar(e, { generico: 'No se pudo agregar el jugador.' })}</div></div>`;
     }
     boton.disabled = false;
     boton.textContent = `Agregar a ${plantel.categoria}`;
@@ -138,7 +138,7 @@ function mostrarOfertaDeSumar(jugador) {
         desde: hoyLocal(),
       });
     } catch (e) {
-      $('alta-aviso').insertAdjacentHTML('beforeend', `<div class="al"><div class="tx">${textoDeError(e, 'No se pudo sumar a la categoría.')}</div></div>`);
+      $('alta-aviso').insertAdjacentHTML('beforeend', `<div class="al"><div class="tx">${mensajeAlGuardar(e, { generico: 'No se pudo sumar a la categoría.' })}</div></div>`);
       b.disabled = false;
       b.textContent = `Sumarlo a ${plantel.categoria}`;
       return;

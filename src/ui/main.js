@@ -5,7 +5,9 @@ import {
 } from '../data/repositorio.js';
 import { necesitaNombre, nombreSugerido, nombreDeUsuario, quiereSerJugador } from '../data/cuenta.js';
 import { puedeHaberSesion } from '../data/sesionGuardada.js';
+import { registroDeError } from '../data/errorDeCliente.js';
 import { iniciarReporteDeErrores } from './reporteDeErrores.js';
+import { alReportarError } from './errores.js';
 import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
 import {
@@ -258,6 +260,18 @@ async function iniciar() {
   iniciarReporteDeErrores({
     pantallaActual: pantallaActualId,
     alCapturar: (registro) => guardarErrorDeCliente(registro, obtenerClubActual()?.id ?? null),
+  });
+
+  // A diferencia de iniciarReporteDeErrores (lo que nadie atrapó), esto es lo
+  // que sí se le mostró a la persona en una pantalla (mensajeAlGuardar, en la
+  // rama de permiso y en la genérica): el código no tiene su propia columna
+  // en error_cliente, así que va adentro del mensaje.
+  alReportarError(({ codigo, mensaje }) => {
+    const registro = registroDeError({ message: codigo ? `[${codigo}] ${mensaje}` : mensaje }, {
+      pantalla: pantallaActualId(),
+      agente: navigator.userAgent,
+    });
+    guardarErrorDeCliente(registro, obtenerClubActual()?.id ?? null);
   });
 
   descartarBorradoresAnteriores();

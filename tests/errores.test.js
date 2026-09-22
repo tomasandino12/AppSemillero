@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SIN_CONEXION, SESION_CERRADA, textoDeError, avisoDeError, mensajeAlGuardar,
-  marcarSesionCerrada, desmarcarSesionCerrada,
+  marcarSesionCerrada, desmarcarSesionCerrada, alReportarError,
 } from '../src/ui/errores.js';
 
 const errorDeRed = new TypeError('Failed to fetch');
@@ -28,7 +28,7 @@ test('mensajeAlGuardar: red, reglas de la pantalla, permiso y genérico, en ese 
   assert.equal(mensajeAlGuardar(errorDeRed, { reglas }), SIN_CONEXION);
   assert.equal(mensajeAlGuardar(new Error('SIN_CATEGORIAS'), { reglas }), 'Marcá al menos una categoría.');
   assert.equal(mensajeAlGuardar(new Error('new row violates row-level security policy')), 'No tenés permiso para hacer eso.');
-  assert.equal(mensajeAlGuardar({ code: '42501', message: '' }), 'No tenés permiso para hacer eso.');
+  assert.equal(mensajeAlGuardar({ code: '42501', message: '' }), 'No tenés permiso para hacer eso. (código 42501)');
   assert.equal(mensajeAlGuardar(new Error('otra cosa')), 'No se pudo guardar. Probá de nuevo.');
 });
 
@@ -40,16 +40,35 @@ test('mensajeAlGuardar: la pantalla puede decir qué mensaje cuenta como falta d
 
 test('con la sesión marcada como cerrada, un 42501 da SESION_CERRADA en vez de "sin permiso"', () => {
   const permiso = { code: '42501', message: '' };
-  assert.equal(mensajeAlGuardar(permiso), 'No tenés permiso para hacer eso.');
+  assert.equal(mensajeAlGuardar(permiso), 'No tenés permiso para hacer eso. (código 42501)');
   marcarSesionCerrada();
   try {
-    assert.equal(mensajeAlGuardar(permiso), SESION_CERRADA);
+    assert.equal(mensajeAlGuardar(permiso), `${SESION_CERRADA} (código 42501)`);
     assert.equal(textoDeError(new Error('permission denied'), 'No se pudo cargar.'), SESION_CERRADA);
     // Un error de red sigue siendo un error de red, marca puesta o no.
     assert.equal(textoDeError(new TypeError('Failed to fetch'), 'No se pudo cargar.'), SIN_CONEXION);
   } finally {
     desmarcarSesionCerrada();
   }
-  assert.equal(mensajeAlGuardar(permiso), 'No tenés permiso para hacer eso.');
+  assert.equal(mensajeAlGuardar(permiso), 'No tenés permiso para hacer eso. (código 42501)');
   assert.equal(textoDeError(new Error('permission denied'), 'No se pudo cargar.'), 'No se pudo cargar.');
+});
+
+test('mensajeAlGuardar reporta la rama de permiso y la genérica, pero no la de red ni una regla propia', () => {
+  const vistos = [];
+  alReportarError((r) => vistos.push(r));
+  try {
+    mensajeAlGuardar(errorDeRed);
+    mensajeAlGuardar(new Error('SIN_CATEGORIAS'), { reglas: [[/SIN_CATEGORIAS/, 'x']] });
+    assert.deepEqual(vistos, []);
+
+    mensajeAlGuardar({ code: '42501', message: '' });
+    mensajeAlGuardar(new Error('otra cosa'));
+    assert.deepEqual(vistos, [
+      { codigo: '42501', mensaje: '' },
+      { codigo: null, mensaje: 'otra cosa' },
+    ]);
+  } finally {
+    alReportarError(null);
+  }
 });
