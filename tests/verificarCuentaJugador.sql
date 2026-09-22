@@ -1,7 +1,8 @@
 -- Verificación de 0029 y 0030 (cuenta de jugador).
 --
 -- CÓMO SE CORRE: pegado entero en el SQL Editor de Supabase, como service
--- role, después de aplicar 0029 y otra vez después de 0030. Los casos de
+-- role, después de aplicar 0029 y otra vez después de 0030. Desde 0037 las
+-- aprobaciones mandan el código que el chico ve en mi_solicitud_jugador(). Los casos de
 -- lectura (8 en adelante) dicen PENDIENTE hasta que 0030 esté aplicada.
 --
 -- LOS RESULTADOS SALEN COMO TABLA, una fila por caso: OK, FALLA o PENDIENTE.
@@ -35,6 +36,7 @@ declare
   v_j21 uuid;       -- ficha de U21M
   v_j_b uuid;       -- ficha de v_k4, en U17M
   v_s1 uuid; v_s2 uuid; v_s3 uuid;
+  v_c1 text; v_c2 text; v_c3 text;   -- códigos de solicitud (0037): los lee el chico
   v_jug1 uuid;
   v_res jsonb;
   n integer; m integer; k integer;
@@ -117,6 +119,7 @@ begin
 
     v_res := crear_solicitud_jugador(v_club, v_u17);
     v_s1 := (v_res->>'solicitudId')::uuid;
+    select codigo into v_c1 from mi_solicitud_jugador();
 
     begin
       perform crear_solicitud_jugador(v_club, v_u21);
@@ -179,7 +182,7 @@ begin
 
     txt := '';
     v_res := aprobar_solicitud_jugador(jsonb_build_object(
-      'solicitudId', v_s1, 'nombreClave', 'ZZTEST CUENTA UNO', 'nombreLimpio', 'ZZTEST, CUENTA UNO'));
+      'solicitudId', v_s1, 'codigo', v_c1, 'nombreClave', 'ZZTEST CUENTA UNO', 'nombreLimpio', 'ZZTEST, CUENTA UNO'));
     v_jug1 := (v_res->>'jugadorId')::uuid;
 
     perform set_config('role', v_rol_previo, true);
@@ -208,10 +211,11 @@ begin
     perform set_config('request.jwt.claims', json_build_object('sub', v_k2, 'role', 'authenticated')::text, true);
     perform set_config('role', 'authenticated', true);
     v_s2 := (crear_solicitud_jugador(v_club, v_u17)->>'solicitudId')::uuid;
+    select codigo into v_c2 from mi_solicitud_jugador();
 
     perform set_config('request.jwt.claims', json_build_object('sub', v_a, 'role', 'authenticated')::text, true);
     select count(*) into m from jugador where club_id = v_club;
-    perform aprobar_solicitud_jugador(jsonb_build_object('solicitudId', v_s2, 'jugadorId', v_j_exist));
+    perform aprobar_solicitud_jugador(jsonb_build_object('solicitudId', v_s2, 'codigo', v_c2, 'jugadorId', v_j_exist));
     select count(*) into k from jugador where club_id = v_club;
     if k <> m then txt := txt || 'creó una ficha de más; '; end if;
 
@@ -233,27 +237,28 @@ begin
     perform set_config('request.jwt.claims', json_build_object('sub', v_k3, 'role', 'authenticated')::text, true);
     perform set_config('role', 'authenticated', true);
     v_s3 := (crear_solicitud_jugador(v_club, v_u17)->>'solicitudId')::uuid;
+    select codigo into v_c3 from mi_solicitud_jugador();
 
     perform set_config('request.jwt.claims', json_build_object('sub', v_a, 'role', 'authenticated')::text, true);
 
     -- (a) nombre que ya existe: JUGADOR_YA_EXISTE y nada nuevo.
     begin
       perform aprobar_solicitud_jugador(jsonb_build_object(
-        'solicitudId', v_s3, 'nombreClave', 'ZZTEST CUENTA EXISTENTE', 'nombreLimpio', 'ZZTEST, CUENTA EXISTENTE'));
+        'solicitudId', v_s3, 'codigo', v_c3, 'nombreClave', 'ZZTEST CUENTA EXISTENTE', 'nombreLimpio', 'ZZTEST, CUENTA EXISTENTE'));
       txt := txt || 'creó una ficha repetida; ';
     exception when others then
       if sqlerrm <> 'JUGADOR_YA_EXISTE' then txt := txt || '(a) ' || sqlerrm || '; '; end if;
     end;
     -- (b) ficha de otro plantel.
     begin
-      perform aprobar_solicitud_jugador(jsonb_build_object('solicitudId', v_s3, 'jugadorId', v_j21));
+      perform aprobar_solicitud_jugador(jsonb_build_object('solicitudId', v_s3, 'codigo', v_c3, 'jugadorId', v_j21));
       txt := txt || 'vinculó una ficha de otro plantel; ';
     exception when others then
       if sqlerrm <> 'FICHA_FUERA_DEL_PLANTEL' then txt := txt || '(b) ' || sqlerrm || '; '; end if;
     end;
     -- (c) ficha que ya tiene cuenta vigente.
     begin
-      perform aprobar_solicitud_jugador(jsonb_build_object('solicitudId', v_s3, 'jugadorId', v_j_exist));
+      perform aprobar_solicitud_jugador(jsonb_build_object('solicitudId', v_s3, 'codigo', v_c3, 'jugadorId', v_j_exist));
       txt := txt || 'le colgó dos cuentas a una ficha; ';
     exception when others then
       if sqlerrm <> 'JUGADOR_YA_TIENE_CUENTA' then txt := txt || '(c) ' || sqlerrm || '; '; end if;
