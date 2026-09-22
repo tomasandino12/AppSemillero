@@ -13,6 +13,7 @@ import { nombreDe } from '../perfil.js';
 import { html } from '../html.js';
 import { toast } from '../nav.js';
 import { montarVisor } from '../componentes/visorJugada.js';
+import { descargarPaso, imprimirJugada } from '../componentes/exportarJugada.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { abrirEditorDeJugada } from './jugadas.js';
 import { ir, volver } from '../main.js';
@@ -44,6 +45,8 @@ function pintarJugada(club, jugada) {
         ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-editar" type="button">Editar</button>` : ''}
         <button class="btn sec" id="btn-jug-duplicar" type="button">Duplicar</button>
         <button class="btn sec" id="btn-jug-asignar" type="button">Asignar a planteles</button>
+        <button class="btn sec" id="btn-jug-descargar" type="button">Descargar paso</button>
+        <button class="btn sec" id="btn-jug-imprimir" type="button">Imprimir</button>
         ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-borrar" type="button">Borrar</button>` : ''}
       </div>
     </div>
@@ -56,6 +59,8 @@ function pintarJugada(club, jugada) {
   }
   $('btn-jug-duplicar').addEventListener('click', () => duplicarJugada(club, jugada));
   $('btn-jug-asignar').addEventListener('click', () => abrirAsignacion(club, jugada));
+  $('btn-jug-descargar').addEventListener('click', () => descargarPasoVisible(jugada));
+  $('btn-jug-imprimir').addEventListener('click', () => imprimirJugada(jugada.datos, jugada.nombre));
   if (jugada.esMia) {
     $('btn-jug-borrar').addEventListener('click', () => confirmarBorrado(club, jugada));
   }
@@ -84,6 +89,18 @@ export async function renderJugada() {
   }
 
   pintarJugada(club, jugada);
+}
+
+/* ---------- Exportar: PNG del paso visible e impresión con todos ---------- */
+
+async function descargarPasoVisible(jugada) {
+  const svg = document.querySelector('#jugada-visor svg.pz');
+  if (!svg || !visorActual) return;
+  try {
+    await descargarPaso(svg, { nombre: jugada.nombre, paso: visorActual.pasoActual(), totalPasos: jugada.datos.pasos.length });
+  } catch (e) {
+    toast(textoDeError(e, 'No se pudo generar la imagen.'));
+  }
 }
 
 /* ---------- Duplicar: queda tuya, con el mismo tipo y contenido ---------- */

@@ -693,6 +693,21 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
   width:var(--tap);height:var(--tap);border-radius:var(--r-full);background:var(--fondo-chip);font-size:var(--fs-160);color:var(--tinta);
 }
 
+/* Hoja de impresión de una jugada: vacía y oculta en pantalla; sólo existe
+   para @media print (exportarJugada.js la llena antes de window.print()). */
+.jugada-impresion{display:none}
+@media print{
+  /* Todo lo demás se oculta con visibility (no display), así no hay que
+     enumerar cada contenedor de la app (.app, .velo, .hoja, .jvc, .toast). */
+  body *{visibility:hidden}
+  .jugada-impresion,.jugada-impresion *{visibility:visible}
+  .jugada-impresion{display:block;position:absolute;inset:0;background:var(--blanco);padding:var(--sp-4)}
+  .jugada-impresion h1{font-family:var(--ff-titulo);font-size:var(--fs-titulo);margin-bottom:var(--sp-4)}
+  .ji-grilla{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-4)}
+  .ji-tile{border:1px solid var(--linea);border-radius:var(--r-s);padding:var(--sp-2);break-inside:avoid}
+  .ji-pie{font-size:var(--fs-115);color:var(--gris);margin-top:var(--sp-1)}
+}
+
 /* Visor: cancha arriba, nota, transporte y velocidad debajo. */
 .visor-jugada{display:flex;flex-direction:column;gap:var(--sp-3)}
 .visor-nota{font-size:var(--fs-135);color:var(--gris);min-height:1.2em}

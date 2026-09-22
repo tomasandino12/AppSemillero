@@ -111,5 +111,9 @@ export function montarVisor(contenedor, datos) {
 
   dibujar();
 
-  return { desmontar: detener };
+  return {
+    desmontar: detener,
+    // El paso visible: lo usa exportarJugada.js para titular el PNG que se descarga.
+    pasoActual: () => paso,
+  };
 }
