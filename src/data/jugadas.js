@@ -20,6 +20,11 @@ export const TIPOS_JUGADA = [
 
 export const TIPOS_ACCION = ['corte', 'dribbling', 'pase', 'cortina', 'tiro', 'handoff'];
 
+/** El nombre para mostrar. Si el tipo no está en la lista devuelve el valor crudo. */
+export function etiquetaDeTipo(tipo) {
+  return TIPOS_JUGADA.find((t) => t.clave === tipo)?.etiqueta ?? String(tipo ?? '');
+}
+
 const CANCHAS = ['media', 'entera'];
 const TIPOS_FICHA = ['ataque', 'defensa', 'cono'];
 // Acciones que desplazan a la ficha hasta `hasta`.

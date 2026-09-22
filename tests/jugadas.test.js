@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TOPES, jugadaVacia, validarJugada, estadoAlInicioDelPaso, aplicarAccion,
-  duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion,
+  duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion, etiquetaDeTipo,
 } from '../src/data/jugadas.js';
 import { LIMITE } from '../src/data/limites.js';
 
@@ -132,4 +132,11 @@ test('asignacion calcula altas y bajas', () => {
   assert.deepEqual(diferenciaDeAsignacion([], ['p1']), { altas: ['p1'], bajas: [] });
   assert.deepEqual(diferenciaDeAsignacion(['p1'], []), { altas: [], bajas: ['p1'] });
   assert.deepEqual(diferenciaDeAsignacion(['p1'], ['p1']), { altas: [], bajas: [] });
+});
+
+test('etiquetaDeTipo devuelve la etiqueta o el valor crudo', () => {
+  assert.equal(etiquetaDeTipo('ataque'), 'Ataque');
+  assert.equal(etiquetaDeTipo('lateral'), 'Salida de lateral');
+  assert.equal(etiquetaDeTipo('inventado'), 'inventado');
+  assert.equal(etiquetaDeTipo(null), '');
 });

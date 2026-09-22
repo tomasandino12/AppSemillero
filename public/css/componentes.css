@@ -492,7 +492,7 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Etapa 5 — pestañas internas de RECURSOS. No es navegación: no se agrega un
    sexto ítem a la barra de abajo, que en celular ya está al límite. */
-.pestanas{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--linea)}
+.pestanas{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:0;border-bottom:1px solid var(--linea)}
 .pest{min-height:48px;border:0;background:none;color:var(--gris-cl);font-family:var(--ff-titulo);font-size:var(--fs-160);letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid transparent}
 .pest.on{color:var(--tinta);border-bottom-color:var(--primario)}
 
@@ -658,6 +658,14 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .pz-trazo-tiro{stroke-dasharray:2 3}
 .pz-trazo-cortina{stroke-width:2.5}
 .pz-flecha{fill:var(--gris)}
+
+/* Tarjeta de jugada en la biblioteca: mismo molde que rec-tarj (miniatura +
+   cuerpo), pero clicable entera en vez de sólo la miniatura. */
+.jugada-tarj{border:0;padding:0;text-align:left;width:100%;font:inherit;color:inherit;cursor:pointer}
+/* Una cancha es casi cuadrada (media) o angosta y alta (entera): el 16/9 de
+   rec-mini (pensado para video) le dejaba franjas negras enormes a los costados. */
+.jugada-mini{aspect-ratio:1/1}
+.jugada-mini svg.pz{width:100%;height:100%}
 
 /* Visor: cancha arriba, nota, transporte y velocidad debajo. */
 .visor-jugada{display:flex;flex-direction:column;gap:var(--sp-3)}

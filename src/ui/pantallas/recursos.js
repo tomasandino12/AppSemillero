@@ -7,6 +7,7 @@ import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { abrirVideo, esVideoEmbebible } from '../componentes/video.js';
 import { ir } from '../main.js';
 import { renderSeccionEjercicios } from './ejercicios.js';
+import { renderSeccionJugadas } from './jugadas.js';
 import { $ } from '../dom.js';
 import { LIMITE } from '../../data/limites.js';
 import { textoDeError } from '../errores.js';
@@ -453,9 +454,11 @@ export async function renderRecursos() {
     <div class="pestanas" role="tablist">
       <button class="pest ${seccionActiva === 'jugadores' ? 'on' : ''}" data-seccion="jugadores" role="tab" aria-selected="${seccionActiva === 'jugadores'}">Jugadores</button>
       <button class="pest ${seccionActiva === 'ejercicios' ? 'on' : ''}" data-seccion="ejercicios" role="tab" aria-selected="${seccionActiva === 'ejercicios'}">Ejercicios</button>
+      <button class="pest ${seccionActiva === 'jugadas' ? 'on' : ''}" data-seccion="jugadas" role="tab" aria-selected="${seccionActiva === 'jugadas'}">Jugadas</button>
     </div>
     <div id="recursos-jugadores" ${seccionActiva === 'jugadores' ? '' : 'hidden'}></div>
     <div id="recursos-ejercicios" ${seccionActiva === 'ejercicios' ? '' : 'hidden'}></div>
+    <div id="recursos-jugadas" ${seccionActiva === 'jugadas' ? '' : 'hidden'}></div>
   `;
 
   contenedor().querySelectorAll('[data-seccion]').forEach((b) => {
@@ -466,5 +469,6 @@ export async function renderRecursos() {
   });
 
   if (seccionActiva === 'jugadores') await renderSeccionJugadores();
-  else await renderSeccionEjercicios();
+  else if (seccionActiva === 'ejercicios') await renderSeccionEjercicios();
+  else await renderSeccionJugadas();
 }
