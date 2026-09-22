@@ -7,11 +7,11 @@
 import { obtenerJugada, guardarJugada } from '../../data/repositorio.js';
 import {
   pantallaAptaParaEditar, estadoAlInicioDelPaso, aplicarAccion, proximoNumeroLibre,
-  agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion, ajustarFicha,
+  agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion, ajustarFicha, fijarDestinoDeAccion, tieneDestinoLibre,
   agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende, resumenDePaso,
 } from '../../data/jugadas.js';
 import {
-  dibujarPizarra, puntoDesdeEvento, fichaEnPunto, resaltoDeFicha, puntoDeControl, asaDeControl,
+  dibujarPizarra, puntoDesdeEvento, fichaEnPunto, resaltoDeFicha, puntoDeControl, asaDeControl, asaDeDestino,
 } from '../componentes/pizarra.js';
 import { montarVisor } from '../componentes/visorJugada.js';
 import { barraDeHerramientasHtml, panelDePasosHtml, cabeceraEditorHtml } from './jugadaEditorHerramientas.js';
@@ -38,7 +38,7 @@ let pasoActual = 0;
 let herramienta = 'seleccionar';
 let seleccion = null; // { tipo: 'ficha', id } | { tipo: 'accion', indice }
 let origenAccion = null; // ficha ya tocada, a la espera del segundo toque de una herramienta de acción
-let arrastre = null; // { tipo: 'ficha'|'control', id?, datosBase, ultimaVista? }
+let arrastre = null; // { tipo: 'ficha'|'control'|'destino', id?, datosBase, ultimaVista? }
 let visorAnimacion = null;
 
 const datosActuales = () => historial[indiceHistorial];
@@ -110,6 +110,7 @@ function pintarCancha(datos) {
       const punto = puntoDeControl(datos, pasoActual, seleccion.indice);
       if (punto) svg.insertAdjacentHTML('beforeend', asaDeControl(datos, punto));
     }
+    if (tieneDestinoLibre(accion)) svg.insertAdjacentHTML('beforeend', asaDeDestino(datos, accion.hasta));
   }
 }
 
@@ -254,11 +255,12 @@ function alPunteroBajar(evento) {
   const fichaId = evento.target.closest('[data-ficha-id]')?.dataset.fichaId
     ?? fichaEnPunto(datos, estado, punto.xSvg, punto.ySvg);
 
-  // El asa manda sobre cualquier herramienta: la acción recién creada se
-  // curva en el momento, sin pasar por "Seleccionar".
-  if (evento.target.closest('.pz-asa') && seleccion?.tipo === 'accion') {
+  // Las asas mandan sobre cualquier herramienta: la acción recién creada se
+  // curva o se estira en el momento, sin pasar por "Seleccionar".
+  const asa = evento.target.closest('.pz-asa');
+  if (asa && seleccion?.tipo === 'accion') {
     svg.setPointerCapture(evento.pointerId);
-    arrastre = { tipo: 'control', datosBase: datos };
+    arrastre = { tipo: asa.classList.contains('pz-asa-destino') ? 'destino' : 'control', datosBase: datos };
     return;
   }
 
@@ -310,13 +312,18 @@ function alPunteroMover(evento) {
   if (!arrastre) return;
   const svg = $('jed-svg');
   const punto = puntoDesdeEvento(svg, arrastre.datosBase, evento);
+  const hasta = { x: punto.x, y: punto.y };
   let vista;
   try {
-    vista = arrastre.tipo === 'ficha'
-      ? (pasoActual === 0
+    if (arrastre.tipo === 'ficha') {
+      vista = pasoActual === 0
         ? moverFicha(arrastre.datosBase, arrastre.id, punto.x, punto.y)
-        : ajustarFicha(arrastre.datosBase, pasoActual, arrastre.id, punto.x, punto.y))
-      : fijarControlDeAccion(arrastre.datosBase, pasoActual, seleccion.indice, { x: punto.x, y: punto.y });
+        : ajustarFicha(arrastre.datosBase, pasoActual, arrastre.id, punto.x, punto.y);
+    } else if (arrastre.tipo === 'destino') {
+      vista = fijarDestinoDeAccion(arrastre.datosBase, pasoActual, seleccion.indice, hasta);
+    } else {
+      vista = fijarControlDeAccion(arrastre.datosBase, pasoActual, seleccion.indice, hasta);
+    }
   } catch (e) {
     // puntoDesdeEvento ya recorta x/y a la cancha, así que esto es una regla
     // real rechazada, no un punto momentáneamente afuera: se avisa, pero una

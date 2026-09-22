@@ -313,3 +313,10 @@ export function asaDeControl(datos, punto) {
   const alto = altoDe(datos.cancha);
   return `<circle cx="${punto.x * W}" cy="${punto.y * alto}" r="6" class="pz-asa"/>`;
 }
+
+/** El asa de la punta (alargar o acortar la flecha): cuadrada, para no confundirla con la de la curva. */
+export function asaDeDestino(datos, punto) {
+  const alto = altoDe(datos.cancha);
+  const lado = 11;
+  return `<rect x="${punto.x * W - lado / 2}" y="${punto.y * alto - lado / 2}" width="${lado}" height="${lado}" rx="2" class="pz-asa pz-asa-destino"/>`;
+}

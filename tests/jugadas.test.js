@@ -5,6 +5,7 @@ import {
   duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion, etiquetaDeTipo, nosotrosDefiende,
   proximoNumeroLibre, agregarFicha, quitarFicha, moverFicha, quitarAccion,
   fijarControlDeAccion, agregarPaso, quitarPaso, fijarNotaDePaso, ajustarFicha, resumenDePaso,
+  fijarDestinoDeAccion, tieneDestinoLibre,
 } from '../src/data/jugadas.js';
 import { LIMITE } from '../src/data/limites.js';
 
@@ -244,6 +245,23 @@ test('fijarControlDeAccion ajusta la curva de una acción cargada', () => {
   assert.deepEqual(nuevo.pasos[0].acciones[0].control, { x: 0.4, y: 0.5 });
   assert.throws(() => fijarControlDeAccion(d, 0, 9, { x: 0.1, y: 0.1 }), /no existe/);
   assert.throws(() => fijarControlDeAccion(d, 0, 0, { x: 2, y: 0 }), /fuera de la cancha/);
+});
+
+test('fijarDestinoDeAccion estira la flecha y conserva la curva', () => {
+  const d = conPaso([{ tipo: 'corte', ficha: 'a2', hasta: { x: 0.3, y: 0.3 }, control: { x: 0.25, y: 0.4 } }]);
+  const nuevo = fijarDestinoDeAccion(d, 0, 0, { x: 0.1, y: 0.1 });
+  assert.deepEqual(nuevo.pasos[0].acciones[0], { tipo: 'corte', ficha: 'a2', hasta: { x: 0.1, y: 0.1 }, control: { x: 0.25, y: 0.4 } });
+  assert.deepEqual(nuevo.fichas, d.fichas, 'en el paso 0 no toca la posición base');
+  assert.equal(d.pasos[0].acciones[0].hasta.x, 0.3);
+});
+
+test('fijarDestinoDeAccion rechaza pase, tiro y acciones inexistentes', () => {
+  const d = conPaso([{ tipo: 'pase', ficha: 'a1', a: 'a2' }]);
+  assert.throws(() => fijarDestinoDeAccion(d, 0, 0, { x: 0.1, y: 0.1 }), /no se puede estirar/);
+  assert.throws(() => fijarDestinoDeAccion(d, 0, 4, { x: 0.1, y: 0.1 }), /no existe/);
+  assert.equal(tieneDestinoLibre({ tipo: 'dribbling' }), true);
+  assert.equal(tieneDestinoLibre({ tipo: 'ajuste' }), false);
+  assert.equal(tieneDestinoLibre({ tipo: 'tiro' }), false);
 });
 
 test('agregarPaso y quitarPaso', () => {

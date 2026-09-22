@@ -262,6 +262,27 @@ export function fijarControlDeAccion(datos, k, indice, control) {
   return conValidacion(nuevos);
 }
 
+/**
+ * La punta de una acción que desplaza (corte, dribbling, cortina): alargar o
+ * acortar la flecha. No reusa ajustarFicha porque en el paso 0 esa mueve la
+ * posición base, no el destino. Pase, handoff y tiro terminan en una ficha o
+ * en el aro: su punta no se arrastra.
+ */
+export function fijarDestinoDeAccion(datos, k, indice, hasta) {
+  if (!Number.isInteger(k) || k < 0 || k >= datos.pasos.length) throw new Error('Ese paso no existe.');
+  const nuevos = duplicarDatos(datos);
+  const accion = nuevos.pasos[k].acciones[indice];
+  if (!accion) throw new Error('Esa acción no existe.');
+  if (!DE_MOVIMIENTO.includes(accion.tipo)) throw new Error('Esa acción termina en una ficha o en el aro: no se puede estirar.');
+  accion.hasta = { x: hasta.x, y: hasta.y };
+  return conValidacion(nuevos);
+}
+
+/** Si la punta de esta acción se puede arrastrar (ver fijarDestinoDeAccion). */
+export function tieneDestinoLibre(accion) {
+  return Boolean(accion) && DE_MOVIMIENTO.includes(accion.tipo) && accion.tipo !== 'ajuste';
+}
+
 export function agregarPaso(datos) {
   const nuevos = duplicarDatos(datos);
   nuevos.pasos.push({ acciones: [], nota: '' });

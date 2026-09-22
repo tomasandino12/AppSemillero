@@ -705,6 +705,7 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .pz-flecha-handoff{fill:var(--trazo-handoff)}
 .pz-resalto{stroke:var(--primario);stroke-width:2;stroke-dasharray:3 2}
 .pz-asa{fill:var(--primario);stroke:var(--blanco);stroke-width:1.5;cursor:grab}
+.pz-asa-destino{cursor:move}
 /* Invisible pero ancha: un trazo de 2px es imposible de tocar con el dedo. Sólo el editor la usa. */
 .pz-trazo-toque{stroke:transparent;stroke-width:16;cursor:pointer}
 
