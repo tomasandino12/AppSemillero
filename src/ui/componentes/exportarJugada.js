@@ -26,11 +26,30 @@ function nombreDeArchivo(texto) {
     .replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'jugada';
 }
 
+// Un <img> cargado desde un blob de SVG (más abajo) no ve el CSS de la
+// página: cada trazo pierde su color (--trazo-corte, etc.) y se dibuja sin
+// stroke. Antes de serializar, se copia el estilo YA COMPUTADO (fill,
+// stroke...) del SVG real como atributo `style` de cada nodo del clon, en el
+// mismo orden (cloneNode preserva la estructura, así que un querySelectorAll
+// da los mismos nodos en el mismo orden en los dos árboles).
+const PROPIEDADES_PINTADO = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'opacity'];
+function inlinearEstilosPintados(original, clon) {
+  const copiarEstilo = (o, c) => {
+    const computado = getComputedStyle(o);
+    c.setAttribute('style', PROPIEDADES_PINTADO.map((p) => `${p}:${computado.getPropertyValue(p)}`).join(';'));
+  };
+  copiarEstilo(original, clon);
+  const nodosOriginal = original.querySelectorAll('*');
+  const nodosClon = clon.querySelectorAll('*');
+  nodosOriginal.forEach((o, i) => copiarEstilo(o, nodosClon[i]));
+}
+
 /** Descarga un PNG de 1600px de ancho del paso que se ve en `svg`, con el nombre y el paso como título. */
 export async function descargarPaso(svg, { nombre, paso, totalPasos }) {
   const [, , anchoSvg, altoSvg] = svg.getAttribute('viewBox').split(' ').map(Number);
   const clon = svg.cloneNode(true);
   clon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  inlinearEstilosPintados(svg, clon);
   const svgBlob = new Blob([new XMLSerializer().serializeToString(clon)], { type: 'image/svg+xml;charset=utf-8' });
   const svgUrl = URL.createObjectURL(svgBlob);
 

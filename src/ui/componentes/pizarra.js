@@ -9,7 +9,7 @@
  * atributo `fill`/`stroke` con var() no lo interpreta el navegador, por eso
  * nada de color se escribe acá, sólo `class`.
  */
-import { estadoAlInicioDelPaso } from '../../data/jugadas.js';
+import { estadoAlInicioDelPaso, TIPOS_ACCION } from '../../data/jugadas.js';
 import { direccionFinal, trazoSvg } from '../../data/animacionJugada.js';
 import { W, altoDe, formasDeUnExtremo, AROS } from '../../data/geometriaCancha.js';
 
@@ -115,14 +115,14 @@ function dibujarT(hasta, dx, dy, alto, extra) {
 
 /**
  * El SVG de un trazo (el `path` con la clase de su tipo, la flecha del corte
- * vía `idFlecha` y la T de la cortina): lo usan la cancha y el ícono de la
- * barra, para que un tipo de acción se vea igual en los dos. `desde`/`hasta`/
- * `control` en 0–1; `extra` es el atributo que la cancha suma a cada
- * elemento (`data-accion-indice="…"`), vacío para el ícono.
+ * vía `baseIdFlecha` + su tipo y la T de la cortina): lo usan la cancha y el
+ * ícono de la barra, para que un tipo de acción se vea igual en los dos.
+ * `desde`/`hasta`/`control` en 0–1; `extra` es el atributo que la cancha
+ * suma a cada elemento (`data-accion-indice="…"`), vacío para el ícono.
  */
-function svgDeTrazo({ tipo, desde, hasta, control }, alto, idFlecha, extra = '') {
+function svgDeTrazo({ tipo, desde, hasta, control }, alto, baseIdFlecha, extra = '') {
   const d = escalarPath(trazoSvg(desde, hasta, control, tipo), alto);
-  const marcador = tipo === 'corte' ? ` marker-end="url(#${idFlecha})"` : '';
+  const marcador = tipo === 'corte' ? ` marker-end="url(#${baseIdFlecha}-${tipo})"` : '';
   let g = `<path d="${d}" class="pz-trazo pz-trazo-${tipo}" fill="none"${marcador} ${extra}/>`;
   if (tipo === 'cortina') {
     const { dx, dy } = direccionFinal(desde, hasta, control);
@@ -156,8 +156,10 @@ function dibujarAcciones(datos, paso, alto, uid) {
   return acciones.map((a, i) => dibujarTrazo(a, i, inicio, datos.cancha, alto, uid)).join('');
 }
 
-function defs(idFlecha) {
-  return `<defs><marker id="${idFlecha}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="pz-flecha"/></marker></defs>`;
+/** Un `<marker>` de flecha por tipo de acción (id `${baseIdFlecha}-${tipo}`), coloreado con `pz-flecha-${tipo}`: hoy sólo el corte la usa, pero los seis quedan listos y con su color. */
+function defs(baseIdFlecha) {
+  const marcadores = TIPOS_ACCION.map((tipo) => `<marker id="${baseIdFlecha}-${tipo}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="pz-flecha-${tipo}"/></marker>`).join('');
+  return `<defs>${marcadores}</defs>`;
 }
 
 // Segmento horizontal, en coordenadas de cancha (0–1) sobre `media`, que
@@ -189,9 +191,9 @@ function viewBoxIcono() {
  */
 export function iconoDeAccion(tipo) {
   const { x, y, ancho, alto: altoVb } = viewBoxIcono();
-  const idFlecha = `pz-flecha-icono-${tipo}`;
-  const trazo = svgDeTrazo({ tipo, desde: DESDE_ICONO, hasta: HASTA_ICONO, control: null }, altoDe('media'), idFlecha);
-  return `<svg class="pz pz-icono" viewBox="${x} ${y} ${ancho} ${altoVb}" aria-hidden="true" focusable="false">${defs(idFlecha)}${trazo}</svg>`;
+  const baseIdFlecha = 'pz-flecha-icono';
+  const trazo = svgDeTrazo({ tipo, desde: DESDE_ICONO, hasta: HASTA_ICONO, control: null }, altoDe('media'), baseIdFlecha);
+  return `<svg class="pz pz-icono" viewBox="${x} ${y} ${ancho} ${altoVb}" aria-hidden="true" focusable="false">${defs(baseIdFlecha)}${trazo}</svg>`;
 }
 
 /**

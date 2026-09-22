@@ -57,6 +57,18 @@
   --sube-fondo:#E1F0E9;
   --baja-fondo:#F6ECD9;
 
+  /* ---- trazos de la pizarra: un color por tipo de acción, igual en la
+     barra, la cancha, el visor y el PNG exportado. Todos ≥4.5:1 sobre
+     --papel (tests/estilosTokens.test.js no lo mide, se comprobó a mano).
+     --trazo-tiro es --primario (el rojo del club) directo: no tiene
+     variante de oscuro propia, ya la hereda de --club si el club la cambia. */
+  --trazo-corte:#1E7D46;
+  --trazo-dribbling:#7D6100;
+  --trazo-pase:#1B57A8;
+  --trazo-cortina:#6B3FA0;
+  --trazo-tiro:var(--primario);
+  --trazo-handoff:#B8306F;
+
   /* ---- sombra / radio ---- */
   --sombra:0 1px 2px rgba(19,19,22,.05),0 6px 18px rgba(19,19,22,.05);
   --sombra-alta:0 2px 4px rgba(19,19,22,.10),0 10px 26px rgba(19,19,22,.14);
@@ -143,5 +155,19 @@
     --primario-osc:color-mix(in srgb,var(--club) 73.7%,black);
     --primario-cl:color-mix(in oklab,var(--club) 9%,white);
     --primario-tenue:color-mix(in srgb,var(--club) 11%,white);
+  }
+}
+
+/* La app por dentro no tiene tema oscuro (DESIGN.md); la cancha sí, porque se
+   usa con cualquier brillo. Sólo estos seis tokens cambian: el resto de la
+   pizarra (--papel, --tinta, --gris...) es el mismo valor con cualquier
+   prefers-color-scheme. */
+@media (prefers-color-scheme:dark){
+  :root{
+    --trazo-corte:#3FCB7E;
+    --trazo-dribbling:#E0B400;
+    --trazo-pase:#5B9CF0;
+    --trazo-cortina:#B085E0;
+    --trazo-handoff:#F075AE;
   }
 }

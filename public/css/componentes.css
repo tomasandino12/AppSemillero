@@ -680,11 +680,24 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .pz-numero{text-anchor:middle;font-family:var(--ff-mono);font-size:var(--fs-115);font-weight:600}
 .pz-numero-ataque{fill:var(--sobre-club)}
 .pz-numero-defensa{fill:var(--sobre-oscuro)}
-.pz-trazo{stroke:var(--gris);stroke-width:2}
-.pz-trazo-pase,.pz-trazo-handoff{stroke-dasharray:5 4}
-.pz-trazo-tiro{stroke-dasharray:2 3}
-.pz-trazo-cortina{stroke-width:2.5}
-.pz-flecha{fill:var(--gris)}
+/* Un color de trazo por tipo de acción (--trazo-*, tokens.css): mismo color
+   en la barra, la cancha, el visor y el PNG exportado (exportarJugada.js
+   copia el estilo computado, así que basta con que esté acá). */
+.pz-trazo{stroke-width:2}
+.pz-trazo-corte{stroke:var(--trazo-corte)}
+.pz-trazo-dribbling{stroke:var(--trazo-dribbling)}
+.pz-trazo-pase{stroke:var(--trazo-pase);stroke-dasharray:5 4}
+.pz-trazo-cortina{stroke:var(--trazo-cortina);stroke-width:2.5}
+.pz-trazo-tiro{stroke:var(--trazo-tiro);stroke-dasharray:2 3}
+.pz-trazo-handoff{stroke:var(--trazo-handoff);stroke-dasharray:5 4}
+/* La punta de flecha del corte: un <marker> por tipo (pizarra.js), así que
+   sólo pz-flecha-corte se ve hoy, pero los seis quedan listos con su color. */
+.pz-flecha-corte{fill:var(--trazo-corte)}
+.pz-flecha-dribbling{fill:var(--trazo-dribbling)}
+.pz-flecha-pase{fill:var(--trazo-pase)}
+.pz-flecha-cortina{fill:var(--trazo-cortina)}
+.pz-flecha-tiro{fill:var(--trazo-tiro)}
+.pz-flecha-handoff{fill:var(--trazo-handoff)}
 .pz-resalto{stroke:var(--primario);stroke-width:2;stroke-dasharray:3 2}
 .pz-asa{fill:var(--primario);stroke:var(--blanco);stroke-width:1.5;cursor:grab}
 /* Invisible pero ancha: un trazo de 2px es imposible de tocar con el dedo. Sólo el editor la usa. */
@@ -694,9 +707,6 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
    svg.pz.pz-icono (no sólo .pz-icono) a propósito: svg.pz{width:100%} de arriba tiene más
    especificidad (elemento+clase) que una sola clase y le ganaría por orden en este mismo archivo. */
 svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-align:middle;margin-right:var(--sp-1);overflow:visible;flex:none}
-/* El gris de .pz-trazo/.pz-flecha no se lee sobre el fondo --primario del botón activo. */
-.chip-tema.on .pz-trazo{stroke:var(--sobre-club)}
-.chip-tema.on .pz-flecha{fill:var(--sobre-club)}
 
 /* Tarjeta de jugada en la biblioteca: mismo molde que rec-tarj (miniatura +
    cuerpo), pero clicable entera en vez de sólo la miniatura. */

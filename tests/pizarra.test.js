@@ -80,6 +80,26 @@ test('un ajuste no dibuja ningún trazo, a diferencia de un corte', () => {
   assert.ok(svgCorte.innerHTML.includes('data-accion-indice'), 'un corte sí debería dibujar el trazo de la acción');
 });
 
+test('cada tipo de acción usa su propio marker de flecha', () => {
+  for (const tipo of TIPOS_ACCION) {
+    const svg = iconoDeAccion(tipo);
+    assert.ok(svg.includes(`<marker id="pz-flecha-icono-${tipo}"`), `${tipo}: falta su <marker>`);
+    assert.ok(svg.includes(`class="pz-flecha-${tipo}"`), `${tipo}: el path del marker no tiene su clase`);
+  }
+});
+
+test('el ícono de la barra usa la misma clase de trazo que la cancha', () => {
+  const datos = {
+    ...jugadaVacia(),
+    fichas: [{ id: 'd1', tipo: 'defensa', numero: 1, x: 0.5, y: 0.5 }],
+    pasos: [{ acciones: [{ tipo: 'corte', ficha: 'd1', hasta: { x: 0.3, y: 0.3 } }], nota: '' }],
+  };
+  const svg = svgFalso();
+  dibujarPizarra(svg, datos, estadoAlInicioDelPaso(datos, 0), { paso: 0 });
+  assert.ok(svg.innerHTML.includes('class="pz-trazo pz-trazo-corte"'));
+  assert.ok(iconoDeAccion('corte').includes('class="pz-trazo pz-trazo-corte"'));
+});
+
 test('el color de un defensor depende de nosotrosDefiende', () => {
   const datos = conUnDefensor();
   const estado = estadoAlInicioDelPaso(datos, 0);
