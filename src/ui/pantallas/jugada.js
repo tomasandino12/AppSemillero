@@ -15,6 +15,7 @@ import { toast } from '../nav.js';
 import { montarVisor } from '../componentes/visorJugada.js';
 import { descargarPaso, imprimirJugada } from '../componentes/exportarJugada.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { ICONO, botonIcono } from '../componentes/iconos.js';
 import { abrirEditorDeJugada } from './jugadas.js';
 import { ir, volver } from '../main.js';
 import { $ } from '../dom.js';
@@ -36,19 +37,23 @@ function pintarJugada(club, jugada) {
   visorActual?.desmontar();
   contenedor().innerHTML = html`
     <div class="ficha-top">
-      <div class="nom">${jugada.nombre}</div>
+      <div class="ficha-top-cab">
+        <div class="nom">${jugada.nombre}</div>
+        ${jugada.esMia ? botonIcono({ id: 'btn-jug-renombrar', icono: ICONO.lapiz, etiqueta: 'Renombrar jugada' }) : ''}
+        ${jugada.esMia ? botonIcono({ id: 'btn-jug-borrar', icono: ICONO.tacho, etiqueta: 'Borrar jugada' }) : ''}
+      </div>
       <div class="sub">${etiquetaDeTipo(jugada.tipo)} · ${jugada.esMia ? 'Vos' : nombreDe(jugada.creadoPor)}</div>
     </div>
     <div class="pad">
       <div id="jugada-visor"></div>
       <div class="acciones-hoy">
         ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-editar" type="button">Editar</button>` : ''}
-        ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-renombrar" type="button">Renombrar</button>` : ''}
-        <button class="btn sec" id="btn-jug-duplicar" type="button">Duplicar</button>
         <button class="btn sec" id="btn-jug-asignar" type="button">Asignar a planteles</button>
-        <button class="btn sec" id="btn-jug-descargar" type="button">Descargar paso</button>
-        <button class="btn sec" id="btn-jug-imprimir" type="button">Imprimir</button>
-        ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-borrar" type="button">Borrar</button>` : ''}
+      </div>
+      <div class="acciones-hoy-iconos">
+        ${botonIcono({ id: 'btn-jug-duplicar', icono: ICONO.duplicar, etiqueta: 'Duplicar jugada' })}
+        ${botonIcono({ id: 'btn-jug-descargar', icono: ICONO.descargar, etiqueta: 'Descargar paso' })}
+        ${botonIcono({ id: 'btn-jug-imprimir', icono: ICONO.imprimir, etiqueta: 'Imprimir jugada' })}
       </div>
     </div>
   `;
@@ -58,14 +63,12 @@ function pintarJugada(club, jugada) {
   if (jugada.esMia) {
     $('btn-jug-editar').addEventListener('click', () => abrirEditorDeJugada(jugada.id));
     $('btn-jug-renombrar').addEventListener('click', () => abrirRenombrar(club, jugada));
+    $('btn-jug-borrar').addEventListener('click', () => confirmarBorrado(club, jugada));
   }
   $('btn-jug-duplicar').addEventListener('click', () => duplicarJugada(club, jugada));
   $('btn-jug-asignar').addEventListener('click', () => abrirAsignacion(club, jugada));
   $('btn-jug-descargar').addEventListener('click', () => descargarPasoVisible(jugada));
   $('btn-jug-imprimir').addEventListener('click', () => imprimirJugada(jugada.datos, jugada.nombre, jugada.tipo));
-  if (jugada.esMia) {
-    $('btn-jug-borrar').addEventListener('click', () => confirmarBorrado(club, jugada));
-  }
 }
 
 export async function renderJugada() {

@@ -188,8 +188,16 @@
 .dato .v{font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600;margin-top:.125rem;color:var(--sobre-oscuro)}
 .dato .v.sin{color:var(--gris-osc);font-style:italic;font-size:var(--fs-135)}
 .ficha-top{background:var(--negro);color:var(--sobre-oscuro);padding:var(--sp-4)}
-.ficha-top .nom{font-family:var(--ff-titulo);font-size:var(--fs-titulo);font-weight:700;line-height:1;text-transform:uppercase}
+.ficha-top-cab{display:flex;align-items:center;gap:var(--sp-1)}
+.ficha-top .nom{flex:1;min-width:0;font-family:var(--ff-titulo);font-size:var(--fs-titulo);font-weight:700;line-height:1;text-transform:uppercase}
 .ficha-top .sub{font-size:var(--fs-115);color:var(--gris-osc);margin-top:var(--sp-2);font-family:var(--ff-mono)}
+/* El lápiz y el tacho van sobre --negro: heredan --gris-osc en vez de
+   --gris/--tinta de .btn-icono, que no se leen sobre fondo oscuro. */
+.ficha-top-cab .btn-icono{color:var(--gris-osc)}
+.ficha-top-cab .btn-icono:focus-visible{color:var(--sobre-oscuro)}
+@media (hover:hover){
+  .ficha-top-cab .btn-icono:not(:disabled):hover{color:var(--sobre-oscuro)}
+}
 
 /* ---- filas de test y recursos (pantallas de ejemplo) ---- */
 .test-fila{
@@ -319,6 +327,21 @@ svg.g{width:100%;display:block;overflow:visible}
 .acciones-al{display:flex;gap:var(--sp-2);margin-top:10px}
 .btn.chico{min-height:var(--tap);padding:0 14px;font-size:var(--fs-145);width:auto}
 
+/* Botón de un solo ícono (lápiz, tacho, deshacer...): cuadrado táctil,
+   transparente en reposo. El anillo de foco lo pone *:focus-visible de
+   base.css; acá sólo el color del ícono cambia con foco y hover. */
+.btn-icono{
+  display:flex;align-items:center;justify-content:center;flex:none;
+  width:var(--tap);height:var(--tap);padding:0;
+  background:transparent;border:0;border-radius:var(--r-s);color:var(--gris);
+}
+.btn-icono svg{width:1.25rem;height:1.25rem}
+.btn-icono:disabled{color:var(--deshabilitado)}
+.btn-icono:focus-visible{color:var(--tinta)}
+@media (hover:hover){
+  .btn-icono:not(:disabled):hover{color:var(--tinta)}
+}
+
 /* Etapa 4 — carga de la batería en cancha.
    Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
    a la pantalla. La tira envuelve sola en dos líneas a 375px. */
@@ -445,6 +468,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .marca-meta.si{color:var(--tinta)}
 .marca-meta.no{color:var(--gris-cl)}
 .acciones-hoy{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--linea)}
+.acciones-hoy-iconos{display:flex;justify-content:center;gap:var(--sp-4);margin-top:var(--sp-3)}
 
 /* Edición de metas */
 .metas-lista{display:flex;flex-direction:column;margin:var(--sp-3) 0}
