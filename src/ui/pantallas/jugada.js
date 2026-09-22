@@ -4,7 +4,7 @@
  * la impone la policy RLS de 0035, no el esMia de acá.
  */
 import {
-  obtenerJugada, borrarJugada, crearJugada, plantelesDeJugada, asignarJugada,
+  obtenerJugada, guardarJugada, borrarJugada, crearJugada, plantelesDeJugada, asignarJugada,
 } from '../../data/repositorio.js';
 import { etiquetaDeTipo, duplicarDatos } from '../../data/jugadas.js';
 import { LIMITE } from '../../data/limites.js';
@@ -43,6 +43,7 @@ function pintarJugada(club, jugada) {
       <div id="jugada-visor"></div>
       <div class="acciones-hoy">
         ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-editar" type="button">Editar</button>` : ''}
+        ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-renombrar" type="button">Renombrar</button>` : ''}
         <button class="btn sec" id="btn-jug-duplicar" type="button">Duplicar</button>
         <button class="btn sec" id="btn-jug-asignar" type="button">Asignar a planteles</button>
         <button class="btn sec" id="btn-jug-descargar" type="button">Descargar paso</button>
@@ -56,6 +57,7 @@ function pintarJugada(club, jugada) {
 
   if (jugada.esMia) {
     $('btn-jug-editar').addEventListener('click', () => abrirEditorDeJugada(jugada.id));
+    $('btn-jug-renombrar').addEventListener('click', () => abrirRenombrar(club, jugada));
   }
   $('btn-jug-duplicar').addEventListener('click', () => duplicarJugada(club, jugada));
   $('btn-jug-asignar').addEventListener('click', () => abrirAsignacion(club, jugada));
@@ -114,6 +116,49 @@ async function duplicarJugada(club, jugada) {
   } catch (e) {
     toast(textoDeError(e, 'No se pudo duplicar la jugada.'));
   }
+}
+
+/* ---------- Renombrar lo propio ---------- */
+
+function abrirRenombrar(club, jugada) {
+  abrirHoja({
+    titulo: 'Renombrar jugada',
+    cuerpo: html`
+      <div class="campo"><label for="in-jug-renombrar">Nombre</label>
+        <input id="in-jug-renombrar" type="text" maxlength="${LIMITE.titulo}" autocomplete="off" value="${jugada.nombre}"></div>
+      <div id="jug-renombrar-aviso"></div>
+      <button class="btn" id="btn-jug-renombrar-guardar">Guardar</button>
+    `,
+  });
+  $('in-jug-renombrar').focus();
+  $('in-jug-renombrar').select();
+  $('btn-jug-renombrar-guardar').addEventListener('click', () => confirmarRenombrar(club, jugada));
+  $('in-jug-renombrar').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarRenombrar(club, jugada); });
+}
+
+async function confirmarRenombrar(club, jugada) {
+  const boton = $('btn-jug-renombrar-guardar');
+  if (boton.disabled) return;
+  const nombre = $('in-jug-renombrar').value.trim();
+  if (!nombre) {
+    $('jug-renombrar-aviso').innerHTML = html`<div class="al"><div class="tx">Poné un nombre.</div></div>`;
+    return;
+  }
+  boton.disabled = true;
+  boton.textContent = 'Guardando...';
+  try {
+    await guardarJugada(club.id, jugada.id, { nombre, tipo: jugada.tipo, datos: jugada.datos });
+  } catch (e) {
+    $('jug-renombrar-aviso').innerHTML = html`<div class="al"><div class="tx">${textoDeError(e, 'No se pudo renombrar.')}</div></div>`;
+    boton.disabled = false;
+    boton.textContent = 'Guardar';
+    return;
+  }
+  jugada.nombre = nombre;
+  cerrarHoja();
+  toast('Nombre actualizado');
+  const nom = contenedor().querySelector('.nom');
+  if (nom) nom.textContent = jugada.nombre;
 }
 
 /* ---------- Asignar a planteles propios ---------- */

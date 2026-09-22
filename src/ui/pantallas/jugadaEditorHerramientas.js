@@ -15,6 +15,15 @@ const ETIQUETA_ACCION = {
 
 const AYUDA_AGREGAR = 'Las fichas se suman en la formación inicial (paso 1).';
 
+export function cabeceraEditorHtml(nombre) {
+  return html`
+    <div class="jed-panel-cab">
+      <span class="nom" id="jed-cab-nombre">${nombre}</span>
+      <button type="button" class="btn sec chico" id="btn-jed-renombrar">Renombrar</button>
+    </div>
+  `;
+}
+
 export function barraDeHerramientasHtml({ herramienta, puedeDeshacer, puedeRehacer, hayPasos, puedeAgregar }) {
   return html`
     <div class="jed-herramientas">

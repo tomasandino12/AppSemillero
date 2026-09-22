@@ -14,9 +14,10 @@ import {
   dibujarPizarra, puntoDesdeEvento, fichaEnPunto, resaltoDeFicha, puntoDeControl, asaDeControl,
 } from '../componentes/pizarra.js';
 import { montarVisor } from '../componentes/visorJugada.js';
-import { barraDeHerramientasHtml, panelDePasosHtml } from './jugadaEditorHerramientas.js';
+import { barraDeHerramientasHtml, panelDePasosHtml, cabeceraEditorHtml } from './jugadaEditorHerramientas.js';
 import { jugadaParaEditorActual } from './jugadas.js';
 import { obtenerClubActual } from '../sesion.js';
+import { LIMITE } from '../../data/limites.js';
 import { html } from '../html.js';
 import { toast } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
@@ -112,6 +113,7 @@ function render() {
   const datos = datosActuales();
   contenedor().innerHTML = html`
     <div class="jed">
+      ${cabeceraEditorHtml(jugadaMeta.nombre)}
       ${barraDeHerramientasHtml({
         herramienta,
         puedeDeshacer: indiceHistorial > 0,
@@ -151,6 +153,7 @@ function cablearHerramientas() {
   $('btn-jed-ver-animacion')?.addEventListener('click', abrirAnimacion);
   $('btn-jed-volver').addEventListener('click', pedirSalir);
   $('btn-jed-guardar').addEventListener('click', guardar);
+  $('btn-jed-renombrar').addEventListener('click', abrirRenombrar);
 }
 
 function agregarNuevaFicha(tipo) {
@@ -297,6 +300,49 @@ function alPunteroSoltar(evento) {
   // Un solo estado en el historial por arrastre completo, no uno por cuadro de movimiento.
   if (vistaFinal) empujarHistorial(vistaFinal);
   render();
+}
+
+/* ---------- Renombrar ---------- */
+
+function abrirRenombrar() {
+  abrirHoja({
+    titulo: 'Renombrar jugada',
+    cuerpo: html`
+      <div class="campo"><label for="in-jed-renombrar">Nombre</label>
+        <input id="in-jed-renombrar" type="text" maxlength="${LIMITE.titulo}" autocomplete="off" value="${jugadaMeta.nombre}"></div>
+      <div id="jed-renombrar-aviso"></div>
+      <button class="btn" id="btn-jed-renombrar-guardar">Guardar</button>
+    `,
+  });
+  $('in-jed-renombrar').focus();
+  $('in-jed-renombrar').select();
+  $('btn-jed-renombrar-guardar').addEventListener('click', confirmarRenombrar);
+  $('in-jed-renombrar').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmarRenombrar(); });
+}
+
+async function confirmarRenombrar() {
+  const boton = $('btn-jed-renombrar-guardar');
+  if (boton.disabled) return;
+  const nombre = $('in-jed-renombrar').value.trim();
+  if (!nombre) {
+    $('jed-renombrar-aviso').innerHTML = html`<div class="al"><div class="tx">Poné un nombre.</div></div>`;
+    return;
+  }
+  boton.disabled = true;
+  boton.textContent = 'Guardando...';
+  try {
+    await guardarJugada(club.id, jugadaMeta.id, { nombre, tipo: jugadaMeta.tipo, datos: datosActuales() });
+  } catch (e) {
+    $('jed-renombrar-aviso').innerHTML = html`<div class="al"><div class="tx">${textoDeError(e, 'No se pudo renombrar.')}</div></div>`;
+    boton.disabled = false;
+    boton.textContent = 'Guardar';
+    return;
+  }
+  jugadaMeta.nombre = nombre;
+  cerrarHoja();
+  toast('Nombre actualizado');
+  const nom = $('jed-cab-nombre');
+  if (nom) nom.textContent = jugadaMeta.nombre;
 }
 
 /* ---------- Ver animación, guardar y salir ---------- */
