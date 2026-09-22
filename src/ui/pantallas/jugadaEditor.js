@@ -8,7 +8,7 @@ import { obtenerJugada, guardarJugada } from '../../data/repositorio.js';
 import {
   pantallaAptaParaEditar, estadoAlInicioDelPaso, aplicarAccion, proximoNumeroLibre,
   agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion, ajustarFicha, fijarDestinoDeAccion, tieneDestinoLibre,
-  agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende, resumenDePaso,
+  agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende, resumenDePaso, darPelotaInicial,
 } from '../../data/jugadas.js';
 import {
   dibujarPizarra, puntoDesdeEvento, fichaEnPunto, resaltoDeFicha, puntoDeControl, asaDeControl, asaDeDestino,
@@ -286,6 +286,16 @@ function alPunteroBajar(evento) {
     }
     const indiceAttr = evento.target.closest('[data-accion-indice]')?.dataset.accionIndice;
     seleccion = indiceAttr != null ? { tipo: 'accion', indice: Number(indiceAttr) } : null;
+    render();
+    return;
+  }
+
+  if (herramienta === 'pelota') {
+    if (pasoActual !== 0) { toast('Quién arranca con la pelota se elige en la formación inicial (paso 1).'); return; }
+    if (!fichaId) { toast('Tocá al atacante que arranca con la pelota.'); return; }
+    // Tocar al que ya la tiene se la saca: así también se puede arrancar sin pelota.
+    const nuevoDuenio = datos.pelota === fichaId ? null : fichaId;
+    aplicarCambio((d) => darPelotaInicial(d, nuevoDuenio));
     render();
     return;
   }

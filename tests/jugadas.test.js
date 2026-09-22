@@ -5,7 +5,7 @@ import {
   duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion, etiquetaDeTipo, nosotrosDefiende,
   proximoNumeroLibre, agregarFicha, quitarFicha, moverFicha, quitarAccion,
   fijarControlDeAccion, agregarPaso, quitarPaso, fijarNotaDePaso, ajustarFicha, resumenDePaso,
-  fijarDestinoDeAccion, tieneDestinoLibre,
+  fijarDestinoDeAccion, tieneDestinoLibre, darPelotaInicial,
 } from '../src/data/jugadas.js';
 import { LIMITE } from '../src/data/limites.js';
 
@@ -272,6 +272,27 @@ test('fijarDestinoDeAccion rechaza pase, tiro y acciones inexistentes', () => {
   assert.equal(tieneDestinoLibre({ tipo: 'dribbling' }), true);
   assert.equal(tieneDestinoLibre({ tipo: 'ajuste' }), false);
   assert.equal(tieneDestinoLibre({ tipo: 'tiro' }), false);
+});
+
+test('el primer atacante de una cancha vacía se lleva la pelota', () => {
+  const vacia = jugadaVacia();
+  const conCono = agregarFicha(vacia, { id: 'c1', tipo: 'cono', x: 0.5, y: 0.5 });
+  assert.equal(conCono.pelota, null);
+  const conUno = agregarFicha(conCono, { id: 'a1', tipo: 'ataque', numero: 1, x: 0.5, y: 0.9 });
+  assert.equal(conUno.pelota, 'a1');
+  const conDos = agregarFicha(conUno, { id: 'a2', tipo: 'ataque', numero: 2, x: 0.2, y: 0.9 });
+  assert.equal(conDos.pelota, 'a1', 'el segundo no se la saca');
+});
+
+test('darPelotaInicial cambia quién saca', () => {
+  const d = base();
+  assert.equal(darPelotaInicial(d, 'a2').pelota, 'a2');
+  assert.equal(darPelotaInicial(d, null).pelota, null);
+  assert.equal(d.pelota, 'a1');
+  assert.throws(() => darPelotaInicial(d, 'd1'), /Sólo un atacante/);
+  assert.throws(() => darPelotaInicial(d, 'nadie'), /Sólo un atacante/);
+  const conPase = conPaso([{ tipo: 'pase', ficha: 'a1', a: 'a2' }]);
+  assert.throws(() => darPelotaInicial(conPase, 'a2'), /borralos/);
 });
 
 test('agregarPaso y quitarPaso', () => {

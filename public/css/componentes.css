@@ -670,7 +670,7 @@ svg.g{width:100%;display:block;overflow:visible}
    pizarra.js sólo escribe `class`, nunca color, acá vive el único valor. ---- */
 svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 /* La banda de afuera (saques): más apagada que la cancha, para que se lea el borde. */
-.pz-fuera{fill:var(--linea);opacity:.45}
+.pz-fuera{fill:var(--linea);opacity:.8}
 .pz-cancha{fill:var(--papel)}
 .pz-linea{stroke:var(--linea);stroke-width:1.5}
 .pz-aro{stroke:var(--tinta);stroke-width:2}

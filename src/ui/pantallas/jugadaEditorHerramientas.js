@@ -14,7 +14,9 @@ const ETIQUETA_ACCION = {
   corte: 'Corte', dribbling: 'Dribbling', pase: 'Pase', cortina: 'Cortina', tiro: 'Tiro', handoff: 'Handoff',
 };
 
-const AYUDA_AGREGAR = 'Las fichas se suman en la formación inicial (paso 1).';
+const AYUDA_AGREGAR = 'Las fichas y quién arranca con la pelota se eligen en la formación inicial (paso 1).';
+
+const ICONO_PELOTA = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="6" class="pz-pelota"/></svg>';
 
 const ICONO_CONO = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="12,4 20,20 4,20" class="pz-cono"/></svg>';
 
@@ -65,6 +67,9 @@ export function barraDeHerramientasHtml({ herramienta, hayPasos, puedeAgregar })
       </button>
       <button type="button" class="jed-herr-btn" data-agregar="cono" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? '' : AYUDA_AGREGAR}">
         ${crudo(ICONO_CONO)}<span>Cono</span>
+      </button>
+      <button type="button" class="jed-herr-btn ${herramienta === 'pelota' ? 'on' : ''}" data-herramienta="pelota" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? 'Tocá al atacante que arranca con la pelota' : AYUDA_AGREGAR}">
+        ${crudo(ICONO_PELOTA)}<span>Pelota</span>
       </button>
       ${puedeAgregar ? '' : html`<div class="ayuda">${AYUDA_AGREGAR}</div>`}
     </div>

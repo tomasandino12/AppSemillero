@@ -204,11 +204,34 @@ export function proximoNumeroLibre(datos, tipo) {
   return null;
 }
 
-/** Agrega una ficha nueva (con su id ya generado por quien llama); lanza si no valida (tope de 12, por ejemplo). */
+/**
+ * Agrega una ficha nueva (con su id ya generado por quien llama); lanza si no
+ * valida (tope de 12, por ejemplo). El primer atacante de una cancha vacía se
+ * lleva la pelota: si no, la jugada arrancaría sin nadie que pueda pasar.
+ */
 export function agregarFicha(datos, ficha) {
   const nuevos = duplicarDatos(datos);
+  const primerAtacante = ficha.tipo === 'ataque' && !nuevos.fichas.some((f) => f.tipo === 'ataque');
   nuevos.fichas.push(structuredClone(ficha));
+  if (primerAtacante && nuevos.pelota == null) nuevos.pelota = ficha.id;
   return conValidacion(nuevos);
+}
+
+/**
+ * Quién arranca con la pelota (null: nadie). Hay una sola pelota porque es un
+ * solo campo. Si un paso siguiente tiene un pase o un tiro del que la tenía
+ * antes, el cambio no valida: se avisa en vez de borrar esas acciones por atrás.
+ */
+export function darPelotaInicial(datos, fichaId) {
+  if (fichaId != null && datos.fichas.find((f) => f.id === fichaId)?.tipo !== 'ataque') {
+    throw new Error('Sólo un atacante puede arrancar con la pelota.');
+  }
+  const nuevos = duplicarDatos(datos);
+  nuevos.pelota = fichaId;
+  if (!validarJugada(nuevos).ok) {
+    throw new Error('Hay pases, dribblings o tiros en los pasos siguientes que dependen de quién tenía la pelota: borralos antes de cambiarla.');
+  }
+  return nuevos;
 }
 
 /** Saca una ficha y, con ella, toda acción de cualquier paso que la nombre: si no, quedarían apuntando a nada. */
