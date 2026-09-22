@@ -671,7 +671,9 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .jugada-mini{aspect-ratio:1/1}
 .jugada-mini svg.pz{width:100%;height:100%}
 
-/* ---- editor de jugadas: herramientas arriba, cancha y panel de pasos abajo ---- */
+/* ---- editor de jugadas: herramientas arriba; cancha y panel de pasos en
+   columna en tablet vertical, en fila (cancha + panel fijo) desde 64rem
+   (layout.css) ---- */
 .jed{display:flex;flex-direction:column;gap:var(--sp-3)}
 .jed-herramientas{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
 .jed-grupo{display:flex;flex-wrap:wrap;gap:var(--sp-2)}

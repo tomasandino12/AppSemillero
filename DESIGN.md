@@ -196,7 +196,7 @@ abrirHoja({ titulo: jugador.nombre, cuerpo: html`<div class="tarj">…</div>` })
 2. Espacios, radios, tamaños de letra y sombras salen de tokens; ningún `px` nuevo salvo bordes de 1 px.
 3. Si algo se mueve: sólo `transform`/`opacity`, con `--dur-*` y `--ease-*`, keyframes con `from` solo; y nada que pueda ser el LCP entra animado.
 4. Con `prefers-reduced-motion: reduce` emulado, todo queda visible y en su estado final.
-5. A 375 px no hay scroll horizontal y todo lo tocable mide al menos `--tap`; a 1280 px el contenido respeta `--max-ancho` y la navegación lateral.
+5. A 375 px no hay scroll horizontal y todo lo tocable mide al menos `--tap`; a 1280 px el contenido respeta `--max-ancho` y la navegación lateral. Única excepción: `.pant.ancha`, sólo para herramientas-lienzo (hoy, el editor de jugadas), no para formularios ni listas.
 6. Texto secundario con el gris de su fondo (`--gris` sobre blanco, `--gris-cl` sobre papel, `--gris-osc` sobre oscuro): así llega a 4.5:1. Nada de color como única señal.
 7. Números en `--ff-mono`; el dato principal, si hay uno, como `.cifra`.
 8. Tres estados resueltos: cargando (`<div class="p">Cargando …</div>` en `.pad`), error (`avisoDeError`), y vacío con un texto que diga qué falta y qué hacer. Un `NULL` se muestra como `.sin`/"—", nunca como 0.

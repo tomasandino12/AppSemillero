@@ -164,6 +164,10 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
 
   svg.setAttribute('viewBox', `0 0 ${W} ${alto}`);
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  // Sin esto, un <svg> sin atributos width/height no tiene tamaño intrínseco
+  // para el navegador: con max-height sola (editor en fila, ≥64rem) mediría
+  // 0×0 en vez de escalar. width:100% (miniatura, visor) no lo necesita.
+  svg.style.aspectRatio = `${W} / ${alto}`;
   svg.innerHTML = g;
 }
 

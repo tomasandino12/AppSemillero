@@ -307,6 +307,10 @@
   }
   .cabecera{padding-top:var(--sp-4)}
   .cuerpo > .pant.on{margin-inline:auto;width:100%;max-width:var(--max-ancho)}
+  /* .pant.ancha: única excepción a --max-ancho, sólo para herramientas-lienzo
+     (hoy, el editor de jugadas). La cabecera sigue alineada a --max-ancho: en
+     estas pantallas el título queda un poco más adentro que la barra, y se acepta. */
+  .cuerpo > .pant.ancha.on{max-width:none}
   /* Título y chips arrancan en el mismo margen izquierdo que el contenido: el
      borde de la columna centrada (la misma cuenta que .pant.on) más el
      padding de .pad. Antes centraban sin ese padding y el título, empujado
@@ -365,11 +369,28 @@
 }
 
 /* Editor de jugadas: en tablet vertical (mobile-first, abajo del panel) el
-   panel de pasos va debajo de la cancha; desde acá pasa al costado. */
+   panel de pasos va debajo de la cancha; desde acá pasa al costado.
+   Selectores con `.pant.ancha` (no sólo `.jed-cuerpo`/`.jed-cancha`/...) a
+   propósito: componentes.css se carga DESPUÉS de este archivo, así que sus
+   reglas base (una sola clase, sin media query) le ganarían por orden de
+   cascada a éstas si tuvieran la misma especificidad — el mismo motivo del
+   prefijo `.publico` más abajo. Sin el extra de especificidad, el editor
+   quedaba siempre en columna aunque el viewport matcheara: el bug original. */
 @media (min-width:64rem){
-  .jed-cuerpo{flex-direction:row;align-items:flex-start}
-  .jed-cancha{flex:2}
-  .jed-panel{flex:1;max-width:20rem}
+  .pant.ancha .jed-cuerpo{flex-direction:row;align-items:flex-start}
+  .pant.ancha .jed-cancha{flex:1;min-width:0;display:flex;justify-content:center}
+  /* La cancha se topa por alto para que entre completa (media o entera) sin
+     scroll vertical. La resta aproxima cabecera + barra de categorías + barra
+     de herramientas con tokens (tres franjas de --tap, paddings de --sp-8 y
+     el padding-bottom de .pant.on): no hay forma de medirlas exacto acá
+     porque las arma JS con datos de sesión. Si en algún ancho no cierra
+     justo, se prefiere quedar corto (un poco de aire abajo) antes que
+     generar scroll. */
+  .pant.ancha .jed-cancha svg.pz{
+    max-height:calc(100dvh - var(--tap) * 3 - var(--sp-8) * 3 - var(--sp-5));
+    width:auto;max-width:100%;margin-inline:auto;
+  }
+  .pant.ancha .jed-panel{flex:0 0 18rem}
 }
 
 /* Hover solo donde hay puntero fino: en táctil no debe ser señal de nada. */
