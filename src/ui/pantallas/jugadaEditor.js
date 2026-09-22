@@ -212,7 +212,10 @@ function cablearPuntero() {
 }
 
 function completarAccion(accion) {
-  aplicarCambio((d) => aplicarAccion(d, pasoActual, accion));
+  // La acción recién creada queda seleccionada, con el asa lista para curvarla en el mismo gesto.
+  seleccion = aplicarCambio((d) => aplicarAccion(d, pasoActual, accion))
+    ? { tipo: 'accion', indice: datosActuales().pasos[pasoActual].acciones.length - 1 }
+    : null;
   origenAccion = null;
   render();
 }
@@ -225,12 +228,15 @@ function alPunteroBajar(evento) {
   const fichaId = evento.target.closest('[data-ficha-id]')?.dataset.fichaId
     ?? fichaEnPunto(datos, estado, punto.xSvg, punto.ySvg);
 
+  // El asa manda sobre cualquier herramienta: la acción recién creada se
+  // curva en el momento, sin pasar por "Seleccionar".
+  if (evento.target.closest('.pz-asa') && seleccion?.tipo === 'accion') {
+    svg.setPointerCapture(evento.pointerId);
+    arrastre = { tipo: 'control', datosBase: datos };
+    return;
+  }
+
   if (herramienta === 'seleccionar') {
-    if (evento.target.closest('.pz-asa') && seleccion?.tipo === 'accion') {
-      svg.setPointerCapture(evento.pointerId);
-      arrastre = { tipo: 'control', datosBase: datos };
-      return;
-    }
     if (fichaId) {
       seleccion = { tipo: 'ficha', id: fichaId };
       if (pasoActual === 0) {
@@ -251,7 +257,8 @@ function alPunteroBajar(evento) {
   // Las seis herramientas de acción: primer toque el origen, segundo el destino
   // (o quien recibe, en pase y handoff). El tiro no necesita segundo toque.
   if (!origenAccion) {
-    if (!fichaId) { toast('Tocá primero la ficha que hace la acción.'); return; }
+    seleccion = null; // encadenar: el asa de la acción anterior se va apenas se arranca la siguiente.
+    if (!fichaId) { toast('Tocá primero la ficha que hace la acción.'); render(); return; }
     origenAccion = fichaId;
     if (herramienta === 'tiro') completarAccion({ tipo: 'tiro', ficha: fichaId });
     else render();
