@@ -42,13 +42,6 @@ export function barraDeHerramientasHtml({ herramienta, puedeDeshacer, puedeRehac
           ${hayPasos ? html`<button type="button" class="btn sec chico" id="btn-jed-ver-animacion">Ver animación</button>` : ''}
         </div>
       </div>
-      <div class="jed-grupo" role="group" aria-label="Salir">
-        <span class="jed-grupo-titulo">Salir</span>
-        <div class="jed-grupo-botones">
-          <button type="button" class="btn sec chico" id="btn-jed-volver">Volver</button>
-          <button type="button" class="btn chico" id="btn-jed-guardar">Guardar</button>
-        </div>
-      </div>
     </div>
   `;
 }
@@ -73,6 +66,10 @@ export function panelDePasosHtml(datos, pasoActual) {
           <textarea id="jed-nota" rows="3" maxlength="${LIMITE.notaPaso}">${datos.pasos[pasoActual]?.nota ?? ''}</textarea>
         </div>
       `}
+      <div class="jed-panel-salir">
+        <button type="button" class="btn sec chico" id="btn-jed-volver">Volver</button>
+        <button type="button" class="btn chico" id="btn-jed-guardar">Guardar</button>
+      </div>
     </div>
   `;
 }

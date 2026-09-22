@@ -381,13 +381,13 @@
   .pant.ancha .jed-cancha{flex:1;min-width:0;display:flex;justify-content:center}
   /* La cancha se topa por alto para que entre completa (media o entera) sin
      scroll vertical. La resta aproxima cabecera + barra de categorías + barra
-     de herramientas con tokens (tres franjas de --tap, paddings de --sp-8 y
-     el padding-bottom de .pant.on): no hay forma de medirlas exacto acá
-     porque las arma JS con datos de sesión. Si en algún ancho no cierra
-     justo, se prefiere quedar corto (un poco de aire abajo) antes que
-     generar scroll. */
+     de herramientas con tokens (tres franjas de --tap, paddings de --sp-8, el
+     padding-top de .jed en componentes.css y el padding-bottom de .pant.on):
+     no hay forma de medirlas exacto acá porque las arma JS con datos de
+     sesión. Si en algún ancho no cierra justo, se prefiere quedar corto (un
+     poco de aire abajo) antes que generar scroll. */
   .pant.ancha .jed-cancha svg.pz{
-    max-height:calc(100dvh - var(--tap) * 3 - var(--sp-8) * 3 - var(--sp-5));
+    max-height:calc(100dvh - var(--tap) * 3 - var(--sp-8) * 3 - var(--sp-5) - var(--sp-3));
     width:auto;max-width:100%;margin-inline:auto;
   }
   .pant.ancha .jed-panel{flex:0 0 18rem}
