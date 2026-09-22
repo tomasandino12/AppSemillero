@@ -5,14 +5,12 @@
  */
 
 import { estadoAlInicioDelPaso } from './jugadas.js';
+import { AROS } from './geometriaCancha.js';
 
 export const DURACION_PASO_MS = 1200;
 
-/** Posición del aro según la cancha; los ataques van hacia arriba (y chico). */
-export const AROS = {
-  media: { x: 0.5, y: 0.09 },
-  entera: { x: 0.5, y: 0.04 },
-};
+/** Posición del aro según la cancha (medidas FIBA reales, geometriaCancha.js); los ataques van hacia arriba (y chico). */
+export { AROS };
 
 const DE_MOVIMIENTO = ['corte', 'dribbling', 'cortina'];
 const DE_ENTREGA = ['pase', 'handoff'];
