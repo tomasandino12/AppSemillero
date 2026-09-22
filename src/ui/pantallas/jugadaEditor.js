@@ -8,7 +8,7 @@ import { obtenerJugada, guardarJugada } from '../../data/repositorio.js';
 import {
   pantallaAptaParaEditar, estadoAlInicioDelPaso, aplicarAccion, proximoNumeroLibre,
   agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion, ajustarFicha,
-  agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende,
+  agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende, resumenDePaso,
 } from '../../data/jugadas.js';
 import {
   dibujarPizarra, puntoDesdeEvento, fichaEnPunto, resaltoDeFicha, puntoDeControl, asaDeControl,
@@ -156,7 +156,6 @@ function cablearHerramientas() {
   });
   $('btn-jed-deshacer').addEventListener('click', deshacer);
   $('btn-jed-rehacer').addEventListener('click', rehacer);
-  $('btn-jed-ver-animacion')?.addEventListener('click', abrirAnimacion);
   $('btn-jed-volver').addEventListener('click', pedirSalir);
   $('btn-jed-guardar').addEventListener('click', guardar);
   $('btn-jed-renombrar').addEventListener('click', abrirRenombrar);
@@ -191,6 +190,10 @@ function cablearPasos() {
   });
   $('btn-jed-paso-anterior')?.addEventListener('click', () => cambiarPaso(pasoActual - 1));
   $('btn-jed-paso-siguiente')?.addEventListener('click', () => cambiarPaso(pasoActual + 1));
+  $('jed-paso-lista')?.addEventListener('click', (e) => {
+    const boton = e.target.closest('[data-paso]');
+    if (boton) cambiarPaso(Number(boton.dataset.paso));
+  });
   $('btn-jed-paso-borrar')?.addEventListener('click', () => {
     if (aplicarCambio((d) => quitarPaso(d, pasoActual))) {
       pasoActual = Math.min(pasoActual, Math.max(0, datosActuales().pasos.length - 1));
@@ -199,7 +202,15 @@ function cablearPasos() {
     origenAccion = null;
     render();
   });
-  $('jed-nota')?.addEventListener('change', (e) => aplicarCambio((d) => fijarNotaDePaso(d, pasoActual, e.target.value)));
+  $('btn-jed-ver-animacion')?.addEventListener('click', abrirAnimacion);
+  // Sólo el título de este paso cambia en la lista: un render() completo acá
+  // le haría perder el foco al textarea apenas el profe termina de escribir.
+  $('jed-nota')?.addEventListener('change', (e) => {
+    if (!aplicarCambio((d) => fijarNotaDePaso(d, pasoActual, e.target.value))) return;
+    const { titulo } = resumenDePaso(datosActuales().pasos[pasoActual], pasoActual);
+    const item = contenedor().querySelector(`[data-paso-titulo="${pasoActual}"]`);
+    if (item) item.textContent = titulo;
+  });
 }
 
 function cambiarPaso(nuevo) {

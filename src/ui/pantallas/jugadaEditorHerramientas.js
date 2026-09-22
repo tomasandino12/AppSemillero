@@ -5,7 +5,7 @@
  * Separado sólo porque jugadaEditor.js ya pasaba las ~300 líneas (plan Task 8).
  */
 import { html, crudo } from '../html.js';
-import { TIPOS_ACCION, etiquetaDeTipo } from '../../data/jugadas.js';
+import { TIPOS_ACCION, etiquetaDeTipo, resumenDePaso } from '../../data/jugadas.js';
 import { LIMITE } from '../../data/limites.js';
 import { iconoDeAccion } from '../componentes/pizarra.js';
 import { ICONO, botonIcono } from '../componentes/iconos.js';
@@ -76,18 +76,33 @@ export function panelDePasosHtml(datos, pasoActual) {
   return html`
     <div class="jed-panel">
       <div class="jed-panel-cab">
-        <span class="eyebrow">Pasos</span>
-        <button type="button" class="btn sec chico" id="btn-jed-paso-nuevo">Nuevo paso</button>
+        <span class="eyebrow">Secuencia de pasos</span>
+        <button type="button" class="btn sec chico" id="btn-jed-paso-nuevo">+ Nuevo paso</button>
       </div>
-      ${total === 0 ? html`<div class="p">Todavía es sólo la formación inicial: "Nuevo paso" arranca la secuencia.</div>` : html`
+      ${total === 0 ? html`<div class="p">Todavía es sólo la formación inicial: "+ Nuevo paso" arranca la secuencia.</div>` : html`
         <div class="jed-paso-nav">
           <button type="button" class="btn sec chico" id="btn-jed-paso-anterior" ${pasoActual === 0 ? 'disabled' : ''} aria-label="Paso anterior">‹</button>
           <span class="mono">Paso ${pasoActual + 1} de ${total}</span>
           <button type="button" class="btn sec chico" id="btn-jed-paso-siguiente" ${pasoActual === total - 1 ? 'disabled' : ''} aria-label="Paso siguiente">›</button>
         </div>
-        <button type="button" class="btn sec chico" id="btn-jed-paso-borrar">Borrar este paso</button>
+        <ol class="jed-paso-lista" id="jed-paso-lista">
+          ${datos.pasos.map((p, i) => {
+            const { numero, titulo } = resumenDePaso(p, i);
+            const activo = i === pasoActual;
+            return html`
+              <li class="jed-paso-fila${activo ? ' on' : ''}">
+                <button type="button" class="jed-paso-item" data-paso="${i}"${activo ? html` aria-current="step"` : ''}>
+                  <span class="jed-paso-num">${numero}</span>
+                  <span class="jed-paso-titulo" data-paso-titulo="${i}">${titulo}</span>
+                </button>
+                ${activo ? botonIcono({ id: 'btn-jed-paso-borrar', icono: ICONO.tacho, etiqueta: 'Borrar este paso' }) : ''}
+              </li>
+            `;
+          })}
+        </ol>
+        <button type="button" class="btn sec chico jed-btn-ancho" id="btn-jed-ver-animacion">${crudo(ICONO.reproducir)}<span>Ver animación</span></button>
         <div class="campo">
-          <label for="jed-nota">Nota de este paso</label>
+          <label for="jed-nota">Indicaciones del paso ${pasoActual + 1}</label>
           <textarea id="jed-nota" rows="3" maxlength="${LIMITE.notaPaso}">${datos.pasos[pasoActual]?.nota ?? ''}</textarea>
         </div>
       `}

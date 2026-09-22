@@ -279,6 +279,17 @@ export function fijarNotaDePaso(datos, k, nota) {
   return conValidacion(nuevos);
 }
 
+const LARGO_TITULO_PASO = 40;
+
+/** El número (1-based) y el título de un paso para la lista del panel: la primera línea de su nota, recortada. */
+export function resumenDePaso(paso, indice) {
+  const numero = indice + 1;
+  const primeraLinea = (paso?.nota ?? '').split('\n')[0].trim();
+  if (!primeraLinea) return { numero, titulo: indice === 0 ? 'Formación inicial' : 'Sin indicaciones' };
+  const titulo = primeraLinea.length > LARGO_TITULO_PASO ? `${primeraLinea.slice(0, LARGO_TITULO_PASO)}…` : primeraLinea;
+  return { numero, titulo };
+}
+
 /** Qué planteles hay que sumar y sacar para que `actuales` termine igual a `deseados`. */
 export function diferenciaDeAsignacion(actuales, deseados) {
   const actualesSet = new Set(actuales);

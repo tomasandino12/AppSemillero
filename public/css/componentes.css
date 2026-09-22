@@ -761,6 +761,28 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .jed-panel{display:flex;flex-direction:column;gap:var(--sp-3)}
 .jed-panel-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
 .jed-paso-nav{display:flex;align-items:center;justify-content:center;gap:var(--sp-3)}
+/* La lista de pasos scrollea sola (con muchos pasos no empuja el resto del
+   panel); 4 filas más pico de la próxima, como pista de que hay más abajo. */
+.jed-paso-lista{list-style:none;display:flex;flex-direction:column;gap:var(--sp-1);max-height:calc(4.5 * var(--tap));overflow-y:auto}
+.jed-paso-fila{display:flex;align-items:center;gap:var(--sp-1)}
+.jed-paso-item{
+  flex:1;min-width:0;display:flex;align-items:center;gap:var(--sp-2);
+  min-height:var(--tap);padding:0 var(--sp-2);border:1px solid transparent;border-radius:var(--r-s);
+  background:transparent;color:var(--tinta);text-align:left;
+}
+.jed-paso-fila.on .jed-paso-item{background:var(--fondo-chip);border-color:var(--linea)}
+.jed-paso-num{
+  flex:none;display:flex;align-items:center;justify-content:center;
+  width:1.5rem;height:1.5rem;border-radius:var(--r-full);background:var(--linea);
+  font-family:var(--ff-mono);font-size:var(--fs-100);font-weight:600;color:var(--tinta);
+}
+.jed-paso-fila.on .jed-paso-num{background:var(--primario);color:var(--sobre-club)}
+.jed-paso-titulo{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-135)}
+@media (hover:hover){
+  .jed-paso-fila:not(.on) .jed-paso-item:hover{background:var(--fondo-chip)}
+}
+.jed-btn-ancho{display:flex;align-items:center;justify-content:center;gap:var(--sp-2)}
+.jed-btn-ancho svg{width:1rem;height:1rem;flex:none}
 
 /* Visor de una jugada a pantalla completa (jugador): tapa todo, sin compartir
    la hoja (que es un panel parcial, pensado para formularios). */

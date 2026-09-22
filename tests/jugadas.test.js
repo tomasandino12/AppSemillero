@@ -4,7 +4,7 @@ import {
   TOPES, jugadaVacia, validarJugada, estadoAlInicioDelPaso, aplicarAccion,
   duplicarDatos, pantallaAptaParaEditar, diferenciaDeAsignacion, etiquetaDeTipo, nosotrosDefiende,
   proximoNumeroLibre, agregarFicha, quitarFicha, moverFicha, quitarAccion,
-  fijarControlDeAccion, agregarPaso, quitarPaso, fijarNotaDePaso, ajustarFicha,
+  fijarControlDeAccion, agregarPaso, quitarPaso, fijarNotaDePaso, ajustarFicha, resumenDePaso,
 } from '../src/data/jugadas.js';
 import { LIMITE } from '../src/data/limites.js';
 
@@ -253,4 +253,20 @@ test('fijarNotaDePaso guarda el texto del paso', () => {
   const d = conPaso([]);
   assert.equal(fijarNotaDePaso(d, 0, 'Pase y corte').pasos[0].nota, 'Pase y corte');
   assert.throws(() => fijarNotaDePaso(d, 0, 'x'.repeat(LIMITE.notaPaso + 1)), /nota/);
+});
+
+test('resumenDePaso usa la primera línea de la nota', () => {
+  assert.deepEqual(resumenDePaso({ nota: 'Pase y corte\nDetalle que no importa acá' }, 1), { numero: 2, titulo: 'Pase y corte' });
+});
+
+test('resumenDePaso recorta notas largas con …', () => {
+  const notaLarga = 'x'.repeat(60);
+  const { titulo } = resumenDePaso({ nota: notaLarga }, 1);
+  assert.equal(titulo, `${'x'.repeat(40)}…`);
+});
+
+test('resumenDePaso sin nota: formación inicial en el 0, sin indicaciones en el resto', () => {
+  assert.deepEqual(resumenDePaso({ nota: '' }, 0), { numero: 1, titulo: 'Formación inicial' });
+  assert.deepEqual(resumenDePaso({ nota: '' }, 2), { numero: 3, titulo: 'Sin indicaciones' });
+  assert.deepEqual(resumenDePaso({ nota: '   ' }, 0), { numero: 1, titulo: 'Formación inicial' });
 });
