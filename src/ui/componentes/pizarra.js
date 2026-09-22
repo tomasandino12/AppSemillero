@@ -10,48 +10,47 @@
  * nada de color se escribe acá, sólo `class`.
  */
 import { estadoAlInicioDelPaso } from '../../data/jugadas.js';
-import { AROS, direccionFinal, trazoSvg } from '../../data/animacionJugada.js';
+import { direccionFinal, trazoSvg } from '../../data/animacionJugada.js';
+import { W, altoDe, formasDeUnExtremo, AROS } from '../../data/geometriaCancha.js';
 
-const W = 300;
-const ALTO = { media: 280, entera: 520 };
 const R_FICHA = 12;
 
 let contador = 0;
 
-function altoDe(cancha) {
-  return ALTO[cancha] ?? ALTO.media;
-}
-
-/** Un extremo de cancha: zona, círculo de tiros libres, arco de tres y aro. Baseline en y=0. */
-function mitadDeCancha(mitadAlto) {
-  const cx = W / 2;
-  const anchoZona = W * 0.36;
-  const altoZona = mitadAlto * 0.38;
-  const rAro = mitadAlto * 0.035;
-  const yAro = mitadAlto * 0.09;
-  const rArco = mitadAlto * 0.58;
+/** Un extremo de cancha: zona, círculo de tiros libres, arco de tres y aro. Baseline en y=0 (medidas FIBA, geometriaCancha.js). */
+function mitadDeCancha() {
+  const { zona, circuloLibres, triple, aro, tablero } = formasDeUnExtremo();
+  const { rectaIzq, rectaDer, arco } = triple;
+  // De izquierda a derecha pasando por abajo: el arco cubre menos de 180°
+  // porque los dos extremos quedan por debajo del centro del aro.
+  const dArco = `M ${rectaIzq.x} ${rectaIzq.y2} A ${arco.r} ${arco.r} 0 0 0 ${rectaDer.x} ${rectaDer.y2}`;
   return `
-    <rect x="${cx - anchoZona / 2}" y="0" width="${anchoZona}" height="${altoZona}" class="pz-linea" fill="none"/>
-    <circle cx="${cx}" cy="${altoZona}" r="${mitadAlto * 0.14}" class="pz-linea" fill="none"/>
-    <path d="M ${cx + rArco} ${yAro} A ${rArco} ${rArco} 0 0 1 ${cx - rArco} ${yAro}" class="pz-linea" fill="none"/>
-    <circle cx="${cx}" cy="${yAro}" r="${rAro}" class="pz-aro" fill="none"/>
-    <line x1="${cx - mitadAlto * 0.08}" y1="${yAro - rAro - 2}" x2="${cx + mitadAlto * 0.08}" y2="${yAro - rAro - 2}" class="pz-tablero"/>
+    <rect x="${zona.x}" y="${zona.y}" width="${zona.ancho}" height="${zona.alto}" class="pz-linea" fill="none"/>
+    <circle cx="${circuloLibres.cx}" cy="${circuloLibres.cy}" r="${circuloLibres.r}" class="pz-linea" fill="none"/>
+    <line x1="${rectaIzq.x}" y1="${rectaIzq.y1}" x2="${rectaIzq.x}" y2="${rectaIzq.y2}" class="pz-linea"/>
+    <line x1="${rectaDer.x}" y1="${rectaDer.y1}" x2="${rectaDer.x}" y2="${rectaDer.y2}" class="pz-linea"/>
+    <path d="${dArco}" class="pz-linea" fill="none"/>
+    <circle cx="${aro.cx}" cy="${aro.cy}" r="${aro.r}" class="pz-aro" fill="none"/>
+    <line x1="${tablero.x1}" y1="${tablero.y}" x2="${tablero.x2}" y2="${tablero.y}" class="pz-tablero"/>
   `;
 }
 
 function fondoDeCancha(cancha) {
   const alto = altoDe(cancha);
+  const { circuloCentral } = formasDeUnExtremo();
   let g = `<rect x="0" y="0" width="${W}" height="${alto}" class="pz-cancha"/>`;
   g += `<rect x="1" y="1" width="${W - 2}" height="${alto - 2}" class="pz-linea" fill="none"/>`;
   if (cancha === 'entera') {
     const mitad = alto / 2;
-    g += mitadDeCancha(mitad);
+    g += mitadDeCancha();
     // La otra mitad es la misma forma, reflejada: evita repetir la geometría con signos al revés.
-    g += `<g transform="translate(0,${alto}) scale(1,-1)">${mitadDeCancha(mitad)}</g>`;
+    g += `<g transform="translate(0,${alto}) scale(1,-1)">${mitadDeCancha()}</g>`;
     g += `<line x1="0" y1="${mitad}" x2="${W}" y2="${mitad}" class="pz-linea"/>`;
-    g += `<circle cx="${W / 2}" cy="${mitad}" r="${mitad * 0.12}" class="pz-linea" fill="none"/>`;
+    g += `<circle cx="${W / 2}" cy="${mitad}" r="${circuloCentral.r}" class="pz-linea" fill="none"/>`;
   } else {
-    g += mitadDeCancha(alto);
+    g += mitadDeCancha();
+    // Media cancha: sólo la mitad de adentro del círculo central, apoyada en la línea de mitad de cancha.
+    g += `<path d="M ${W / 2 - circuloCentral.r} ${alto} A ${circuloCentral.r} ${circuloCentral.r} 0 0 1 ${W / 2 + circuloCentral.r} ${alto}" class="pz-linea" fill="none"/>`;
   }
   return g;
 }
