@@ -371,6 +371,7 @@
     <section class="pant" id="p-jug-fisico"><div id="jug-fisico-contenido"></div></section>
     <section class="pant" id="p-jug-sesion"><div id="jug-sesion-contenido"></div></section>
     <section class="pant" id="p-jug-progreso"><div id="jug-progreso-contenido"></div></section>
+    <section class="pant" id="p-jug-jugadas"><div id="jug-jugadas-contenido"></div></section>
 
     <!-- Pantallas del flujo de import de la Etapa 2B. Los ids de contenido
          los usa su lógica, que no se toca. -->
@@ -388,6 +389,13 @@
 
 <div class="velo" id="velo"></div>
 <div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-titulo"></div>
+
+<!-- El visor de una jugada, a pantalla completa: pensado para el celular del
+     jugador, así que no comparte la hoja (que es un panel parcial). -->
+<div class="jvc" id="jug-visor-completo" role="dialog" aria-modal="true" hidden>
+  <button class="jvc-cerrar" id="btn-jvc-cerrar" aria-label="Cerrar">&#10005;</button>
+  <div id="jug-visor-completo-cuerpo"></div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-tx"></span></div>
 
 <input type="file" id="input-archivo" accept=".xlsx" class="sr" tabindex="-1" aria-hidden="true">

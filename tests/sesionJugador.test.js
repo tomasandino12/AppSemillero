@@ -53,10 +53,10 @@ test('limpiarSesion olvida al jugador y su ficha', () => {
   assert.equal(obtenerModo(), 'entrenar');
 });
 
-test('cada modo tiene sus pestañas, y el jugador tiene tres', () => {
+test('cada modo tiene sus pestañas, y el jugador tiene cuatro', () => {
   setRoles({ esJugador: true });
   assert.equal(tabsDelModo(), TABS_JUGADOR);
-  assert.deepEqual(TABS_JUGADOR.map((t) => t.texto), ['Recursos', 'Físico', 'Mi progreso']);
+  assert.deepEqual(TABS_JUGADOR.map((t) => t.texto), ['Recursos', 'Físico', 'Mi progreso', 'Jugadas']);
   setRoles({ esEntrenador: true });
   assert.equal(tabsDelModo(), TABS);
   setRoles({ esCoordinador: true });

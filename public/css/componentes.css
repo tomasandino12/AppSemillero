@@ -684,6 +684,15 @@ svg.pz{width:100%;display:block;overflow:visible;border-radius:var(--r-m)}
 .jed-panel-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
 .jed-paso-nav{display:flex;align-items:center;justify-content:center;gap:var(--sp-3)}
 
+/* Visor de una jugada a pantalla completa (jugador): tapa todo, sin compartir
+   la hoja (que es un panel parcial, pensado para formularios). */
+.jvc{position:fixed;inset:0;z-index:55;background:var(--papel);padding:var(--sp-4);padding-top:calc(var(--sp-4) + env(safe-area-inset-top));overflow-y:auto}
+.jvc[hidden]{display:none}
+.jvc-cerrar{
+  display:flex;align-items:center;justify-content:center;margin-left:auto;margin-bottom:var(--sp-2);
+  width:var(--tap);height:var(--tap);border-radius:var(--r-full);background:var(--fondo-chip);font-size:var(--fs-160);color:var(--tinta);
+}
+
 /* Visor: cancha arriba, nota, transporte y velocidad debajo. */
 .visor-jugada{display:flex;flex-direction:column;gap:var(--sp-3)}
 .visor-nota{font-size:var(--fs-135);color:var(--gris);min-height:1.2em}

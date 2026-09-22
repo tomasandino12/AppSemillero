@@ -28,6 +28,7 @@ import { renderJugRecursos } from './jugRecursos.js';
 import { renderJugFisico } from './jugFisico.js';
 import { renderJugSesion } from './jugSesion.js';
 import { renderJugProgreso } from './jugProgreso.js';
+import { renderJugJugadas, iniciarJugJugadas } from './jugJugadas.js';
 
 /**
  * Punto único donde se registran las pantallas. Existe para que main.js no
@@ -63,10 +64,12 @@ export function registrarPantallas() {
   registrarPantalla('p-jug-fisico', { titulo: 'Físico', render: renderJugFisico });
   registrarPantalla('p-jug-sesion', { titulo: 'Sesión', render: renderJugSesion });
   registrarPantalla('p-jug-progreso', { titulo: 'Mi progreso', render: renderJugProgreso });
+  registrarPantalla('p-jug-jugadas', { titulo: 'Jugadas', render: renderJugJugadas });
   setAbrirFicha(abrirFicha);
   setAbrirEjercicio(abrirEjercicio);
   setAbrirJugada(abrirJugada);
   iniciarJugadaEditor();
+  iniciarJugJugadas();
   iniciarDatos();
   iniciarFisico();
   iniciarHoja();

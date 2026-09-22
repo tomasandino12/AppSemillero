@@ -15,6 +15,8 @@ const ICONOS = {
   recursos: '<path d="M4 5h16v14H4z"/><path d="M10 9l5 3-5 3z"/>',
   datos: '<path d="M3 17l5-6 4 4 4-7 5 5"/><path d="M3 21h18"/>',
   persona: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
+  // Una pizarra: el tablero, una ficha y la flecha de una jugada.
+  pizarra: '<rect x="3" y="4" width="18" height="13" rx="1.5"/><circle cx="8" cy="10.5" r="1.8"/><path d="M11 13l5-5M16 8h-3v3"/><path d="M9 21h6"/>',
 };
 
 // El escudo real del club. Hasta acá era un pentágono rojo dibujado con
@@ -52,6 +54,7 @@ export const TABS_JUGADOR = [
   { id: 'p-jug-recursos', texto: 'Recursos', icono: ICONOS.recursos },
   { id: 'p-jug-fisico', texto: 'Físico', icono: ICONOS.fisico },
   { id: 'p-jug-progreso', texto: 'Mi progreso', icono: ICONOS.datos },
+  { id: 'p-jug-jugadas', texto: 'Jugadas', icono: ICONOS.pizarra },
 ];
 
 export const PANTALLA_PERFIL = 'p-mi-perfil';
