@@ -111,5 +111,8 @@ export async function obtenerMiSolicitud() {
   if (error) throw error;
   const f = data[0];
   if (!f) return null;
-  return { id: f.id, estado: f.estado, clubNombre: f.club_nombre, categoriaNombre: f.categoria_nombre, creadoEn: f.creado_en };
+  return {
+    id: f.id, estado: f.estado, clubNombre: f.club_nombre, categoriaNombre: f.categoria_nombre,
+    creadoEn: f.creado_en, codigo: f.codigo,
+  };
 }

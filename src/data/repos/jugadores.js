@@ -120,12 +120,15 @@ export async function actualizarFechaNacimiento(clubId, jugadorId, fechaNacimien
 
 /* ---------- Cuenta de jugador: lo que hace el entrenador del plantel (0029) ---------- */
 
-/** Solicitudes pendientes, con el nombre que escribió el chico al registrarse. */
+/**
+ * Solicitudes pendientes, con el nombre que escribió el chico al registrarse.
+ * El código para aprobar no viaja acá (0037): el profe se lo pide en persona.
+ */
 export async function obtenerSolicitudesDelPlantel(plantelId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase.rpc('solicitudes_del_plantel', { p_plantel_id: plantelId });
   if (error) throw error;
-  return data.map((f) => ({ id: f.id, userId: f.user_id, nombre: f.nombre, creadoEn: f.creado_en }));
+  return data.map((f) => ({ id: f.id, userId: f.user_id, nombre: f.nombre, creadoEn: f.creado_en, emailEnmascarado: f.email_enmascarado }));
 }
 
 /**

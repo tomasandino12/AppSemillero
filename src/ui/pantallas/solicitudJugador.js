@@ -55,10 +55,12 @@ function mostrarError(texto) {
   caja.style.display = '';
 }
 
-function verEstado(texto, { conReintentar }) {
+function verEstado(texto, { conReintentar, codigo = null }) {
   $('jugador-form').hidden = true;
   $('jugador-estado').hidden = false;
   $('jugador-estado-texto').textContent = texto;
+  $('jugador-codigo-caja').hidden = !codigo;
+  $('jugador-codigo').textContent = codigo ?? '';
   $('btn-jugador-reintentar').hidden = !conReintentar;
 }
 
@@ -83,7 +85,7 @@ export async function abrirSolicitudJugador() {
   }
 
   if (pendiente) {
-    verEstado(textoDeSolicitudPendiente(pendiente), { conReintentar: true });
+    verEstado(textoDeSolicitudPendiente(pendiente), { conReintentar: true, codigo: pendiente.codigo });
     return;
   }
   clubes = clubesDelCatalogo(catalogo);

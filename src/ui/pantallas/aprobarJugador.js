@@ -2,7 +2,7 @@ import { limpiarNombre, clavearNombre } from '../../parser/parserCabb.js';
 import {
   obtenerJugadoresDelClub, aprobarSolicitud, rechazarSolicitud, revocarCuentaJugador, jugadorTieneCuenta,
 } from '../../data/repositorio.js';
-import { fichaExistente } from '../../data/solicitudJugador.js';
+import { fichaExistente, normalizarCodigo } from '../../data/solicitudJugador.js';
 import { LIMITE } from '../../data/limites.js';
 import { html } from '../html.js';
 import { toast, formatearFechaCorta } from '../nav.js';
@@ -24,6 +24,7 @@ const REGLAS = [
   [/SOLICITUD_NO_ENCONTRADA/, 'Esa solicitud ya no está pendiente: la resolvió otro profe o no es de tu categoría.'],
   [/ES_DEL_CUERPO_TECNICO/, 'Esa cuenta ya es del cuerpo técnico: no se la puede vincular a una ficha de jugador. Rechazá la solicitud.'],
   [/FICHA_FUERA_DEL_PLANTEL/, 'Esa ficha no está en esta categoría.'],
+  [/CODIGO_INCORRECTO/, 'Ese código no es el de esta solicitud. Pedíselo al chico en persona.'],
 ];
 
 const aviso = (texto) => html`<div class="al"><div class="tx">${texto}</div></div>`;
@@ -62,7 +63,13 @@ function abrirDetalle(ctx, s, solicitudes) {
   abrirHoja({
     titulo: s.nombre ?? 'Solicitud',
     cuerpo: html`
-      <div class="p">Pidió entrar a ${plantel.categoria} el ${fechaDe(s)}. Escribió ese nombre al crear su cuenta.</div>
+      <div class="p">Pidió entrar a ${plantel.categoria} el ${fechaDe(s)}. Escribió ese nombre al crear su cuenta.${s.emailEnmascarado ? ` Mail: ${s.emailEnmascarado}.` : ''}</div>
+
+      <div class="campo">
+        <label for="in-sol-codigo">Código que te mostró en persona</label>
+        <input id="in-sol-codigo" type="text" maxlength="6" autocomplete="off" spellcheck="false" placeholder="A1B2C3">
+        <div class="ayuda">Se lo pide en la práctica: la app no te lo puede mostrar a vos.</div>
+      </div>
 
       <div class="eyebrow">Es un chico nuevo</div>
       <div class="campo">
@@ -113,6 +120,20 @@ async function resolver(ctx, boton, textoEnCurso, accion, mensajeOk) {
   return null;
 }
 
+/**
+ * El código lo lee de la hoja porque ambos caminos (crear ficha o vincular a
+ * una existente) lo mandan igual: sin él, aprobar_solicitud_jugador rechaza
+ * con CODIGO_INCORRECTO (0037). null si falta o no tiene 6 caracteres.
+ */
+function leerCodigo() {
+  const codigo = normalizarCodigo($('in-sol-codigo').value);
+  if (!codigo) {
+    $('sol-aviso').innerHTML = aviso('Pedile el código al chico: son 6 caracteres, se los muestra la app a él.');
+    return null;
+  }
+  return codigo;
+}
+
 async function crearFicha(ctx, s, desambiguador) {
   const nombreLimpio = limpiarNombre($('in-sol-nombre').value);
   const nombreClave = clavearNombre(nombreLimpio);
@@ -120,7 +141,9 @@ async function crearFicha(ctx, s, desambiguador) {
     $('sol-aviso').innerHTML = aviso('Escribí el nombre de la ficha.');
     return;
   }
-  const payload = { solicitudId: s.id, nombreClave, nombreLimpio };
+  const codigo = leerCodigo();
+  if (!codigo) return;
+  const payload = { solicitudId: s.id, nombreClave, nombreLimpio, codigo };
   if (desambiguador) payload.desambiguador = desambiguador;
   const error = await resolver(ctx, $('btn-sol-crear'), 'Creando…',
     () => aprobarSolicitud(payload), `${nombreLimpio} ya puede entrar`);
@@ -171,8 +194,10 @@ async function ofrecerFichaExistente(ctx, s, nombreClave) {
 }
 
 async function vincular(ctx, s, jugadorId) {
+  const codigo = leerCodigo();
+  if (!codigo) return;
   const boton = $('hoja').querySelector(`[data-ficha="${jugadorId}"]`) ?? $('btn-sol-misma');
-  const error = await resolver(ctx, boton, 'Vinculando…', () => aprobarSolicitud({ solicitudId: s.id, jugadorId }), 'Listo: ya puede entrar');
+  const error = await resolver(ctx, boton, 'Vinculando…', () => aprobarSolicitud({ solicitudId: s.id, jugadorId, codigo }), 'Listo: ya puede entrar');
   if (error) {
     $('sol-aviso').innerHTML = aviso(mensajeAlGuardar(error, { reglas: REGLAS, generico: 'No se pudo aprobar. Probá de nuevo.' }));
   }

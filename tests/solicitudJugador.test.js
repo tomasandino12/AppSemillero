@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clubesDelCatalogo, fichaExistente } from '../src/data/solicitudJugador.js';
+import { clubesDelCatalogo, fichaExistente, normalizarCodigo } from '../src/data/solicitudJugador.js';
 
 const fila = (clubId, clubNombre, plantelId, categoriaNombre) => ({
   clubId, clubNombre, plantelId, categoriaCodigo: 'X', categoriaNombre,
@@ -45,4 +45,18 @@ test('fichaExistente: sin ficha con esa clave (o sin lista) es null', () => {
 
 test('fichaExistente compara la clave exacta: no adivina parecidos', () => {
   assert.equal(fichaExistente(existentes, 'PEREZ JUAN M', 'p13'), null);
+});
+
+test('normalizarCodigo saca espacios y pasa a mayúsculas', () => {
+  assert.equal(normalizarCodigo('a1b2c3'), 'A1B2C3');
+  assert.equal(normalizarCodigo(' a1 b2c3 '), 'A1B2C3');
+  assert.equal(normalizarCodigo('A1B2C3'), 'A1B2C3');
+});
+
+test('normalizarCodigo: sin 6 caracteres (ya limpio), null', () => {
+  assert.equal(normalizarCodigo('a1b2c'), null);
+  assert.equal(normalizarCodigo('a1b2c33'), null);
+  assert.equal(normalizarCodigo(''), null);
+  assert.equal(normalizarCodigo(undefined), null);
+  assert.equal(normalizarCodigo(null), null);
 });

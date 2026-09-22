@@ -98,6 +98,13 @@
 .caja h2{font-size:var(--fs-260);text-align:center;margin-bottom:var(--sp-2)}
 .caja .sub{color:var(--gris-osc);font-size:var(--fs-135);text-align:center;line-height:1.45;margin-bottom:var(--sp-5)}
 
+/* El código de 6 caracteres que el chico le muestra al profe en la práctica (0037). */
+.codigo-solicitud{
+  font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-300);
+  letter-spacing:.3em;text-align:center;color:var(--sobre-oscuro);
+  margin:var(--sp-4) 0;
+}
+
 .campo-osc{margin-bottom:var(--sp-4)}
 .campo-osc label{
   font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.11em;

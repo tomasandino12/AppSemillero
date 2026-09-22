@@ -30,3 +30,15 @@ export function fichaExistente(existentes, nombreClave, plantelId) {
   if (!jugador) return null;
   return { jugador, enPlantel: (jugador.plantelesActuales ?? []).includes(plantelId) };
 }
+
+/**
+ * El código de 6 caracteres que el chico le muestra al profe en la práctica
+ * (0037). Saca espacios y pasa a mayúsculas, igual que codigo_de_solicitud_valido
+ * en la base — así lo que se ve escrito en el campo antes de guardar coincide
+ * con lo que la base va a comparar. null si, ya limpio, no quedan 6 caracteres:
+ * ni vale la pena mandarlo, es un CODIGO_INCORRECTO seguro.
+ */
+export function normalizarCodigo(texto) {
+  const limpio = String(texto ?? '').replace(/\s+/g, '').toUpperCase();
+  return limpio.length === 6 ? limpio : null;
+}
