@@ -60,6 +60,13 @@ test('connect-src llega al proyecto de Supabase que usa la app', () => {
   assert.ok(directiva('connect-src')?.includes(url), `connect-src sin ${url}`);
 });
 
+// El marcador de salto reproduce el video elegido como objectURL. Sin
+// media-src rige default-src 'self', que bloquea blob:, y el video queda en
+// negro sólo en producción.
+test('media-src deja reproducir el video local del marcador y nada más', () => {
+  assert.deepEqual(directiva('media-src'), ['blob:']);
+});
+
 test('no se puede embeber la app en otra página', () => {
   assert.deepEqual(directiva('frame-ancestors'), ["'none'"]);
 });

@@ -18,7 +18,7 @@ migraciones 0001–0044 **aplicadas en remoto** (0043 y 0044 son las del salto).
 | 4 (RPCs 0044) | hecha y aplicada | c7990ad |
 | 5 | hecha | d3c6038 |
 | 6 | hecha | e6fe0d5 |
-| 7 (pantalla MEDIR → Salto) | hecha; bug del video en negro corregido | 57b7669, 5047fc1 |
+| 7 (pantalla MEDIR → Salto) | hecha; video en negro: faltaba `media-src blob:` en la CSP | 57b7669, 5047fc1, (este) |
 | 8 (ficha y progreso) | hecha, **falta verificar en el celular** | b235870 |
 | 9 (cierre) | código y docs hechos; **falta la prueba en el celular** (elegir video → marcar → guardar → ficha) | |
 

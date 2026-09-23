@@ -362,10 +362,13 @@ primaria.**
    - **Decisión:** el marcador no usa rVFC. Lee la tabla de cuadros del `moov`
      (`src/data/tablaCuadros.js`) y se mueve por índice de cuadro.
 4b. **Prueba de la app (2026-09-23).** Al elegir un video desde el celular, el
-   editor se abría con el video en negro. Causa: el contenedor del editor
-   usaba la clase `.marcador`, que ya existía para el resultado de un partido
-   (`display:flex` en fila) y le achicaba el video. Corregido con la clase
-   `.marcador-cuadros` (5047fc1). Falta reprobar en el S24 FE.
+   editor se abría con el video en negro. **Causa:** la CSP de `vercel.json`
+   no tenía `media-src`, así que regía `default-src 'self'`, que bloquea el
+   objectURL (`blob:`) del video ("Media load rejected by URL safety check").
+   En local no pasa porque la CSP la pone Vercel. Se agregó `media-src blob:`
+   y lo cuida `tests/csp.test.js`. De paso se separó la clase del editor
+   (`.marcador-cuadros`) de la del resultado del partido. Falta reprobar en el
+   S24 FE.
 5. **Salto real.** 3 CMJ filmados; marcar los cuadros y ver que la
    dispersión entre intentos sea de menos de ~1 cm.
 6. **Sprint.** Ver qué lentes permite el modo "Cámara lenta" (¿gran angular?)
