@@ -230,6 +230,15 @@ La pizarra táctica del club (spec `docs/superpowers/specs/2026-09-21-jugadas-de
 - El jugador no tiene acceso a las tablas: lee por `mis_jugadas()` (`security definer`, arranca por `mi_jugador()`), que devuelve `jugada_id`, `nombre`, `tipo` y `datos` de lo asignado a sus planteles con pertenencia vigente. Nunca el autor. No está en `accesoJugador.js` porque ese contrato es de 0029 y 0030; lo cubre `contratoJugada.test.js`.
 - Verificación contra la base: `tests/verificarJugadas.sql` en el SQL Editor.
 
+### Salto: `medicion_salto` y pierna en `medicion_corporal` (0043)
+CMJ y Abalakov medidos con video en cámara lenta (spec `docs/superpowers/specs/2026-09-23-evaluacion-salto-design.md`). El video nunca llega a la base.
+
+- `sesion_medicion.tipo` suma `salto`, y `test_salto` (`cmj` | `abalakov`) es obligatorio sólo en ese tipo (`(tipo = 'salto') = (test_salto is not null)`). Una sesión es de un solo test.
+- `medicion_salto`: `intento` (1–3), `tiempo_vuelo_ms` (`numeric(6,2)`, 100–1000) y `fps_captura` (120–960), `unique (sesion_id, jugador_id, intento)`. **Se guarda el dato crudo, nunca la altura**: `src/data/salto.js` la calcula (y la potencia), así corregir una fórmula recalcula todo el histórico. `tiempo_vuelo_ms` NULL = ausente, en una sola fila (intento 1) y sin fps.
+- RLS por el plantel de la sesión, como `medicion_velocidad`; el insert exige además que la sesión sea de tipo `salto`. `revoke all` + `select` + `insert` por columna, sin update ni delete. Un trigger sella `creado_por` y `creado_en`.
+- `medicion_corporal` suma `pierna_cm` (L0, 60–130) y `pierna_flexionada_cm` (hpush, 30–110), `numeric(4,1)` y nullable, con la flexionada menor que la extendida. Son para la potencia de Samozino; como el peso, el jugador no las ve.
+- `tests/contratoSalto.test.js` compara los rangos con `salto.js` y `antropometria.js`.
+
 ## Políticas RLS
 
 Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde 0016 pasa por la asignación, y **lectura y escritura son ejes separados**. Desde 0018 el coordinador no lee datos individuales.
@@ -276,7 +285,7 @@ Son `security definer` por obligación, no por comodidad: se llaman desde las po
 |---|---|
 | `plantel_id` directo | `plantel`, `pertenencia`, `partido`, `sesion_medicion`, `meta_zona` |
 | vía `partido_id` | `estadistica_jugador_partido` |
-| vía `sesion_id` | `medicion_tiro`, `medicion_velocidad` |
+| vía `sesion_id` | `medicion_tiro`, `medicion_velocidad`, `medicion_salto` |
 | vía `pertenencia` del jugador | `jugador`, `medicion_corporal`, `envio_recurso` |
 
 Un chico citado en dos categorías tiene dos pertenencias vigentes: con que **alguna** dé acceso alcanza.

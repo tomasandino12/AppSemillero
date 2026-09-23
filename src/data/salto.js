@@ -22,6 +22,10 @@ export const TV_MAX_S = 1.00;
 export const FPS_MIN = 120;
 export const FPS_MAX = 960;
 
+/** Una sesión es de un solo test (0043): CMJ y Abalakov no se comparan entre sí. */
+export const TESTS_SALTO = ['cmj', 'abalakov'];
+export const INTENTOS_SALTO = 3;
+
 /**
  * Cuadros entre dos `mediaTime` del archivo. Se divide por el intervalo del
  * archivo (no por los fps de captura) porque Samsung guarda la cámara lenta

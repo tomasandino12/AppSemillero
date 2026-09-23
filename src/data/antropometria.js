@@ -20,6 +20,16 @@ export const ALTURA_MAX_CM = 230;
 export const PESO_MIN_KG = 25;
 export const PESO_MAX_KG = 150;
 
+/**
+ * Largo de pierna para la potencia del salto (Samozino, 0043): extendida
+ * (L0, trocánter → punta del pie) y en cuclillas a 90° (hpush, trocánter →
+ * piso). La flexionada siempre es menor que la extendida.
+ */
+export const PIERNA_MIN_CM = 60;
+export const PIERNA_MAX_CM = 130;
+export const PIERNA_FLEXIONADA_MIN_CM = 30;
+export const PIERNA_FLEXIONADA_MAX_CM = 110;
+
 /** 'YYYY-MM-DD' del día de hoy en hora local, no UTC. */
 export function hoyLocal(fecha = new Date()) {
   const mes = String(fecha.getMonth() + 1).padStart(2, '0');
