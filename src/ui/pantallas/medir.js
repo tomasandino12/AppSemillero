@@ -8,6 +8,9 @@ import { textoDeError } from '../errores.js';
 
 const contenedor = () => $('medir-contenido');
 
+const NOMBRE_TIPO = { tiro: 'Batería de tiro', velocidad: 'Velocidad', salto: 'Salto' };
+const PANTALLA_TIPO = { tiro: 'p-medir-bateria', velocidad: 'p-medir-velocidad', salto: 'p-medir-salto' };
+
 /** 'YYYY-MM-DD' → 'DD/MM/YY', a mano para no depender de la zona horaria. */
 export function formatearFecha(iso) {
   const [anio, mes, dia] = iso.split('-');
@@ -22,7 +25,7 @@ function cuantosCargados(borrador) {
 
 function tarjetaBorrador(borrador, tipo) {
   const cargados = cuantosCargados(borrador);
-  const nombre = tipo === 'tiro' ? 'Batería de tiro' : 'Velocidad';
+  const nombre = NOMBRE_TIPO[tipo];
   return `
     <div class="al">
       <div class="ico">!</div>
@@ -49,6 +52,7 @@ export async function renderMedir() {
   const borradores = {
     tiro: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'tiro')),
     velocidad: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'velocidad')),
+    salto: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'salto')),
   };
 
   contenedor().innerHTML = `
@@ -57,6 +61,7 @@ export async function renderMedir() {
       <div id="medir-borradores">
         ${borradores.tiro ? tarjetaBorrador(borradores.tiro, 'tiro') : ''}
         ${borradores.velocidad ? tarjetaBorrador(borradores.velocidad, 'velocidad') : ''}
+        ${borradores.salto ? tarjetaBorrador(borradores.salto, 'salto') : ''}
       </div>
       <div class="lista-2col">
         <button class="test-fila" id="btn-medir-bateria">
@@ -67,6 +72,10 @@ export async function renderMedir() {
           <div class="ic">s</div>
           <div><div class="t">Velocidad</div><div class="d">Largo de cancha, un intento</div></div>
         </button>
+        <button class="test-fila" id="btn-medir-salto">
+          <div class="ic">↑</div>
+          <div><div class="t">Salto</div><div class="d">CMJ o Abalakov, por video</div></div>
+        </button>
       </div>
       <div class="eyebrow">Sesiones cargadas</div>
       <div class="p" id="medir-estado">Cargando sesiones...</div>
@@ -76,8 +85,9 @@ export async function renderMedir() {
 
   $('btn-medir-bateria').addEventListener('click', () => ir('p-medir-bateria', { push: true }));
   $('btn-medir-velocidad').addEventListener('click', () => ir('p-medir-velocidad', { push: true }));
+  $('btn-medir-salto').addEventListener('click', () => ir('p-medir-salto', { push: true }));
   contenedor().querySelectorAll('[data-seguir]').forEach((b) => {
-    b.addEventListener('click', () => ir(b.dataset.seguir === 'tiro' ? 'p-medir-bateria' : 'p-medir-velocidad', { push: true }));
+    b.addEventListener('click', () => ir(PANTALLA_TIPO[b.dataset.seguir], { push: true }));
   });
   contenedor().querySelectorAll('[data-descartar]').forEach((b) => {
     b.addEventListener('click', async () => {
@@ -108,7 +118,7 @@ export async function renderMedir() {
   $('medir-lista').innerHTML = `<div class="lista-2col">${sesiones.map((s) => `
     <div class="jug-fila">
       <div style="flex:1">
-        <div class="nom">${s.tipo === 'tiro' ? 'Batería de tiro' : 'Velocidad'}</div>
+        <div class="nom">${escaparHtml(NOMBRE_TIPO[s.tipo] ?? s.tipo)}</div>
         <div class="det">${escaparHtml(formatearFecha(s.fecha))}</div>
       </div>
     </div>
