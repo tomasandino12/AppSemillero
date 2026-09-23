@@ -1,10 +1,13 @@
-import { obtenerRecursos, obtenerResumenRecursos, guardarRecurso, obtenerJugadoresDelPlantel } from '../../data/repositorio.js';
+import {
+  obtenerRecursos, obtenerResumenRecursos, guardarRecurso, borrarRecurso, obtenerJugadoresDelPlantel,
+} from '../../data/repositorio.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { toast, formatearFechaCorta } from '../nav.js';
 import { html } from '../html.js';
 import { esEnlaceWeb, MENSAJE_ENLACE_NO_WEB } from '../../data/enlaces.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { abrirVideo, esVideoEmbebible } from '../componentes/video.js';
+import { cargarPerfiles, esMio } from '../perfil.js';
 import { ir } from '../main.js';
 import { renderSeccionEjercicios } from './ejercicios.js';
 import { renderSeccionJugadas } from './jugadas.js';
@@ -116,6 +119,7 @@ function tarjetaRecurso(r, alcance, envio, categoria) {
         <div class="rec-acciones">
           ${esVideoEmbebible(r.enlace) && html`<button class="btn chico" type="button" data-ver-video="${r.id}">Ver video</button>`}
           ${esEnlaceWeb(r.enlace) && html`<a class="btn contorno chico" href="${r.enlace}" target="_blank" rel="noopener noreferrer">Material</a>`}
+          ${esMio(r.creadoPor) && html`<button class="btn sec chico" type="button" data-borrar-recurso="${r.id}">Borrar</button>`}
         </div>
         ${botonDeEnvio(r, envio)}
       </div>
@@ -363,7 +367,11 @@ async function renderSeccionJugadores() {
 
   let recursos, jugadores, resumen;
   try {
-    [recursos, jugadores, resumen] = await Promise.all([
+    // cargarPerfiles junto con la lectura: sin nombres, esMio() no puede
+    // decidir de quién es cada recurso para mostrarle "Borrar". Mismo patrón
+    // que la biblioteca de ejercicios.
+    [, recursos, jugadores, resumen] = await Promise.all([
+      cargarPerfiles(club.id),
       obtenerRecursos(club.id),
       obtenerJugadoresDelPlantel(club.id, plantel.id),
       // Los conteos son un agregado: si fallan, la lista de recursos sale igual.
@@ -438,6 +446,43 @@ async function renderSeccionJugadores() {
       const { faltan } = estadoDeEnvio(recurso.envios, jugadores);
       abrirAltaDeRecurso(recurso.id, faltan, jugadores.length - faltan.length);
     });
+  });
+  contenedorJugadores().querySelectorAll('[data-borrar-recurso]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const recurso = recursos.find((r) => r.id === b.dataset.borrarRecurso);
+      if (recurso) confirmarBorrado(club, recurso);
+    });
+  });
+}
+
+/** Es para siempre: se lleva puesto a quién se le mandó y quién lo abrió. */
+function confirmarBorrado(club, recurso) {
+  abrirHoja({
+    titulo: 'Borrar este recurso',
+    cuerpo: html`
+      <div class="al"><div class="tx">Es para siempre: los jugadores a los que se lo mandaste dejan de verlo, y se pierde el registro de a quién se le mandó y quién lo abrió.</div></div>
+      <div id="borrado-rec-aviso"></div>
+      <button class="btn" id="btn-rec-confirmar-borrado">Borrar de todos modos</button>
+      <button class="btn sec" id="btn-rec-cancelar-borrado">Cancelar</button>
+    `,
+  });
+  $('btn-rec-cancelar-borrado').addEventListener('click', () => cerrarHoja());
+  $('btn-rec-confirmar-borrado').addEventListener('click', async () => {
+    const boton = $('btn-rec-confirmar-borrado');
+    if (boton.disabled) return;
+    boton.disabled = true;
+    boton.textContent = 'Borrando...';
+    try {
+      await borrarRecurso(club.id, recurso.id);
+    } catch (e) {
+      $('borrado-rec-aviso').innerHTML = html`<div class="al"><div class="tx">${textoDeError(e, 'No se pudo borrar el recurso.')}</div></div>`;
+      boton.disabled = false;
+      boton.textContent = 'Borrar de todos modos';
+      return;
+    }
+    cerrarHoja();
+    toast('Recurso borrado');
+    await renderSeccionJugadores();
   });
 }
 

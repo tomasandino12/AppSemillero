@@ -6,7 +6,7 @@ export async function obtenerRecursos(clubId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('recurso')
-    .select('id, titulo, descripcion, enlace, tipo, frecuencia_semanal, minutos, creado_en, envio_recurso(jugador_id, fecha)')
+    .select('id, titulo, descripcion, enlace, tipo, frecuencia_semanal, minutos, creado_por, creado_en, envio_recurso(jugador_id, fecha)')
     .eq('club_id', clubId)
     .order('creado_en', { ascending: false });
   if (error) throw error;
@@ -18,9 +18,27 @@ export async function obtenerRecursos(clubId) {
     tipo: f.tipo,
     frecuenciaSemanal: f.frecuencia_semanal,
     minutos: f.minutos,
+    creadoPor: f.creado_por,
     creadoEn: f.creado_en,
     envios: (f.envio_recurso ?? []).map((e) => ({ jugadorId: e.jugador_id, fecha: e.fecha })),
   }));
+}
+
+/**
+ * Sólo lo propio (0042, policy recurso_borrar_lo_propio). Se lleva puesto los
+ * envíos y las aperturas registradas (cascade desde 0009/0034): la pantalla
+ * lo dice antes de confirmar.
+ */
+export async function borrarRecurso(clubId, recursoId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('recurso')
+    .delete()
+    .eq('club_id', clubId)
+    .eq('id', recursoId)
+    .select('id');
+  if (error) throw error;
+  if (!data.length) throw new Error('NO_ES_TUYO');
 }
 
 /** Recursos que se le enviaron a un jugador, para su ficha. */
