@@ -8,6 +8,7 @@ import { armarProfes } from '../../data/coordinacion.js';
 import { obtenerClubActual } from '../sesion.js';
 import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { verDetallesHtml } from '../componentes/verDetalles.js';
 import { $ } from '../dom.js';
 import { html } from '../html.js';
 import { mensajeAlGuardar, textoDeError } from '../errores.js';
@@ -65,14 +66,17 @@ function sinProfeHtml(sinProfe) {
   `).join('');
 }
 
+// Sólo recibe profes activos (sin bajaEn): los dados de baja van en su propia
+// lista, detrás de "Ver ex miembros" — no tiene sentido ofrecerles asignar
+// categorías ni volver a darlos de baja, y antes ese texto de estado se
+// mezclaba con la lista de gente activa y le comía lugar.
 function profeHtml(p) {
   const roles = [p.esEntrenador && 'Entrenador', p.esCoordinador && 'Coordinación'].filter(Boolean).join(' · ');
   // El propio coordinador no se edita desde acá (la base lo rechaza), y a un
-  // coordinador puro no se le asignan categorías (NO_ES_ENTRENADOR). Un dado
-  // de baja tampoco: la base lo rechaza con DADO_DE_BAJA.
-  const editable = p.esEntrenador && !p.esUnoMismo && !p.bajaEn;
+  // coordinador puro no se le asignan categorías (NO_ES_ENTRENADOR).
+  const editable = p.esEntrenador && !p.esUnoMismo;
   // dar_de_baja_profe rechaza a uno mismo y a coordinación (NO_ES_UNO_MISMO, ES_COORDINACION).
-  const sePuedeDarDeBaja = !p.esUnoMismo && !p.esCoordinador && !p.bajaEn;
+  const sePuedeDarDeBaja = !p.esUnoMismo && !p.esCoordinador;
   const categorias = p.categorias.map((c) => `
     <div class="profe-cat">
       <div style="flex:1;min-width:0">
@@ -84,11 +88,21 @@ function profeHtml(p) {
   `).join('');
   return `
     <div class="profe">
-      <div class="nom">${escaparHtml(p.etiqueta)}${p.esUnoMismo ? ' <span class="det">(vos)</span>' : ''}${p.bajaEn ? ' <span class="det">(dado de baja)</span>' : ''}</div>
+      <div class="nom">${escaparHtml(p.etiqueta)}${p.esUnoMismo ? ' <span class="det">(vos)</span>' : ''}</div>
       <div class="det">${roles}${p.etiqueta !== p.email ? ` · ${escaparHtml(p.email)}` : ''}</div>
-      ${categorias || (p.esEntrenador && !p.bajaEn ? '<span class="chip sin">Sin categorías</span>' : '')}
+      ${categorias || (p.esEntrenador ? '<span class="chip sin">Sin categorías</span>' : '')}
       ${editable ? `<button class="btn sec chico" data-asignar-a="${p.userId}">Asignar categorías</button>` : ''}
       ${sePuedeDarDeBaja ? `<button class="btn sec chico" data-dar-de-baja="${p.userId}">Dar de baja</button>` : ''}
+    </div>
+  `;
+}
+
+/** La lista de dados de baja: sólo el nombre, el mail y desde cuándo. Nada que tocar. */
+function exMiembroHtml(p) {
+  return `
+    <div class="profe">
+      <div class="nom">${escaparHtml(p.etiqueta)}</div>
+      <div class="det">${p.etiqueta !== p.email ? `${escaparHtml(p.email)} · ` : ''}Dado de baja el ${formatearFechaCorta(p.bajaEn.slice(0, 10))}</div>
     </div>
   `;
 }
@@ -372,7 +386,11 @@ export async function renderProfes() {
       ${sinProfeHtml(vista.sinProfe)}
 
       <div class="eyebrow">Profes del club</div>
-      <div class="lista-2col">${vista.profes.map(profeHtml).join('')}</div>
+      <div class="lista-2col">${vista.profes.filter((p) => !p.bajaEn).map(profeHtml).join('')}</div>
+      ${verDetallesHtml('Ex miembros del club', [{
+        nombre: 'Ex miembros',
+        html: vista.profes.filter((p) => p.bajaEn).map(exMiembroHtml).join(''),
+      }])}
     </div>
   `;
 
