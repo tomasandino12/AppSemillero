@@ -342,6 +342,20 @@ svg.g{width:100%;display:block;overflow:visible}
   .btn-icono:not(:disabled):hover{color:var(--tinta)}
 }
 
+/* Ícono con su nombre debajo: para una acción suelta (sin botón de texto
+   al lado) que si no queda muda sobre qué hace y que se puede tocar. */
+.btn-icono-etq{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:none;
+  min-width:var(--tap);min-height:var(--tap);padding:var(--sp-1) var(--sp-2);
+  background:transparent;border:0;border-radius:var(--r-s);color:var(--gris);font-size:var(--fs-100);
+}
+.btn-icono-etq svg{width:1.25rem;height:1.25rem}
+.btn-icono-etq:disabled{color:var(--deshabilitado)}
+.btn-icono-etq:focus-visible{color:var(--tinta)}
+@media (hover:hover){
+  .btn-icono-etq:not(:disabled):hover{color:var(--tinta)}
+}
+
 /* Etapa 4 — carga de la batería en cancha.
    Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
    a la pantalla. La tira envuelve sola en dos líneas a 375px. */
@@ -468,7 +482,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .marca-meta.si{color:var(--tinta)}
 .marca-meta.no{color:var(--gris-cl)}
 .acciones-hoy{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--linea)}
-.acciones-hoy-iconos{display:flex;justify-content:center;gap:var(--sp-4);margin-top:var(--sp-3)}
+.acciones-hoy-iconos{display:flex;justify-content:center;gap:var(--sp-4)}
 
 /* Edición de metas */
 .metas-lista{display:flex;flex-direction:column;margin:var(--sp-3) 0}
@@ -762,11 +776,24 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .jed-herr-btn.on[data-herramienta="tiro"]{border-color:var(--trazo-tiro);background:var(--fondo-chip);background:color-mix(in oklab,var(--trazo-tiro) 14%,var(--papel))}
 .jed-herr-btn.on[data-herramienta="handoff"]{border-color:var(--trazo-handoff);background:var(--fondo-chip);background:color-mix(in oklab,var(--trazo-handoff) 14%,var(--papel))}
 .jed-barra .ayuda{font-size:var(--fs-115);color:var(--gris-cl);flex:0 0 100%}
+/* Hover de cada herramienta de trazo con su propio color (más tenue que
+   .on, activa): confirma que es tocable antes de tocarla. */
+@media (hover:hover){
+  .jed-herr-btn:not(:disabled):not(.on):hover{border-color:var(--gris)}
+  .jed-herr-btn:not(:disabled):not(.on):hover[data-herramienta="corte"]{border-color:var(--trazo-corte);background:color-mix(in oklab,var(--trazo-corte) 8%,var(--papel))}
+  .jed-herr-btn:not(:disabled):not(.on):hover[data-herramienta="dribbling"]{border-color:var(--trazo-dribbling);background:color-mix(in oklab,var(--trazo-dribbling) 8%,var(--papel))}
+  .jed-herr-btn:not(:disabled):not(.on):hover[data-herramienta="pase"]{border-color:var(--trazo-pase);background:color-mix(in oklab,var(--trazo-pase) 8%,var(--papel))}
+  .jed-herr-btn:not(:disabled):not(.on):hover[data-herramienta="cortina"]{border-color:var(--trazo-cortina);background:color-mix(in oklab,var(--trazo-cortina) 8%,var(--papel))}
+  .jed-herr-btn:not(:disabled):not(.on):hover[data-herramienta="tiro"]{border-color:var(--trazo-tiro);background:color-mix(in oklab,var(--trazo-tiro) 8%,var(--papel))}
+  .jed-herr-btn:not(:disabled):not(.on):hover[data-herramienta="handoff"]{border-color:var(--trazo-handoff);background:color-mix(in oklab,var(--trazo-handoff) 8%,var(--papel))}
+}
 .jed-cuerpo{display:flex;flex-direction:column;gap:var(--sp-4)}
 .jed-cancha{flex:1;min-width:0}
 /* Pointer Events maneja el arrastre; sin esto el navegador hace scroll/zoom con el dedo sobre la cancha. */
 .jed-cancha svg.pz{touch-action:none}
-.jed-panel{display:flex;flex-direction:column;gap:var(--sp-3)}
+/* Fondo y borde propios: sin esto el panel se leía como una continuación
+   de la cancha, no como un bloque aparte (la secuencia de pasos). */
+.jed-panel{display:flex;flex-direction:column;gap:var(--sp-3);background:var(--blanco);border:1px solid var(--linea);border-radius:var(--r);padding:var(--sp-3)}
 .jed-panel-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
 .jed-paso-nav{display:flex;align-items:center;justify-content:center;gap:var(--sp-3)}
 /* La lista de pasos scrollea sola (con muchos pasos no empuja el resto del

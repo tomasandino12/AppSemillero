@@ -15,7 +15,7 @@ import { toast } from '../nav.js';
 import { montarVisor } from '../componentes/visorJugada.js';
 import { descargarPaso, imprimirJugada } from '../componentes/exportarJugada.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
-import { ICONO, botonIcono } from '../componentes/iconos.js';
+import { ICONO, botonIcono, botonIconoEtiquetado } from '../componentes/iconos.js';
 import { abrirEditorDeJugada } from './jugadas.js';
 import { ir, volver } from '../main.js';
 import { $ } from '../dom.js';
@@ -49,11 +49,11 @@ function pintarJugada(club, jugada) {
       <div class="acciones-hoy">
         ${jugada.esMia ? html`<button class="btn sec" id="btn-jug-editar" type="button">Editar</button>` : ''}
         <button class="btn sec" id="btn-jug-asignar" type="button">Asignar a planteles</button>
-      </div>
-      <div class="acciones-hoy-iconos">
-        ${botonIcono({ id: 'btn-jug-duplicar', icono: ICONO.duplicar, etiqueta: 'Duplicar jugada' })}
-        ${botonIcono({ id: 'btn-jug-descargar', icono: ICONO.descargar, etiqueta: 'Descargar paso' })}
-        ${botonIcono({ id: 'btn-jug-imprimir', icono: ICONO.imprimir, etiqueta: 'Imprimir jugada' })}
+        <div class="acciones-hoy-iconos">
+          ${botonIconoEtiquetado({ id: 'btn-jug-duplicar', icono: ICONO.duplicar, etiqueta: 'Duplicar' })}
+          ${botonIconoEtiquetado({ id: 'btn-jug-descargar', icono: ICONO.descargar, etiqueta: 'Descargar' })}
+          ${botonIconoEtiquetado({ id: 'btn-jug-imprimir', icono: ICONO.imprimir, etiqueta: 'Imprimir' })}
+        </div>
       </div>
     </div>
   `;

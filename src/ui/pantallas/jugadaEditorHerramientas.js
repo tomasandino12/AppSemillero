@@ -57,21 +57,22 @@ export function barraDeHerramientasHtml({ herramienta, hayPasos, puedeAgregar })
           ${crudo(iconoDeAccion(t))}<span>${ETIQUETA_ACCION[t]}</span>
         </button>
       `)}
-      <hr class="jed-barra-filete">
-      <span class="jed-barra-titulo">Fichas</span>
-      <button type="button" class="jed-herr-btn" data-agregar="ataque" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? '' : AYUDA_AGREGAR}">
-        <span class="jed-herr-letra">+A</span>
-      </button>
-      <button type="button" class="jed-herr-btn" data-agregar="defensa" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? '' : AYUDA_AGREGAR}">
-        <span class="jed-herr-letra">+D</span>
-      </button>
-      <button type="button" class="jed-herr-btn" data-agregar="cono" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? '' : AYUDA_AGREGAR}">
-        ${crudo(ICONO_CONO)}<span>Cono</span>
-      </button>
-      <button type="button" class="jed-herr-btn ${herramienta === 'pelota' ? 'on' : ''}" data-herramienta="pelota" ${puedeAgregar ? '' : 'disabled'} title="${puedeAgregar ? 'Tocá al atacante que arranca con la pelota' : AYUDA_AGREGAR}">
-        ${crudo(ICONO_PELOTA)}<span>Pelota</span>
-      </button>
-      ${puedeAgregar ? '' : html`<div class="ayuda">${AYUDA_AGREGAR}</div>`}
+      ${puedeAgregar ? html`
+        <hr class="jed-barra-filete">
+        <span class="jed-barra-titulo">Fichas</span>
+        <button type="button" class="jed-herr-btn" data-agregar="ataque">
+          <span class="jed-herr-letra">+A</span>
+        </button>
+        <button type="button" class="jed-herr-btn" data-agregar="defensa">
+          <span class="jed-herr-letra">+D</span>
+        </button>
+        <button type="button" class="jed-herr-btn" data-agregar="cono">
+          ${crudo(ICONO_CONO)}<span>Cono</span>
+        </button>
+        <button type="button" class="jed-herr-btn ${herramienta === 'pelota' ? 'on' : ''}" data-herramienta="pelota" title="Tocá al atacante que arranca con la pelota">
+          ${crudo(ICONO_PELOTA)}<span>Pelota</span>
+        </button>
+      ` : html`<div class="ayuda">${AYUDA_AGREGAR}</div>`}
     </div>
   `;
 }

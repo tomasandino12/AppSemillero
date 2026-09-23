@@ -27,3 +27,10 @@ export function botonIcono({
 }) {
   return html`<button type="button" class="btn-icono${extraClase ? ` ${extraClase}` : ''}"${id ? html` id="${id}"` : ''} aria-label="${etiqueta}" title="${etiqueta}"${disabled ? html` disabled` : ''}>${crudo(icono)}</button>`;
 }
+
+/** Como `botonIcono`, pero con el texto visible debajo (para acciones sueltas, sin botón de texto al lado que las explique). */
+export function botonIconoEtiquetado({
+  id, icono, etiqueta, disabled = false,
+}) {
+  return html`<button type="button" class="btn-icono-etq"${id ? html` id="${id}"` : ''} title="${etiqueta}"${disabled ? html` disabled` : ''}>${crudo(icono)}<span>${etiqueta}</span></button>`;
+}
