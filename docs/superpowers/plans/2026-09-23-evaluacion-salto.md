@@ -6,6 +6,27 @@
 **Cómo se ejecuta:** en esta sesión, sin subagentes. Cada task es un commit,
 con TDD donde hay lógica, y `npm run test:q` antes de commitear.
 
+## Estado (actualizar al cerrar cada task)
+Verificado el 2026-09-23 con `git log` y `npx supabase migration list`:
+migraciones 0001–0044 **aplicadas en remoto** (0043 y 0044 son las del salto).
+
+| Task | Estado | Commit |
+|---|---|---|
+| 0, 1, 2 | hecha | ffc4381, dcb11f2, ac993f3 |
+| 2b | hecha | 4fe3c1f |
+| 3 (migración 0043) | hecha y aplicada | 796dc53 |
+| 4 (RPCs 0044) | hecha y aplicada | c7990ad |
+| 5 | hecha | d3c6038 |
+| 6 | hecha | e6fe0d5 |
+| 7 (pantalla MEDIR → Salto) | hecha | 57b7669 |
+| 8 (ficha y progreso) | hecha, **falta verificar en el celular** | b235870 |
+| 9 (cierre) | pendiente | |
+
+Para retomar: mirar esta tabla, `git log --oneline -15` y `migration list`
+antes de asumir qué falta.
+
+---
+
 ## Restricciones globales
 - Capas: pantalla → `repositorio.js` → `repos/mediciones.js` → `cliente.js`.
   Las fórmulas van sólo en `src/data/salto.js`, que es puro.
