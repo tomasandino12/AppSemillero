@@ -856,3 +856,16 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .visor-velocidades{display:flex;gap:var(--sp-2)}
 .visor-indicador{font-size:var(--fs-115);color:var(--gris-cl)}
 .inv-cantidad input{width:5rem;text-align:center}
+
+/* Marcador de cuadros del salto (marcadorCuadros.js): tapa todo, como .jvc, y
+   por eso lleva el protocolo en un <details> en vez de abrir la hoja. */
+.marcador{position:fixed;inset:0;z-index:60;background:var(--papel);overflow-y:auto;padding:var(--sp-4);padding-top:calc(var(--sp-4) + env(safe-area-inset-top))}
+.marcador-cuerpo{display:flex;flex-direction:column;gap:var(--sp-3);max-width:var(--max-ancho);margin-inline:auto}
+.marcador-video{width:100%;max-height:45vh;object-fit:contain;background:var(--negro-puro);border-radius:var(--r)}
+.marcador-slider{width:100%;min-height:var(--tap);accent-color:var(--primario)}
+.marcador-cuadro{font-size:var(--fs-145);color:var(--gris-cl);text-align:center}
+.marcador-pasos,.marcador-marcas{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2)}
+.marcador-marcas{grid-template-columns:repeat(2,1fr)}
+.marcador-resultado{font-size:var(--fs-145);min-height:2.5em}
+.marcador-protocolo summary{min-height:var(--tap);display:flex;align-items:center;cursor:pointer;font-size:var(--fs-145);color:var(--tinta)}
+.protocolo-salto{padding-left:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-2);font-size:var(--fs-135)}
