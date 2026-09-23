@@ -83,6 +83,21 @@ pantalla le pasa los primeros y los últimos 4 MB leídos con `file.slice`.
 - `ignora valores no numéricos`
 - `acepta la clave cerca del final`
 
+### Task 2b: tabla de cuadros del video (agregada tras la falla de la task 0)
+**Por qué:** la página de prueba falló con el video original de la cámara
+lenta. Su cuadro 0 dura 1,17 s, y con rVFC a 0,25× el primer aviso tarda 4,7 s
+(el timeout era de 2 s); además, con el video en pausa, un seek que cae en el
+mismo cuadro no presenta ninguno y rVFC no avisa nunca. La task 6 **no usa
+rVFC**.
+
+**Archivos:** `src/data/tablaCuadros.js` y `tests/tablaCuadros.test.js`.
+
+**Produce:** `tablaDeCuadros(bytes)` → `{ tiempos, intervaloS }` o `null` (lee el
+`moov`: `stts` y `ctts` de la pista de video) y `cuadroEnTiempo(tiempos, t)`.
+Verificado contra los tres videos reales (2023, 1605 y 1044 cuadros).
+
+**Commit:** `feat(salto): tabla de cuadros del video leída del moov`.
+
 ### Task 3: migración de datos de salto
 **Archivos:** `supabase/migrations/0043_salto.sql` (usar `/nueva-migracion`),
 `supabase/ESQUEMA.md`, `src/data/limites.js` o `src/data/antropometria.js`,
@@ -142,7 +157,12 @@ entran (0032–0044). Las tasks 7 y 8 necesitan la base actualizada.
 
 **Produce:**
 - `abrirMarcador({ archivo, fpsCaptura })` → `Promise<{ tiempoVueloMs, fpsCaptura } | null>`.
-  - Crea y revoca el `objectURL` y mide el intervalo del archivo con rVFC.
+  - Crea y revoca el `objectURL`. Lee la tabla con `tablaDeCuadros` (cabeza y
+    cola del archivo con `file.slice`); si da `null`, avisa "no puedo leer los
+    cuadros de este video, grabalo con la app de Cámara" y no adivina.
+  - Se mueve **por índice de cuadro**: hace seek a mitad del cuadro y espera
+    `seeked` con timeout; sin rVFC y sin controles nativos (video siempre en pausa).
+  - Con la tabla, `n = índice del aterrizaje − índice del despegue`.
   - Botones −10/−1/+1/+10, "Despegue", "Aterrizaje" y "Usar".
   - Valida con `validarTiempoDeVuelo`.
 - `botonProtocolo()` → abre la hoja con el texto del protocolo del spec.

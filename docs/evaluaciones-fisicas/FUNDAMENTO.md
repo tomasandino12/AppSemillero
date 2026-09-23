@@ -350,8 +350,17 @@ primaria.**
    - **La cámara no puede pedir "Cámara lenta"**: `<input capture>` abre la
      cámara en modo normal y el selector sin `capture` tampoco lo ofrece.
      El flujo es grabar con la app de Cámara y después "Elegir video".
-   - Un video de pelota dio error al cargarlo (causa sin identificar; el de
-     salto, de más peso, sí cargó, así que no es por el tamaño).
+   - Un video dio error al cargarlo. **Causa (2026-09-23, con el archivo
+     original de la cámara lenta):** el cuadro 0 dura 1,17 s. La página de
+     prueba medía con rVFC a 0,25× y esperaba 2 s: el segundo cuadro llegaba a
+     los 4,7 s, así que no leía ninguno. Después, con el video en pausa, un
+     seek dentro del cuadro 0 no presenta un cuadro nuevo y rVFC no avisa
+     (por eso `mediaTime 0,0500 (currentTime, sin rVFC)`). Los videos
+     recortados no tienen ese cuadro y andaban. La página también dijo
+     "fps no encontrado" porque buscaba texto: en el archivo es un float32
+     (la app, `fpsDeCaptura`, sí lo lee: 240).
+   - **Decisión:** el marcador no usa rVFC. Lee la tabla de cuadros del `moov`
+     (`src/data/tablaCuadros.js`) y se mueve por índice de cuadro.
 5. **Salto real.** 3 CMJ filmados; marcar los cuadros y ver que la
    dispersión entre intentos sea de menos de ~1 cm.
 6. **Sprint.** Ver qué lentes permite el modo "Cámara lenta" (¿gran angular?)
