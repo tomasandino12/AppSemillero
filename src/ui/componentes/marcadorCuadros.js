@@ -54,7 +54,7 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
   const ultimo = tiempos.length - 1;
   const url = URL.createObjectURL(archivo);
   const raiz = document.createElement('div');
-  raiz.className = 'marcador';
+  raiz.className = 'marcador-cuadros';
   raiz.setAttribute('role', 'dialog');
   raiz.setAttribute('aria-modal', 'true');
   raiz.setAttribute('aria-label', 'Marcar el salto');

@@ -859,7 +859,7 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 
 /* Marcador de cuadros del salto (marcadorCuadros.js): tapa todo, como .jvc, y
    por eso lleva el protocolo en un <details> en vez de abrir la hoja. */
-.marcador{position:fixed;inset:0;z-index:60;background:var(--papel);overflow-y:auto;padding:var(--sp-4);padding-top:calc(var(--sp-4) + env(safe-area-inset-top))}
+.marcador-cuadros{position:fixed;inset:0;z-index:60;background:var(--papel);overflow-y:auto;padding:var(--sp-4);padding-top:calc(var(--sp-4) + env(safe-area-inset-top))}
 .marcador-cuerpo{display:flex;flex-direction:column;gap:var(--sp-3);max-width:var(--max-ancho);margin-inline:auto}
 .marcador-video{width:100%;max-height:45vh;object-fit:contain;background:var(--negro-puro);border-radius:var(--r)}
 .marcador-slider{width:100%;min-height:var(--tap);accent-color:var(--primario)}
