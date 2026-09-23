@@ -9,6 +9,7 @@ import { toast } from '../nav.js';
 // El moov de un mp4/mov está al principio o al final del archivo.
 const BYTES_EXTREMO = 4 * 1024 * 1024;
 const ESPERA_SEEK_MS = 1500;
+const ESPERA_CARGA_MS = 10000;
 
 async function leerTabla(archivo) {
   const cabeza = new Uint8Array(await archivo.slice(0, BYTES_EXTREMO).arrayBuffer());
@@ -62,6 +63,7 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
     <div class="marcador-cuerpo">
       <button type="button" class="jvc-cerrar" data-m="cerrar" aria-label="Cerrar">&#10005;</button>
       <video class="marcador-video" muted playsinline preload="auto" src="${url}"></video>
+      <p class="marcador-resultado" data-m="aviso-video" role="alert" hidden></p>
       <input type="range" class="marcador-slider" data-m="slider" min="0" max="${ultimo}" value="0" step="1" aria-label="Cuadro del video">
       <p class="marcador-cuadro">Cuadro <span class="mono" data-m="cuadro">0</span> de ${ultimo}</p>
       <div class="marcador-pasos">
@@ -170,6 +172,27 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
   $m('usar').addEventListener('click', () => { if (resultado) cerrar(resultado); });
   $m('cerrar').addEventListener('click', () => cerrar(null));
   document.addEventListener('keydown', alTeclear);
+
+  // Si el navegador no puede abrir el video (HEVC en muchas PC), el <video>
+  // queda en negro sin avisar. El detalle técnico va a la vista porque es la
+  // única pista que llega desde el celular del profe.
+  function avisarSinVideo(texto) {
+    const aviso = $m('aviso-video');
+    aviso.textContent = texto;
+    aviso.hidden = false;
+  }
+  video.addEventListener('error', () => {
+    const e = video.error;
+    const detalle = `error ${e?.code ?? '?'}${e?.message ? `: ${e.message}` : ''}`;
+    avisarSinVideo(e?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+      ? `Este navegador no puede abrir el video (${detalle}). Probá desde el celular, o grabá con "Videos de alta eficiencia" desactivado en la cámara.`
+      : `No se pudo cargar el video (${detalle}).`);
+  });
+  setTimeout(() => {
+    if (raiz.isConnected && !video.error && video.readyState < HTMLMediaElement.HAVE_METADATA) {
+      avisarSinVideo(`El video no terminó de cargar (readyState ${video.readyState}, networkState ${video.networkState}).`);
+    }
+  }, ESPERA_CARGA_MS);
 
   video.addEventListener('loadedmetadata', () => {
     actual = cuadroEnTiempo(tiempos, video.currentTime);
