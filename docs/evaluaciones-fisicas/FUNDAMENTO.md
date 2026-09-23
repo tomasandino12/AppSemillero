@@ -333,9 +333,25 @@ primaria.**
    240 fps reales.
 3. **Metadata.** Pasar los archivos a la PC y leer los fps guardados, la
    duración y la metadata de captura.
-4. **Navegador.** Cargar el archivo en Chrome Android con una página de
-   prueba y verificar que `requestVideoFrameCallback` avance cuadro por
-   cuadro.
+4. ~~Navegador.~~ **Verificado el 2026-09-23** con una página de prueba en
+   Chrome del S24 FE (video de salto de 112 MB, recortado):
+   - `requestVideoFrameCallback` está disponible y el marcado cuadro por
+     cuadro anda **con el video en pausa**. Intervalo medido: mediana
+     **33,33 ms**; mín 33,32 y máx 66,83 ms (el máximo es un cuadro que
+     rVFC no entregó al reproducir; por eso se usa la mediana).
+   - Marcando a mano en el celular: **104 cuadros** entre despegue y
+     aterrizaje → tv = 0,433 s → **h = 23,0 cm**, igual al análisis en PC
+     (104 ± 3).
+   - El archivo recortado **no traía `com.android.capture.fps`**: sin la
+     metadata, la app tiene que pedir los fps (selector 240/120).
+   - Si se reproduce y se toca ±1 a la vez, el video se reinicia: el marcador
+     debe dejar el video siempre en pausa, sin controles nativos de
+     reproducción.
+   - **La cámara no puede pedir "Cámara lenta"**: `<input capture>` abre la
+     cámara en modo normal y el selector sin `capture` tampoco lo ofrece.
+     El flujo es grabar con la app de Cámara y después "Elegir video".
+   - Un video de pelota dio error al cargarlo (causa sin identificar; el de
+     salto, de más peso, sí cargó, así que no es por el tamaño).
 5. **Salto real.** 3 CMJ filmados; marcar los cuadros y ver que la
    dispersión entre intentos sea de menos de ~1 cm.
 6. **Sprint.** Ver qué lentes permite el modo "Cámara lenta" (¿gran angular?)
