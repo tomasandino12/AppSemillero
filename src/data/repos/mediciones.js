@@ -64,6 +64,44 @@ export async function obtenerMedicionesVelocidadDelPlantel(clubId, plantelId) {
   }));
 }
 
+/**
+ * Todos los intentos de salto del plantel, con la fecha y el test de su
+ * sesión. tiempoVueloMs y fpsCaptura null = ausente (no saltó), nunca 0.
+ */
+export async function obtenerMedicionesSaltoDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const data = [];
+  let desde = 0;
+  for (;;) {
+    const hasta = desde + TAMANIO_PAGINA - 1;
+    const { data: pagina, error } = await supabase
+      .from('medicion_salto')
+      .select('id, sesion_id, jugador_id, intento, tiempo_vuelo_ms, fps_captura, sesion_medicion!inner(plantel_id, fecha, test_salto)')
+      .eq('club_id', clubId)
+      .eq('sesion_medicion.plantel_id', plantelId)
+      .order('id')
+      .range(desde, hasta);
+    if (error) throw error;
+    data.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
+  return data.map(saltoDesdeFila);
+}
+
+function saltoDesdeFila(f) {
+  return {
+    sesionId: f.sesion_id,
+    jugadorId: f.jugador_id,
+    intento: f.intento,
+    // numeric llega como string por PostgREST; el null (ausente) se preserva.
+    tiempoVueloMs: f.tiempo_vuelo_ms == null ? null : Number(f.tiempo_vuelo_ms),
+    fpsCaptura: f.fps_captura == null ? null : Number(f.fps_captura),
+    fecha: f.sesion_medicion?.fecha ?? null,
+    testSalto: f.sesion_medicion?.test_salto ?? null,
+  };
+}
+
 export async function guardarSesionMedicion(payload) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase.rpc('guardar_sesion_medicion', { payload });
@@ -80,7 +118,7 @@ export async function obtenerMedicionesCorporalesDeJugador(clubId, jugadorId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('medicion_corporal')
-    .select('id, fecha_medicion, altura_cm, peso_kg')
+    .select('id, fecha_medicion, altura_cm, peso_kg, pierna_cm, pierna_flexionada_cm')
     .eq('club_id', clubId)
     .eq('jugador_id', jugadorId)
     .order('fecha_medicion', { ascending: false });
@@ -92,6 +130,8 @@ export async function obtenerMedicionesCorporalesDeJugador(clubId, jugadorId) {
     alturaCm: f.altura_cm,
     // numeric de Postgres llega como string por PostgREST; el null se preserva.
     pesoKg: f.peso_kg == null ? null : Number(f.peso_kg),
+    piernaCm: f.pierna_cm == null ? null : Number(f.pierna_cm),
+    piernaFlexionadaCm: f.pierna_flexionada_cm == null ? null : Number(f.pierna_flexionada_cm),
   }));
 }
 
@@ -109,7 +149,7 @@ export async function obtenerMedicionesCorporalesDelClub(clubId) {
     const hasta = desde + TAMANIO_PAGINA - 1;
     const { data: pagina, error } = await supabase
       .from('medicion_corporal')
-      .select('id, jugador_id, fecha_medicion, altura_cm, peso_kg')
+      .select('id, jugador_id, fecha_medicion, altura_cm, peso_kg, pierna_cm, pierna_flexionada_cm')
       .eq('club_id', clubId)
       .order('id')
       .range(desde, hasta);
@@ -124,6 +164,8 @@ export async function obtenerMedicionesCorporalesDelClub(clubId) {
     fechaMedicion: f.fecha_medicion,
     alturaCm: f.altura_cm,
     pesoKg: f.peso_kg == null ? null : Number(f.peso_kg),
+    piernaCm: f.pierna_cm == null ? null : Number(f.pierna_cm),
+    piernaFlexionadaCm: f.pierna_flexionada_cm == null ? null : Number(f.pierna_flexionada_cm),
   }));
 }
 
@@ -134,7 +176,7 @@ export async function obtenerMedicionesCorporalesDelClub(clubId) {
  * Lanza un Error con message 'MEDICION_DUPLICADA' si ya hay una medición de
  * ese jugador en esa fecha (unique (jugador_id, fecha_medicion) en 0012).
  */
-export async function crearMedicionCorporal({ clubId, jugadorId, fechaMedicion, alturaCm, pesoKg }) {
+export async function crearMedicionCorporal({ clubId, jugadorId, fechaMedicion, alturaCm, pesoKg, piernaCm = null, piernaFlexionadaCm = null }) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('medicion_corporal')
@@ -144,6 +186,8 @@ export async function crearMedicionCorporal({ clubId, jugadorId, fechaMedicion, 
       fecha_medicion: fechaMedicion,
       altura_cm: alturaCm,
       peso_kg: pesoKg,
+      pierna_cm: piernaCm,
+      pierna_flexionada_cm: piernaFlexionadaCm,
     })
     .select('id')
     .single();

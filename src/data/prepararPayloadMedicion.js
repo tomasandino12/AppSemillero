@@ -58,3 +58,34 @@ export function prepararPayloadVelocidad({ clubId, plantelId, fecha, valores, se
   }
   return { clubId, plantelId, fecha, tipo: 'velocidad', mediciones, sesionId };
 }
+
+/**
+ * Borrador de salto → payload. `valores[jugadorId]` es `{ ausente: true }` o
+ * `{ intentos: [{ tiempoVueloMs, fpsCaptura }] }`.
+ *
+ * Igual que en batería: ausente es una fila sin tiempo ni fps (estuvo, no
+ * saltó); un chico sin ningún intento cargado no genera nada (la sesión no
+ * llegó a él). Un intento sin tiempo o sin fps no viaja: los checks de la base
+ * exigen que vayan juntos, y los que sí viajan se numeran 1..n sin huecos.
+ */
+export function prepararPayloadSalto({ sesionId, clubId, plantelId, fecha, testSalto, valores }) {
+  const mediciones = [];
+  for (const [jugadorId, datos] of Object.entries(valores ?? {})) {
+    if (datos?.ausente) {
+      mediciones.push({ jugadorId, intento: 1 });
+      continue;
+    }
+    const cargados = (datos?.intentos ?? []).filter(
+      (i) => i?.tiempoVueloMs != null && i?.fpsCaptura != null,
+    );
+    cargados.forEach((i, idx) => {
+      mediciones.push({
+        jugadorId,
+        intento: idx + 1,
+        tiempoVueloMs: i.tiempoVueloMs,
+        fpsCaptura: i.fpsCaptura,
+      });
+    });
+  }
+  return { clubId, plantelId, fecha, tipo: 'salto', testSalto, mediciones, sesionId };
+}

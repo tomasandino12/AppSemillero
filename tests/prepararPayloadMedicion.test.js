@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { prepararPayloadBateria, prepararPayloadVelocidad, redondearSegundos } from '../src/data/prepararPayloadMedicion.js';
+import { prepararPayloadBateria, prepararPayloadVelocidad, prepararPayloadSalto, redondearSegundos } from '../src/data/prepararPayloadMedicion.js';
 
 const BASE = { clubId: 'c1', plantelId: 'pl1', fecha: '2026-03-05' };
 
@@ -69,4 +69,37 @@ test('el sesionId del borrador pasa al payload, en batería y en velocidad', () 
   assert.equal(bateria.sesionId, 'sesion-1');
   const velocidad = prepararPayloadVelocidad({ ...BASE, valores: { j1: '4.7' }, sesionId: 'sesion-2' });
   assert.equal(velocidad.sesionId, 'sesion-2');
+});
+
+const SALTO = { ...BASE, sesionId: 's1', testSalto: 'cmj' };
+
+test('payload de salto con 3 intentos', () => {
+  const intentos = [
+    { tiempoVueloMs: 480.5, fpsCaptura: 240 },
+    { tiempoVueloMs: 500, fpsCaptura: 240 },
+    { tiempoVueloMs: 495.83, fpsCaptura: 240 },
+  ];
+  const p = prepararPayloadSalto({ ...SALTO, valores: { j1: { intentos } } });
+  assert.equal(p.tipo, 'salto');
+  assert.equal(p.testSalto, 'cmj');
+  assert.equal(p.sesionId, 's1');
+  assert.deepEqual(p.mediciones.map((m) => m.intento), [1, 2, 3]);
+  assert.deepEqual(p.mediciones[2], { jugadorId: 'j1', intento: 3, tiempoVueloMs: 495.83, fpsCaptura: 240 });
+});
+
+test('ausente va sin intentos', () => {
+  const p = prepararPayloadSalto({ ...SALTO, valores: { j1: { ausente: true } } });
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', intento: 1 }]);
+});
+
+test('intento sin tiempo no viaja, y un chico sin nada no genera filas', () => {
+  const p = prepararPayloadSalto({
+    ...SALTO,
+    valores: {
+      j1: { intentos: [{ tiempoVueloMs: null, fpsCaptura: null }, { tiempoVueloMs: 450, fpsCaptura: 240 }] },
+      j2: { intentos: [] },
+      j3: {},
+    },
+  });
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', intento: 1, tiempoVueloMs: 450, fpsCaptura: 240 }]);
 });
