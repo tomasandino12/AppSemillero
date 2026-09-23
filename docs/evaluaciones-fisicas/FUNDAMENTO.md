@@ -292,10 +292,24 @@ primaria.**
 
 ## 10. Verificaciones pendientes (Galaxy S24 FE)
 
-1. **Factor de estiramiento y uniformidad.** Filmar en "Cámara lenta" un
-   cronómetro con milésimas en otra pantalla durante ~5 s. Comparar el tiempo
-   que muestra la pantalla con el tiempo del archivo al principio, en el medio
-   y al final.
+1. ~~Factor de estiramiento y uniformidad.~~ **Verificado el 2026-09-23**
+   con un cronómetro filmado en "Cámara lenta" (S24 FE, Android 16):
+   - El archivo es HEVC 1920×1080 a 30 fps nominales y trae la metadata
+     **`com.android.capture.fps = 240.000000`**. El factor se puede leer del
+     archivo, sin preguntarle al usuario.
+   - Cuadros cada 33,33 ms de archivo, con una variación de ±0,2 ms.
+   - Contra el cronómetro: 1.700 cuadros = 7,10 s reales → **4,18 ms por
+     cuadro (≈ 239,5 fps)**, lineal de punta a punta (se revisaron 16 puntos
+     con error ≤ 0,01 s). No hay tramos a velocidad normal.
+   - **Anomalía:** el cuadro 0 queda suelto, 1,17 s antes del resto. Hay que
+     ignorarlo; los tiempos se toman siempre como diferencia entre cuadros
+     marcados.
+   - El archivo trae la **ubicación GPS** en la metadata. Es un motivo más
+     para no subir nunca el video.
+   - **HEVC:** Chrome en Android lo reproduce con el decodificador del
+     teléfono, pero en muchas PC no anda. Si hace falta analizar en PC,
+     desactivar "Videos de alta eficiencia" en la cámara para grabar en
+     H.264.
 2. **Verdad física.** Soltar una pelota desde 1,226 m, que deberían ser
    **0,500 s** de caída (`t = √(2h/g)`). Contar cuadros: se esperan ~120 a
    240 fps reales.
