@@ -310,6 +310,24 @@ primaria.**
      teléfono, pero en muchas PC no anda. Si hace falta analizar en PC,
      desactivar "Videos de alta eficiencia" en la cámara para grabar en
      H.264.
+1b. **Segunda prueba (2026-09-23, pelota y salto)**
+   - **Archivos re-codificados en el celular:** tienen fecha interna de
+     varios minutos después de la grabación y perdieron
+     `com.android.capture.fps`. Conclusión: **la app no puede depender de la
+     metadata**; si falta, pide los fps y aplica el control de sentido común.
+   - **Pelota:** caída con parábola limpia (residuo de ~4 px). El factor ×8 es
+     uniforme; se descartan 30, 60 y 120 fps. Para cerrar el número exacto
+     falta la altura real de suelta o el diámetro de la pelota.
+   - **Marcado a mano:** el cuadro del impacto es inequívoco; el de la suelta
+     es difuso (±3 cuadros), porque las manos se abren de a poco.
+   - **Salto filmado de frente:** despegue ≈ cuadro 785 y aterrizaje ≈ 889–890
+     → 104 ± 3 cuadros → tv = 0,433 s → **h ≈ 23 cm (±1,5 cm)**. La
+     incertidumbre viene de **la vista frontal**: no se ve el espacio entre la
+     punta del pie y el piso. Además hubo piernas flexionadas en el aire,
+     que inflan el tiempo de vuelo.
+   - **Consecuencias para el protocolo:** cámara **de costado**, al ras del
+     piso, zapatillas que contrasten con el piso, luz fuerte y no editar el
+     video.
 2. **Verdad física.** Soltar una pelota desde 1,226 m, que deberían ser
    **0,500 s** de caída (`t = √(2h/g)`). Contar cuadros: se esperan ~120 a
    240 fps reales.
