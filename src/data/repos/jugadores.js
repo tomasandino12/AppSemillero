@@ -149,7 +149,10 @@ export async function obtenerSolicitudesDelPlantel(plantelId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase.rpc('solicitudes_del_plantel', { p_plantel_id: plantelId });
   if (error) throw error;
-  return data.map((f) => ({ id: f.id, userId: f.user_id, nombre: f.nombre, creadoEn: f.creado_en, emailEnmascarado: f.email_enmascarado }));
+  return data.map((f) => ({
+    id: f.id, userId: f.user_id, nombre: f.nombre, creadoEn: f.creado_en,
+    emailEnmascarado: f.email_enmascarado, fechaNacimiento: f.fecha_nacimiento,
+  }));
 }
 
 /**

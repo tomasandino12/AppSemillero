@@ -175,6 +175,7 @@ Un chico que se registró pide entrar a una categoría: `(id, user_id, club_id, 
 - **No guarda el nombre.** Ya está en los metadatos de Auth (0019), y una copia más del nombre de un menor no aporta nada; `solicitudes_del_plantel()` lo lee de ahí, como `usuarios_pendientes()`.
 - El chico no lee ni escribe la tabla: crea la solicitud con `crear_solicitud_jugador()` y ve la suya con `mi_solicitud_jugador()`. La leen y la resuelven los entrenadores con asignación vigente al plantel de la solicitud (`puede_escribir_plantel`).
 - Update otorgado sólo sobre `estado`; un trigger sella `resuelto_por` y `resuelto_en`, y una solicitud resuelta no se vuelve a tocar. Sin insert directo ni delete.
+- `fecha_nacimiento` (0041): la escribe el chico al pedir acceso — `crear_solicitud_jugador()` la exige, a diferencia del nombre acá no hay "no se sabe" razonable. El profe la ve precargada en `solicitudes_del_plantel()` y la puede corregir antes de confirmar; `aprobar_solicitud_jugador()` también la exige al crear una ficha nueva. Sin grant de select, como `codigo` (0037): sólo la leen las funciones.
 
 ### `cuenta_jugador` (0029)
 Qué cuenta de Auth ve a qué jugador: `(id, user_id, club_id, jugador_id, desde, hasta, aprobado_por, revocado_por)`.

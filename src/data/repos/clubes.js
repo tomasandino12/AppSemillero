@@ -97,10 +97,16 @@ export async function obtenerClubesParaSolicitar() {
   }));
 }
 
-/** Lanza un Error con message 'SOLICITUD_YA_PENDIENTE' si ya hay una esperando. */
-export async function crearSolicitudJugador({ clubId, plantelId }) {
+/**
+ * Lanza un Error con message 'SOLICITUD_YA_PENDIENTE' si ya hay una esperando,
+ * o 'FECHA_NACIMIENTO_REQUERIDA'/'FECHA_NACIMIENTO_FUTURA' si esa fecha no
+ * pasa la validación del servidor (0041).
+ */
+export async function crearSolicitudJugador({ clubId, plantelId, fechaNacimiento }) {
   const supabase = obtenerCliente();
-  const { error } = await supabase.rpc('crear_solicitud_jugador', { p_club_id: clubId, p_plantel_id: plantelId });
+  const { error } = await supabase.rpc('crear_solicitud_jugador', {
+    p_club_id: clubId, p_plantel_id: plantelId, p_fecha_nacimiento: fechaNacimiento,
+  });
   if (error) throw error;
 }
 

@@ -3,6 +3,7 @@ import {
   obtenerJugadoresDelClub, aprobarSolicitud, rechazarSolicitud, revocarCuentaJugador, jugadorTieneCuenta,
 } from '../../data/repositorio.js';
 import { fichaExistente, normalizarCodigo } from '../../data/solicitudJugador.js';
+import { hoyLocal, validarFechaNacimiento } from '../../data/antropometria.js';
 import { LIMITE } from '../../data/limites.js';
 import { html } from '../html.js';
 import { toast, formatearFechaCorta } from '../nav.js';
@@ -25,6 +26,7 @@ const REGLAS = [
   [/ES_DEL_CUERPO_TECNICO/, 'Esa cuenta ya es del cuerpo técnico: no se la puede vincular a una ficha de jugador. Rechazá la solicitud.'],
   [/FICHA_FUERA_DEL_PLANTEL/, 'Esa ficha no está en esta categoría.'],
   [/CODIGO_INCORRECTO/, 'Ese código no es el de esta solicitud. Pedíselo al chico en persona.'],
+  [/FECHA_NACIMIENTO_REQUERIDA/, 'Falta la fecha de nacimiento.'],
 ];
 
 const aviso = (texto) => html`<div class="al"><div class="tx">${texto}</div></div>`;
@@ -76,6 +78,11 @@ function abrirDetalle(ctx, s, solicitudes) {
         <label for="in-sol-nombre">Nombre de la ficha</label>
         <input id="in-sol-nombre" type="text" maxlength="${LIMITE.nombrePersona}" autocomplete="off" spellcheck="false" value="${s.nombre ?? ''}">
         <div class="ayuda">Como en la CABB: Apellido, Nombre. Si lo dejás como lo escribió, cuando llegue una planilla el import te la va a sugerir para que la confirmes.</div>
+      </div>
+      <div class="campo">
+        <label for="in-sol-nacimiento">Fecha de nacimiento</label>
+        <input id="in-sol-nacimiento" type="date" max="${hoyLocal()}" value="${s.fechaNacimiento ?? ''}">
+        <div class="ayuda">La escribió al pedir acceso. Si se equivocó (o le erró a propósito), corregila antes de confirmar.</div>
       </div>
       <div id="sol-aviso"></div>
       <button class="btn" id="btn-sol-crear">Crear la ficha y darle acceso</button>
@@ -141,9 +148,21 @@ async function crearFicha(ctx, s, desambiguador) {
     $('sol-aviso').innerHTML = aviso('Escribí el nombre de la ficha.');
     return;
   }
+  const nacimiento = $('in-sol-nacimiento').value;
+  if (!nacimiento) {
+    $('sol-aviso').innerHTML = aviso('Falta la fecha de nacimiento.');
+    return;
+  }
+  const { ok, errores, valor: fechaNacimiento } = validarFechaNacimiento(nacimiento);
+  if (!ok) {
+    $('sol-aviso').innerHTML = aviso(errores.join(' '));
+    return;
+  }
   const codigo = leerCodigo();
   if (!codigo) return;
-  const payload = { solicitudId: s.id, nombreClave, nombreLimpio, codigo };
+  const payload = {
+    solicitudId: s.id, nombreClave, nombreLimpio, fechaNacimiento, codigo,
+  };
   if (desambiguador) payload.desambiguador = desambiguador;
   const error = await resolver(ctx, $('btn-sol-crear'), 'Creando…',
     () => aprobarSolicitud(payload), `${nombreLimpio} ya puede entrar`);

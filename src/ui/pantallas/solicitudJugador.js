@@ -1,5 +1,6 @@
 import { obtenerClubesParaSolicitar, crearSolicitudJugador, obtenerMiSolicitud } from '../../data/repositorio.js';
 import { clubesDelCatalogo } from '../../data/solicitudJugador.js';
+import { hoyLocal, validarFechaNacimiento } from '../../data/antropometria.js';
 import { html } from '../html.js';
 import { formatearFechaCorta } from '../nav.js';
 import { mensajeAlGuardar, textoDeError } from '../errores.js';
@@ -18,6 +19,8 @@ const REGLAS = [
   [/YA_TIENE_CUENTA/, 'Tu cuenta ya tiene acceso como jugador. Cerrá la sesión y volvé a entrar.'],
   [/MAIL_SIN_CONFIRMAR/, 'Primero confirmá tu mail: te llegó un link cuando creaste la cuenta.'],
   [/PLANTEL_INVALIDO/, 'Esa categoría ya no está disponible. Elegí otra.'],
+  [/FECHA_NACIMIENTO_REQUERIDA/, 'Ingresá tu fecha de nacimiento.'],
+  [/FECHA_NACIMIENTO_FUTURA/, 'La fecha de nacimiento no puede ser futura.'],
 ];
 
 let mostrarVista = () => {};
@@ -95,6 +98,7 @@ export async function abrirSolicitudJugador() {
   }
   $('sj-club').innerHTML = html`${clubes.map((c) => html`<option value="${c.clubId}">${c.nombre}</option>`)}`;
   cargarCategorias();
+  $('sj-nacimiento').max = hoyLocal();
   verFormulario();
 }
 
@@ -113,11 +117,21 @@ async function pedir() {
     mostrarError('Elegí tu club y tu categoría.');
     return;
   }
+  const nacimiento = $('sj-nacimiento').value;
+  if (!nacimiento) {
+    mostrarError('Ingresá tu fecha de nacimiento.');
+    return;
+  }
+  const { ok, errores, valor: fechaNacimiento } = validarFechaNacimiento(nacimiento);
+  if (!ok) {
+    mostrarError(errores.join(' '));
+    return;
+  }
   boton.disabled = true;
   const textoOriginal = boton.textContent;
   boton.textContent = 'Enviando…';
   try {
-    await crearSolicitudJugador({ clubId, plantelId });
+    await crearSolicitudJugador({ clubId, plantelId, fechaNacimiento });
   } catch (e) {
     mostrarError(mensajeAlGuardar(e, { reglas: REGLAS, generico: 'No se pudo enviar el pedido. Probá de nuevo.' }));
     boton.disabled = false;
