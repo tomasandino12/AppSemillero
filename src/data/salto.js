@@ -110,3 +110,47 @@ export function vigenteALaFecha(medicionesCorporales, fechaIso, campo) {
   }
   return vigente ? vigente[campo] : null;
 }
+
+/**
+ * Los intentos de UN jugador agrupados por sesión, la más reciente primero.
+ * De cada sesión queda el mejor intento con su altura y, si hay peso y largo
+ * de pierna vigentes a esa fecha, su potencia (null si no: nunca 0). Sin
+ * `corporales` (el jugador no ve la potencia) no se calcula.
+ */
+export function sesionesDeSalto(intentos, corporales) {
+  const porSesion = new Map();
+  for (const i of intentos ?? []) {
+    if (!porSesion.has(i.sesionId)) {
+      porSesion.set(i.sesionId, {
+        sesionId: i.sesionId, fecha: i.fecha, testSalto: i.testSalto, intentos: [],
+      });
+    }
+    porSesion.get(i.sesionId).intentos.push(i);
+  }
+  return [...porSesion.values()]
+    .map((s) => {
+      s.intentos.sort((a, b) => a.intento - b.intento);
+      const mejor = mejorIntento(s.intentos);
+      if (!mejor) return { ...s, mejor: null, rangoCm: null };
+      const alturaCm = alturaDeSalto(mejor.tiempoVueloMs / 1000);
+      const potencia = corporales
+        ? potenciaSamozino({
+          masaKg: vigenteALaFecha(corporales, s.fecha, 'pesoKg'),
+          alturaCm,
+          piernaCm: vigenteALaFecha(corporales, s.fecha, 'piernaCm'),
+          piernaFlexionadaCm: vigenteALaFecha(corporales, s.fecha, 'piernaFlexionadaCm'),
+        })
+        : null;
+      return {
+        ...s,
+        mejor: {
+          tiempoVueloMs: mejor.tiempoVueloMs,
+          alturaCm,
+          potenciaW: potencia?.potenciaW ?? null,
+          potenciaWKg: potencia?.potenciaWKg ?? null,
+        },
+        rangoCm: rangoDeIntentos(s.intentos),
+      };
+    })
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+}

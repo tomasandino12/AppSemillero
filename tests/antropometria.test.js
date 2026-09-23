@@ -75,10 +75,10 @@ test('un campo vacío es null, nunca cero', () => {
   assert.notEqual(r.valores.pesoKg, 0);
 });
 
-test('una fecha sola, sin altura ni peso, no es una medición', () => {
+test('una fecha sola, sin ningún dato, no es una medición', () => {
   const r = validarMedicion({ fechaMedicion: '2026-09-01', altura: '', peso: '' }, HOY);
   assert.equal(r.ok, false);
-  assert.match(r.errores.join(' '), /altura o el peso/);
+  assert.match(r.errores.join(' '), /altura, peso o largo de pierna/);
 });
 
 test('la fecha de medición no puede ser futura', () => {
@@ -122,4 +122,18 @@ test('la fecha de nacimiento no puede ser futura ni de hace 80 años', () => {
   assert.equal(validarFechaNacimiento('2026-09-06', HOY).ok, false);
   assert.equal(validarFechaNacimiento('1940-01-01', HOY).ok, false);
   assert.equal(validarFechaNacimiento('2009-06-15', HOY).ok, true);
+});
+
+test('validarMedicion acepta el largo de pierna y exige flexionada < extendida', () => {
+  const ok = validarMedicion({ fechaMedicion: '2026-09-01', pierna: '92,5', piernaFlexionada: '41' }, '2026-09-23');
+  assert.equal(ok.ok, true);
+  assert.equal(ok.valores.piernaCm, 92.5);
+  assert.equal(ok.valores.piernaFlexionadaCm, 41);
+  assert.equal(ok.valores.alturaCm, null);
+  const mal = validarMedicion({ fechaMedicion: '2026-09-01', pierna: '60', piernaFlexionada: '70' }, '2026-09-23');
+  assert.equal(mal.ok, false);
+  const fuera = validarMedicion({ fechaMedicion: '2026-09-01', pierna: '200' }, '2026-09-23');
+  assert.equal(fuera.ok, false);
+  const vacia = validarMedicion({ fechaMedicion: '2026-09-01' }, '2026-09-23');
+  assert.equal(vacia.ok, false);
 });

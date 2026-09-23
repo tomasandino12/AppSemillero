@@ -6,6 +6,7 @@ import {
 import {
   insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque, bloquePorClaveDePlanes,
 } from '../../data/progresoDelJugador.js';
+import { sesionesDeSalto, TESTS_SALTO } from '../../data/salto.js';
 import { obtenerFichaJugador } from '../sesion.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
@@ -100,6 +101,41 @@ function seccionVelocidad(velocidad) {
   `;
 }
 
+const NOMBRE_TEST_SALTO = { cmj: 'CMJ', abalakov: 'Abalakov' };
+
+/**
+ * Salto: altura del mejor intento de cada sesión, por test. Sin potencia (es
+ * un número para el cuerpo técnico) y sin gráfico: ±2 cm de error por cuadro.
+ */
+function seccionSalto(saltos) {
+  // mi_progreso trae los intentos ya agrupados; se aplanan para reusar la serie.
+  const intentos = saltos.flatMap((s) => s.intentos.map((i) => ({
+    sesionId: s.sesionId, fecha: s.fecha, testSalto: s.test, intento: i.intento, tiempoVueloMs: i.tiempoVueloMs,
+  })));
+  const sesiones = sesionesDeSalto(intentos, null).filter((s) => s.mejor);
+  if (!sesiones.length) {
+    return html`<div class="eyebrow">Salto</div><div class="p">Todavía no te midieron el salto.</div>`;
+  }
+  return html`
+    <div class="eyebrow">Salto</div>
+    ${TESTS_SALTO.map((test) => {
+      const delTest = sesiones.filter((s) => s.testSalto === test);
+      if (!delTest.length) return '';
+      return html`
+        <div class="det">${NOMBRE_TEST_SALTO[test]}</div>
+        <div class="tabla-ev">
+          ${delTest.map((s) => html`
+            <div class="fila-ev dos">
+              <div class="f">${formatearFechaCorta(s.fecha)}</div>
+              <div>${s.mejor.alturaCm.toFixed(1).replace('.', ',')} cm</div>
+            </div>
+          `)}
+        </div>
+      `;
+    })}
+  `;
+}
+
 function seccionPartidos(historial, acumulados) {
   if (!historial.length) {
     return html`<div class="eyebrow">Partido a partido</div>
@@ -169,7 +205,7 @@ export async function renderJugProgreso() {
     return;
   }
 
-  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.velocidad.length && !progreso.escalones.length;
+  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.velocidad.length && !progreso.saltos.length && !progreso.escalones.length;
   if (vacio) {
     contenedor().innerHTML = html`
       <div class="pad">
@@ -197,6 +233,7 @@ export async function renderJugProgreso() {
       ${seccionSerie('jug-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial, acumuladosDePartidos(progreso.partidos))}
       ${seccionVelocidad(progreso.velocidad)}
+      ${seccionSalto(progreso.saltos)}
       ${seccionPesos(pesos)}
     </div>
   `;

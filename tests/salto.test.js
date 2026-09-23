@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   G, TV_MIN_S, TV_MAX_S, FPS_MIN,
   cuadrosEntre, tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo,
-  potenciaSamozino, mejorIntento, rangoDeIntentos, vigenteALaFecha,
+  potenciaSamozino, mejorIntento, rangoDeIntentos, vigenteALaFecha, sesionesDeSalto,
 } from '../src/data/salto.js';
 
 const cerca = (real, esperado, tolerancia = 0.01) => assert.ok(
@@ -106,4 +106,34 @@ test('vigente toma el último con fecha menor o igual', () => {
   assert.equal(vigenteALaFecha(mediciones, '2026-04-01', 'piernaCm'), null, 'no se sabe, no 0');
   assert.equal(vigenteALaFecha(mediciones, '2026-01-01', 'pesoKg'), null);
   assert.equal(vigenteALaFecha([], '2026-01-01', 'pesoKg'), null);
+});
+
+test('serie de salto toma el mejor por sesión', () => {
+  const intentos = [
+    { sesionId: 'a', fecha: '2026-06-01', testSalto: 'cmj', intento: 1, tiempoVueloMs: 400 },
+    { sesionId: 'a', fecha: '2026-06-01', testSalto: 'cmj', intento: 2, tiempoVueloMs: 480 },
+    { sesionId: 'b', fecha: '2026-09-01', testSalto: 'cmj', intento: 1, tiempoVueloMs: null },
+    { sesionId: 'c', fecha: '2026-09-10', testSalto: 'abalakov', intento: 1, tiempoVueloMs: 500 },
+  ];
+  const corporales = [
+    { fechaMedicion: '2026-05-01', pesoKg: 60, piernaCm: 90, piernaFlexionadaCm: 40 },
+  ];
+  const serie = sesionesDeSalto(intentos, corporales);
+  assert.deepEqual(serie.map((s) => s.sesionId), ['c', 'b', 'a'], 'la más reciente primero');
+  const a = serie[2];
+  assert.equal(a.mejor.tiempoVueloMs, 480);
+  cerca(a.mejor.alturaCm, alturaDeSalto(0.48));
+  cerca(a.rangoCm, alturaDeSalto(0.48) - alturaDeSalto(0.4));
+  assert.ok(a.mejor.potenciaWKg > 0, 'con peso y piernas hay potencia');
+  assert.equal(serie[1].mejor, null, 'la sesión de ausente no tiene mejor');
+  assert.equal(serie[1].intentos.length, 1);
+  assert.equal(serie[0].testSalto, 'abalakov');
+});
+
+test('sin datos corporales la serie de salto no inventa potencia', () => {
+  const intentos = [{ sesionId: 'a', fecha: '2026-06-01', testSalto: 'cmj', intento: 1, tiempoVueloMs: 400 }];
+  const s = sesionesDeSalto(intentos, null)[0];
+  assert.equal(s.mejor.potenciaW, null);
+  assert.equal(s.mejor.potenciaWKg, null);
+  cerca(s.mejor.alturaCm, alturaDeSalto(0.4));
 });

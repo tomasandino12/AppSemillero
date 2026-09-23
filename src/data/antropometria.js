@@ -88,7 +88,9 @@ function aNumero(valor) {
  * son null cuando el campo quedó vacío — vacío es "no se midió", nunca cero,
  * y las dos son independientes: se puede pesar a alguien sin medirlo.
  */
-export function validarMedicion({ fechaMedicion, altura, peso }, hoyIso = hoyLocal()) {
+export function validarMedicion({
+  fechaMedicion, altura, peso, pierna, piernaFlexionada,
+}, hoyIso = hoyLocal()) {
   const errores = [];
 
   if (!fechaMedicion) errores.push('Poné la fecha en que se lo midió.');
@@ -108,9 +110,29 @@ export function validarMedicion({ fechaMedicion, altura, peso }, hoyIso = hoyLoc
     errores.push(`El peso tiene que estar entre ${PESO_MIN_KG} y ${PESO_MAX_KG} kg.`);
   }
 
+  const piernaCm = aNumero(pierna);
+  if (Number.isNaN(piernaCm)) {
+    errores.push('El largo de pierna tiene que ser un número.');
+  } else if (piernaCm != null && (piernaCm < PIERNA_MIN_CM || piernaCm > PIERNA_MAX_CM)) {
+    errores.push(`El largo de pierna extendida tiene que estar entre ${PIERNA_MIN_CM} y ${PIERNA_MAX_CM} cm.`);
+  }
+
+  const flexionadaCm = aNumero(piernaFlexionada);
+  if (Number.isNaN(flexionadaCm)) {
+    errores.push('El largo de pierna flexionada tiene que ser un número.');
+  } else if (flexionadaCm != null && (flexionadaCm < PIERNA_FLEXIONADA_MIN_CM || flexionadaCm > PIERNA_FLEXIONADA_MAX_CM)) {
+    errores.push(`El largo de pierna flexionada tiene que estar entre ${PIERNA_FLEXIONADA_MIN_CM} y ${PIERNA_FLEXIONADA_MAX_CM} cm.`);
+  }
+
+  // La base lo exige igual (0043): mejor avisar antes de mandar la fila.
+  if (piernaCm != null && flexionadaCm != null && !Number.isNaN(piernaCm) && !Number.isNaN(flexionadaCm)
+    && flexionadaCm >= piernaCm) {
+    errores.push('La pierna flexionada tiene que ser más corta que la extendida.');
+  }
+
   // Una fila sin ningún valor no es una medición: sería una fecha sola.
-  if (!errores.length && alturaCm == null && pesoKg == null) {
-    errores.push('Cargá al menos la altura o el peso.');
+  if (!errores.length && [alturaCm, pesoKg, piernaCm, flexionadaCm].every((v) => v == null)) {
+    errores.push('Cargá al menos un dato: altura, peso o largo de pierna.');
   }
 
   return {
@@ -120,6 +142,8 @@ export function validarMedicion({ fechaMedicion, altura, peso }, hoyIso = hoyLoc
       fechaMedicion,
       alturaCm: Number.isNaN(alturaCm) ? null : (alturaCm == null ? null : Math.round(alturaCm)),
       pesoKg: Number.isNaN(pesoKg) ? null : (pesoKg == null ? null : Math.round(pesoKg * 10) / 10),
+      piernaCm: piernaCm == null || Number.isNaN(piernaCm) ? null : Math.round(piernaCm * 10) / 10,
+      piernaFlexionadaCm: flexionadaCm == null || Number.isNaN(flexionadaCm) ? null : Math.round(flexionadaCm * 10) / 10,
     },
   };
 }

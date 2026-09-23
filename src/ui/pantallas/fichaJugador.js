@@ -1,6 +1,7 @@
 import {
   obtenerJugadoresDelPlantel, obtenerPertenenciasDeJugador,
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel, obtenerMedicionesVelocidadDelPlantel,
+  obtenerMedicionesSaltoDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
   obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
   actualizarFechaNacimiento, obtenerCargasDelPlantel, sacarDelPlantel,
@@ -9,10 +10,12 @@ import {
   serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador,
   ejeComun, compararPorcentajes,
 } from '../../data/estadisticas.js';
+import { sesionesDeSalto, TESTS_SALTO } from '../../data/salto.js';
 import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
   ALTURA_MIN_CM, ALTURA_MAX_CM, PESO_MIN_KG, PESO_MAX_KG,
+  PIERNA_MIN_CM, PIERNA_MAX_CM, PIERNA_FLEXIONADA_MIN_CM, PIERNA_FLEXIONADA_MAX_CM,
 } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast } from '../nav.js';
@@ -23,7 +26,7 @@ import { verDetallesHtml } from '../componentes/verDetalles.js';
 import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjetasDePesos.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { botonIcono, ICONO } from '../componentes/iconos.js';
-import { html } from '../html.js';
+import { html, crudo } from '../html.js';
 import { $ } from '../dom.js';
 import { avisoDeError, textoDeError, mensajeAlGuardar } from '../errores.js';
 import { renderAccesoDeJugador } from './aprobarJugador.js';
@@ -229,6 +232,49 @@ function seccionVelocidad(velocidades) {
   `;
 }
 
+const NOMBRE_TEST_SALTO = { cmj: 'CMJ', abalakov: 'Abalakov' };
+
+const decimalEs = (n, dec = 1) => n.toFixed(dec).replace('.', ',');
+
+/**
+ * Salto: el mejor intento de cada sesión, por test (CMJ y Abalakov no se
+ * comparan entre sí). Sin gráfico de tendencia, por lo mismo que velocidad:
+ * el error de un cuadro son ±2 cm y una línea mentiría. La potencia sólo sale
+ * si hay peso y largos de pierna vigentes a esa fecha; si no, "sin datos".
+ */
+function seccionSalto(sesiones) {
+  if (!sesiones.length) {
+    return html`<div class="eyebrow">Salto</div><div class="p">Sin medir.</div>`;
+  }
+  return html`
+    <div class="eyebrow">Salto</div>
+    ${TESTS_SALTO.map((test) => {
+      const delTest = sesiones.filter((s) => s.testSalto === test);
+      if (!delTest.length) return '';
+      return html`
+        <div class="det">${NOMBRE_TEST_SALTO[test]}</div>
+        <div class="tabla-ev">
+          ${delTest.map((s) => html`
+            <div class="fila-ev">
+              <div class="f">${formatearFechaCorta(s.fecha)}</div>
+              ${s.mejor ? html`
+                <div>${decimalEs(s.mejor.alturaCm)} cm</div>
+                <div>${decimalEs(s.mejor.tiempoVueloMs / 1000, 2)} s</div>
+                <div>${s.mejor.potenciaW == null
+                  ? crudo('<span class="sin">sin datos</span>')
+                  : `${Math.round(s.mejor.potenciaW)} W · ${decimalEs(s.mejor.potenciaWKg)} W/kg`}</div>
+              ` : html`<div class="sin">Ausente</div><div></div><div></div>`}
+            </div>
+            ${s.intentos.length > 1 && s.rangoCm != null
+              ? html`<div class="det">${s.intentos.length} intentos · entre el mejor y el peor hubo ${decimalEs(s.rangoCm)} cm</div>`
+              : ''}
+          `)}
+        </div>
+      `;
+    })}
+  `;
+}
+
 function seccionRecursos(envios) {
   if (!envios.length) {
     return `<div class="eyebrow">Recursos enviados</div>
@@ -300,10 +346,12 @@ export async function renderFicha() {
   // están pintados arriba, así que un error de red trayendo la historia no
   // puede dejar la ficha entera en blanco.
   try {
-    const [sesiones, medicionesTiro, velocidades, partidos, estadisticas, envios] = await Promise.all([
+    const [sesiones, medicionesTiro, velocidades, saltos, corporales, partidos, estadisticas, envios] = await Promise.all([
       obtenerSesionesDeMedicion(club.id, plantel.id),
       obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
       obtenerMedicionesVelocidadDelPlantel(club.id, plantel.id),
+      obtenerMedicionesSaltoDelPlantel(club.id, plantel.id),
+      obtenerMedicionesCorporalesDeJugador(club.id, jugadorId),
       obtenerPartidosDelPlantel(club.id, plantel.id),
       obtenerEstadisticasDelPlantel(club.id, plantel.id),
       obtenerEnviosDeJugador(club.id, jugadorId),
@@ -323,12 +371,15 @@ export async function renderFicha() {
       .filter((v) => v.jugadorId === jugadorId && v.segundos != null)
       .sort((a, b) => b.fecha.localeCompare(a.fecha));
 
+    const sesionesDeSaltoDelJugador = sesionesDeSalto(saltos.filter((x) => x.jugadorId === jugadorId), corporales);
+
     $('ficha-historia').innerHTML = `
       ${seccionCancha(bateria, bateriaConDatos)}
       ${bloqueDeSerie('ficha-triples', 'Tiro de tres', series.triples, 'Todavía no hay datos de triples, ni de práctica ni de partido.')}
       ${bloqueDeSerie('ficha-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial)}
       ${seccionVelocidad(velocidadesDelJugador)}
+      ${seccionSalto(sesionesDeSaltoDelJugador)}
       ${seccionRecursos(envios)}
     `;
 
@@ -514,6 +565,7 @@ function renderCorporal(clubId, idJugador, mediciones) {
             <div>${celdaMedida(m.pesoKg, 'kg')}</div>
             <div><button class="borrar" data-borrar="${m.id}" aria-label="Borrar la medición del ${escaparHtml(m.fechaMedicion)}">&#10005;</button></div>
           </div>
+          ${m.piernaCm != null || m.piernaFlexionadaCm != null ? `<div class="det">Pierna: ${celdaMedida(m.piernaCm, 'cm')} extendida · ${celdaMedida(m.piernaFlexionadaCm, 'cm')} flexionada</div>` : ''}
         `).join('')}
       </div>
     ` : `
@@ -536,6 +588,17 @@ function renderCorporal(clubId, idJugador, mediciones) {
       </div>
     </div>
     <div class="ayuda">Se puede cargar sólo una de las dos. Altura entre ${ALTURA_MIN_CM} y ${ALTURA_MAX_CM} cm, peso entre ${PESO_MIN_KG} y ${PESO_MAX_KG} kg.</div>
+    <div class="campos-par">
+      <div class="campo">
+        <label for="in-pierna">Pierna extendida (cm)</label>
+        <input id="in-pierna" type="text" inputmode="decimal" autocomplete="off" placeholder="—">
+      </div>
+      <div class="campo">
+        <label for="in-pierna-flexionada">Pierna flexionada (cm)</label>
+        <input id="in-pierna-flexionada" type="text" inputmode="decimal" autocomplete="off" placeholder="—">
+      </div>
+    </div>
+    <div class="ayuda">Sólo para la potencia del salto. Extendida: del trocánter a la punta del pie (entre ${PIERNA_MIN_CM} y ${PIERNA_MAX_CM} cm). Flexionada: del trocánter al piso en cuclillas a 90° (entre ${PIERNA_FLEXIONADA_MIN_CM} y ${PIERNA_FLEXIONADA_MAX_CM} cm). Cualquiera de los cuatro datos se puede dejar vacío.</div>
     <div id="corporal-aviso"></div>
     <button class="btn" id="btn-agregar-medicion">Agregar medición</button>
   `;
@@ -566,6 +629,8 @@ function renderCorporal(clubId, idJugador, mediciones) {
       fechaMedicion: $('in-fecha-medicion').value,
       altura: $('in-altura').value,
       peso: $('in-peso').value,
+      pierna: $('in-pierna').value,
+      piernaFlexionada: $('in-pierna-flexionada').value,
     });
     if (!ok) {
       aviso.innerHTML = `<div class="al"><div class="tx">${escaparHtml(errores.join(' '))}</div></div>`;
@@ -582,6 +647,8 @@ function renderCorporal(clubId, idJugador, mediciones) {
         fechaMedicion: valores.fechaMedicion,
         alturaCm: valores.alturaCm,
         pesoKg: valores.pesoKg,
+        piernaCm: valores.piernaCm,
+        piernaFlexionadaCm: valores.piernaFlexionadaCm,
       });
     } catch (e) {
       aviso.innerHTML = `<div class="al"><div class="tx">${
