@@ -1,6 +1,7 @@
 // Jugadores, sus pertenencias a planteles y su ficha.
 // Se importa a través de src/data/repositorio.js (fachada).
 import { obtenerCliente, TAMANIO_PAGINA } from '../cliente.js';
+import { hoyLocal } from '../antropometria.js';
 
 /**
  * Todos los jugadores del club, para el dedup del import y el del alta manual.
@@ -116,6 +117,26 @@ export async function actualizarFechaNacimiento(clubId, jugadorId, fechaNacimien
     .eq('club_id', clubId)
     .eq('id', jugadorId);
   if (error) throw error;
+}
+
+/**
+ * Cierra la pertenencia vigente al plantel: el jugador deja de aparecer ahí,
+ * pero ni la ficha ni su historia se tocan (0040). El valor de `hasta` que se
+ * manda no importa —el trigger lo pisa con la fecha de hoy y quién lo sacó—,
+ * pero tiene que ser una fecha válida para no romper el tipado de la columna.
+ */
+export async function sacarDelPlantel(clubId, jugadorId, plantelId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('pertenencia')
+    .update({ hasta: hoyLocal() })
+    .eq('club_id', clubId)
+    .eq('jugador_id', jugadorId)
+    .eq('plantel_id', plantelId)
+    .is('hasta', null)
+    .select('jugador_id');
+  if (error) throw error;
+  if (!data.length) throw new Error('NO_SE_PUDO_SACAR');
 }
 
 /* ---------- Cuenta de jugador: lo que hace el entrenador del plantel (0029) ---------- */

@@ -59,6 +59,8 @@ El número de camiseta **no** vive acá — está verificado (Etapa 1) que cambi
 ### `pertenencia`
 La membresía de un jugador a un plantel en una temporada, con rango `desde`/`hasta` (`hasta` NULL = vigente). Un jugador puede tener más de una pertenencia vigente a la vez (citado a dos categorías) — es el caso normal en inferiores, no una excepción.
 
+- `cerrado_por` (0040): quién lo sacó del plantel. Mismo mecanismo que `asignacion_plantel` — el cliente manda cualquier `hasta` para pedir el cierre, y el trigger `pertenencia_sellar_cierre` lo pisa con la fecha de hoy y `auth.uid()`, sin RPC nueva (la tabla ya tenía grant de update completo desde 0006). No borra la ficha ni su historia; si el jugador vuelve, se lo suma de nuevo en vez de duplicarlo.
+
 ### `miembro_club`
 `(user_id, club_id)`, PK compuesta. Dice **a qué club** pertenece una cuenta y **con qué rol**; a qué categorías dentro de ese club lo dice `asignacion_plantel`. **Es sólo del cuerpo técnico.** Los jugadores tienen cuenta propia desde 0029, pero en otra tabla (`cuenta_jugador`, abajo): un jugador nunca es staff y el check de esta tabla no se toca.
 

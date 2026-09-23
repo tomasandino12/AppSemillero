@@ -3,7 +3,7 @@ import {
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel, obtenerMedicionesVelocidadDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
   obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
-  actualizarFechaNacimiento, obtenerCargasDelPlantel,
+  actualizarFechaNacimiento, obtenerCargasDelPlantel, sacarDelPlantel,
 } from '../../data/repositorio.js';
 import {
   serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador,
@@ -16,14 +16,16 @@ import {
 } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast } from '../nav.js';
-import { ir } from '../main.js';
+import { ir, volver } from '../main.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
 import { verDetallesHtml } from '../componentes/verDetalles.js';
 import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjetasDePesos.js';
+import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { botonIcono, ICONO } from '../componentes/iconos.js';
 import { html } from '../html.js';
 import { $ } from '../dom.js';
-import { avisoDeError, textoDeError } from '../errores.js';
+import { avisoDeError, textoDeError, mensajeAlGuardar } from '../errores.js';
 import { renderAccesoDeJugador } from './aprobarJugador.js';
 
 const contenedor = () => $('ficha-contenido');
@@ -274,18 +276,22 @@ export async function renderFicha() {
     <div class="ficha-top">
       <div class="nom">${escaparHtml(jugador.nombreLimpio)}</div>
       <div class="sub">${categorias.length ? escaparHtml(categorias.join(' · ')) : 'Sin categoría vigente'}</div>
-      <div class="datos-ficha" id="ficha-cabecera-datos">
-        ${dato('Edad', edadEnAnios(jugador.fechaNacimiento), 'años')}
+      <div class="ficha-top-cab">
+        <div class="datos-ficha" id="ficha-cabecera-datos">
+          ${dato('Edad', edadEnAnios(jugador.fechaNacimiento), 'años')}
+        </div>
+        ${botonIcono({ id: 'btn-ficha-nacimiento', icono: ICONO.lapiz, etiqueta: 'Editar fecha de nacimiento' })}
       </div>
+      <button class="btn sec chico" id="btn-ficha-sacar">Sacar del plantel</button>
     </div>
-    <div class="pad" id="ficha-personales"></div>
     <div class="pad" id="ficha-acceso"></div>
     <div class="pad" id="ficha-corporal"><div class="p">Cargando mediciones...</div></div>
     <div class="pad" id="ficha-historia"><div class="p">Cargando historia del jugador...</div></div>
     <div class="pad" id="ficha-cargas"></div>
   `;
 
-  renderPersonales(jugador);
+  $('btn-ficha-nacimiento').addEventListener('click', () => abrirEditarNacimiento(jugador));
+  $('btn-ficha-sacar').addEventListener('click', () => abrirSacarDelPlantel(club, plantel, jugador));
   renderAccesoDeJugador(jugador);
   cargarCorporal(club.id, jugador.id);
   cargarCargas(club.id, plantel.id, jugador.id);
@@ -342,26 +348,27 @@ export async function renderFicha() {
 /* ---------- Datos personales: fecha de nacimiento ---------- */
 
 /**
- * La fecha de nacimiento se edita acá y no en el alta: los jugadores entran
- * casi siempre por una planilla de la CABB, que no la trae. Vacía es un
- * estado válido y significa "no se sabe" — nunca se infiere.
- *
- * Sin ella no se puede separar "mejoró" de "creció" al comparar dos
- * generaciones, que es exactamente para lo que existe el dato.
+ * Se pide al chico cuando pide acceso a la app (0041) y el profe la revisa al
+ * aprobarlo; esto es sólo para corregirla después (typeo, o un jugador que
+ * entró por planilla CABB y nunca pasó por esa pantalla). Un campo de fecha
+ * siempre abierto ocupaba lugar para algo que se carga una vez en la vida y
+ * no cambia nunca — un lápiz al lado de la edad, como en Renombrar jugada,
+ * alcanza.
  */
-function renderPersonales(jugador) {
-  const cont = $('ficha-personales');
-  if (!cont) return;
-  cont.innerHTML = `
-    <div class="eyebrow">Datos personales</div>
-    <div class="campo">
-      <label for="in-nacimiento">Fecha de nacimiento</label>
-      <input id="in-nacimiento" type="date" max="${hoyLocal()}" value="${escaparHtml(jugador.fechaNacimiento ?? '')}">
-      <div class="ayuda">Las planillas de la CABB no la traen, así que se carga a mano. Sin ella no se puede saber si una mejora es progreso o es crecimiento.</div>
-    </div>
-    <div id="nacimiento-aviso"></div>
-    <button class="btn sec" id="btn-guardar-nacimiento">Guardar fecha de nacimiento</button>
-  `;
+function abrirEditarNacimiento(jugador) {
+  abrirHoja({
+    titulo: 'Fecha de nacimiento',
+    cuerpo: `
+      <div class="campo">
+        <label for="in-nacimiento">Fecha de nacimiento</label>
+        <input id="in-nacimiento" type="date" max="${hoyLocal()}" value="${escaparHtml(jugador.fechaNacimiento ?? '')}">
+        <div class="ayuda">Vacía significa "no se sabe". Sin ella no se puede saber si una mejora es progreso o es crecimiento.</div>
+      </div>
+      <div id="nacimiento-aviso"></div>
+      <button class="btn" id="btn-guardar-nacimiento">Guardar</button>
+    `,
+  });
+  $('in-nacimiento').focus();
 
   $('btn-guardar-nacimiento').addEventListener('click', async () => {
     const boton = $('btn-guardar-nacimiento');
@@ -383,16 +390,54 @@ function renderPersonales(jugador) {
         textoDeError(e, 'No se pudo guardar la fecha.')
       }</div></div>`;
       boton.disabled = false;
-      boton.textContent = 'Guardar fecha de nacimiento';
+      boton.textContent = 'Guardar';
       return;
     }
 
     jugador.fechaNacimiento = valor;
     const cabecera = $('ficha-cabecera-datos');
     if (cabecera) cabecera.innerHTML = dato('Edad', edadEnAnios(valor), 'años');
-    boton.disabled = false;
-    boton.textContent = 'Guardar fecha de nacimiento';
+    cerrarHoja();
     toast(valor ? 'Fecha de nacimiento guardada' : 'Fecha de nacimiento borrada');
+  });
+}
+
+/* ---------- Sacar del plantel ---------- */
+
+/**
+ * Cierra la pertenencia vigente (0040): el jugador deja de aparecer en este
+ * plantel, pero ni la ficha ni su historia se borran. Confirmación por lo
+ * mismo que Dar de baja a un profe: es lo que más duele si fue un dedazo.
+ */
+function abrirSacarDelPlantel(club, plantel, jugador) {
+  abrirHoja({
+    titulo: `Sacar a ${jugador.nombreLimpio} de ${plantel.categoria}`,
+    cuerpo: `
+      <div class="p">${escaparHtml(jugador.nombreLimpio)} deja de aparecer en ${escaparHtml(plantel.categoria)} desde ahora. Su ficha y su historia no se borran: si vuelve, se lo suma de nuevo desde "Agregar jugador a mano".</div>
+      <div id="sacar-aviso"></div>
+      <div class="acciones">
+        <button class="btn" id="btn-confirmar-sacar">Sacar del plantel</button>
+        <button class="btn sec" id="btn-cancelar-sacar">Cancelar</button>
+      </div>
+    `,
+  });
+  $('btn-cancelar-sacar').addEventListener('click', () => cerrarHoja());
+  $('btn-confirmar-sacar').addEventListener('click', async () => {
+    const boton = $('btn-confirmar-sacar');
+    if (boton.disabled) return;
+    boton.disabled = true;
+    try {
+      await sacarDelPlantel(club.id, jugador.id, plantel.id);
+    } catch (e) {
+      $('sacar-aviso').innerHTML = `<div class="al"><div class="tx">${
+        mensajeAlGuardar(e, { generico: 'No se pudo sacar al jugador.' })
+      }</div></div>`;
+      boton.disabled = false;
+      return;
+    }
+    cerrarHoja();
+    toast(`${jugador.nombreLimpio} ya no está en ${plantel.categoria}`);
+    await volver();
   });
 }
 
