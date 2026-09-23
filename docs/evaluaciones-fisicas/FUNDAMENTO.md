@@ -361,6 +361,11 @@ primaria.**
      (la app, `fpsDeCaptura`, sí lo lee: 240).
    - **Decisión:** el marcador no usa rVFC. Lee la tabla de cuadros del `moov`
      (`src/data/tablaCuadros.js`) y se mueve por índice de cuadro.
+4b. **Prueba de la app (2026-09-23).** Al elegir un video desde el celular, el
+   editor se abría con el video en negro. Causa: el contenedor del editor
+   usaba la clase `.marcador`, que ya existía para el resultado de un partido
+   (`display:flex` en fila) y le achicaba el video. Corregido con la clase
+   `.marcador-cuadros` (5047fc1). Falta reprobar en el S24 FE.
 5. **Salto real.** 3 CMJ filmados; marcar los cuadros y ver que la
    dispersión entre intentos sea de menos de ~1 cm.
 6. **Sprint.** Ver qué lentes permite el modo "Cámara lenta" (¿gran angular?)
