@@ -188,6 +188,8 @@ abrirHoja({ titulo: jugador.nombre, cuerpo: html`<div class="tarj">…</div>` })
 <div class="beneficios"><div class="ben"><div class="t">Título</div><div class="d">Texto.</div></div></div>
 ```
 
+**Guías** — hoja de explicación con cabecera y pasos (`guiaSalto.js`, `protocoloCorporal.js`, `protocoloSalto.js` en `src/ui/componentes/`). `.guia-cab` (ícono, título y `.tag-metodo`, más un `.sub`), `.guia-paso` (tarjeta numerada, número en mono, con `.dibujo` para un SVG y su `.chip-rango`), `.guia-clave` (bloque destacado con el filete del club, como `.al`), `.chip-rango` (un rango en mono, siempre leído de las constantes de `antropometria.js`) y `.cifra-clave` (la cifra héroe de la ficha, con `.u` para la unidad y un `.etq` debajo). `.tag-metodo` es la etiqueta "Metodología <apodo>": la arma `etiquetaMetodologia(club)` con los apodos de `club.apodos` (0046), o `club.nombre` si no hay. Los SVG de pierna viven en `iconos.js` (`ICONO.piernaExtendida`, `ICONO.piernaFlexionada`) con `currentColor`.
+
 **Piezas chicas que ya existen** (usalas antes de crear otra): `.btn` / `.btn.sec` / `.btn.chico`, `.eyebrow` (con `.der` para un dato a la derecha), `.h2` y `.p`, `.chip` (`.sube`, `.baja`, `.sin`), `.campo` (con `.ayuda`), `.sin` para un dato que falta, `.mono`, `.sr` para texto sólo para lectores de pantalla, y el toast con `toast()` de `src/ui/nav.js`.
 
 ## Checklist para una pantalla o función nueva
@@ -209,6 +211,7 @@ Presupuesto de la rama: ninguna regresión contra la medición previa, con toler
 
 ## Deuda y decisiones abiertas
 
+- **El jugador que entra con su cuenta no trae `club.apodos`** (`main.js`, camino del jugador): la etiqueta "Metodología" cae en `club.nombre`. Es aceptable porque las guías son para los profes; si llegan a la vista del jugador hay que traerlos.
 - **IBM Plex Mono se pide en 500 y 600, pero ningún CSS declara 500.** Los textos mono sin peso explícito (400) caen en el archivo 500. Pedir 400 en lugar de 500 los aliviaría: es decisión de diseño, no de rendimiento.
 - **El color del club desde la base** (`clubes.color_primario`, `check` de hex, función pura que valide el contraste y elija `--sobre-club`): lleva migración y RLS, queda para otro spec. Hoy ningún JS sobrescribe `--club`: todos los clubes se ven rojos.
 - **`.tarj.acento` no existe.** El spec la definía como variante con filete; el filete sólo está en `.al` (aviso) y `.ben` (landing). Si una pantalla necesita una tarjeta con acento que no sea un aviso, hay que crearla.
