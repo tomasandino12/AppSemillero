@@ -17,7 +17,7 @@ Antes de tocar CSS o una pantalla: leer DESIGN.md (tokens, "Reglas duras", "Chec
 | 5 guía de interpretación | hecha | ver git log |
 | 6 salto en la ficha | hecha | ver git log |
 | 7 protocolo corporal | hecha | ver git log |
-| 8 protocolo del salto en tarjetas | pendiente | |
+| 8 protocolo del salto en tarjetas | hecha | ver git log |
 | 9 documentación y cierre | pendiente | |
 
 ---
