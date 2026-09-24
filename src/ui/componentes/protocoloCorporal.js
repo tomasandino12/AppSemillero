@@ -41,7 +41,7 @@ export function abrirProtocoloCorporal(club) {
       <div class="dibujo">${rango(ALTURA_MIN_CM, ALTURA_MAX_CM, 'cm')}${rango(PESO_MIN_KG, PESO_MAX_KG, 'kg')}</div>
       <div class="cuerpo">
         <p>Altura: descalzo y de espaldas a la pared.</p>
-        <p>Peso: con la menor carga encima posible (sin mochila, buzo ni botines).</p>
+        <p>Peso: con la menor carga encima posible (sin mochila, buzo ni calzado pesado).</p>
       </div>
     </div>
 

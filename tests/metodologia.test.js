@@ -8,13 +8,13 @@ test('los límites son 3 apodos de 20 caracteres', () => {
 });
 
 test('usa un apodo del club', () => {
-  const club = { nombre: "Newell's", apodos: ['Leproso'] };
-  assert.equal(etiquetaMetodologia(club), 'Metodología Leproso');
+  const club = { nombre: "Newell's", apodos: ['Leprosa'] };
+  assert.equal(etiquetaMetodologia(club), 'Metodología Leprosa');
 });
 
 test('elige con el azar inyectado (0 → primero, 0.99 → último)', () => {
-  const club = { nombre: "Newell's", apodos: ['Leproso', 'NOB', 'Lepra'] };
-  assert.equal(etiquetaMetodologia(club, () => 0), 'Metodología Leproso');
+  const club = { nombre: "Newell's", apodos: ['Leprosa', 'NOB', 'Lepra'] };
+  assert.equal(etiquetaMetodologia(club, () => 0), 'Metodología Leprosa');
   assert.equal(etiquetaMetodologia(club, () => 0.99), 'Metodología Lepra');
 });
 
