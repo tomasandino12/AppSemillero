@@ -248,6 +248,7 @@ function seccionSalto(sesiones) {
   }
   return html`
     <div class="eyebrow">Salto</div>
+    <div class="det">Del mejor intento: altura, tiempo en el aire y potencia de piernas estimada, en watts y en watts por kilo de peso (ésta es la que sirve para comparar chicos de distinto tamaño).</div>
     ${TESTS_SALTO.map((test) => {
       const delTest = sesiones.filter((s) => s.testSalto === test);
       if (!delTest.length) return '';
