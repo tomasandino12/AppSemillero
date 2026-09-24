@@ -69,7 +69,7 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
     violacion = e;
     avisarSinVideo(e.originalPolicy.includes('media-src')
       ? `La política de seguridad bloqueó el video (${e.effectiveDirective}).`
-      : 'La página abierta es de una versión anterior y bloquea el video. Cerrá la pestaña y volvé a abrir la app.');
+      : 'El navegador tiene guardada una versión anterior de la app, que bloquea el video. Recargá la página.');
   };
   document.addEventListener('securitypolicyviolation', alViolarCsp);
   raiz.innerHTML = html`

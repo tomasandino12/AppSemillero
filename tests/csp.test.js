@@ -67,6 +67,17 @@ test('media-src deja reproducir el video local del marcador y nada más', () => 
   assert.deepEqual(directiva('media-src'), ['blob:']);
 });
 
+// Si el navegador guarda el HTML, lo revalida con el ETag, y el 304 de Vercel
+// no trae la CSP: el navegador sigue aplicando la cabecera vieja aunque
+// vercel.json cambie, hasta que cambie el HTML. Pasó con media-src.
+test('el HTML no se guarda en caché, para que cada CSP nueva llegue', () => {
+  for (const ruta of ['/', '/public/index.html']) {
+    const reglas = vercel.headers.filter((h) => h.source === ruta).flatMap((h) => h.headers);
+    const cache = reglas.find((h) => h.key.toLowerCase() === 'cache-control')?.value ?? '';
+    assert.match(cache, /\bno-store\b/, `${ruta} sin Cache-Control: no-store`);
+  }
+});
+
 test('no se puede embeber la app en otra página', () => {
   assert.deepEqual(directiva('frame-ancestors'), ["'none'"]);
 });

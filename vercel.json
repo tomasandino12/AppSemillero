@@ -6,6 +6,8 @@
     { "source": "/sitemap.xml", "destination": "/public/sitemap.xml" }
   ],
   "headers": [
+    { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/public/index.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
     {
       "source": "/(.*)",
       "headers": [
