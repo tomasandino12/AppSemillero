@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { prepararPayloadBateria, prepararPayloadSalto, prepararPayloadSprint } from '../src/data/prepararPayloadMedicion.js';
+import { prepararPayloadBateria, prepararPayloadSalto, prepararPayloadSprint, prepararPayloadYoyo } from '../src/data/prepararPayloadMedicion.js';
 
 const BASE = { clubId: 'c1', plantelId: 'pl1', fecha: '2026-03-05' };
 
@@ -105,4 +105,25 @@ test('payload de sprint: exige distancia 20 o 30', () => {
     assert.throws(() => prepararPayloadSprint({ ...SPRINT, distanciaSprintM: mala, valores: {} }), /Distancia/);
   }
   assert.equal(prepararPayloadSprint({ ...SPRINT, distanciaSprintM: 20, valores: {} }).distanciaSprintM, 20);
+});
+
+const YOYO = { ...BASE, sesionId: 's1' };
+
+test('payload de yoyo: una fila por jugador', () => {
+  const p = prepararPayloadYoyo({ ...YOYO, valores: { j1: { idas: 40 }, j2: { idas: 0 } } });
+  assert.equal(p.tipo, 'yoyo');
+  assert.equal(p.sesionId, 's1');
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', idas: 40 }, { jugadorId: 'j2', idas: 0 }]);
+  assert.equal('distanciaSprintM' in p, false);
+  assert.equal('testSalto' in p, false);
+});
+
+test('payload de yoyo: ausente con idas null', () => {
+  const p = prepararPayloadYoyo({ ...YOYO, valores: { j1: { ausente: true, idas: 30 } } });
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', idas: null }]);
+});
+
+test('payload de yoyo: no manda jugadores sin tocar', () => {
+  const p = prepararPayloadYoyo({ ...YOYO, valores: { j1: {}, j2: { idas: null }, j3: { idas: 12 } } });
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j3', idas: 12 }]);
 });

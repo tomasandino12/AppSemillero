@@ -91,3 +91,23 @@ export function prepararPayloadSprint({
   }
   return { clubId, plantelId, fecha, tipo: 'sprint', distanciaSprintM, mediciones, sesionId };
 }
+
+/**
+ * Borrador de Yo-Yo → payload. `valores[jugadorId]` es `{ ausente: true }` o
+ * `{ idas: n }` (las idas completas al quedar afuera).
+ *
+ * Una fila por jugador. Ausente es `idas: null` (estuvo, no corrió); 0 idas es
+ * un dato real (quedó afuera en la primera). Un jugador sin nada en el
+ * borrador no viaja: la sesión no llegó a él.
+ */
+export function prepararPayloadYoyo({ sesionId, clubId, plantelId, fecha, valores }) {
+  const mediciones = [];
+  for (const [jugadorId, datos] of Object.entries(valores ?? {})) {
+    if (datos?.ausente) {
+      mediciones.push({ jugadorId, idas: null });
+    } else if (datos?.idas != null) {
+      mediciones.push({ jugadorId, idas: datos.idas });
+    }
+  }
+  return { clubId, plantelId, fecha, tipo: 'yoyo', mediciones, sesionId };
+}

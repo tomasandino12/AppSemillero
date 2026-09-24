@@ -1,4 +1,4 @@
-// Mediciones (tiro, salto, sprint, cuerpo) y metas del cuerpo técnico.
+// Mediciones (tiro, salto, sprint, yoyo, cuerpo) y metas del cuerpo técnico.
 // Se importa a través de src/data/repositorio.js (fachada).
 import { obtenerCliente, TAMANIO_PAGINA } from '../cliente.js';
 
@@ -119,6 +119,42 @@ function sprintDesdeFila(f) {
     origen: f.origen,
     fecha: f.sesion_medicion?.fecha ?? null,
     distanciaM: f.sesion_medicion?.distancia_sprint_m ?? null,
+  };
+}
+
+/**
+ * Los resultados de Yo-Yo del plantel, con la fecha de su sesión.
+ * idas null = ausente (no corrió), nunca 0.
+ */
+export async function obtenerMedicionesYoyoDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const data = [];
+  let desde = 0;
+  for (;;) {
+    const hasta = desde + TAMANIO_PAGINA - 1;
+    const { data: pagina, error } = await supabase
+      .from('medicion_yoyo')
+      .select('id, sesion_id, jugador_id, idas, origen, sesion_medicion!inner(plantel_id, fecha)')
+      .eq('club_id', clubId)
+      .eq('sesion_medicion.plantel_id', plantelId)
+      .order('id')
+      .range(desde, hasta);
+    if (error) throw error;
+    data.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
+  return data.map(yoyoDesdeFila);
+}
+
+function yoyoDesdeFila(f) {
+  return {
+    id: f.id,
+    sesionId: f.sesion_id,
+    jugadorId: f.jugador_id,
+    idas: f.idas ?? null,
+    origen: f.origen,
+    fecha: f.sesion_medicion?.fecha ?? null,
   };
 }
 
