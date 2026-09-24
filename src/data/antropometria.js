@@ -71,6 +71,37 @@ export function ultimaMedicionPorJugador(mediciones) {
   return porJugador;
 }
 
+const CAMPOS_CORPORALES = ['alturaCm', 'pesoKg', 'piernaCm', 'piernaFlexionadaCm'];
+
+/**
+ * De cada medida, el último valor que se cargó y de qué fecha es. El peso no
+ * se vuelve a tomar en cada medición: que la última no lo traiga no lo borra,
+ * sólo cambia la fecha con la que se muestra. Un campo nunca medido es null.
+ */
+export function vigentePorCampo(mediciones) {
+  const vigente = Object.fromEntries(CAMPOS_CORPORALES.map((c) => [c, null]));
+  for (const m of mediciones ?? []) {
+    for (const campo of CAMPOS_CORPORALES) {
+      if (m[campo] == null) continue;
+      const previo = vigente[campo];
+      if (!previo || m.fechaMedicion.localeCompare(previo.fechaMedicion) > 0) {
+        vigente[campo] = { valor: m[campo], fechaMedicion: m.fechaMedicion };
+      }
+    }
+  }
+  return vigente;
+}
+
+/** Map de jugadorId → `vigentePorCampo` de sus mediciones. Para la lista de PLANTEL. */
+export function vigentePorJugador(mediciones) {
+  const propias = new Map();
+  for (const m of mediciones ?? []) {
+    if (!propias.has(m.jugadorId)) propias.set(m.jugadorId, []);
+    propias.get(m.jugadorId).push(m);
+  }
+  return new Map([...propias].map(([id, lista]) => [id, vigentePorCampo(lista)]));
+}
+
 /** Ordenadas de la más reciente a la más vieja, para mostrar el histórico. */
 export function ordenarMediciones(mediciones) {
   return [...(mediciones ?? [])].sort((a, b) => b.fechaMedicion.localeCompare(a.fechaMedicion));

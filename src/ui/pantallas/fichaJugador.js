@@ -15,7 +15,7 @@ import {
 } from '../../data/salto.js';
 import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
-  edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
+  edadEnAnios, hoyLocal, ordenarMediciones, vigentePorCampo, validarMedicion, validarFechaNacimiento,
 } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast } from '../nav.js';
@@ -554,12 +554,39 @@ function celdaMedida(valor, unidad) {
     : `${valor}<span class="u"> ${unidad}</span>`;
 }
 
+const MEDIDAS_VIGENTES = [
+  ['alturaCm', 'Altura', 'cm'], ['pesoKg', 'Peso', 'kg'],
+  ['piernaCm', 'Pierna ext.', 'cm'], ['piernaFlexionadaCm', 'Pierna flex.', 'cm'],
+];
+
+/**
+ * Lo último que se cargó de cada medida. Si no es de la medición más reciente
+ * se le pone su fecha: el peso no se toma en cada visita y no tiene que
+ * desaparecer por eso.
+ */
+function vigentesHtml(ordenadas) {
+  if (!ordenadas.length) return '';
+  const vigente = vigentePorCampo(ordenadas);
+  const ultimaFecha = ordenadas[0].fechaMedicion;
+  return html`
+    <div class="eyebrow">Último dato de cada medida</div>
+    <div class="vigentes">
+      ${MEDIDAS_VIGENTES.map(([campo, nombre, unidad]) => {
+        const v = vigente[campo];
+        return html`<div class="vigente"><div class="k">${nombre}</div>
+          <div class="v">${v ? crudo(celdaMedida(v.valor, unidad)) : crudo(celdaMedida(null, unidad))}</div>
+          ${v && v.fechaMedicion !== ultimaFecha ? html`<div class="d">${formatearFechaCorta(v.fechaMedicion)}</div>` : ''}</div>`;
+      })}
+    </div>`;
+}
+
 function renderCorporal(clubId, idJugador, mediciones) {
   const cont = $('ficha-corporal');
   if (!cont) return;
   const ordenadas = ordenarMediciones(mediciones);
 
   cont.innerHTML = `
+    ${vigentesHtml(ordenadas)}
     <div class="eyebrow">Mediciones <span class="der">${ordenadas.length}</span></div>
     ${ordenadas.length ? `
       <div class="tabla-corporal">

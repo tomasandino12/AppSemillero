@@ -1,7 +1,7 @@
 import {
   obtenerJugadoresDelPlantel, obtenerMedicionesCorporalesDelClub, obtenerSolicitudesDelPlantel,
 } from '../../data/repositorio.js';
-import { ultimaMedicionPorJugador } from '../../data/antropometria.js';
+import { vigentePorJugador } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo, obtenerPlanteles } from '../sesion.js';
 import { escaparHtml } from '../nav.js';
 import { ir } from '../main.js';
@@ -32,10 +32,10 @@ export function iniciales(nombreLimpio) {
 }
 
 /** NULL = "sin medir", nunca cero (Etapa 3, Decisión 8). */
-export function textoMedicion(medicion) {
-  if (medicion == null) return 'Sin medir';
-  const altura = medicion.alturaCm == null ? null : `${medicion.alturaCm} cm`;
-  const peso = medicion.pesoKg == null ? null : `${medicion.pesoKg} kg`;
+export function textoMedicion(vigente) {
+  if (vigente == null) return 'Sin medir';
+  const altura = vigente.alturaCm == null ? null : `${vigente.alturaCm.valor} cm`;
+  const peso = vigente.pesoKg == null ? null : `${vigente.pesoKg.valor} kg`;
   if (altura == null && peso == null) return 'Sin medir';
   return [altura ?? 'altura sin medir', peso ?? 'peso sin medir'].join(' · ');
 }
@@ -132,7 +132,7 @@ export async function renderPlantel() {
     return;
   }
 
-  const porJugador = ultimaMedicionPorJugador(mediciones);
+  const porJugador = vigentePorJugador(mediciones);
   contenedor().innerHTML = `
     <div class="pad">
       ${avisoDeSolicitudesHtml(solicitudes)}

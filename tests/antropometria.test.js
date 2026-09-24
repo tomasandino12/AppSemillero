@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   ALTURA_MIN_CM, ALTURA_MAX_CM, PESO_MIN_KG, PESO_MAX_KG,
   edadEnAnios, ultimaMedicion, ultimaMedicionPorJugador, ordenarMediciones,
+  vigentePorCampo, vigentePorJugador,
   validarMedicion, validarFechaNacimiento,
 } from '../src/data/antropometria.js';
 
@@ -136,4 +137,36 @@ test('validarMedicion acepta el largo de pierna y exige flexionada < extendida',
   assert.equal(fuera.ok, false);
   const vacia = validarMedicion({ fechaMedicion: '2026-09-01' }, '2026-09-23');
   assert.equal(vacia.ok, false);
+});
+
+test('el dato vigente de cada campo es el último que se cargó, aunque la última medición no lo traiga', () => {
+  const v = vigentePorCampo([
+    { fechaMedicion: '2026-03-01', alturaCm: 180, pesoKg: 70, piernaCm: null },
+    { fechaMedicion: '2026-08-01', alturaCm: null, pesoKg: null, piernaCm: 95 },
+    { fechaMedicion: '2026-05-01', alturaCm: 182, pesoKg: 72, piernaCm: null },
+  ]);
+  assert.deepEqual(v.pesoKg, { valor: 72, fechaMedicion: '2026-05-01' });
+  assert.deepEqual(v.alturaCm, { valor: 182, fechaMedicion: '2026-05-01' });
+  assert.deepEqual(v.piernaCm, { valor: 95, fechaMedicion: '2026-08-01' });
+  assert.equal(v.piernaFlexionadaCm, null);
+});
+
+test('sin mediciones no hay ningún dato vigente, y un campo nunca medido es null, no cero', () => {
+  for (const entrada of [[], null, undefined]) {
+    const v = vigentePorCampo(entrada);
+    assert.deepEqual(Object.values(v), [null, null, null, null]);
+  }
+});
+
+test('por jugador: el vigente de cada uno sale de sus propias mediciones', () => {
+  const mapa = vigentePorJugador([
+    { jugadorId: 'a', fechaMedicion: '2026-03-01', alturaCm: 180, pesoKg: 70 },
+    { jugadorId: 'a', fechaMedicion: '2026-08-01', alturaCm: 184, pesoKg: null },
+    { jugadorId: 'b', fechaMedicion: '2026-04-01', alturaCm: null, pesoKg: 65 },
+  ]);
+  assert.equal(mapa.get('a').alturaCm.valor, 184);
+  assert.equal(mapa.get('a').pesoKg.valor, 70);
+  assert.equal(mapa.get('b').alturaCm, null);
+  assert.equal(mapa.get('b').pesoKg.valor, 65);
+  assert.equal(mapa.get('c'), undefined);
 });

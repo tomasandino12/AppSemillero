@@ -438,6 +438,13 @@ svg.g{width:100%;display:block;overflow:visible}
 .fila-corporal.cab{font-family:var(--ff-titulo);font-size:var(--fs-115);line-height:1.15;letter-spacing:.04em;text-transform:uppercase;color:var(--gris-cl);align-items:end}
 .fila-corporal .borrar{min-width:36px;min-height:40px;border:0;border-radius:8px;background:none;color:var(--gris-cl);font-size:var(--fs-145)}
 .aviso-corporal{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;margin:var(--sp-3) 0;font-size:var(--fs-135);font-weight:500;color:var(--primario-osc)}
+.vigentes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-2);margin:10px 0}
+.vigente .k{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.04em;text-transform:uppercase;color:var(--gris-cl)}
+.vigente .v{font-size:var(--fs-145)}
+.vigente .u{color:var(--gris-cl);font-size:var(--fs-115)}
+.vigente .sin{color:var(--gris-cl)}
+.vigente .d{font-family:var(--ff-mono);font-size:var(--fs-115);color:var(--gris-cl)}
+@media (max-width:420px){.vigentes{grid-template-columns:1fr 1fr}}
 .campos-par{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 /* Card de HOY: zonas ordenadas de peor a mejor, barra en escala 0-100 fija */
