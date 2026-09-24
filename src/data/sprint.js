@@ -38,7 +38,7 @@ export function validarTiempoSprint(texto) {
     return {
       ok: false,
       ms: null,
-      error: `El tiempo tiene que estar entre ${TIEMPO_SPRINT_MIN_MS / 1000} y ${TIEMPO_SPRINT_MAX_MS / 1000} segundos.`,
+      error: `El tiempo tiene que estar entre ${String(TIEMPO_SPRINT_MIN_MS / 1000).replace('.', ',')} y ${TIEMPO_SPRINT_MAX_MS / 1000} segundos.`,
     };
   }
   return { ok: true, ms, error: null };

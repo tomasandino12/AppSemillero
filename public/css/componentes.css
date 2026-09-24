@@ -862,6 +862,23 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .marcador-protocolo summary{min-height:var(--tap);display:flex;align-items:center;cursor:pointer;font-size:var(--fs-145);color:var(--tinta)}
 .protocolo-salto{display:flex;flex-direction:column}
 
+/* Cronómetro de salida del sprint (cronometroSalida.js): tapa todo, como el
+   marcador de cuadros. Claro, como el resto de la app: se usa en la cancha. */
+.crono-salida{position:fixed;inset:0;z-index:60;background:var(--papel);overflow-y:auto;padding:var(--sp-4);padding-top:calc(var(--sp-4) + env(safe-area-inset-top))}
+.crono-cuerpo{display:flex;flex-direction:column;gap:var(--sp-4);max-width:var(--max-ancho);margin-inline:auto;min-height:100%}
+.crono-quien{text-align:center;padding-inline:var(--sp-8)}
+.crono-nombre{font-family:var(--ff-titulo);font-size:var(--fs-220);font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--tinta)}
+.crono-sub{font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
+.crono-tiempo{font-family:var(--ff-mono);font-weight:600;font-variant-numeric:tabular-nums;line-height:1;text-align:center;color:var(--tinta);font-size:clamp(4rem,22vw,6.5rem);padding-block:var(--sp-6)}
+.crono-tiempo .u{font-size:.4em;color:var(--primario);margin-left:.1em}
+.crono-marcas{font-family:var(--ff-titulo);font-size:var(--fs-300);text-transform:uppercase;letter-spacing:.06em;text-align:center;color:var(--tinta);padding-block:var(--sp-8)}
+.crono-aviso{font-size:var(--fs-145);color:var(--tinta);text-align:center;background:var(--aviso-fondo);border-radius:var(--r);padding:var(--sp-3)}
+.crono-boton{min-height:5rem;font-size:var(--fs-220)}
+.crono-llego{flex:1;min-height:45vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-2);border:0;border-radius:var(--r);background:var(--primario);color:var(--sobre-club);font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-300);text-transform:uppercase;letter-spacing:.05em;touch-action:manipulation;transition:transform var(--dur-1) var(--ease-salida)}
+.crono-llego:active{transform:scale(.98)}
+.crono-llego .ayuda{font-family:var(--ff-cuerpo);font-size:var(--fs-125);font-weight:400;text-transform:none;letter-spacing:0}
+.crono-acciones{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+
 /* ---- medir salto: fila por jugador con hasta 3 intentos ---- */
 .campo select{width:100%;min-height:var(--tap);padding:0 var(--sp-3);border:1px solid var(--linea);border-radius:var(--r-m);background:var(--blanco);color:var(--tinta);font-size:var(--fs-145)}
 .salto-acciones{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-4)}
