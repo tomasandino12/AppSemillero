@@ -59,6 +59,19 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
   raiz.setAttribute('role', 'dialog');
   raiz.setAttribute('aria-modal', 'true');
   raiz.setAttribute('aria-label', 'Marcar el salto');
+  // Chrome informa igual un bloqueo de la CSP que otros rechazos de la URL
+  // ("URL safety check"). Este evento sólo llega si fue la CSP, y trae la
+  // política aplicada: si no tiene media-src, la página es de antes del deploy.
+  // Va antes del innerHTML porque el video empieza a cargar al crearse.
+  let violacion = null;
+  const alViolarCsp = (e) => {
+    if (e.effectiveDirective !== 'media-src' && !e.blockedURI.startsWith('blob')) return;
+    violacion = e;
+    avisarSinVideo(e.originalPolicy.includes('media-src')
+      ? `La política de seguridad bloqueó el video (${e.effectiveDirective}).`
+      : 'La página abierta es de una versión anterior y bloquea el video. Cerrá la pestaña y volvé a abrir la app.');
+  };
+  document.addEventListener('securitypolicyviolation', alViolarCsp);
   raiz.innerHTML = html`
     <div class="marcador-cuerpo">
       <button type="button" class="jvc-cerrar" data-m="cerrar" aria-label="Cerrar">&#10005;</button>
@@ -103,6 +116,7 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
 
   function cerrar(valor) {
     document.removeEventListener('keydown', alTeclear);
+    document.removeEventListener('securitypolicyviolation', alViolarCsp);
     video.removeAttribute('src');
     video.load();
     URL.revokeObjectURL(url);
@@ -182,6 +196,7 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
     aviso.hidden = false;
   }
   video.addEventListener('error', () => {
+    if (violacion) return;
     const e = video.error;
     const detalle = `error ${e?.code ?? '?'}${e?.message ? `: ${e.message}` : ''}`;
     avisarSinVideo(e?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
