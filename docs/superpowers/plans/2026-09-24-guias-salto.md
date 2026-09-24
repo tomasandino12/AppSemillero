@@ -11,8 +11,8 @@ Antes de tocar CSS o una pantalla: leer DESIGN.md (tokens, "Reglas duras", "Chec
 | Task | Estado | Commit |
 |---|---|---|
 | 1 etiqueta pura | hecha | ver git log |
-| 2 migración 0046 | escrita, db push pendiente de confirmación | ver git log |
-| 3 repo clubes | pendiente | |
+| 2 migración 0046 | aplicada con db push (24/09) | ver git log |
+| 3 repo clubes | hecha | ver git log |
 | 4 estilos de guía | pendiente | |
 | 5 guía de interpretación | pendiente | |
 | 6 salto en la ficha | pendiente | |

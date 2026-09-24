@@ -10,9 +10,9 @@ import { obtenerUsuarioActual } from './auth.js';
  */
 export async function obtenerClubesDelEntrenador() {
   const supabase = obtenerCliente();
-  const { data, error } = await supabase.from('club').select('id, nombre');
+  const { data, error } = await supabase.from('club').select('id, nombre, apodos');
   if (error) throw error;
-  return data.map((fila) => ({ id: fila.id, nombre: fila.nombre }));
+  return data.map((fila) => ({ id: fila.id, nombre: fila.nombre, apodos: fila.apodos ?? [] }));
 }
 
 /**
