@@ -1,5 +1,5 @@
 /**
- * Siembra sesiones de entrenamiento (batería de tiro y velocidad) en la base
+ * Siembra sesiones de entrenamiento (batería de tiro) en la base
  * real, para poder ver la app con varios meses de datos sin cargar cada tiro
  * a mano.
  *
@@ -24,7 +24,6 @@
  *   que lo más probable es 3 de 10 y la probabilidad baja hacia los costados.
  *   No se fuerza el 3: sale de la moneda.
  * - Libres: lo mismo con ~45%, así que caen sobre todo en 4 y 5 de 10.
- * - Velocidad: alrededor de 5,0 s con dispersión chica, un decimal.
  * - Cada jugador tiene una habilidad propia estable, derivada de su id, así
  *   que el mismo chico es parecido de una sesión a la otra en vez de saltar
  *   al azar.
@@ -53,9 +52,8 @@ const supabase = createClient(url, publishableKey);
 const ZONAS_ARCO = ['esq_izq', 'c45_izq', 'frontal', 'c45_der', 'esq_der'];
 const INTENTOS = 10;
 
-/** Fechas de las baterías y de las sesiones de velocidad, de la más vieja a la más nueva. */
+/** Fechas de las baterías, de la más vieja a la más nueva. */
 const FECHAS_BATERIA = ['2026-04-07', '2026-05-05', '2026-06-02', '2026-07-07', '2026-08-04', '2026-09-01'];
-const FECHAS_VELOCIDAD = ['2026-04-07', '2026-06-02', '2026-08-04'];
 
 /**
  * Generador determinístico: la misma semilla da siempre la misma secuencia.
@@ -94,12 +92,6 @@ function tirosAcertados(r, n, p) {
   return entraron;
 }
 
-/** Normal aproximada por suma de uniformes, que alcanza y sobra para esto. */
-function normal(r, media, desvio) {
-  const s = r() + r() + r() - 1.5;
-  return media + s * desvio * 1.4;
-}
-
 function payloadBateria({ clubId, plantelId, fecha, jugadores, mes }) {
   const mediciones = [];
   const rSesion = rng(plantelId + fecha);
@@ -130,25 +122,7 @@ function payloadBateria({ clubId, plantelId, fecha, jugadores, mes }) {
   return { clubId, plantelId, fecha, tipo: 'tiro', mediciones };
 }
 
-function payloadVelocidad({ clubId, plantelId, fecha, jugadores, mes }) {
-  const rSesion = rng('vel' + plantelId + fecha);
-  const ausente = jugadores[Math.floor(rSesion() * jugadores.length)]?.id;
-  const mediciones = [];
-  for (const j of jugadores) {
-    if (j.id === ausente) continue;     // sin fila: no se lo midió ese día
-    const r = rng('v' + j.id + fecha);
-    const base = 5.0 + habilidad(j.id) * -3;   // el que tira mejor tiende a correr un poco más rápido
-    const segundos = Math.min(6.2, Math.max(4.2, normal(r, base - mes * 0.02, 0.22)));
-    mediciones.push({ jugadorId: j.id, segundos: Math.round(segundos * 10) / 10 });
-  }
-  return { clubId, plantelId, fecha, tipo: 'velocidad', mediciones };
-}
-
 function resumen(payload) {
-  if (payload.tipo === 'velocidad') {
-    const v = payload.mediciones.map((m) => m.segundos);
-    return `${v.length} tiempos, de ${Math.min(...v).toFixed(1)} a ${Math.max(...v).toFixed(1)} s`;
-  }
   const reales = payload.mediciones.filter((m) => m.anotados != null);
   const ausentes = new Set(payload.mediciones.filter((m) => m.anotados == null).map((m) => m.jugadorId));
   const arco = reales.filter((m) => m.posicion !== 'libres');
@@ -184,12 +158,7 @@ async function main() {
     console.log(`--- ${plantel.categoria}: ${jugadores.length} jugadores ---`);
     if (!jugadores.length) { console.log('   (sin jugadores, se saltea)\n'); continue; }
 
-    const tareas = [
-      ...FECHAS_BATERIA.map((fecha, mes) => ({ tipo: 'tiro', fecha, mes, arma: payloadBateria })),
-      ...FECHAS_VELOCIDAD.map((fecha) => ({
-        tipo: 'velocidad', fecha, mes: FECHAS_BATERIA.indexOf(fecha), arma: payloadVelocidad,
-      })),
-    ].sort((a, b) => a.fecha.localeCompare(b.fecha) || a.tipo.localeCompare(b.tipo));
+    const tareas = FECHAS_BATERIA.map((fecha, mes) => ({ tipo: 'tiro', fecha, mes, arma: payloadBateria }));
 
     for (const t of tareas) {
       if (yaHay.has(`${plantel.id}|${t.fecha}|${t.tipo}`)) {

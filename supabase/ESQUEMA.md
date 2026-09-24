@@ -194,7 +194,7 @@ Qué cuenta de Auth ve a qué jugador: `(id, user_id, club_id, jugador_id, desde
 | `mi_ficha()` | club, nombre propio y planteles con pertenencia vigente. Null si no hay cuenta vigente: es lo que arranca la app. |
 | `mis_recursos()` | sólo los `envio_recurso` dirigidos a él. |
 | `mi_plan()` | por cada plantel suyo, el plan vigente (mismo criterio que `elegirPlanVisible`) con sus sesiones y líneas, más `pesos`: **su** último peso en cada ejercicio, con la clave para unirlo a la línea en el cliente (`clavearNombre` es JS y no se reproduce en SQL). |
-| `mi_progreso()` | `partidos`, `tiro`, `velocidad`, `saltos` (0044: por sesión, `test` e `intentos` con `tiempoVueloMs`) y `escalones`, todo propio. Sin medidas corporales, sin promedios ni nombres de otros. |
+| `mi_progreso()` | `partidos`, `tiro`, `saltos` (0044: por sesión, `test` e `intentos` con `tiempoVueloMs`) y `escalones`, todo propio. Sin medidas corporales, sin promedios ni nombres de otros. |
 
 Con la cuenta cerrada devuelven null o cero filas, y no se borra nada. `src/data/accesoJugador.js` declara todo lo que 0029 y 0030 otorgan con `grant execute`, y `tests/contratoAccesoJugador.test.js` falla si aparece un grant que no está ahí. Sumar una función para el jugador es una RPC, una pantalla y una línea en `TABS_JUGADOR`; sacarla es `revoke execute`.
 
@@ -235,10 +235,13 @@ CMJ y Abalakov medidos con video en cámara lenta (spec `docs/superpowers/specs/
 
 - `sesion_medicion.tipo` suma `salto`, y `test_salto` (`cmj` | `abalakov`) es obligatorio sólo en ese tipo (`(tipo = 'salto') = (test_salto is not null)`). Una sesión es de un solo test.
 - `medicion_salto`: `intento` (1–3), `tiempo_vuelo_ms` (`numeric(6,2)`, 100–1000) y `fps_captura` (120–960), `unique (sesion_id, jugador_id, intento)`. **Se guarda el dato crudo, nunca la altura**: `src/data/salto.js` la calcula (y la potencia), así corregir una fórmula recalcula todo el histórico. `tiempo_vuelo_ms` NULL = ausente, en una sola fila (intento 1) y sin fps.
-- RLS por el plantel de la sesión, como `medicion_velocidad`; el insert exige además que la sesión sea de tipo `salto`. `revoke all` + `select` + `insert` por columna, sin update ni delete. Un trigger sella `creado_por` y `creado_en`.
+- RLS por el plantel de la sesión, como `medicion_tiro`; el insert exige además que la sesión sea de tipo `salto`. `revoke all` + `select` + `insert` por columna, sin update ni delete. Un trigger sella `creado_por` y `creado_en`.
 - `medicion_corporal` suma `pierna_cm` (L0, 60–130) y `pierna_flexionada_cm` (hpush, 30–110), `numeric(4,1)` y nullable, con la flexionada menor que la extendida. Son para la potencia de Samozino; como el peso, el jugador no las ve.
-- `guardar_sesion_medicion` (0044) suma la rama `salto`: `testSalto` obligatorio (y prohibido en tiro y velocidad), mediciones `{ jugadorId, intento, tiempoVueloMs, fpsCaptura }`, misma idempotencia por `sesionId` de 0038 (el reintento tiene que coincidir también en el test).
+- `guardar_sesion_medicion` (0044) suma la rama `salto`: `testSalto` obligatorio (y prohibido en tiro), mediciones `{ jugadorId, intento, tiempoVueloMs, fpsCaptura }`, misma idempotencia por `sesionId` de 0038 (el reintento tiene que coincidir también en el test).
 - `tests/contratoSalto.test.js` compara los rangos con `salto.js` y `antropometria.js`; `tests/contratoRpcSalto.test.js`, que 0044 no haya perdido ninguna rama de 0038 ni ninguna garantía de 0030.
+
+### Sin velocidad (0045)
+La medición de velocidad de 0009 (largo de cancha con cronómetro) se borró: daba ruido y lo cargado era de prueba (lo sembraba `tests/sembrarEntrenamientos.js`). 0045 borra `medicion_velocidad` y sus sesiones, deja `sesion_medicion.tipo` en `tiro` | `salto` y reemplaza `guardar_sesion_medicion` y `mi_progreso` sin esa rama ni esa clave. El sprint vuelve rediseñado, por video, con su propia tabla.
 
 ## Políticas RLS
 
@@ -286,7 +289,7 @@ Son `security definer` por obligación, no por comodidad: se llaman desde las po
 |---|---|
 | `plantel_id` directo | `plantel`, `pertenencia`, `partido`, `sesion_medicion`, `meta_zona` |
 | vía `partido_id` | `estadistica_jugador_partido` |
-| vía `sesion_id` | `medicion_tiro`, `medicion_velocidad`, `medicion_salto` |
+| vía `sesion_id` | `medicion_tiro`, `medicion_salto` |
 | vía `pertenencia` del jugador | `jugador`, `medicion_corporal`, `envio_recurso` |
 
 Un chico citado en dos categorías tiene dos pertenencias vigentes: con que **alguna** dé acceso alcanza.

@@ -37,7 +37,7 @@ declare
   v_p2 uuid := gen_random_uuid();   -- pendiente para el caso de rollback
 
   v_j17 uuid; v_j17b uuid; v_j21 uuid;
-  v_imp uuid; v_par uuid; v_ses21 uuid; v_sesvel uuid; v_ses17 uuid; v_ses_p uuid;
+  v_imp uuid; v_par uuid; v_ses21 uuid; v_ses17 uuid; v_ses_p uuid;
   v_imp17 uuid; v_par17 uuid; q integer;
   v_ej uuid; v_asig_b uuid;
   v_hasta timestamptz; v_cerrado uuid;
@@ -115,10 +115,6 @@ begin
       values (v_club, v_u21, '2026-04-02', 'tiro') returning id into v_ses21;
     insert into medicion_tiro (club_id, sesion_id, jugador_id, posicion, anotados)
       values (v_club, v_ses21, v_j21, 'frontal', 4);
-    insert into sesion_medicion (club_id, plantel_id, fecha, tipo)
-      values (v_club, v_u21, '2026-04-03', 'velocidad') returning id into v_sesvel;
-    insert into medicion_velocidad (club_id, sesion_id, jugador_id, segundos)
-      values (v_club, v_sesvel, v_j21, 5.2);
     insert into medicion_corporal (club_id, jugador_id, fecha_medicion, altura_cm)
       values (v_club, v_j21, '2026-04-04', 180);
 
@@ -162,7 +158,6 @@ begin
          + (select count(*) from estadistica_jugador_partido where partido_id = v_par)
          + (select count(*) from sesion_medicion where plantel_id = v_u21)
          + (select count(*) from medicion_tiro where sesion_id = v_ses21)
-         + (select count(*) from medicion_velocidad where sesion_id = v_sesvel)
          + (select count(*) from medicion_corporal where jugador_id = v_j21)
       into n;
     select count(*) into m from jugador where id = v_j17;
@@ -171,7 +166,7 @@ begin
     elsif m <> 1 then
       estados[1] := 'FALLA'; detalles[1] := 'No ve al jugador de su propia categoría.';
     else
-      estados[1] := 'OK'; detalles[1] := '0 filas de U21M en las 8 tablas; ve lo suyo.';
+      estados[1] := 'OK'; detalles[1] := '0 filas de U21M en las 7 tablas; ve lo suyo.';
     end if;
 
     -- 2
@@ -423,7 +418,6 @@ begin
          + (select count(*) from estadistica_jugador_partido where partido_id in (v_par, v_par17))
          + (select count(*) from sesion_medicion where plantel_id in (v_u17, v_u21))
          + (select count(*) from medicion_tiro where sesion_id in (v_ses17, v_ses21))
-         + (select count(*) from medicion_velocidad where sesion_id = v_sesvel)
          + (select count(*) from medicion_corporal where jugador_id = v_j21)
       into n;
     select count(*) into m from plantel where club_id = v_club;

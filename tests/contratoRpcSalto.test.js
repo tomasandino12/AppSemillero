@@ -3,21 +3,23 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 /**
- * 0044 reemplaza enteras guardar_sesion_medicion (de 0038) y mi_progreso (de
- * 0030) para sumar el salto. Un reemplazo entero puede perder en silencio una
- * rama o una garantía vieja, y los contratos de 0030 y 0038 siguen leyendo
- * esas migraciones, no ésta. Este test fija en 0044 lo que ya garantizaban.
+ * 0044 reemplazó enteras guardar_sesion_medicion (de 0038) y mi_progreso (de
+ * 0030) para sumar el salto, y 0045 las volvió a reemplazar para sacar la
+ * velocidad. Un reemplazo entero puede perder en silencio una rama o una
+ * garantía vieja, y los contratos de 0030 y 0038 siguen leyendo esas
+ * migraciones. Este test fija en la última versión lo que ya garantizaban.
  *
  * Si una migración posterior vuelve a reemplazar alguna, actualizar la ruta.
  */
 
+const MIGRACION = 'supabase/migrations/0045_borrar_velocidad.sql';
 const leer = (ruta) => readFileSync(ruta, 'utf8').replace(/\r\n/g, '\n');
 const sinComentarios = (sql) => sql.replace(/--.*$/gm, '');
-const sql = sinComentarios(leer('supabase/migrations/0044_rpc_salto.sql'));
+const sql = sinComentarios(leer(MIGRACION));
 
 function cuerpoDe(nombre, cierre) {
   const desde = sql.indexOf(`create or replace function ${nombre}(`);
-  assert.ok(desde >= 0, `no encontré "create or replace function ${nombre}(" en 0044`);
+  assert.ok(desde >= 0, `no encontré "create or replace function ${nombre}(" en ${MIGRACION}`);
   const hasta = sql.indexOf(`\n${cierre};`, desde);
   assert.ok(hasta > desde, `no encontré el cierre de ${nombre}`);
   return sql.slice(desde, hasta);
@@ -26,10 +28,10 @@ function cuerpoDe(nombre, cierre) {
 const guardar = cuerpoDe('guardar_sesion_medicion', '$$');
 const progreso = cuerpoDe('mi_progreso', '$fn$');
 
-test('guardar_sesion_medicion conserva tiro y velocidad y suma salto', () => {
-  assert.match(guardar, /v_tipo not in \('tiro', 'velocidad', 'salto'\)/);
+test('guardar_sesion_medicion guarda tiro y salto, y ya no velocidad', () => {
+  assert.match(guardar, /v_tipo not in \('tiro', 'salto'\)/);
   assert.match(guardar, /insert into medicion_tiro \(club_id, sesion_id, jugador_id, posicion, anotados, intentos\)/);
-  assert.match(guardar, /insert into medicion_velocidad \(club_id, sesion_id, jugador_id, segundos\)/);
+  assert.doesNotMatch(guardar, /velocidad/);
   assert.match(guardar, /insert into medicion_salto \(club_id, sesion_id, jugador_id, intento, tiempo_vuelo_ms, fps_captura\)/);
   assert.match(guardar, /security invoker/, 'corre con los permisos y la RLS de quien guarda');
 });
@@ -57,11 +59,18 @@ test('mi_progreso conserva las garantías de 0030', () => {
   assert.doesNotMatch(progreso, /jugador_id\s*(<>|!=|in\s*\()/i);
 });
 
-test('mi_progreso conserva todas sus claves y suma saltos', () => {
-  for (const clave of ['partidos', 'tiro', 'velocidad', 'escalones', 'saltos']) {
+test('mi_progreso conserva sus claves, sin velocidad', () => {
+  for (const clave of ['partidos', 'tiro', 'escalones', 'saltos']) {
     assert.match(progreso, new RegExp(`'${clave}', coalesce\\(`), `falta la clave ${clave}`);
   }
+  assert.doesNotMatch(progreso, /velocidad/);
   assert.doesNotMatch(progreso, /fps_captura/);
+});
+
+test('0045 borra la tabla y el tipo de sesión de velocidad', () => {
+  assert.match(sql, /drop table medicion_velocidad;/);
+  assert.match(sql, /delete from sesion_medicion where tipo = 'velocidad';/);
+  assert.match(sql, /check \(tipo in \('tiro', 'salto'\)\)/);
 });
 
 test('los dos siguen ejecutables sólo por authenticated', () => {

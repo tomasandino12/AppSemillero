@@ -47,7 +47,7 @@ declare
   v_hay_0030 boolean := to_regprocedure('public.mi_ficha()') is not null;
   v_hoy date := (now() at time zone 'America/Argentina/Buenos_Aires')::date;
   v_r1 uuid; v_r2 uuid; v_r3 uuid;
-  v_imp uuid; v_par uuid; v_ses_t uuid; v_ses_v uuid;
+  v_imp uuid; v_par uuid; v_ses_t uuid;
   v_plan_viejo uuid; v_plan_vigente uuid; v_plan21 uuid; v_sesion uuid;
   v_ef uuid; v_paso uuid;
   r record; j jsonb;
@@ -396,16 +396,12 @@ begin
       (v_club, v_par, v_j_exist, 'ZZTEST', 11, 2, 5),
       (v_club, v_par, v_j_b,     'ZZTEST', 77, 4, 6);
 
-    -- Batería de tiro y velocidad.
+    -- Batería de tiro.
     insert into sesion_medicion (club_id, plantel_id, fecha, tipo)
       values (v_club, v_u17, '2026-04-11', 'tiro') returning id into v_ses_t;
     insert into medicion_tiro (club_id, sesion_id, jugador_id, posicion, anotados) values
       (v_club, v_ses_t, v_j_exist, 'frontal', 3), (v_club, v_ses_t, v_j_exist, 'libres', 6),
       (v_club, v_ses_t, v_j_b,     'frontal', 9);
-    insert into sesion_medicion (club_id, plantel_id, fecha, tipo)
-      values (v_club, v_u17, '2026-04-12', 'velocidad') returning id into v_ses_v;
-    insert into medicion_velocidad (club_id, sesion_id, jugador_id, segundos) values
-      (v_club, v_ses_v, v_j_exist, 5.4), (v_club, v_ses_v, v_j_b, 4.1);
 
     -- Un plan vencido, el vigente (con una sesión hoy) y uno de U21M.
     insert into plan_fisico (club_id, plantel_id, nombre_archivo, hash_archivo)
@@ -554,17 +550,14 @@ begin
     if jsonb_array_length(j->'tiro') <> 2 then
       txt := txt || format('%s mediciones de tiro (esperaba 2); ', jsonb_array_length(j->'tiro'));
     end if;
-    if jsonb_array_length(j->'velocidad') <> 1 or (j->'velocidad'->0->>'segundos')::numeric <> 5.4 then
-      txt := txt || 'velocidad: ' || (j->>'velocidad') || '; ';
-    end if;
     if jsonb_array_length(j->'escalones') <> 2 then
       txt := txt || format('%s pesos (esperaba 2); ', jsonb_array_length(j->'escalones'));
     end if;
-    -- Los valores del otro chico: 77 puntos, 4,1 s, 60 kg, y su nombre.
-    if j::text ~ 'OTRO|"pts": 77|"segundos": 4\.1|"kg": 60' then txt := txt || 'aparece algo del otro chico; '; end if;
+    -- Los valores del otro chico: 77 puntos, 60 kg, y su nombre.
+    if j::text ~ 'OTRO|"pts": 77|"kg": 60' then txt := txt || 'aparece algo del otro chico; '; end if;
 
     if txt = '' then
-      estados[12] := 'OK'; detalles[12] := 'Su partido, sus 2 tiros, su velocidad y sus 2 pesos; nada del otro.';
+      estados[12] := 'OK'; detalles[12] := 'Su partido, sus 2 tiros y sus 2 pesos; nada del otro.';
     else
       estados[12] := 'FALLA'; detalles[12] := txt;
     end if;

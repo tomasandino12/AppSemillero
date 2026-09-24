@@ -100,7 +100,7 @@ async function verificarCoordinador() {
   if (errorClub) { falla(`no se pudo leer el club: ${errorClub.message}`); return; }
 
   for (const tabla of ['jugador', 'pertenencia', 'partido', 'estadistica_jugador_partido',
-    'sesion_medicion', 'medicion_tiro', 'medicion_velocidad', 'medicion_corporal']) {
+    'sesion_medicion', 'medicion_tiro', 'medicion_salto', 'medicion_corporal']) {
     const { data, error } = await cliente.from(tabla).select('id').limit(1);
     if (error) falla(`${tabla}: error inesperado ${error.message}`);
     else if (data.length) falla(`${tabla}: el coordinador lee filas (¿0018 sin aplicar?)`);
