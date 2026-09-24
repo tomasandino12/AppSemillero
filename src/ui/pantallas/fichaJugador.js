@@ -15,7 +15,6 @@ import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../dat
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
   ALTURA_MIN_CM, ALTURA_MAX_CM, PESO_MIN_KG, PESO_MAX_KG,
-  PIERNA_MIN_CM, PIERNA_MAX_CM, PIERNA_FLEXIONADA_MIN_CM, PIERNA_FLEXIONADA_MAX_CM,
 } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast } from '../nav.js';
@@ -27,6 +26,7 @@ import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjet
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { botonIcono, ICONO } from '../componentes/iconos.js';
 import { abrirGuiaSalto } from '../componentes/guiaSalto.js';
+import { abrirProtocoloCorporal } from '../componentes/protocoloCorporal.js';
 import { html, crudo } from '../html.js';
 import { $ } from '../dom.js';
 import { avisoDeError, textoDeError, mensajeAlGuardar } from '../errores.js';
@@ -235,7 +235,7 @@ function tarjetaSalto(s, chica) {
         <span>${decimalEs(m.tiempoVueloMs / 1000, 2)} s en el aire</span>
         ${conPotencia ? html`<span>${Math.round(m.potenciaW)} W</span>` : ''}
       </div>
-      ${conPotencia ? '' : html`<div class="det sin">Sin potencia: falta peso o medidas de pierna.</div>`}
+      ${conPotencia ? '' : html`<div class="det sin">Sin potencia: falta peso o medidas de pierna. <button type="button" class="btn chico sec" data-como-medir>¿Cómo medirlas?</button></div>`}
       ${s.intentos.length > 1 && s.rangoCm != null
         ? html`<div class="det">${s.intentos.length} intentos · ${decimalEs(s.rangoCm)} cm entre el mejor y el peor</div>`
         : ''}
@@ -386,6 +386,7 @@ export async function renderFicha() {
     dibujarSerie('ficha-triples', series.triples);
     dibujarSerie('ficha-libres', series.libres);
     $('btn-guia-salto')?.addEventListener('click', () => abrirGuiaSalto(club));
+    $('ficha-historia').querySelectorAll('[data-como-medir]').forEach((b) => b.addEventListener('click', () => abrirProtocoloCorporal(club)));
   } catch (e) {
     $('ficha-historia').innerHTML = `<div class="al"><div class="tx">${
       textoDeError(e, 'No se pudo cargar la historia del jugador.')
@@ -595,7 +596,7 @@ function renderCorporal(clubId, idJugador, mediciones) {
         <input id="in-pierna-flexionada" type="text" inputmode="decimal" autocomplete="off" placeholder="—">
       </div>
     </div>
-    <div class="ayuda">Sólo para la potencia del salto. Extendida: del trocánter a la punta del pie (entre ${PIERNA_MIN_CM} y ${PIERNA_MAX_CM} cm). Flexionada: del trocánter al piso en cuclillas a 90° (entre ${PIERNA_FLEXIONADA_MIN_CM} y ${PIERNA_FLEXIONADA_MAX_CM} cm). Cualquiera de los cuatro datos se puede dejar vacío.</div>
+    <div class="ayuda">Las dos piernas son sólo para la potencia del salto. Cualquiera de los cuatro datos se puede dejar vacío. <button type="button" class="btn chico sec" id="btn-como-medir">¿Cómo medir?</button></div>
     <div id="corporal-aviso"></div>
     <button class="btn" id="btn-agregar-medicion">Agregar medición</button>
   `;
@@ -616,6 +617,8 @@ function renderCorporal(clubId, idJugador, mediciones) {
       await cargarCorporal(clubId, idJugador);
     });
   });
+
+  $('btn-como-medir').addEventListener('click', () => abrirProtocoloCorporal(obtenerClubActual()));
 
   $('btn-agregar-medicion').addEventListener('click', async () => {
     const boton = $('btn-agregar-medicion');
