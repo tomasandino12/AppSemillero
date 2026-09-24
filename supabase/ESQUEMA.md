@@ -194,7 +194,7 @@ Qué cuenta de Auth ve a qué jugador: `(id, user_id, club_id, jugador_id, desde
 | `mi_ficha()` | club, nombre propio y planteles con pertenencia vigente. Null si no hay cuenta vigente: es lo que arranca la app. |
 | `mis_recursos()` | sólo los `envio_recurso` dirigidos a él. |
 | `mi_plan()` | por cada plantel suyo, el plan vigente (mismo criterio que `elegirPlanVisible`) con sus sesiones y líneas, más `pesos`: **su** último peso en cada ejercicio, con la clave para unirlo a la línea en el cliente (`clavearNombre` es JS y no se reproduce en SQL). |
-| `mi_progreso()` | `partidos`, `tiro`, `saltos` (0044: por sesión, `test` e `intentos` con `tiempoVueloMs`), `sprints` (0048: por sesión, `distanciaM` e `intentos` con `tiempoMs` y `origen`) y `escalones`, todo propio. Sin medidas corporales, sin promedios ni nombres de otros. |
+| `mi_progreso()` | `partidos`, `tiro`, `saltos` (0044: por sesión, `test` e `intentos` con `tiempoVueloMs`), `sprints` (0048: por sesión, `distanciaM` e `intentos` con `tiempoMs` y `origen`), `yoyos` (0049: por sesión, `idas` y `origen`) y `escalones`, todo propio. Sin medidas corporales, sin promedios ni nombres de otros. |
 
 Con la cuenta cerrada devuelven null o cero filas, y no se borra nada. `src/data/accesoJugador.js` declara todo lo que 0029 y 0030 otorgan con `grant execute`, y `tests/contratoAccesoJugador.test.js` falla si aparece un grant que no está ahí. Sumar una función para el jugador es una RPC, una pantalla y una línea en `TABS_JUGADOR`; sacarla es `revoke execute`.
 
@@ -253,6 +253,15 @@ Sprint de 20 o 30 m con cronómetro de salida en el celular (spec `docs/superpow
 - `guardar_sesion_medicion` (0048) suma la rama `sprint`: `distanciaSprintM` obligatoria (y prohibida en tiro y salto), mediciones `{ jugadorId, intento, tiempoMs }`, misma idempotencia por `sesionId` (el reintento tiene que coincidir también en la distancia).
 - `tests/contratoSprint.test.js` compara los rangos con `sprint.js`; `tests/contratoRpcSprint.test.js`, que 0048 no haya perdido ninguna rama ni garantía de 0045.
 
+### Yo-Yo: `medicion_yoyo` (0049)
+Yo-Yo Endurance L1 (idas de 20 m) con pitidos de la app (spec `docs/superpowers/specs/2026-09-24-sprint-y-yoyo-design.md`, etapa B).
+
+- `sesion_medicion.tipo` suma `yoyo`; no lleva test ni distancia (los checks de 0043 y 0048 los prohíben en los demás tipos).
+- `medicion_yoyo`: una fila por jugador (`unique (sesion_id, jugador_id)`), `idas` (`smallint`, 0–223; NULL = ausente, nunca 0: 0 idas es un dato real) y `origen` como en `medicion_sprint`. **Se guardan las idas, nunca el nivel ni los metros**: `src/data/yoyo.js` los calcula.
+- RLS, grants (sin `origen` en el insert) y sellado, como `medicion_sprint`; el insert exige sesión de tipo `yoyo`.
+- `guardar_sesion_medicion` (0049) suma la rama `yoyo` (mediciones `{ jugadorId, idas }`); conserva todo lo de 0048.
+- `tests/contratoYoyo.test.js` compara el tope de idas con `IDAS_MAX`; `tests/contratoRpcYoyo.test.js`, que 0049 no perdió nada de 0048.
+
 ## Políticas RLS
 
 Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde 0016 pasa por la asignación, y **lectura y escritura son ejes separados**. Desde 0018 el coordinador no lee datos individuales.
@@ -299,7 +308,7 @@ Son `security definer` por obligación, no por comodidad: se llaman desde las po
 |---|---|
 | `plantel_id` directo | `plantel`, `pertenencia`, `partido`, `sesion_medicion`, `meta_zona` |
 | vía `partido_id` | `estadistica_jugador_partido` |
-| vía `sesion_id` | `medicion_tiro`, `medicion_salto`, `medicion_sprint` |
+| vía `sesion_id` | `medicion_tiro`, `medicion_salto`, `medicion_sprint`, `medicion_yoyo` |
 | vía `pertenencia` del jugador | `jugador`, `medicion_corporal`, `envio_recurso` |
 
 Un chico citado en dos categorías tiene dos pertenencias vigentes: con que **alguna** dé acceso alcanza.
