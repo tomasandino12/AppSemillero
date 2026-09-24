@@ -361,14 +361,24 @@ primaria.**
      (la app, `fpsDeCaptura`, sí lo lee: 240).
    - **Decisión:** el marcador no usa rVFC. Lee la tabla de cuadros del `moov`
      (`src/data/tablaCuadros.js`) y se mueve por índice de cuadro.
-4b. **Prueba de la app (2026-09-23).** Al elegir un video desde el celular, el
-   editor se abría con el video en negro. **Causa:** la CSP de `vercel.json`
-   no tenía `media-src`, así que regía `default-src 'self'`, que bloquea el
-   objectURL (`blob:`) del video ("Media load rejected by URL safety check").
-   En local no pasa porque la CSP la pone Vercel. Se agregó `media-src blob:`
-   y lo cuida `tests/csp.test.js`. De paso se separó la clase del editor
-   (`.marcador-cuadros`) de la del resultado del partido. Falta reprobar en el
-   S24 FE.
+4b. **Prueba de la app (2026-09-23).** Al elegir un video, el editor se abría
+   con el video en negro. **Causa:** la CSP de `vercel.json` no tenía
+   `media-src`, así que regía `default-src 'self'`, que bloquea el objectURL
+   (`blob:`) del video ("Media load rejected by URL safety check"). Agregar
+   `media-src blob:` no alcanzó en el celular: el HTML no había cambiado, el
+   navegador lo revalidaba con el ETag y **el 304 de Vercel no trae la CSP**,
+   así que seguía la vieja aunque se reiniciara el teléfono. El HTML pasó a
+   `Cache-Control: no-store` (lo cuida `tests/csp.test.js`).
+   **Verificado en el S24 FE:** se marcó y guardó un CMJ (24,4 cm, 0,45 s) y
+   aparece en la ficha.
+4c. **Quick Share recomprime la cámara lenta.** El mismo video pasado a la PC
+   llegó con 1044 cuadros en vez de 2022, 35 s en vez de ~67 s, sin
+   `com.android.capture.fps` y sin el cuadro 0 suelto: es la versión que
+   muestra la galería, lenta sólo en algunos tramos. Un salto en un tramo a
+   velocidad normal ocupa ~14 cuadros; uno en un tramo lento a medias da una
+   altura creíble pero equivocada. El marcador avisa cuando el archivo no trae
+   los fps de captura y cuando el vuelo sólo cierra a velocidad normal. Para
+   medir en la PC, pasar el archivo por cable USB.
 5. **Salto real.** 3 CMJ filmados; marcar los cuadros y ver que la
    dispersión entre intentos sea de menos de ~1 cm.
 6. **Sprint.** Ver qué lentes permite el modo "Cámara lenta" (¿gran angular?)

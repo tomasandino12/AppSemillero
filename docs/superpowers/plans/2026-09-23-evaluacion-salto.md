@@ -18,9 +18,9 @@ migraciones 0001–0044 **aplicadas en remoto** (0043 y 0044 son las del salto).
 | 4 (RPCs 0044) | hecha y aplicada | c7990ad |
 | 5 | hecha | d3c6038 |
 | 6 | hecha | e6fe0d5 |
-| 7 (pantalla MEDIR → Salto) | hecha; video en negro: faltaba `media-src blob:` en la CSP | 57b7669, 5047fc1, (este) |
-| 8 (ficha y progreso) | hecha, **falta verificar en el celular** | b235870 |
-| 9 (cierre) | código y docs hechos; **falta la prueba en el celular** (elegir video → marcar → guardar → ficha) | |
+| 7 (pantalla MEDIR → Salto) | hecha | 57b7669 |
+| 8 (ficha y progreso) | hecha; ficha verificada en el celular (progreso del jugador sin mirar) | b235870, 59dd91d |
+| 9 (cierre) | hecha: video en negro (CSP + 304), avisos de cámara lenta perdida | 5047fc1…e4de0ee |
 
 Para retomar: mirar esta tabla, `git log --oneline -15` y `migration list`
 antes de asumir qué falta.
