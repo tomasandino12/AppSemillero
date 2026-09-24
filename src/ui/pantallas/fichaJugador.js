@@ -10,7 +10,9 @@ import {
   serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador,
   ejeComun, compararPorcentajes,
 } from '../../data/estadisticas.js';
-import { sesionesDeSalto, ultimaYAnteriores, TESTS_SALTO } from '../../data/salto.js';
+import {
+  sesionesDeSalto, ultimaYAnteriores, potenciaPrincipal, TESTS_SALTO,
+} from '../../data/salto.js';
 import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
@@ -223,18 +225,23 @@ const decimalEs = (n, dec = 1) => n.toFixed(dec).replace('.', ',');
  */
 function tarjetaSalto(s, chica) {
   const m = s.mejor;
-  const conPotencia = m.potenciaWKg != null;
+  const principal = potenciaPrincipal(m);
+  const etiqueta = { pico: 'Potencia pico', media: 'Potencia media' };
+  // Con el pico como cifra, la media sale aparte (si hay piernas); y viceversa no hace falta.
+  const mediaAparte = principal?.tipo === 'pico' && m.potenciaWKg != null;
+  const faltaMedia = principal?.tipo === 'pico' && m.potenciaWKg == null;
   return html`
     <div class="tarj salto-tarj${chica ? ' chica' : ''}">
       <div class="det">${formatearFechaCorta(s.fecha)}</div>
-      <div class="cifra-clave">${conPotencia ? decimalEs(m.potenciaWKg) : decimalEs(m.alturaCm)}<span class="u">${conPotencia ? 'W/kg' : 'cm'}</span></div>
-      <span class="etq">${conPotencia ? 'Parámetro clave' : 'Altura'}</span>
+      <div class="cifra-clave">${principal ? decimalEs(principal.wKg) : decimalEs(m.alturaCm)}<span class="u">${principal ? 'W/kg' : 'cm'}</span></div>
+      <span class="etq">${principal ? etiqueta[principal.tipo] : 'Altura'}</span>
       <div class="salto-datos">
-        ${conPotencia ? html`<span>${decimalEs(m.alturaCm)} cm</span>` : ''}
+        ${principal ? html`<span>${decimalEs(m.alturaCm)} cm</span>` : ''}
         <span>${decimalEs(m.tiempoVueloMs / 1000, 2)} s en el aire</span>
-        ${conPotencia ? html`<span>${Math.round(m.potenciaW)} W</span>` : ''}
+        ${principal ? html`<span>${Math.round(principal.w)} W</span>` : ''}
+        ${mediaAparte ? html`<span>media ${decimalEs(m.potenciaWKg)} W/kg</span>` : ''}
       </div>
-      ${conPotencia ? '' : html`<div class="det sin">Sin potencia: falta peso o medidas de pierna. <button type="button" class="btn chico sec" data-como-medir>¿Cómo medirlas?</button></div>`}
+      ${principal && !faltaMedia ? '' : html`<div class="det sin">${faltaMedia ? 'Sin potencia media: faltan las medidas de pierna.' : 'Sin potencia: falta el peso o las medidas de pierna.'} <button type="button" class="btn chico sec" data-como-medir>¿Cómo medirlas?</button></div>`}
       ${s.intentos.length > 1 && s.rangoCm != null
         ? html`<div class="det">${s.intentos.length} intentos · ${decimalEs(s.rangoCm)} cm entre el mejor y el peor</div>`
         : ''}
@@ -250,9 +257,9 @@ function filaSaltoAnterior(s) {
     <div class="fila-ev tres">
       <div class="f">${formatearFechaCorta(s.fecha)}</div>
       <div>${decimalEs(s.mejor.alturaCm)} cm</div>
-      <div>${s.mejor.potenciaWKg == null
+      <div>${potenciaPrincipal(s.mejor) == null
     ? crudo('<span class="sin">sin potencia</span>')
-    : `${decimalEs(s.mejor.potenciaWKg)} W/kg`}</div>
+    : `${decimalEs(potenciaPrincipal(s.mejor).wKg)} W/kg`}</div>
     </div>
   `;
 }

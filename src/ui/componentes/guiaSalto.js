@@ -1,12 +1,12 @@
-// Guía de interpretación del salto: qué mide cada número y por qué el W/kg
-// es el que importa. Los ejemplos se calculan con las mismas funciones que
+// Guía de interpretación del salto: qué mide cada número, en qué se
+// diferencian la potencia pico y la media, y por qué el W/kg es el que importa. Los ejemplos se calculan con las mismas funciones que
 // usa la ficha, así el texto no se desalinea si cambia la fórmula.
 import { html, crudo } from '../html.js';
 import { abrirHoja, cerrarHoja } from './hoja.js';
 import { ICONO } from './iconos.js';
 import { $ } from '../dom.js';
 import { etiquetaMetodologia } from '../../data/metodologia.js';
-import { alturaDeSalto, potenciaSamozino } from '../../data/salto.js';
+import { alturaDeSalto, potenciaSamozino, potenciaSayers } from '../../data/salto.js';
 
 const coma = (n, dec = 1) => n.toFixed(dec).replace('.', ',');
 
@@ -18,8 +18,9 @@ const BASE = {
 };
 
 function ejemplo(nombre, datos) {
-  const p = potenciaSamozino(datos);
-  return html`<li><strong>${nombre}:</strong> ${datos.masaKg} kg, salta ${datos.alturaCm} cm, pierna extendida ${datos.piernaCm} y flexionada ${datos.piernaFlexionadaCm} → <span class="mono">${Math.round(p.potenciaW)} W · ${coma(p.potenciaWKg)} W/kg</span></li>`;
+  const media = potenciaSamozino(datos);
+  const pico = potenciaSayers({ ...datos, test: 'cmj' });
+  return html`<li><strong>${nombre}:</strong> ${datos.masaKg} kg, salta ${datos.alturaCm} cm → pico <span class="mono">${Math.round(pico.potenciaW)} W · ${coma(pico.potenciaWKg)} W/kg</span>, media <span class="mono">${coma(media.potenciaWKg)} W/kg</span></li>`;
 }
 
 export function abrirGuiaSalto(club) {
@@ -39,9 +40,18 @@ export function abrirGuiaSalto(club) {
       </div>
     </div>
 
+    <div class="guia-paso">
+      <span class="num">2</span><span class="tit">Dos potencias: pico y media</span>
+      <div class="cuerpo">
+        <p><strong>Pico (Sayers):</strong> lo máximo que llega a empujar en un instante. Sale del peso y la altura, sólo en CMJ. Es la que aparece en la mayoría de las tablas y plataformas de fuerza: usala para comparar con otros deportistas.</p>
+        <p><strong>Media (Samozino):</strong> el promedio durante todo el empuje. Usa además las dos medidas de pierna. Siempre da bastante menos que el pico, y es normal: no son comparables entre sí.</p>
+        <p>En Abalakov (brazos libres) el pico no está validado, así que sólo se muestra la media.</p>
+      </div>
+    </div>
+
     <div class="guia-clave">
-      <div class="tit">2 · ¿Por qué W/kg? El parámetro clave</div>
-      <p>Mide la potencia en relación con el propio peso, así que sirve para comparar chicos de distinto tamaño. Un ejemplo:</p>
+      <div class="tit">3 · ¿Por qué W/kg? El parámetro clave</div>
+      <p>Mide la potencia en relación con el propio peso, así que sirve para comparar chicos de distinto tamaño. Un ejemplo con CMJ:</p>
       <ul class="lista-guia">
         ${ejemplo('Pivot', PIVOT)}
         ${ejemplo('Base', BASE)}
@@ -50,9 +60,9 @@ export function abrirGuiaSalto(club) {
     </div>
 
     <div class="guia-paso">
-      <span class="num">3</span><span class="tit">Watts o W/kg, y cómo comparar</span>
+      <span class="num">4</span><span class="tit">Qué hace falta y cómo comparar</span>
       <div class="cuerpo">
-        <p>La potencia usa el peso, la pierna extendida y la pierna flexionada, tomados a la fecha del salto. Si falta alguno de los tres, aparece "sin datos".</p>
+        <p>El pico necesita el peso. La media necesita también la pierna extendida y la flexionada, tomadas a la fecha del salto. Si falta algo, esa potencia no aparece.</p>
         <p>Comparalo con el mismo chico, con el mismo test (CMJ con CMJ) y con el mismo protocolo de filmación.</p>
       </div>
     </div>

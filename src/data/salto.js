@@ -94,7 +94,34 @@ export function potenciaSamozino({
   };
 }
 
-const intentosValidos = (intentos) => (intentos ?? []).filter((i) => sabido(i?.tiempoVueloMs));
+/**
+ * Potencia pico de Sayers et al. (1999) para CMJ: sólo necesita peso y altura,
+ * no las piernas. Es la cifra con la que se compara todo el mundo (plataformas
+ * de fuerza, My Jump Lab). Sólo vale para CMJ: con brazos libres (Abalakov) no
+ * está validada, así que ahí es null. Los coeficientes vienen de la
+ * publicación; si se cambian, cambian también en la guía del salto.
+ */
+export const SAYERS_CMJ = { porCm: 51.9, porKg: 48.9, constante: -2007 };
+
+export function potenciaSayers({ masaKg, alturaCm, test }) {
+  if (test !== 'cmj' || !sabido(masaKg) || !sabido(alturaCm)) return null;
+  if (masaKg <= 0 || alturaCm < 0) return null;
+  const potenciaW = SAYERS_CMJ.porCm * alturaCm + SAYERS_CMJ.porKg * masaKg + SAYERS_CMJ.constante;
+  if (potenciaW <= 0) return null;
+  return { potenciaW, potenciaWKg: potenciaW / masaKg };
+}
+
+/**
+ * La potencia que va de cifra principal: el pico de Sayers si hay (CMJ con
+ * peso), si no la media de Samozino. `tipo` dice cuál es, para rotularla.
+ */
+export function potenciaPrincipal(mejor) {
+  if (mejor?.picoWKg != null) return { tipo: 'pico', w: mejor.picoW, wKg: mejor.picoWKg };
+  if (mejor?.potenciaWKg != null) return { tipo: 'media', w: mejor.potenciaW, wKg: mejor.potenciaWKg };
+  return null;
+}
+
+const intentosValidos =(intentos) => (intentos ?? []).filter((i) => sabido(i?.tiempoVueloMs));
 
 /** El de mayor altura, que es el de mayor tiempo de vuelo. null si no saltó. */
 export function mejorIntento(intentos) {
@@ -146,21 +173,26 @@ export function sesionesDeSalto(intentos, corporales) {
       const mejor = mejorIntento(s.intentos);
       if (!mejor) return { ...s, mejor: null, rangoCm: null };
       const alturaCm = alturaDeSalto(mejor.tiempoVueloMs / 1000);
+      const masaKg = corporales ? vigenteALaFecha(corporales, s.fecha, 'pesoKg') : null;
       const potencia = corporales
         ? potenciaSamozino({
-          masaKg: vigenteALaFecha(corporales, s.fecha, 'pesoKg'),
+          masaKg,
           alturaCm,
           piernaCm: vigenteALaFecha(corporales, s.fecha, 'piernaCm'),
           piernaFlexionadaCm: vigenteALaFecha(corporales, s.fecha, 'piernaFlexionadaCm'),
         })
         : null;
+      const pico = potenciaSayers({ masaKg, alturaCm, test: s.testSalto });
       return {
         ...s,
         mejor: {
           tiempoVueloMs: mejor.tiempoVueloMs,
           alturaCm,
+          // Media de Samozino (necesita las piernas) y pico de Sayers (sólo CMJ).
           potenciaW: potencia?.potenciaW ?? null,
           potenciaWKg: potencia?.potenciaWKg ?? null,
+          picoW: pico?.potenciaW ?? null,
+          picoWKg: pico?.potenciaWKg ?? null,
         },
         rangoCm: rangoDeIntentos(s.intentos),
       };

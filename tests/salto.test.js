@@ -5,6 +5,7 @@ import {
   cuadrosEntre, tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo,
   potenciaSamozino, mejorIntento, rangoDeIntentos, vigenteALaFecha, sesionesDeSalto,
   pareceSinCamaraLenta, ultimaYAnteriores,
+  potenciaSayers, potenciaPrincipal,
 } from '../src/data/salto.js';
 
 const cerca = (real, esperado, tolerancia = 0.01) => assert.ok(
@@ -182,4 +183,31 @@ test('ultimaYAnteriores sin sesiones de ese test devuelve null', () => {
   assert.equal(ultimaYAnteriores([], 'cmj'), null);
   assert.equal(ultimaYAnteriores([{ sesionId: 'a', testSalto: 'abalakov', mejor: { alturaCm: 1 } }], 'cmj'), null);
   assert.equal(ultimaYAnteriores([{ sesionId: 'a', testSalto: 'cmj', mejor: null }], 'cmj'), null);
+});
+
+test('Sayers (CMJ): 92 kg y 24 cm dan ~3740 W; sin CMJ o sin peso es null', () => {
+  const r = potenciaSayers({ masaKg: 92, alturaCm: 24, test: 'cmj' });
+  assert.equal(Math.round(r.potenciaW), 3737);
+  assert.equal(r.potenciaWKg.toFixed(1), '40.6');
+  assert.equal(potenciaSayers({ masaKg: 92, alturaCm: 24, test: 'abalakov' }), null);
+  assert.equal(potenciaSayers({ masaKg: null, alturaCm: 24, test: 'cmj' }), null);
+});
+
+test('el CMJ con peso tiene pico aunque falten las piernas; el Abalakov sólo media', () => {
+  const intentos = [
+    { sesionId: 'a', fecha: '2026-09-01', testSalto: 'cmj', intento: 1, tiempoVueloMs: 440 },
+    { sesionId: 'b', fecha: '2026-09-02', testSalto: 'abalakov', intento: 1, tiempoVueloMs: 440 },
+  ];
+  const sinPiernas = sesionesDeSalto(intentos, [{ fechaMedicion: '2026-08-01', pesoKg: 90 }]);
+  const cmj = sinPiernas.find((s) => s.testSalto === 'cmj').mejor;
+  assert.ok(cmj.picoWKg > 0);
+  assert.equal(cmj.potenciaWKg, null);
+  assert.equal(potenciaPrincipal(cmj).tipo, 'pico');
+  const completo = sesionesDeSalto(intentos, [
+    { fechaMedicion: '2026-08-01', pesoKg: 90, piernaCm: 118, piernaFlexionadaCm: 81 },
+  ]);
+  const aba = completo.find((s) => s.testSalto === 'abalakov').mejor;
+  assert.equal(aba.picoWKg, null);
+  assert.equal(potenciaPrincipal(aba).tipo, 'media');
+  assert.equal(potenciaPrincipal({ potenciaWKg: null, picoWKg: null }), null);
 });

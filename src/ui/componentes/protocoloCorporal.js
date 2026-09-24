@@ -18,7 +18,7 @@ export function abrirProtocoloCorporal(club) {
       <span class="ico">${crudo(ICONO.piernaExtendida)}</span>
       <span class="tit">Protocolo de medidas</span>
       <span class="tag-metodo">${etiquetaMetodologia(club)}</span>
-      <p class="sub">Con estas medidas y el peso se calcula la potencia del salto.</p>
+      <p class="sub">Con estas medidas y el peso se calcula la potencia media del salto.</p>
     </div>
 
     <div class="guia-paso">
@@ -46,7 +46,7 @@ export function abrirProtocoloCorporal(club) {
     </div>
 
     <div class="guia-clave">
-      Cualquiera de las medidas se puede dejar vacía. Sin las dos medidas de pierna y el peso no hay potencia.
+      Cualquiera de las medidas se puede dejar vacía. Sin las dos medidas de pierna y el peso no hay potencia media.
     </div>
 
     <button type="button" class="btn" id="guia-corporal-ok">Entendido</button>
