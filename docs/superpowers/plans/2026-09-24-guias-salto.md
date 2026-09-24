@@ -10,7 +10,7 @@ Antes de tocar CSS o una pantalla: leer DESIGN.md (tokens, "Reglas duras", "Chec
 
 | Task | Estado | Commit |
 |---|---|---|
-| 1 etiqueta pura | pendiente | |
+| 1 etiqueta pura | hecha | ver git log |
 | 2 migración 0046 | pendiente | |
 | 3 repo clubes | pendiente | |
 | 4 estilos de guía | pendiente | |
