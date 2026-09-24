@@ -184,6 +184,26 @@ de 2 puntos [17] es la puerta de entrada.
 Por eso hoy ese dato no se compara con el CReAR, que usa fotocélulas, ni
 detecta mejoras de décimas.
 
+**Método actual (0048, sin tecnología).** Sprint de 30 m (20 m si no hay 30
+despejados) desde parado, con la app como cronómetro de salida: da la voz "En
+sus marcas… listos…", espera un tiempo al azar de 1 a 2 s y suena un pitido.
+**El cero del reloj es el instante programado del pitido** en el reloj del
+audio, no el toque del profe; el profe toca una sola vez, en la llegada (con
+`pointerdown`, que no suma la demora del `click`). Queda **una** reacción
+humana, siempre la misma persona, en lugar de las dos del cronómetro manual.
+Dos intentos, cuenta el mejor. Se muestra en décimas: las centésimas serían
+falsa precisión.
+
+Sirve para **compararse contra uno mismo** (mismo profe, misma pista), no
+contra el CReAR: no decimos que estos tiempos equivalen a los de las
+fotocélulas. Por eso cada medición lleva `origen` (`propio` | `crear`) y un
+dato del CReAR queda marcado "CReAR · más exacto".
+
+**Por qué no MySprint por ahora.** Pide trípode, seis postes con la geometría
+corrida por el paralaje y gran angular (o filmar a ~20 m), más los 30 m
+despejados que una cancha de 28 m no da. Es mucha logística para un profe solo
+en la cancha. Queda como alternativa, no descartada.
+
 **Método MySprint** (Romero-Franco 2017 [23]): un solo celular filmando de
 costado. Contra fotocélulas, los parciales dieron r = 0,989–0,999.
 
