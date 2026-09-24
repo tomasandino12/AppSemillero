@@ -377,23 +377,6 @@ svg.g{width:100%;display:block;overflow:visible}
 .acciones-bateria{display:flex;gap:var(--sp-2);margin-top:var(--sp-4)}
 .acciones-bateria .btn{flex:1}
 
-/* Etapa 4 — carga de velocidad */
-.lista-vel{display:flex;flex-direction:column;margin:var(--sp-3) 0}
-.vel-fila{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;width:100%;min-height:56px;padding:6px 2px;border:0;border-bottom:1px solid var(--linea);background:none;text-align:left}
-.vel-fila .nom{font-size:var(--fs-145);color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.vel-fila .caja{min-width:4.5rem;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--linea);color:var(--gris-cl);font-family:var(--ff-mono);font-size:var(--fs-190);font-weight:600}
-.vel-fila .caja.si{background:var(--primario-cl);color:var(--tinta)}
-.vel-fila.on .caja{outline:2px solid var(--primario);outline-offset:1px;color:var(--tinta)}
-.vel-fila .u{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-
-/* Teclado propio, portado del prototipo. Teclas grandes para cargar de pie en
-   la cancha, y sólo dígitos y una coma: nada de tipear precisión falsa. */
-.kb{position:fixed;left:0;right:0;bottom:0;z-index:45;display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);padding:var(--sp-2);padding-bottom:calc(var(--sp-2) + env(safe-area-inset-bottom));background:var(--linea);transform:translateY(110%);transition:transform var(--dur-2) var(--ease-salida)}
-.kb.on{transform:translateY(0)}
-.kb button{min-height:56px;border:0;border-radius:9px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-220);font-weight:600}
-.kb button.ac{background:var(--negro);color:var(--papel);font-size:var(--fs-190)}
-.kb button.ok{grid-column:1 / -1;background:var(--primario);color:var(--sobre-club);font-family:var(--ff-titulo);font-size:var(--fs-160);letter-spacing:.08em;text-transform:uppercase}
-
 /* Etapa 4 — evolución del equipo */
 .tabla-ev{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .fila-ev{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:var(--sp-2);align-items:baseline;padding:var(--sp-2) 0;border-bottom:1px solid var(--linea);font-size:var(--fs-135)}

@@ -135,7 +135,7 @@ test('un partido sin estadísticas cargadas no rompe la evolución', () => {
 const SESIONES = [
   { id: 's1', fecha: '2026-03-05', tipo: 'tiro' },
   { id: 's2', fecha: '2026-04-05', tipo: 'tiro' },
-  { id: 's3', fecha: '2026-04-05', tipo: 'velocidad' },
+  { id: 's3', fecha: '2026-04-05', tipo: 'salto' },
 ];
 
 // s1: 5 posiciones de arco a 4/10 cada una = 20/50, y libres 8/10.
@@ -436,10 +436,10 @@ test('cada punto de la serie lleva su fracción real', () => {
   assert.equal(p.valor.intentos, 20);
 });
 
-test('las sesiones de velocidad no generan puntos en la serie de tiro', () => {
+test('las sesiones de salto no generan puntos en la serie de tiro', () => {
   const ses = [
     { id: 's1', fecha: '2026-03-01', tipo: 'tiro' },
-    { id: 'sv', fecha: '2026-04-01', tipo: 'velocidad' },
+    { id: 'ss', fecha: '2026-04-01', tipo: 'salto' },
   ];
   const med = [{ sesionId: 's1', jugadorId: 'a', posicion: 'frontal', anotados: 3, intentos: 10 }];
   assert.equal(serieDeZonas(ses, med, ['frontal']).length, 1);

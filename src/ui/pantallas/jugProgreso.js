@@ -82,25 +82,6 @@ function seccionCancha(bateria) {
   `;
 }
 
-/** Sin gráfico de tendencia: con un intento por sesión y ~0,2 s de error de cronómetro, una línea mentiría. */
-function seccionVelocidad(velocidad) {
-  const medidas = velocidad.filter((v) => v.segundos != null).sort((a, b) => b.fecha.localeCompare(a.fecha));
-  if (!medidas.length) {
-    return html`<div class="eyebrow">Velocidad</div><div class="p">Todavía no te midieron la velocidad.</div>`;
-  }
-  return html`
-    <div class="eyebrow">Velocidad</div>
-    <div class="tabla-ev">
-      ${medidas.map((v) => html`
-        <div class="fila-ev dos">
-          <div class="f">${formatearFechaCorta(v.fecha)}</div>
-          <div>${v.segundos.toFixed(1)} s</div>
-        </div>
-      `)}
-    </div>
-  `;
-}
-
 const NOMBRE_TEST_SALTO = { cmj: 'CMJ', abalakov: 'Abalakov' };
 
 /**
@@ -205,13 +186,13 @@ export async function renderJugProgreso() {
     return;
   }
 
-  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.velocidad.length && !progreso.saltos.length && !progreso.escalones.length;
+  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.saltos.length && !progreso.escalones.length;
   if (vacio) {
     contenedor().innerHTML = html`
       <div class="pad">
         <div class="estado-vacio">
           <h2>Todavía no hay nada para mostrar</h2>
-          <div class="p">Cuando haya partidos, baterías de tiro, velocidad o pesos tuyos cargados, tu progreso aparece acá.</div>
+          <div class="p">Cuando haya partidos, baterías de tiro, saltos o pesos tuyos cargados, tu progreso aparece acá.</div>
         </div>
       </div>
     `;
@@ -232,7 +213,6 @@ export async function renderJugProgreso() {
       ${seccionSerie('jug-triples', 'Tiro de tres', series.triples, 'Todavía no hay datos de triples, ni de práctica ni de partido.')}
       ${seccionSerie('jug-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial, acumuladosDePartidos(progreso.partidos))}
-      ${seccionVelocidad(progreso.velocidad)}
       ${seccionSalto(progreso.saltos)}
       ${seccionPesos(pesos)}
     </div>

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { prepararPayloadBateria, prepararPayloadVelocidad, prepararPayloadSalto, redondearSegundos } from '../src/data/prepararPayloadMedicion.js';
+import { prepararPayloadBateria, prepararPayloadSalto } from '../src/data/prepararPayloadMedicion.js';
 
 const BASE = { clubId: 'c1', plantelId: 'pl1', fecha: '2026-03-05' };
 
@@ -40,35 +40,9 @@ test('el borrador vacío no rompe', () => {
   assert.deepEqual(prepararPayloadBateria({ ...BASE, valores: undefined }).mediciones, []);
 });
 
-test('la velocidad se redondea a un decimal', () => {
-  assert.equal(redondearSegundos('4.73'), 4.7);
-  assert.equal(redondearSegundos('4.75'), 4.8);
-  assert.equal(redondearSegundos(5), 5);
-});
-
-test('un tiempo escrito con coma (teclado es-AR) se normaliza a punto y no se pierde', () => {
-  assert.equal(redondearSegundos('4,7'), 4.7);
-  assert.equal(redondearSegundos('4,75'), 4.8);
-  const p = prepararPayloadVelocidad({ ...BASE, valores: { j1: '4,7' } });
-  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', segundos: 4.7 }]);
-});
-
-test('una velocidad inválida o vacía no genera fila', () => {
-  assert.equal(redondearSegundos(''), null);
-  assert.equal(redondearSegundos(null), null);
-  assert.equal(redondearSegundos('abc'), null);
-  assert.equal(redondearSegundos('-3'), null);
-  assert.equal(redondearSegundos('0'), null);
-  const p = prepararPayloadVelocidad({ ...BASE, valores: { j1: '', j2: '4.62' } });
-  assert.deepEqual(p.mediciones, [{ jugadorId: 'j2', segundos: 4.6 }]);
-  assert.equal(p.tipo, 'velocidad');
-});
-
-test('el sesionId del borrador pasa al payload, en batería y en velocidad', () => {
+test('el sesionId del borrador pasa al payload de la batería', () => {
   const bateria = prepararPayloadBateria({ ...BASE, valores: { j1: { esq_izq: 7 } }, sesionId: 'sesion-1' });
   assert.equal(bateria.sesionId, 'sesion-1');
-  const velocidad = prepararPayloadVelocidad({ ...BASE, valores: { j1: '4.7' }, sesionId: 'sesion-2' });
-  assert.equal(velocidad.sesionId, 'sesion-2');
 });
 
 const SALTO = { ...BASE, sesionId: 's1', testSalto: 'cmj' };

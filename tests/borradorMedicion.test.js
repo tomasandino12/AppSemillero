@@ -26,7 +26,7 @@ function almacenQueTira() {
 test('la clave separa club, plantel y tipo', () => {
   const a = claveBorrador('u1', 'c1', 'pl1', 'tiro');
   const b = claveBorrador('u1', 'c1', 'pl2', 'tiro');
-  const c = claveBorrador('u1', 'c1', 'pl1', 'velocidad');
+  const c = claveBorrador('u1', 'c1', 'pl1', 'salto');
   assert.notEqual(a, b);
   assert.notEqual(a, c);
 });

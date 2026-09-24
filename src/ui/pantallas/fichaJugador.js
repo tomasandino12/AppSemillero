@@ -1,6 +1,6 @@
 import {
   obtenerJugadoresDelPlantel, obtenerPertenenciasDeJugador,
-  obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel, obtenerMedicionesVelocidadDelPlantel,
+  obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel,
   obtenerMedicionesSaltoDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
   obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
@@ -102,7 +102,7 @@ function bloqueDeSerie(id, titulo, serie, ayuda) {
     return `<div class="eyebrow">${titulo}</div><div class="p">${ayuda}</div>`;
   }
   // Más reciente primero, igual que el resto de las tablas de la ficha
-  // (partidos, velocidad).
+  // (partidos, salto).
   const tabla = (s) => (s.length ? `<div class="tabla-ev">${[...s].reverse().map(filaDePunto).join('')}</div>` : '');
   return `
     <div class="eyebrow">${titulo}</div>
@@ -210,36 +210,14 @@ function seccionPartidos(historial) {
   `;
 }
 
-/**
- * Velocidad: se listan los valores con su fecha y NO se grafica tendencia.
- * Con un intento por sesión y ~0.2s de error humano de cronómetro, una línea
- * de tendencia mentiría (spec, Decisión 6).
- */
-function seccionVelocidad(velocidades) {
-  if (!velocidades.length) {
-    return `<div class="eyebrow">Velocidad</div><div class="p">Sin medir.</div>`;
-  }
-  return `
-    <div class="eyebrow">Velocidad</div>
-    <div class="tabla-ev">
-      ${velocidades.map((v) => `
-        <div class="fila-ev dos">
-          <div class="f">${escaparHtml(formatearFechaCorta(v.fecha))}</div>
-          <div>${v.segundos.toFixed(1)} s</div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
 const NOMBRE_TEST_SALTO = { cmj: 'CMJ', abalakov: 'Abalakov' };
 
 const decimalEs = (n, dec = 1) => n.toFixed(dec).replace('.', ',');
 
 /**
  * Salto: el mejor intento de cada sesión, por test (CMJ y Abalakov no se
- * comparan entre sí). Sin gráfico de tendencia, por lo mismo que velocidad:
- * el error de un cuadro son ±2 cm y una línea mentiría. La potencia sólo sale
+ * comparan entre sí). Sin gráfico de tendencia: el error de un cuadro son
+ * ±2 cm y una línea mentiría. La potencia sólo sale
  * si hay peso y largos de pierna vigentes a esa fecha; si no, "sin datos".
  */
 function seccionSalto(sesiones) {
@@ -347,10 +325,9 @@ export async function renderFicha() {
   // están pintados arriba, así que un error de red trayendo la historia no
   // puede dejar la ficha entera en blanco.
   try {
-    const [sesiones, medicionesTiro, velocidades, saltos, corporales, partidos, estadisticas, envios] = await Promise.all([
+    const [sesiones, medicionesTiro, saltos, corporales, partidos, estadisticas, envios] = await Promise.all([
       obtenerSesionesDeMedicion(club.id, plantel.id),
       obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
-      obtenerMedicionesVelocidadDelPlantel(club.id, plantel.id),
       obtenerMedicionesSaltoDelPlantel(club.id, plantel.id),
       obtenerMedicionesCorporalesDeJugador(club.id, jugadorId),
       obtenerPartidosDelPlantel(club.id, plantel.id),
@@ -368,10 +345,6 @@ export async function renderFicha() {
       : bateria;
     const series = serieDeTiroDelJugador({ sesiones, medicionesTiro, partidos, estadisticas, jugadorId });
     const historial = historialDePartidosDelJugador(partidos, estadisticas, jugadorId);
-    const velocidadesDelJugador = velocidades
-      .filter((v) => v.jugadorId === jugadorId && v.segundos != null)
-      .sort((a, b) => b.fecha.localeCompare(a.fecha));
-
     const sesionesDeSaltoDelJugador = sesionesDeSalto(saltos.filter((x) => x.jugadorId === jugadorId), corporales);
 
     $('ficha-historia').innerHTML = `
@@ -379,7 +352,6 @@ export async function renderFicha() {
       ${bloqueDeSerie('ficha-triples', 'Tiro de tres', series.triples, 'Todavía no hay datos de triples, ni de práctica ni de partido.')}
       ${bloqueDeSerie('ficha-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial)}
-      ${seccionVelocidad(velocidadesDelJugador)}
       ${seccionSalto(sesionesDeSaltoDelJugador)}
       ${seccionRecursos(envios)}
     `;

@@ -1,5 +1,4 @@
 import { POSICIONES_BATERIA, INTENTOS_POR_POSICION } from './posiciones.js';
-import { decimalEstricto } from './numeros.js';
 
 /**
  * Borrador de batería → payload de guardar_sesion_medicion.
@@ -31,32 +30,6 @@ export function prepararPayloadBateria({ clubId, plantelId, fecha, valores, sesi
   }
 
   return { clubId, plantelId, fecha, tipo: 'tiro', mediciones, sesionId };
-}
-
-/**
- * Un decimal, siempre. Un cronómetro a mano tiene error humano de ~0.2s;
- * sobre 5 segundos eso es 4%. Mostrar centésimas sería precisión falsa.
- * Devuelve null para cualquier cosa que no sea un tiempo positivo.
- *
- * La coma se normaliza a punto antes de todo: el teclado numérico de un
- * celular en es-AR ofrece coma como tecla decimal, y Number('4,7') es NaN.
- * Sin esto, "4,7" se pierde en silencio y ese jugador no entra al payload.
- */
-export function redondearSegundos(valor) {
-  const n = decimalEstricto(valor);
-  if (n == null || !Number.isFinite(n) || n <= 0) return null;
-  return Math.round(n * 10) / 10;
-}
-
-/** Borrador de velocidad → payload. `valores` es { [jugadorId]: '4.7' }. */
-export function prepararPayloadVelocidad({ clubId, plantelId, fecha, valores, sesionId }) {
-  const mediciones = [];
-  for (const [jugadorId, crudo] of Object.entries(valores ?? {})) {
-    const segundos = redondearSegundos(crudo);
-    if (segundos == null) continue;
-    mediciones.push({ jugadorId, segundos });
-  }
-  return { clubId, plantelId, fecha, tipo: 'velocidad', mediciones, sesionId };
 }
 
 /**

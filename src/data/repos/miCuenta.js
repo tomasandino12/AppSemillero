@@ -105,7 +105,6 @@ export async function obtenerMiProgreso() {
   return {
     partidos: data?.partidos ?? [],
     tiro: data?.tiro ?? [],
-    velocidad: (data?.velocidad ?? []).map((v) => ({ ...v, segundos: numeroONulo(v.segundos) })),
     // Un ausente llega con tiempoVueloMs null: se preserva, no se vuelve 0.
     saltos: (data?.saltos ?? []).map((s) => ({
       ...s,

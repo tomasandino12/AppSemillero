@@ -17,7 +17,7 @@ const ARCHIVOS = [
 const LECTURAS_INDIVIDUALES = [
   'obtenerJugadoresDelClub', 'obtenerJugadoresDelPlantel', 'obtenerPartidosDelPlantel',
   'obtenerPertenenciasDeJugador', 'obtenerSesionesDeMedicion', 'obtenerMedicionesTiroDelPlantel',
-  'obtenerMedicionesVelocidadDelPlantel', 'obtenerEstadisticasDelPlantel', 'obtenerEnviosDeJugador',
+  'obtenerMedicionesSaltoDelPlantel', 'obtenerEstadisticasDelPlantel', 'obtenerEnviosDeJugador',
   'obtenerMedicionesCorporalesDeJugador', 'obtenerMedicionesCorporalesDelClub', 'obtenerMetasDelPlantel',
   'obtenerEjercicios', 'obtenerRecursos',
 ];

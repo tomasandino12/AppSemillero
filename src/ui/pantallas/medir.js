@@ -8,8 +8,8 @@ import { textoDeError } from '../errores.js';
 
 const contenedor = () => $('medir-contenido');
 
-const NOMBRE_TIPO = { tiro: 'Batería de tiro', velocidad: 'Velocidad', salto: 'Salto' };
-const PANTALLA_TIPO = { tiro: 'p-medir-bateria', velocidad: 'p-medir-velocidad', salto: 'p-medir-salto' };
+const NOMBRE_TIPO = { tiro: 'Batería de tiro', salto: 'Salto' };
+const PANTALLA_TIPO = { tiro: 'p-medir-bateria', salto: 'p-medir-salto' };
 
 /** 'YYYY-MM-DD' → 'DD/MM/YY', a mano para no depender de la zona horaria. */
 export function formatearFecha(iso) {
@@ -51,7 +51,6 @@ export async function renderMedir() {
 
   const borradores = {
     tiro: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'tiro')),
-    velocidad: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'velocidad')),
     salto: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'salto')),
   };
 
@@ -60,17 +59,12 @@ export async function renderMedir() {
       <div class="eyebrow">Medir ${escaparHtml(plantel.categoria)}</div>
       <div id="medir-borradores">
         ${borradores.tiro ? tarjetaBorrador(borradores.tiro, 'tiro') : ''}
-        ${borradores.velocidad ? tarjetaBorrador(borradores.velocidad, 'velocidad') : ''}
         ${borradores.salto ? tarjetaBorrador(borradores.salto, 'salto') : ''}
       </div>
       <div class="lista-2col">
         <button class="test-fila" id="btn-medir-bateria">
           <div class="ic">%</div>
           <div><div class="t">Batería de tiro</div><div class="d">6 posiciones, 10 tiros cada una</div></div>
-        </button>
-        <button class="test-fila" id="btn-medir-velocidad">
-          <div class="ic">s</div>
-          <div><div class="t">Velocidad</div><div class="d">Largo de cancha, un intento</div></div>
         </button>
         <button class="test-fila" id="btn-medir-salto">
           <div class="ic">↑</div>
@@ -84,7 +78,6 @@ export async function renderMedir() {
   `;
 
   $('btn-medir-bateria').addEventListener('click', () => ir('p-medir-bateria', { push: true }));
-  $('btn-medir-velocidad').addEventListener('click', () => ir('p-medir-velocidad', { push: true }));
   $('btn-medir-salto').addEventListener('click', () => ir('p-medir-salto', { push: true }));
   contenedor().querySelectorAll('[data-seguir]').forEach((b) => {
     b.addEventListener('click', () => ir(PANTALLA_TIPO[b.dataset.seguir], { push: true }));

@@ -1,4 +1,4 @@
-// Mediciones (tiro, velocidad, cuerpo) y metas del cuerpo técnico.
+// Mediciones (tiro, salto, cuerpo) y metas del cuerpo técnico.
 // Se importa a través de src/data/repositorio.js (fachada).
 import { obtenerCliente, TAMANIO_PAGINA } from '../cliente.js';
 
@@ -43,24 +43,6 @@ export async function obtenerMedicionesTiroDelPlantel(clubId, plantelId) {
     posicion: f.posicion,
     anotados: f.anotados,
     intentos: f.intentos,
-  }));
-}
-
-export async function obtenerMedicionesVelocidadDelPlantel(clubId, plantelId) {
-  const supabase = obtenerCliente();
-  const { data, error } = await supabase
-    .from('medicion_velocidad')
-    .select('sesion_id, jugador_id, segundos, sesion_medicion!inner(plantel_id, fecha)')
-    .eq('club_id', clubId)
-    .eq('sesion_medicion.plantel_id', plantelId);
-  if (error) throw error;
-  return data.map((f) => ({
-    sesionId: f.sesion_id,
-    jugadorId: f.jugador_id,
-    // numeric de Postgres llega como string por PostgREST: se convierte acá,
-    // en la capa de datos, para que las vistas reciban números.
-    segundos: f.segundos == null ? null : Number(f.segundos),
-    fecha: f.sesion_medicion?.fecha ?? null,
   }));
 }
 

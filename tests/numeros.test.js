@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { decimalEstricto } from '../src/data/numeros.js';
 import { validarMeta } from '../src/data/objetivosClub.js';
-import { redondearSegundos } from '../src/data/prepararPayloadMedicion.js';
 import { validarMedicion } from '../src/data/antropometria.js';
 
 /**
@@ -46,14 +45,6 @@ test('validarMeta no toma "1e2" ni "0x10" como un porcentaje', () => {
   }
   assert.equal(validarMeta('85,5').valor, 86);
   assert.equal(validarMeta('').valor, null);
-});
-
-test('redondearSegundos no toma true, "1e1" ni "0x5" como un tiempo', () => {
-  for (const h of [true, '1e1', '0x5', [4], Infinity, {}]) {
-    assert.equal(redondearSegundos(h), null, String(h));
-  }
-  assert.equal(redondearSegundos('4,66'), 4.7);
-  assert.equal(redondearSegundos(4.66), 4.7);
 });
 
 test('validarMedicion no toma "1e2" como altura ni "0x40" como peso', () => {
