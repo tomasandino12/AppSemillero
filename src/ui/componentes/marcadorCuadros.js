@@ -30,10 +30,15 @@ async function leerTabla(archivo) {
  * dura 1,17 s y, en pausa, un seek dentro del mismo cuadro no avisa nunca
  * (FUNDAMENTO.md §10). El video queda siempre en pausa y sin controles nativos.
  *
- * @param {{ archivo: File, fpsCaptura: number }} args
+ * `fpsSupuestos`: el archivo no traía los fps de captura y se usan los del
+ * selector. Pasa con videos recortados en el celular, que sirven, pero también
+ * con los que se recomprimieron al compartirlos: ésos tienen tramos a
+ * velocidad normal y pueden dar una altura creíble pero equivocada.
+ *
+ * @param {{ archivo: File, fpsCaptura: number, fpsSupuestos?: boolean }} args
  * @returns {Promise<{ tiempoVueloMs: number, fpsCaptura: number } | null>}
  */
-export async function abrirMarcador({ archivo, fpsCaptura }) {
+export async function abrirMarcador({ archivo, fpsCaptura, fpsSupuestos = false }) {
   if (!(fpsCaptura >= FPS_MIN && fpsCaptura <= FPS_MAX)) {
     toast(`Los fps de captura tienen que estar entre ${FPS_MIN} y ${FPS_MAX}.`);
     return null;
@@ -48,10 +53,10 @@ export async function abrirMarcador({ archivo, fpsCaptura }) {
     toast('No puedo leer los cuadros de este video. Grabalo con la app de Cámara, sin editarlo.');
     return null;
   }
-  return new Promise((resolver) => montar(archivo, tabla, fpsCaptura, resolver));
+  return new Promise((resolver) => montar(archivo, tabla, fpsCaptura, fpsSupuestos, resolver));
 }
 
-function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
+function montar(archivo, { tiempos, intervaloS }, fpsCaptura, fpsSupuestos, resolver) {
   const ultimo = tiempos.length - 1;
   const url = URL.createObjectURL(archivo);
   const raiz = document.createElement('div');
@@ -75,6 +80,7 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
   raiz.innerHTML = html`
     <div class="marcador-cuerpo">
       <button type="button" class="jvc-cerrar" data-m="cerrar" aria-label="Cerrar">&#10005;</button>
+      ${fpsSupuestos ? html`<p class="marcador-resultado" role="note">Este video no trae los fps de captura: se toma como grabado a ${fpsCaptura} fps. Si lo pasaste por un chat, Quick Share o la PC, puede haberse recomprimido y la altura saldría mal. Lo más seguro es elegir el archivo original, desde la galería del celular.</p>` : ''}
       <video class="marcador-video" muted playsinline preload="auto" src="${url}"></video>
       <p class="marcador-resultado" data-m="aviso-video" role="alert" hidden></p>
       <input type="range" class="marcador-slider" data-m="slider" min="0" max="${ultimo}" value="0" step="1" aria-label="Cuadro del video">

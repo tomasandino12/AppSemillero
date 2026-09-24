@@ -160,8 +160,10 @@ async function alElegirArchivo(e) {
   const archivo = e.target.files?.[0];
   if (!archivo || !destino) return;
   const { jugadorId, indice } = destino;
-  const fps = (await fpsDelArchivo(archivo)) ?? fpsManual;
-  const resultado = await abrirMarcador({ archivo, fpsCaptura: fps });
+  const fpsLeidos = await fpsDelArchivo(archivo);
+  const resultado = await abrirMarcador({
+    archivo, fpsCaptura: fpsLeidos ?? fpsManual, fpsSupuestos: fpsLeidos == null,
+  });
   if (!resultado) return;
   const intentos = [...intentosDe(jugadorId)];
   intentos[indice] = resultado;
