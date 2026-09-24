@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { prepararPayloadBateria, prepararPayloadSalto } from '../src/data/prepararPayloadMedicion.js';
+import { prepararPayloadBateria, prepararPayloadSalto, prepararPayloadSprint } from '../src/data/prepararPayloadMedicion.js';
 
 const BASE = { clubId: 'c1', plantelId: 'pl1', fecha: '2026-03-05' };
 
@@ -76,4 +76,33 @@ test('intento sin tiempo no viaja, y un chico sin nada no genera filas', () => {
     },
   });
   assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', intento: 1, tiempoVueloMs: 450, fpsCaptura: 240 }]);
+});
+
+const SPRINT = { ...BASE, sesionId: 's1', distanciaSprintM: 30 };
+
+test('payload de sprint: ausente en una fila', () => {
+  const p = prepararPayloadSprint({ ...SPRINT, valores: { j1: { ausente: true, intentos: [4500] } } });
+  assert.equal(p.tipo, 'sprint');
+  assert.equal(p.distanciaSprintM, 30);
+  assert.equal(p.sesionId, 's1');
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', intento: 1, tiempoMs: null }]);
+});
+
+test('payload de sprint: no manda intentos vacíos y numera sin huecos', () => {
+  const p = prepararPayloadSprint({
+    ...SPRINT,
+    valores: { j1: { intentos: [null, 4600] }, j2: { intentos: [4500, 4400] }, j3: { intentos: [] }, j4: {} },
+  });
+  assert.deepEqual(p.mediciones, [
+    { jugadorId: 'j1', intento: 1, tiempoMs: 4600 },
+    { jugadorId: 'j2', intento: 1, tiempoMs: 4500 },
+    { jugadorId: 'j2', intento: 2, tiempoMs: 4400 },
+  ]);
+});
+
+test('payload de sprint: exige distancia 20 o 30', () => {
+  for (const mala of [undefined, null, 25, '30']) {
+    assert.throws(() => prepararPayloadSprint({ ...SPRINT, distanciaSprintM: mala, valores: {} }), /Distancia/);
+  }
+  assert.equal(prepararPayloadSprint({ ...SPRINT, distanciaSprintM: 20, valores: {} }).distanciaSprintM, 20);
 });

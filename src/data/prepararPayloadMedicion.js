@@ -1,4 +1,5 @@
 import { POSICIONES_BATERIA, INTENTOS_POR_POSICION } from './posiciones.js';
+import { DISTANCIAS_SPRINT } from './sprint.js';
 
 /**
  * Borrador de batería → payload de guardar_sesion_medicion.
@@ -61,4 +62,32 @@ export function prepararPayloadSalto({ sesionId, clubId, plantelId, fecha, testS
     });
   }
   return { clubId, plantelId, fecha, tipo: 'salto', testSalto, mediciones, sesionId };
+}
+
+/**
+ * Borrador de sprint → payload. `valores[jugadorId]` es `{ ausente: true }` o
+ * `{ intentos: [tiempoMs | null, ...] }` (un tiempo por intento, en ms).
+ *
+ * Igual que en el salto: ausente es una sola fila sin tiempo (estuvo, no
+ * corrió); un chico sin ningún tiempo cargado no genera nada; un intento vacío
+ * no viaja y los que sí viajan se numeran 1..n sin huecos.
+ */
+export function prepararPayloadSprint({
+  sesionId, clubId, plantelId, fecha, distanciaSprintM, valores,
+}) {
+  if (!DISTANCIAS_SPRINT.includes(distanciaSprintM)) {
+    throw new Error(`Distancia de sprint inválida: ${distanciaSprintM}`);
+  }
+  const mediciones = [];
+  for (const [jugadorId, datos] of Object.entries(valores ?? {})) {
+    if (datos?.ausente) {
+      mediciones.push({ jugadorId, intento: 1, tiempoMs: null });
+      continue;
+    }
+    const cargados = (datos?.intentos ?? []).filter((t) => t != null);
+    cargados.forEach((tiempoMs, idx) => {
+      mediciones.push({ jugadorId, intento: idx + 1, tiempoMs });
+    });
+  }
+  return { clubId, plantelId, fecha, tipo: 'sprint', distanciaSprintM, mediciones, sesionId };
 }

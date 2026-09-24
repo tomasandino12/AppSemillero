@@ -110,6 +110,11 @@ export async function obtenerMiProgreso() {
       ...s,
       intentos: (s.intentos ?? []).map((i) => ({ ...i, tiempoVueloMs: numeroONulo(i.tiempoVueloMs) })),
     })),
+    // Igual: un ausente llega con tiempoMs null.
+    sprints: (data?.sprints ?? []).map((s) => ({
+      ...s,
+      intentos: (s.intentos ?? []).map((i) => ({ ...i, tiempoMs: numeroONulo(i.tiempoMs) })),
+    })),
     escalones: (data?.escalones ?? []).map((e) => ({ ...e, kg: Number(e.kg) })),
   };
 }

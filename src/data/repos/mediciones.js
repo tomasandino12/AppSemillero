@@ -1,4 +1,4 @@
-// Mediciones (tiro, salto, cuerpo) y metas del cuerpo técnico.
+// Mediciones (tiro, salto, sprint, cuerpo) y metas del cuerpo técnico.
 // Se importa a través de src/data/repositorio.js (fachada).
 import { obtenerCliente, TAMANIO_PAGINA } from '../cliente.js';
 
@@ -81,6 +81,44 @@ function saltoDesdeFila(f) {
     fpsCaptura: f.fps_captura == null ? null : Number(f.fps_captura),
     fecha: f.sesion_medicion?.fecha ?? null,
     testSalto: f.sesion_medicion?.test_salto ?? null,
+  };
+}
+
+/**
+ * Todos los intentos de sprint del plantel, con la fecha y la distancia de su
+ * sesión. tiempoMs null = ausente (no corrió), nunca 0.
+ */
+export async function obtenerMedicionesSprintDelPlantel(clubId, plantelId) {
+  const supabase = obtenerCliente();
+  const data = [];
+  let desde = 0;
+  for (;;) {
+    const hasta = desde + TAMANIO_PAGINA - 1;
+    const { data: pagina, error } = await supabase
+      .from('medicion_sprint')
+      .select('id, sesion_id, jugador_id, intento, tiempo_ms, origen, sesion_medicion!inner(plantel_id, fecha, distancia_sprint_m)')
+      .eq('club_id', clubId)
+      .eq('sesion_medicion.plantel_id', plantelId)
+      .order('id')
+      .range(desde, hasta);
+    if (error) throw error;
+    data.push(...pagina);
+    if (pagina.length < TAMANIO_PAGINA) break;
+    desde += TAMANIO_PAGINA;
+  }
+  return data.map(sprintDesdeFila);
+}
+
+function sprintDesdeFila(f) {
+  return {
+    id: f.id,
+    sesionId: f.sesion_id,
+    jugadorId: f.jugador_id,
+    intento: f.intento,
+    tiempoMs: f.tiempo_ms ?? null,
+    origen: f.origen,
+    fecha: f.sesion_medicion?.fecha ?? null,
+    distanciaM: f.sesion_medicion?.distancia_sprint_m ?? null,
   };
 }
 
