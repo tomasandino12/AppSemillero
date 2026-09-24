@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  TABLA_YYET1, IDA_M, IDAS_MAX, duracionIdaS, cronograma, posicionEn, metrosDe, nivelYIda, validarIdas,
+  TABLA_YYET1, IDA_M, IDAS_MAX, duracionIdaS, cronograma, posicionEn, segundosAlPitido, metrosDe, nivelYIda, validarIdas,
 } from '../src/data/yoyo.js';
 
 const cerca = (real, esperado, tolerancia = 0.01) => assert.ok(
@@ -63,4 +63,11 @@ test('validarIdas rechaza decimales, negativos y más de 223', () => {
     assert.equal(r.idas, null);
     assert.ok(r.error);
   }
+});
+
+test('segundos al próximo pitido', () => {
+  cerca(segundosAlPitido(0), 9, 0.001);
+  cerca(segundosAlPitido(6.5), 2.5, 0.001);
+  cerca(segundosAlPitido(63), 8.4706, 0.001);
+  assert.equal(segundosAlPitido(99999), null);
 });

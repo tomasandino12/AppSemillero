@@ -8,8 +8,8 @@ import { textoDeError } from '../errores.js';
 
 const contenedor = () => $('medir-contenido');
 
-const NOMBRE_TIPO = { tiro: 'Batería de tiro', salto: 'Salto', sprint: 'Sprint' };
-const PANTALLA_TIPO = { tiro: 'p-medir-bateria', salto: 'p-medir-salto', sprint: 'p-medir-sprint' };
+const NOMBRE_TIPO = { tiro: 'Batería de tiro', salto: 'Salto', sprint: 'Sprint', yoyo: 'Yo-Yo' };
+const PANTALLA_TIPO = { tiro: 'p-medir-bateria', salto: 'p-medir-salto', sprint: 'p-medir-sprint', yoyo: 'p-medir-yoyo' };
 
 /** 'YYYY-MM-DD' → 'DD/MM/YY', a mano para no depender de la zona horaria. */
 export function formatearFecha(iso) {
@@ -53,6 +53,7 @@ export async function renderMedir() {
     tiro: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'tiro')),
     salto: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'salto')),
     sprint: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'sprint')),
+    yoyo: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'yoyo')),
   };
 
   contenedor().innerHTML = `
@@ -62,6 +63,7 @@ export async function renderMedir() {
         ${borradores.tiro ? tarjetaBorrador(borradores.tiro, 'tiro') : ''}
         ${borradores.salto ? tarjetaBorrador(borradores.salto, 'salto') : ''}
         ${borradores.sprint ? tarjetaBorrador(borradores.sprint, 'sprint') : ''}
+        ${borradores.yoyo ? tarjetaBorrador(borradores.yoyo, 'yoyo') : ''}
       </div>
       <div class="lista-2col">
         <button class="test-fila" id="btn-medir-bateria">
@@ -76,6 +78,10 @@ export async function renderMedir() {
           <div class="ic">→</div>
           <div><div class="t">Sprint</div><div class="d">20 o 30 m, cronómetro con pitido</div></div>
         </button>
+        <button class="test-fila" id="btn-medir-yoyo">
+          <div class="ic">⟷</div>
+          <div><div class="t">Yo-Yo</div><div class="d">Resistencia, idas de 20 m con pitidos</div></div>
+        </button>
       </div>
       <div class="eyebrow">Sesiones cargadas</div>
       <div class="p" id="medir-estado">Cargando sesiones...</div>
@@ -86,6 +92,7 @@ export async function renderMedir() {
   $('btn-medir-bateria').addEventListener('click', () => ir('p-medir-bateria', { push: true }));
   $('btn-medir-salto').addEventListener('click', () => ir('p-medir-salto', { push: true }));
   $('btn-medir-sprint').addEventListener('click', () => ir('p-medir-sprint', { push: true }));
+  $('btn-medir-yoyo').addEventListener('click', () => ir('p-medir-yoyo', { push: true }));
   contenedor().querySelectorAll('[data-seguir]').forEach((b) => {
     b.addEventListener('click', () => ir(PANTALLA_TIPO[b.dataset.seguir], { push: true }));
   });

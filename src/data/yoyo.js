@@ -87,3 +87,9 @@ export function validarIdas(texto) {
   }
   return { ok: true, idas: n, error: null };
 }
+
+/** Segundos que faltan para el próximo pitido a los `tS` del arranque; null si ya sonó el último. */
+export function segundosAlPitido(tS) {
+  const proximo = PITIDOS.find((p) => p.t > tS);
+  return proximo ? proximo.t - tS : null;
+}

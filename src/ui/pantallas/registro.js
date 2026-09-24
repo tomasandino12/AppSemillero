@@ -10,6 +10,7 @@ import { renderMedir } from './medir.js';
 import { renderBateria } from './medirBateria.js';
 import { renderSalto } from './medirSalto.js';
 import { renderSprint } from './medirSprint.js';
+import { renderYoyo } from './medirYoyo.js';
 import { renderRecursos } from './recursos.js';
 import { setAbrirEjercicio } from './ejercicios.js';
 import { renderEjercicio, abrirEjercicio } from './ejercicio.js';
@@ -48,6 +49,7 @@ export function registrarPantallas() {
   registrarPantalla('p-medir-bateria', { titulo: 'Batería de tiro', render: renderBateria });
   registrarPantalla('p-medir-salto', { titulo: 'Salto', render: renderSalto });
   registrarPantalla('p-medir-sprint', { titulo: 'Sprint', render: renderSprint });
+  registrarPantalla('p-medir-yoyo', { titulo: 'Yo-Yo', render: renderYoyo });
   registrarPantalla('p-fisico', { titulo: 'Físico', render: renderFisico });
   registrarPantalla('p-fisico-sesion', { titulo: 'Sesión', render: renderSesion });
   registrarPantalla('p-fisico-escalones', { titulo: 'Escalones', render: renderEscalones });
