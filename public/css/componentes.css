@@ -878,6 +878,8 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .crono-llego:active{transform:scale(.98)}
 .crono-llego .ayuda{font-family:var(--ff-cuerpo);font-size:var(--fs-125);font-weight:400;text-transform:none;letter-spacing:0}
 .crono-acciones{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.crono-parcial{min-height:1.5em;font-family:var(--ff-mono);font-size:var(--fs-160);text-align:center;color:var(--gris-cl)}
+.crono-desglose{display:flex;justify-content:center;gap:var(--sp-6);font-size:var(--fs-145);color:var(--gris-cl)}
 
 /* ---- medir sprint: tarjeta por jugador con dos intentos y selector de distancia ---- */
 .segmentado{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-1);padding:var(--sp-1);margin-bottom:var(--sp-4);background:var(--fondo-chip);border-radius:var(--r)}
@@ -889,11 +891,12 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .sprint-cab .nom{font-family:var(--ff-titulo);font-size:var(--fs-200);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
 .sprint-celdas{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
 .sprint-celda{display:grid;gap:var(--sp-1);align-content:start}
-.sprint-celda .etq{display:flex;align-items:center;gap:var(--sp-1);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
+.sprint-celda .etq{display:flex;align-items:center;gap:var(--sp-1);min-height:1.5rem;font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
 .sprint-celda.vacia .sin{display:flex;align-items:center;justify-content:center;min-height:var(--tap)}
 .sprint-correr{min-height:3.5rem;padding:var(--sp-2)}
 .sprint-tiempo{min-height:3.5rem;border-radius:var(--r-m);background:var(--fondo-chip);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-260);font-weight:600;font-variant-numeric:tabular-nums}
 .sprint-tiempo .u{font-size:.5em;color:var(--primario);margin-left:.12em}
+.sprint-desglose{font-family:var(--ff-mono);font-size:var(--fs-115);color:var(--gris)}
 .sprint-pie{display:flex;gap:var(--sp-2)}
 .sprint-pie .btn{flex:1}
 .tabla-ev + .det{margin-top:var(--sp-4)}

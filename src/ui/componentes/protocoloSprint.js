@@ -3,17 +3,19 @@ import { html, crudo } from '../html.js';
 import { ICONO } from './iconos.js';
 import { etiquetaMetodologia } from '../../data/metodologia.js';
 import { obtenerClubActual } from '../sesion.js';
-import { TIEMPO_SPRINT_MIN_MS, TIEMPO_SPRINT_MAX_MS } from '../../data/sprint.js';
+import { PARCIAL_SPRINT_MIN_MS, PARCIAL_SPRINT_MAX_MS, TIEMPO_SPRINT_MAX_MS } from '../../data/sprint.js';
 
 const segundos = (ms) => String(ms / 1000).replace('.', ',');
 
 const PASOS = [
-  ['Pista', crudo('Marcá la salida y la llegada con cinta o conos: <b>30 m</b>, o <b>20 m</b> si no hay 30 despejados. Los 20 y los 30 no se comparan entre sí. Mismo piso y mismo calzado en todas las mediciones.')],
-  ['Entrada en calor', crudo('Trote, movilidad y dos o tres arranques progresivos antes del primer intento.')],
+  ['Pista', crudo('Marcá la línea de salida y, a <b>30 m</b>, un cono para el giro (o a <b>20 m</b> si no hay 30 despejados). El chico corre hasta el cono, frena, gira y vuelve a la línea: <b>30 + 30</b>. Los de 20 y los de 30 no se comparan entre sí. Mismo piso y mismo calzado en todas las mediciones.')],
+  ['Entrada en calor', crudo('Trote, movilidad y dos o tres arranques progresivos antes del primer intento. Practicá el giro una vez sin cronómetro.')],
+  ['Dónde te parás', crudo('En la línea de salida, siempre el mismo profe: ahí controlás que arranque bien y ves la llegada. El giro lo ves de frente, a 30 m.')],
   ['Salida', crudo('De pie, con un pie adelante y detrás de la línea. La app dice “En sus marcas… listos…” y suena un pitido: el reloj arranca con el pitido, no cuando el chico se mueve.')],
-  ['Llegada', crudo('Siempre el mismo profe toca <b>¡Llegó!</b>, parado en la línea de meta, cuando el pecho del chico la cruza. El chico sigue corriendo un poco más allá para no frenar antes.')],
-  ['Intentos', crudo('2 intentos con 3 minutos de pausa. Cuenta el mejor.')],
-  ['Qué esperar', crudo(`Un tiempo fuera de ${segundos(TIEMPO_SPRINT_MIN_MS)}–${segundos(TIEMPO_SPRINT_MAX_MS)} s se rechaza: casi seguro fue un toque de más. El cronómetro a mano tiene un error de reacción de unas décimas: sirve para ver la evolución del chico con el mismo profe, no para compararlo con tablas. Si el CReAR mide con fotocélulas, ese dato queda marcado como más exacto.`)],
+  ['Giró y Llegó', crudo('Tocá <b>¡Giró!</b> en el momento en que el chico frena para dar la vuelta, y <b>¡Llegó!</b> cuando cruza otra vez la línea de salida. Siempre el mismo criterio para el giro (por ejemplo, cuando planta el pie junto al cono).')],
+  ['Qué mira la app', crudo('El dato principal es el <b>total</b> (ida y vuelta), porque un toque de más o de menos pesa menos sobre unos 10 segundos. La <b>ida</b> sirve para comparar con el sprint simple, y la <b>vuelta</b> (total menos ida) incluye el giro: mostrala como aproximada.')],
+  ['Intentos', crudo('2 intentos con 3 minutos de pausa. Cuenta el mejor total.')],
+  ['Qué esperar', crudo(`Un tiempo fuera de rango se rechaza (la ida entre ${segundos(PARCIAL_SPRINT_MIN_MS)} y ${segundos(PARCIAL_SPRINT_MAX_MS)} s, el total hasta ${segundos(TIEMPO_SPRINT_MAX_MS)} s): casi seguro fue un toque de más. El cronómetro a mano sirve para ver la evolución del chico con el mismo profe, no para compararlo con tablas. Si el CReAR mide con fotocélulas, ese dato queda marcado como más exacto.`)],
 ];
 
 /**

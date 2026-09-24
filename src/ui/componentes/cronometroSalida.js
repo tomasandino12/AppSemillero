@@ -1,5 +1,5 @@
 import { html } from '../html.js';
-import { validarTiempoSprint, formatearTiempoSprint } from '../../data/sprint.js';
+import { validarIntentoSprint, formatearTiempoSprint } from '../../data/sprint.js';
 
 const ESPERA_MIN_MS = 1000;
 const ESPERA_MAX_MS = 2000;
@@ -17,17 +17,20 @@ const enVivo = (ms) => (Math.max(0, ms) / 1000).toFixed(1).replace('.', ',');
 const instanteDelToque = (e) => (e.timeStamp > 1e12 ? performance.now() : e.timeStamp);
 
 /**
- * Cronómetro de salida por sonido: "En sus marcas… listos…", una espera al
- * azar y un pitido. El cero del reloj es el instante programado del pitido en
- * el reloj del audio (no el toque de *Correr*), y *Llegó* se mide con el
- * `pointerdown`, que no suma la demora del `click`. Si el audio no arranca, cae a
- * un cronómetro manual (*Salida* / *Llegó*).
+ * Cronómetro de salida por sonido para el sprint de ida y vuelta: "En sus
+ * marcas… listos…", una espera al azar y un pitido. El cero del reloj es el
+ * instante programado del pitido en el reloj del audio (no el toque de
+ * *Correr*). Después el profe toca dos veces, siempre desde la línea de
+ * salida: *Giró* cuando el chico frena para dar la vuelta (el parcial) y
+ * *Llegó* cuando vuelve a la línea (el total). Los dos toques se miden con el
+ * `pointerdown`, que no suma la demora del `click`. Si el audio no arranca,
+ * cae a un cronómetro manual (*Salida* / *Giró* / *Llegó*).
  *
  * El toque de *Correr* es el gesto que habilita el audio en el celular: el
  * AudioContext se crea ahí.
  *
  * @param {{ jugador: string, intento: number, distanciaM: number }} args
- * @returns {Promise<{ tiempoMs: number } | null>} null si se cancela.
+ * @returns {Promise<{ parcialMs: number, tiempoMs: number } | null>} null si se cancela.
  */
 export function abrirCronometroSalida({ jugador, intento, distanciaM }) {
   return new Promise((resolver) => montar({ jugador, intento, distanciaM }, resolver));
@@ -44,7 +47,8 @@ function montar({ jugador, intento, distanciaM }, resolver) {
   let fase = 'listo';
   let audio = null;
   let inicioMs = null; // en el reloj de performance.now()
-  let tiempoMs = null;
+  let parcialMs = null; // la ida, desde el cero
+  let tiempoMs = null; // el total, desde el cero
   let manual = false;
   let mensaje = null;
   let cuadro = null;
@@ -82,7 +86,7 @@ function montar({ jugador, intento, distanciaM }, resolver) {
     <button type="button" class="jvc-cerrar" data-c="cerrar" aria-label="Cerrar">&#10005;</button>
     <div class="crono-quien">
       <div class="crono-nombre">${jugador}</div>
-      <div class="crono-sub">Intento ${intento} · ${distanciaM} metros</div>
+      <div class="crono-sub">Intento ${intento} · ${distanciaM} + ${distanciaM} metros</div>
     </div>
   `;
 
@@ -103,14 +107,22 @@ function montar({ jugador, intento, distanciaM }, resolver) {
         <button type="button" class="crono-llego" data-c="salida">¡Salida!</button>
       `;
     } else if (fase === 'corriendo') {
+      const yaGiro = parcialMs != null;
       cuerpo = html`
         <div class="crono-tiempo" data-c="reloj" role="timer">0,0<span class="u">s</span></div>
-        <button type="button" class="crono-llego" data-c="llego">¡Llegó!<span class="ayuda">Tocá cuando el pecho cruce la meta</span></button>
+        <div class="crono-parcial" role="status">${yaGiro ? `Ida ${formatearTiempoSprint(parcialMs)}` : ''}</div>
+        ${yaGiro
+    ? html`<button type="button" class="crono-llego" data-c="llego">¡Llegó!<span class="ayuda">Tocá cuando vuelva a la línea de salida</span></button>`
+    : html`<button type="button" class="crono-llego" data-c="giro">¡Giró!<span class="ayuda">Tocá cuando frene para dar la vuelta</span></button>`}
       `;
     } else {
-      const v = validarTiempoSprint(tiempoMs / 1000);
+      const v = validarIntentoSprint(parcialMs / 1000, tiempoMs / 1000);
       cuerpo = html`
         <div class="crono-tiempo" role="status">${formatearTiempoSprint(tiempoMs)?.replace(' s', '')}<span class="u">s</span></div>
+        <div class="crono-desglose">
+          <span>Ida <b class="mono">${formatearTiempoSprint(parcialMs)}</b></span>
+          <span>Vuelta <b class="mono">${formatearTiempoSprint(tiempoMs - parcialMs)}</b></span>
+        </div>
         ${!v.ok && html`<p class="crono-aviso" role="alert">${v.error} Repetí el intento.</p>`}
         <div class="crono-acciones">
           <button type="button" class="btn sec" data-c="repetir">Repetir</button>
@@ -126,8 +138,9 @@ function montar({ jugador, intento, distanciaM }, resolver) {
     const boton = e.target.closest('[data-c]');
     if (!boton || boton.disabled) return;
     const accion = boton.dataset.c;
-    // Llegó y Salida se miden con el pointerdown, que no suma la demora del click.
+    // Salida, Giró y Llegó se miden con el pointerdown, que no suma la demora del click.
     if (accion === 'llego') llego(instanteDelToque(e));
+    else if (accion === 'giro') giro(instanteDelToque(e));
     else if (accion === 'salida') salida(instanteDelToque(e));
   });
   raiz.addEventListener('click', (e) => {
@@ -137,8 +150,8 @@ function montar({ jugador, intento, distanciaM }, resolver) {
     if (accion === 'cerrar') cerrar(null);
     else if (accion === 'correr') correr();
     else if (accion === 'manual') { manual = true; fase = 'manual'; pintar(); }
-    else if (accion === 'repetir') { mensaje = null; tiempoMs = null; fase = manual ? 'manual' : 'listo'; pintar(); }
-    else if (accion === 'guardar') cerrar({ tiempoMs });
+    else if (accion === 'repetir') { mensaje = null; parcialMs = null; tiempoMs = null; fase = manual ? 'manual' : 'listo'; pintar(); }
+    else if (accion === 'guardar') cerrar({ parcialMs, tiempoMs });
   });
 
   function correr() {
@@ -156,6 +169,7 @@ function montar({ jugador, intento, distanciaM }, resolver) {
     }
     mensaje = null;
     manual = false;
+    parcialMs = null;
     fase = 'marcas';
     pintar();
     decirMarcas(programarPitido);
@@ -223,13 +237,23 @@ function montar({ jugador, intento, distanciaM }, resolver) {
 
   function salida(instante) {
     inicioMs = instante;
+    parcialMs = null;
     fase = 'corriendo';
     pintar();
     animarReloj();
   }
 
+  function giro(instante) {
+    if (fase !== 'corriendo' || parcialMs != null) return;
+    parcialMs = Math.round(instante - inicioMs);
+    // pintar() reemplaza el reloj: el lazo viejo se corta antes de arrancar otro.
+    if (cuadro) cancelAnimationFrame(cuadro);
+    pintar();
+    animarReloj();
+  }
+
   function llego(instante) {
-    if (fase !== 'corriendo') return;
+    if (fase !== 'corriendo' || parcialMs == null) return;
     if (cuadro) cancelAnimationFrame(cuadro);
     cuadro = null;
     tiempoMs = Math.round(instante - inicioMs);

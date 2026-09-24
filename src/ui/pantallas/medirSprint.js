@@ -2,7 +2,7 @@ import { obtenerJugadoresDelPlantel, guardarSesionMedicion } from '../../data/re
 import { prepararPayloadSprint } from '../../data/prepararPayloadMedicion.js';
 import {
   DISTANCIAS_SPRINT, DISTANCIA_SPRINT_PREDETERMINADA, INTENTOS_SPRINT,
-  validarTiempoSprint, formatearTiempoSprint, mejorIntentoSprint,
+  validarIntentoSprint, formatearTiempoSprint, mejorIntentoSprint, vueltaSprint,
 } from '../../data/sprint.js';
 import { obtenerClubActual, obtenerPlantelActivo, obtenerCuenta } from '../sesion.js';
 import { toast, formatearFechaCorta } from '../nav.js';
@@ -20,7 +20,8 @@ const contenedor = () => $('sprint-contenido');
 const CLAVE_DISTANCIA = 'sprint.distancia.predeterminada';
 
 let jugadores = [];
-// { [jugadorId]: { ausente: true } | { intentos: [tiempoMs | null, ...] } }
+// { [jugadorId]: { ausente: true } | { intentos: [{ parcialMs, tiempoMs } | null, ...] } }
+// parcialMs es la ida y tiempoMs el total (ida y vuelta), los dos desde el pitido.
 let valores = {};
 let fecha = null;
 let distanciaM = DISTANCIA_SPRINT_PREDETERMINADA;
@@ -60,10 +61,10 @@ function recordarDistancia(n) {
 
 const intentosDe = (id) => valores[id]?.intentos ?? [];
 
-/** Guarda el tiempo de un intento (o lo borra con null) y limpia lo que quede vacío. */
-function ponerTiempo(jugadorId, indice, tiempoMs) {
+/** Guarda un intento `{ parcialMs, tiempoMs }` (o lo borra con null) y limpia lo que quede vacío. */
+function ponerIntento(jugadorId, indice, intento) {
   const intentos = Array.from({ length: INTENTOS_SPRINT }, (_, i) => intentosDe(jugadorId)[i] ?? null);
-  intentos[indice] = tiempoMs;
+  intentos[indice] = intento;
   if (intentos.every((t) => t == null)) delete valores[jugadorId];
   else valores[jugadorId] = { intentos };
   persistir();
@@ -71,7 +72,8 @@ function ponerTiempo(jugadorId, indice, tiempoMs) {
 }
 
 function celdaIntento(j, indice, ausente, mejorIdx) {
-  const tiempo = intentosDe(j.id)[indice] ?? null;
+  const cargado = intentosDe(j.id)[indice] ?? null;
+  const tiempo = cargado?.tiempoMs ?? null;
   const etiqueta = `Intento ${indice + 1}`;
   if (ausente) {
     return html`<div class="sprint-celda vacia"><span class="etq">${etiqueta}</span><span class="sin">—</span></div>`;
@@ -83,6 +85,7 @@ function celdaIntento(j, indice, ausente, mejorIdx) {
     <div class="sprint-celda">
       <span class="etq">${etiqueta}${mejorIdx === indice && html` <span class="chip sube">Mejor</span>`}</span>
       <button type="button" class="sprint-tiempo" data-editar="${j.id}" data-intento="${indice}" aria-label="${etiqueta}: ${formatearTiempoSprint(tiempo)}. Tocá para corregir">${formatearTiempoSprint(tiempo).replace(' s', '')}<span class="u">s</span></button>
+      ${cargado.parcialMs != null && html`<span class="sprint-desglose">Ida ${formatearTiempoSprint(cargado.parcialMs)} · Vuelta ${formatearTiempoSprint(vueltaSprint(cargado))}</span>`}
     </div>
   `;
 }
@@ -90,8 +93,8 @@ function celdaIntento(j, indice, ausente, mejorIdx) {
 function filaJugador(j) {
   const ausente = valores[j.id]?.ausente === true;
   const intentos = intentosDe(j.id);
-  const mejor = mejorIntentoSprint(intentos.map((tiempoMs, i) => ({ tiempoMs, i })));
-  const mejorIdx = intentos.filter((t) => t != null).length > 1 ? mejor?.i : null;
+  const mejor = mejorIntentoSprint(intentos.map((x, i) => ({ tiempoMs: x?.tiempoMs ?? null, i })));
+  const mejorIdx = intentos.filter((x) => x != null).length > 1 ? mejor?.i : null;
   return html`
     <div class="tarj sprint-tarj ${ausente ? 'ausente' : ''}">
       <div class="sprint-cab">
@@ -172,10 +175,12 @@ async function correr(jugadorId, indice) {
   const resultado = await abrirCronometroSalida({
     jugador: jugador.nombreLimpio, intento: indice + 1, distanciaM,
   });
-  if (resultado) ponerTiempo(jugadorId, indice, resultado.tiempoMs);
+  if (resultado) ponerIntento(jugadorId, indice, { parcialMs: resultado.parcialMs, tiempoMs: resultado.tiempoMs });
 }
 
-/** Hoja para teclear (o corregir o borrar) el tiempo de un intento. */
+const segundosTecleables = (ms) => (ms == null ? '' : (ms / 1000).toFixed(2).replace('.', ','));
+
+/** Hoja para teclear (o corregir o borrar) los dos tiempos de un intento. */
 function teclear(jugadorId, indice) {
   const jugador = jugadores.find((j) => j.id === jugadorId);
   const actual = intentosDe(jugadorId)[indice] ?? null;
@@ -183,9 +188,13 @@ function teclear(jugadorId, indice) {
     titulo: `${jugador.nombreLimpio} · intento ${indice + 1}`,
     cuerpo: html`
       <div class="campo">
-        <label for="sprint-tiempo">Tiempo en segundos</label>
-        <input id="sprint-tiempo" inputmode="decimal" autocomplete="off" maxlength="6" placeholder="4,5" value="${actual == null ? '' : (actual / 1000).toFixed(2).replace('.', ',')}">
-        <div class="ayuda">Entre 2,5 y 12 segundos. Con coma o con punto.</div>
+        <label for="sprint-parcial">Ida (cuando frena para girar), en segundos</label>
+        <input id="sprint-parcial" inputmode="decimal" autocomplete="off" maxlength="6" placeholder="4,6" value="${segundosTecleables(actual?.parcialMs)}">
+      </div>
+      <div class="campo">
+        <label for="sprint-tiempo">Total (cuando vuelve a la línea), en segundos</label>
+        <input id="sprint-tiempo" inputmode="decimal" autocomplete="off" maxlength="6" placeholder="10,2" value="${segundosTecleables(actual?.tiempoMs)}">
+        <div class="ayuda">Los dos tiempos se cuentan desde el pitido. Con coma o con punto.</div>
       </div>
       <div id="sprint-tiempo-error" role="alert"></div>
       <div class="acciones-bateria">
@@ -196,19 +205,19 @@ function teclear(jugadorId, indice) {
   });
   const campo = $('sprint-tiempo');
   const aceptar = () => {
-    const r = validarTiempoSprint(campo.value);
+    const r = validarIntentoSprint($('sprint-parcial').value, campo.value);
     if (!r.ok) {
       $('sprint-tiempo-error').innerHTML = html`<div class="al"><div class="tx">${r.error}</div></div>`;
       return;
     }
     cerrarHoja();
-    ponerTiempo(jugadorId, indice, r.ms);
+    ponerIntento(jugadorId, indice, { parcialMs: r.parcialMs, tiempoMs: r.tiempoMs });
   };
   $('sprint-tiempo-ok').addEventListener('click', aceptar);
   campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') aceptar(); });
   $('sprint-tiempo-borrar').addEventListener('click', () => {
     cerrarHoja();
-    ponerTiempo(jugadorId, indice, null);
+    ponerIntento(jugadorId, indice, null);
   });
 }
 
@@ -266,6 +275,10 @@ export async function renderSprint() {
   const borrador = leerBorrador(clave());
   fecha = borrador?.fecha ?? hoyLocal();
   valores = borrador?.valores ?? {};
+  // Un borrador de antes del ida y vuelta guardaba sólo el tiempo (un número).
+  for (const v of Object.values(valores)) {
+    v.intentos = v.intentos?.map((i) => (typeof i === 'number' ? { parcialMs: null, tiempoMs: i } : i));
+  }
   distanciaM = DISTANCIAS_SPRINT.includes(borrador?.distanciaM) ? borrador.distanciaM : leerDistanciaRecordada();
   sesionId = borrador?.sesionId ?? crypto.randomUUID();
   render();

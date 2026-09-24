@@ -197,15 +197,26 @@ de 2 puntos [17] es la puerta de entrada.
 Por eso hoy ese dato no se compara con el CReAR, que usa fotocélulas, ni
 detecta mejoras de décimas.
 
-**Método actual (0048, sin tecnología).** Sprint de 30 m (20 m si no hay 30
-despejados) desde parado, con la app como cronómetro de salida: da la voz "En
-sus marcas… listos…", espera un tiempo al azar de 1 a 2 s y suena un pitido.
-**El cero del reloj es el instante programado del pitido** en el reloj del
-audio, no el toque del profe; el profe toca una sola vez, en la llegada (con
-`pointerdown`, que no suma la demora del `click`). Queda **una** reacción
-humana, siempre la misma persona, en lugar de las dos del cronómetro manual.
-Dos intentos, cuenta el mejor. Se muestra en décimas: las centésimas serían
-falsa precisión.
+**Método actual (0048 y 0050, sin tecnología).** Sprint de **ida y vuelta,
+30 + 30 m** (20 + 20 si no hay 30 despejados) desde parado, con la app como
+cronómetro de salida: da la voz "En sus marcas… listos…", espera un tiempo al
+azar de 1 a 2 s y suena un pitido. **El cero del reloj es el instante
+programado del pitido** en el reloj del audio, no el toque del profe. El
+profe, siempre el mismo y parado en la línea de salida (controla la salida y
+ve la llegada), toca dos veces con `pointerdown` (que no suma la demora del
+`click`): *Giró* cuando el chico frena para dar la vuelta (el parcial de la
+ida) y *Llegó* cuando vuelve a la línea (el total). Dos intentos, cuenta el
+mejor total. Se muestra en décimas: las centésimas serían falsa precisión.
+
+**Por qué ida y vuelta.** El error de un toque de cronómetro es casi
+constante (del orden de una décima), no proporcional: sobre un sprint de ~5 s
+pesa el doble que sobre ~10 s, y la mejora de un chico en una temporada
+(2–4%) es del tamaño de ese ruido. El **total** es el dato principal porque su
+error relativo es la mitad. La **ida** se compara con el sprint simple de
+antes, y la **vuelta** (total − ida) lleva el giro adentro y suma los errores
+de los dos toques, así que se muestra como aproximada. El giro es un momento
+claro (frena y planta el pie), más fácil de marcar que cruzar una línea.
+Los intentos de antes de 0050 (un solo tramo) quedan con el parcial vacío.
 
 Sirve para **compararse contra uno mismo** (mismo profe, misma pista), no
 contra el CReAR: no decimos que estos tiempos equivalen a los de las
