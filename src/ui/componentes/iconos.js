@@ -19,6 +19,10 @@ export const ICONO = {
   mas: `<svg ${ATR}><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
   reproducir: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" focusable="false"><path d="M7 4l13 8-13 8V4z"/></svg>',
   cursor: `<svg ${ATR}><path d="M4 3l7.07 16.97 2.51-6.99 6.99-2.51z"/></svg>`,
+  // Guía de medidas del cuerpo (de perfil). L0: trocánter a punta del pie con el tobillo estirado.
+  piernaExtendida: `<svg ${ATR}><circle cx="13" cy="4" r="1.8"/><path d="M13 5.8V18"/><path d="M13 18l5 3.5"/><path d="M4 4v17.5"/><path d="M2 4h4"/><path d="M2 21.5h4"/></svg>`,
+  // hpush: trocánter al piso, en cuclillas con la rodilla a 90°.
+  piernaFlexionada: `<svg ${ATR}><circle cx="8" cy="10" r="1.8"/><path d="M9.5 11l8.5 1"/><path d="M18 12l-1.5 8"/><path d="M16.5 20H21"/><path d="M4 10v10"/><path d="M2 10h4"/><path d="M2 20h4"/><path d="M2 22h21"/></svg>`,
 };
 
 /** Botón cuadrado con un solo ícono: `aria-label` y `title` cubren lo que en un botón de texto da la etiqueta. */

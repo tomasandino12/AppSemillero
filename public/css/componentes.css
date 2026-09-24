@@ -861,3 +861,44 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .salto-fila.ausente .nom{color:var(--gris)}
 .salto-ints{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
 .salto-int.si{font-family:var(--ff-mono);background:var(--primario-cl);color:var(--tinta)}
+
+/* ---- guías (salto y medidas del cuerpo): hoja con cabecera, pasos y bloque clave ---- */
+.tag-metodo{
+  display:inline-block;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-s);
+  background:var(--primario-tenue);color:var(--primario-osc);
+  font-family:var(--ff-titulo);font-weight:600;font-size:var(--fs-115);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.guia-cab{display:grid;grid-template-columns:auto 1fr;gap:var(--sp-1) var(--sp-3);align-items:center;margin-bottom:var(--sp-4)}
+.guia-cab .ico{grid-row:span 2;width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;border-radius:var(--r-m);background:var(--fondo-chip);color:var(--primario)}
+.guia-cab .ico svg{width:1.5rem;height:1.5rem}
+.guia-cab .tit{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-190);color:var(--tinta)}
+.guia-cab .tag-metodo{justify-self:start}
+.guia-cab .sub{grid-column:1 / -1;font-size:var(--fs-135);color:var(--gris-cl)}
+.guia-paso{
+  display:grid;grid-template-columns:auto 1fr;gap:var(--sp-1) var(--sp-3);
+  background:var(--blanco);border-radius:var(--r);padding:var(--sp-4);
+  margin-bottom:var(--sp-3);box-shadow:var(--sombra);
+}
+.guia-paso .num{font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-145);color:var(--primario)}
+.guia-paso .tit{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-190);color:var(--tinta)}
+.guia-paso .cuerpo{grid-column:2;font-size:var(--fs-135);line-height:1.45;color:var(--tinta)}
+.guia-paso .cuerpo p + p{margin-top:var(--sp-2)}
+.guia-paso .dibujo{grid-column:2;display:flex;gap:var(--sp-3);align-items:center;color:var(--primario)}
+.guia-paso .dibujo svg{width:3rem;height:3rem;flex:0 0 auto}
+.guia-clave{
+  background:var(--blanco);border-left:3px solid var(--primario);
+  border-radius:0 var(--r) var(--r) 0;padding:var(--sp-4);
+  margin-bottom:var(--sp-3);box-shadow:var(--sombra-alta);
+  font-size:var(--fs-135);line-height:1.45;
+}
+.guia-clave .tit{font-family:var(--ff-titulo);font-weight:700;font-size:var(--fs-190);margin-bottom:var(--sp-2)}
+.guia-clave p + p{margin-top:var(--sp-2)}
+.chip-rango{
+  display:inline-block;padding:var(--sp-1) var(--sp-2);border-radius:var(--r-s);
+  background:var(--fondo-chip);color:var(--tinta);
+  font-family:var(--ff-mono);font-weight:500;font-size:var(--fs-115);white-space:nowrap;
+}
+.cifra-clave{font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-cifra);line-height:1;color:var(--tinta)}
+.cifra-clave .u{font-size:var(--fs-160);color:var(--primario);margin-left:var(--sp-1)}
+.cifra-clave + .etq{display:block;margin-top:var(--sp-1);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
