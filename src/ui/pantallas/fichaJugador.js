@@ -1,7 +1,7 @@
 import {
   obtenerJugadoresDelPlantel, obtenerPertenenciasDeJugador,
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel,
-  obtenerMedicionesSaltoDelPlantel, obtenerMedicionesSprintDelPlantel,
+  obtenerMedicionesSaltoDelPlantel, obtenerMedicionesSprintDelPlantel, obtenerMedicionesYoyoDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
   obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
   actualizarFechaNacimiento, obtenerCargasDelPlantel, sacarDelPlantel,
@@ -14,6 +14,7 @@ import {
   sesionesDeSalto, ultimaYAnteriores, potenciaPrincipal, TESTS_SALTO,
 } from '../../data/salto.js';
 import { sesionesDeSprint } from '../../data/sprint.js';
+import { sesionesDeYoyo } from '../../data/yoyo.js';
 import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, vigentePorCampo, validarMedicion, validarFechaNacimiento,
@@ -29,6 +30,7 @@ import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { botonIcono, ICONO } from '../componentes/iconos.js';
 import { abrirGuiaSalto } from '../componentes/guiaSalto.js';
 import { seccionSprint } from '../componentes/seccionSprint.js';
+import { seccionYoyo } from '../componentes/seccionYoyo.js';
 import { abrirProtocoloCorporal } from '../componentes/protocoloCorporal.js';
 import { html, crudo } from '../html.js';
 import { $ } from '../dom.js';
@@ -356,11 +358,12 @@ export async function renderFicha() {
   // están pintados arriba, así que un error de red trayendo la historia no
   // puede dejar la ficha entera en blanco.
   try {
-    const [sesiones, medicionesTiro, saltos, sprints, corporales, partidos, estadisticas, envios] = await Promise.all([
+    const [sesiones, medicionesTiro, saltos, sprints, yoyos, corporales, partidos, estadisticas, envios] = await Promise.all([
       obtenerSesionesDeMedicion(club.id, plantel.id),
       obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
       obtenerMedicionesSaltoDelPlantel(club.id, plantel.id),
       obtenerMedicionesSprintDelPlantel(club.id, plantel.id),
+      obtenerMedicionesYoyoDelPlantel(club.id, plantel.id),
       obtenerMedicionesCorporalesDeJugador(club.id, jugadorId),
       obtenerPartidosDelPlantel(club.id, plantel.id),
       obtenerEstadisticasDelPlantel(club.id, plantel.id),
@@ -386,6 +389,7 @@ export async function renderFicha() {
       ${seccionPartidos(historial)}
       ${seccionSalto(sesionesDeSaltoDelJugador)}
       ${seccionSprint(sesionesDeSprint(sprints.filter((x) => x.jugadorId === jugadorId)))}
+      ${seccionYoyo(sesionesDeYoyo(yoyos.filter((x) => x.jugadorId === jugadorId)))}
       ${seccionRecursos(envios)}
     `;
 

@@ -93,3 +93,28 @@ export function segundosAlPitido(tS) {
   const proximo = PITIDOS.find((p) => p.t > tS);
   return proximo ? proximo.t - tS : null;
 }
+
+/**
+ * Los resultados de UN jugador (uno por sesión), la sesión más reciente
+ * primero. `idas` null es ausente: se conserva en la lista pero no cuenta como dato.
+ */
+export function sesionesDeYoyo(resultados) {
+  return [...(resultados ?? [])]
+    .map((r) => ({
+      sesionId: r.sesionId, fecha: r.fecha, idas: r.idas ?? null, origen: r.origen ?? 'propio',
+    }))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+}
+
+/**
+ * La última sesión con dato y las anteriores con dato (las ausencias quedan
+ * afuera: no hay con qué comparar). `variacionM` = metros de la última menos
+ * los de la anterior (positivo = mejoró); null con una sola. null si no hay ninguna.
+ */
+export function ultimaYAnterioresYoyo(sesiones) {
+  const conDato = (sesiones ?? []).filter((s) => s.idas != null);
+  if (!conDato.length) return null;
+  const [ultima, ...anteriores] = conDato;
+  const variacionM = anteriores.length ? metrosDe(ultima.idas) - metrosDe(anteriores[0].idas) : null;
+  return { ultima, anteriores, variacionM };
+}

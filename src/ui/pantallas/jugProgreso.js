@@ -9,6 +9,8 @@ import {
 import { sesionesDeSalto, TESTS_SALTO } from '../../data/salto.js';
 import { sesionesDeSprint } from '../../data/sprint.js';
 import { seccionSprint } from '../componentes/seccionSprint.js';
+import { sesionesDeYoyo } from '../../data/yoyo.js';
+import { seccionYoyo } from '../componentes/seccionYoyo.js';
 import { obtenerFichaJugador } from '../sesion.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
@@ -193,13 +195,13 @@ export async function renderJugProgreso() {
     return;
   }
 
-  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.saltos.length && !progreso.sprints.length && !progreso.escalones.length;
+  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.saltos.length && !progreso.sprints.length && !progreso.yoyos.length && !progreso.escalones.length;
   if (vacio) {
     contenedor().innerHTML = html`
       <div class="pad">
         <div class="estado-vacio">
           <h2>Todavía no hay nada para mostrar</h2>
-          <div class="p">Cuando haya partidos, baterías de tiro, saltos, sprints o pesos tuyos cargados, tu progreso aparece acá.</div>
+          <div class="p">Cuando haya partidos, baterías de tiro, saltos, sprints, resistencia o pesos tuyos cargados, tu progreso aparece acá.</div>
         </div>
       </div>
     `;
@@ -222,6 +224,7 @@ export async function renderJugProgreso() {
       ${seccionPartidos(historial, acumuladosDePartidos(progreso.partidos))}
       ${seccionSalto(progreso.saltos)}
       ${seccionSprint(sesionesDeSprint(intentosDeSprint(progreso.sprints)), { sinDatos: 'Todavía no te midieron el sprint.' })}
+      ${seccionYoyo(sesionesDeYoyo(progreso.yoyos), { sinDatos: 'Todavía no te midieron la resistencia.' })}
       ${seccionPesos(pesos)}
     </div>
   `;

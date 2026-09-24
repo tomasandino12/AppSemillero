@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  TABLA_YYET1, IDA_M, IDAS_MAX, duracionIdaS, cronograma, posicionEn, segundosAlPitido, metrosDe, nivelYIda, validarIdas,
+  TABLA_YYET1, IDA_M, IDAS_MAX, duracionIdaS, cronograma, posicionEn, segundosAlPitido, sesionesDeYoyo, ultimaYAnterioresYoyo, metrosDe, nivelYIda, validarIdas,
 } from '../src/data/yoyo.js';
 
 const cerca = (real, esperado, tolerancia = 0.01) => assert.ok(
@@ -70,4 +70,30 @@ test('segundos al próximo pitido', () => {
   cerca(segundosAlPitido(6.5), 2.5, 0.001);
   cerca(segundosAlPitido(63), 8.4706, 0.001);
   assert.equal(segundosAlPitido(99999), null);
+});
+
+const res = (sesionId, fecha, idas, origen) => ({ sesionId, fecha, idas, origen });
+
+test('ordena las sesiones con la más reciente primero', () => {
+  const s = sesionesDeYoyo([res('a', '2026-03-01', 30), res('b', '2026-09-01', 44, 'crear'), res('c', '2026-06-01', null)]);
+  assert.deepEqual(s.map((x) => x.sesionId), ['b', 'c', 'a']);
+  assert.equal(s[0].origen, 'crear');
+  assert.equal(s[1].idas, null);
+  assert.equal(sesionesDeYoyo(undefined).length, 0);
+});
+
+test('la variación es en metros contra la sesión anterior con dato, y salta las ausencias', () => {
+  const s = sesionesDeYoyo([res('a', '2026-03-01', 30), res('b', '2026-09-01', 44), res('c', '2026-06-01', null)]);
+  const r = ultimaYAnterioresYoyo(s);
+  assert.equal(r.ultima.sesionId, 'b');
+  assert.deepEqual(r.anteriores.map((x) => x.sesionId), ['a']);
+  assert.equal(r.variacionM, 280);
+});
+
+test('con una sola sesión con dato no hay variación, y sin datos es null', () => {
+  const uno = ultimaYAnterioresYoyo(sesionesDeYoyo([res('a', '2026-03-01', 0), res('b', '2026-09-01', null)]));
+  assert.equal(uno.ultima.idas, 0);
+  assert.equal(uno.variacionM, null);
+  assert.equal(ultimaYAnterioresYoyo(sesionesDeYoyo([res('b', '2026-09-01', null)])), null);
+  assert.equal(ultimaYAnterioresYoyo([]), null);
 });
