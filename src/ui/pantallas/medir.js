@@ -8,8 +8,8 @@ import { textoDeError } from '../errores.js';
 
 const contenedor = () => $('medir-contenido');
 
-const NOMBRE_TIPO = { tiro: 'Batería de tiro', salto: 'Salto' };
-const PANTALLA_TIPO = { tiro: 'p-medir-bateria', salto: 'p-medir-salto' };
+const NOMBRE_TIPO = { tiro: 'Batería de tiro', salto: 'Salto', sprint: 'Sprint' };
+const PANTALLA_TIPO = { tiro: 'p-medir-bateria', salto: 'p-medir-salto', sprint: 'p-medir-sprint' };
 
 /** 'YYYY-MM-DD' → 'DD/MM/YY', a mano para no depender de la zona horaria. */
 export function formatearFecha(iso) {
@@ -52,6 +52,7 @@ export async function renderMedir() {
   const borradores = {
     tiro: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'tiro')),
     salto: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'salto')),
+    sprint: leerBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, 'sprint')),
   };
 
   contenedor().innerHTML = `
@@ -60,6 +61,7 @@ export async function renderMedir() {
       <div id="medir-borradores">
         ${borradores.tiro ? tarjetaBorrador(borradores.tiro, 'tiro') : ''}
         ${borradores.salto ? tarjetaBorrador(borradores.salto, 'salto') : ''}
+        ${borradores.sprint ? tarjetaBorrador(borradores.sprint, 'sprint') : ''}
       </div>
       <div class="lista-2col">
         <button class="test-fila" id="btn-medir-bateria">
@@ -70,6 +72,10 @@ export async function renderMedir() {
           <div class="ic">↑</div>
           <div><div class="t">Salto</div><div class="d">CMJ o Abalakov, por video</div></div>
         </button>
+        <button class="test-fila" id="btn-medir-sprint">
+          <div class="ic">→</div>
+          <div><div class="t">Sprint</div><div class="d">20 o 30 m, cronómetro con pitido</div></div>
+        </button>
       </div>
       <div class="eyebrow">Sesiones cargadas</div>
       <div class="p" id="medir-estado">Cargando sesiones...</div>
@@ -79,6 +85,7 @@ export async function renderMedir() {
 
   $('btn-medir-bateria').addEventListener('click', () => ir('p-medir-bateria', { push: true }));
   $('btn-medir-salto').addEventListener('click', () => ir('p-medir-salto', { push: true }));
+  $('btn-medir-sprint').addEventListener('click', () => ir('p-medir-sprint', { push: true }));
   contenedor().querySelectorAll('[data-seguir]').forEach((b) => {
     b.addEventListener('click', () => ir(PANTALLA_TIPO[b.dataset.seguir], { push: true }));
   });

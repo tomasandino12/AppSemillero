@@ -879,6 +879,24 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .crono-llego .ayuda{font-family:var(--ff-cuerpo);font-size:var(--fs-125);font-weight:400;text-transform:none;letter-spacing:0}
 .crono-acciones{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
 
+/* ---- medir sprint: tarjeta por jugador con dos intentos y selector de distancia ---- */
+.segmentado{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-1);padding:var(--sp-1);margin-bottom:var(--sp-4);background:var(--fondo-chip);border-radius:var(--r)}
+.segmento{min-height:var(--tap);border-radius:var(--r-m);background:transparent;color:var(--tinta);font-family:var(--ff-titulo);font-size:var(--fs-190);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.segmento[aria-pressed="true"]{background:var(--blanco);box-shadow:var(--sombra)}
+.sprint-tarj{display:grid;gap:var(--sp-3);margin-bottom:var(--sp-3)}
+.sprint-tarj.ausente .nom{color:var(--gris)}
+.sprint-cab{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.sprint-cab .nom{font-family:var(--ff-titulo);font-size:var(--fs-200);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.sprint-celdas{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.sprint-celda{display:grid;gap:var(--sp-1);align-content:start}
+.sprint-celda .etq{display:flex;align-items:center;gap:var(--sp-1);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
+.sprint-celda.vacia .sin{display:flex;align-items:center;justify-content:center;min-height:var(--tap)}
+.sprint-correr{min-height:3.5rem;padding:var(--sp-2)}
+.sprint-tiempo{min-height:3.5rem;border-radius:var(--r-m);background:var(--fondo-chip);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-260);font-weight:600;font-variant-numeric:tabular-nums}
+.sprint-tiempo .u{font-size:.5em;color:var(--primario);margin-left:.12em}
+.sprint-pie{display:flex;gap:var(--sp-2)}
+.sprint-pie .btn{flex:1}
+
 /* ---- medir salto: fila por jugador con hasta 3 intentos ---- */
 .campo select{width:100%;min-height:var(--tap);padding:0 var(--sp-3);border:1px solid var(--linea);border-radius:var(--r-m);background:var(--blanco);color:var(--tinta);font-size:var(--fs-145)}
 .salto-acciones{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-4)}
