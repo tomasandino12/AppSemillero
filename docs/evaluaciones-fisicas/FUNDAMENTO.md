@@ -55,10 +55,23 @@ alcanzar la marca.
 |---|---|---|---|
 | 1 | CMJ (manos en la cadera) | video en cámara lenta, 2 marcas | [6][7][8] |
 | 1 | Abalakov (CMJ con brazos libres) | video en cámara lenta, 2 marcas | [7] (CMJ con brazos en chicos de 11–14) |
-| 2 | Sprint de 30 m | video de costado, marcas en postes (método MySprint) | [23][24] |
+| 2 | Sprint de 30 m | cronómetro de salida con pitido en la app (§6; MySprint quedó como alternativa) | [23][24] |
 | 3 | Wells y Dillon | carga manual en cm | protocolo CReAR/ENARD |
 | 3 | Coordinación 10 m | carga manual (o video) | protocolo a conseguir |
-| 4 | Yo-Yo | la app hace sonar los pitidos | protocolo a conseguir |
+| 4 | Yo-Yo endurance L1 | la app hace sonar los pitidos y el profe marca avisos y eliminados (protocolo definido, ver abajo) | Bangsbo; tabla de theyoyotest.com |
+
+**Yo-Yo endurance (0049).** Nivel 1 de Bangsbo, continuo, con idas de 20 m: 20
+niveles de ~1 minuto, de 8,0 a 17,5 km/h, con 7, 8, 8, 8, 9, 9, 10, 10, 11, 11,
+11, 12, 12, 13, 13, 13, 14, 14, 15 y 15 idas (223 idas, 4.460 m). La app
+programa todos los pitidos en el reloj del audio (uno por ida, doble al subir
+de nivel) y cuenta 5 s antes de arrancar. Al primer pitido que un chico no
+llega a la línea el profe le marca un aviso; al segundo seguido, queda afuera
+y la app anota sus idas completas. Se guardan las idas, nunca el nivel ni los
+metros: los calcula `src/data/yoyo.js`. Como en el sprint, sirve para
+compararse contra uno mismo; **antes de comparar con el CReAR hay que
+confirmar que usan esta misma versión** (si no, sólo cambia la tabla). Es
+agotador (hasta unos 15 min): no más de 2 o 3 veces por año, y tandas de 8 a
+10 jugadores.
 
 ## 4. Salto por tiempo de vuelo
 
