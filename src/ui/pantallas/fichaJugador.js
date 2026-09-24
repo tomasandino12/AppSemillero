@@ -14,7 +14,6 @@ import { sesionesDeSalto, ultimaYAnteriores, TESTS_SALTO } from '../../data/salt
 import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
-  ALTURA_MIN_CM, ALTURA_MAX_CM, PESO_MIN_KG, PESO_MAX_KG,
 } from '../../data/antropometria.js';
 import { obtenerClubActual, obtenerPlantelActivo } from '../sesion.js';
 import { escaparHtml, esErrorDeRed, textoPorcentaje, formatearFechaCorta, toast } from '../nav.js';
@@ -543,7 +542,9 @@ async function cargarCorporal(clubId, idJugador) {
 
 /** NULL es "no se midió" y se muestra como tal; nunca como un cero. */
 function celdaMedida(valor, unidad) {
-  return valor == null ? '<span class="sin">sin medir</span>' : `${valor} ${unidad}`;
+  return valor == null
+    ? '<span class="sin" title="sin medir" aria-label="sin medir">—</span>'
+    : `${valor}<span class="u"> ${unidad}</span>`;
 }
 
 function renderCorporal(clubId, idJugador, mediciones) {
@@ -555,15 +556,16 @@ function renderCorporal(clubId, idJugador, mediciones) {
     <div class="eyebrow">Mediciones <span class="der">${ordenadas.length}</span></div>
     ${ordenadas.length ? `
       <div class="tabla-corporal">
-        <div class="fila-corporal cab"><div>Fecha</div><div>Altura</div><div>Peso</div><div></div></div>
+        <div class="fila-corporal cab"><div>Fecha</div><div>Altura</div><div>Peso</div><div>Pierna ext.</div><div>Pierna flex.</div><div></div></div>
         ${ordenadas.map((m) => `
           <div class="fila-corporal">
             <div class="f">${escaparHtml(formatearFechaCorta(m.fechaMedicion))}</div>
             <div>${celdaMedida(m.alturaCm, 'cm')}</div>
             <div>${celdaMedida(m.pesoKg, 'kg')}</div>
+            <div>${celdaMedida(m.piernaCm, 'cm')}</div>
+            <div>${celdaMedida(m.piernaFlexionadaCm, 'cm')}</div>
             <div><button class="borrar" data-borrar="${m.id}" aria-label="Borrar la medición del ${escaparHtml(m.fechaMedicion)}">&#10005;</button></div>
           </div>
-          ${m.piernaCm != null || m.piernaFlexionadaCm != null ? `<div class="det">Pierna: ${celdaMedida(m.piernaCm, 'cm')} extendida · ${celdaMedida(m.piernaFlexionadaCm, 'cm')} flexionada</div>` : ''}
         `).join('')}
       </div>
     ` : `
@@ -585,7 +587,6 @@ function renderCorporal(clubId, idJugador, mediciones) {
         <input id="in-peso" type="text" inputmode="decimal" autocomplete="off" placeholder="—">
       </div>
     </div>
-    <div class="ayuda">Se puede cargar sólo una de las dos. Altura entre ${ALTURA_MIN_CM} y ${ALTURA_MAX_CM} cm, peso entre ${PESO_MIN_KG} y ${PESO_MAX_KG} kg.</div>
     <div class="campos-par">
       <div class="campo">
         <label for="in-pierna">Pierna extendida (cm)</label>
@@ -596,7 +597,10 @@ function renderCorporal(clubId, idJugador, mediciones) {
         <input id="in-pierna-flexionada" type="text" inputmode="decimal" autocomplete="off" placeholder="—">
       </div>
     </div>
-    <div class="ayuda">Las dos piernas son sólo para la potencia del salto. Cualquiera de los cuatro datos se puede dejar vacío. <button type="button" class="btn chico sec" id="btn-como-medir">¿Cómo medir?</button></div>
+    <div class="aviso-corporal">
+      <span>No hace falta cargar todas las medidas en cada medición.</span>
+      <button type="button" class="btn chico sec" id="btn-como-medir">¿Cómo medir?</button>
+    </div>
     <div id="corporal-aviso"></div>
     <button class="btn" id="btn-agregar-medicion">Agregar medición</button>
   `;

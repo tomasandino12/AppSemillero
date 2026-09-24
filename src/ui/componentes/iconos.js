@@ -20,10 +20,18 @@ export const ICONO = {
   reproducir: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" focusable="false"><path d="M7 4l13 8-13 8V4z"/></svg>',
   cursor: `<svg ${ATR}><path d="M4 3l7.07 16.97 2.51-6.99 6.99-2.51z"/></svg>`,
   info: `<svg ${ATR}><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>`,
-  // Guía de medidas del cuerpo (de perfil). L0: trocánter a punta del pie con el tobillo estirado.
+  // Guía de medidas del cuerpo. Íconos chicos: cabecera de la hoja.
   piernaExtendida: `<svg ${ATR}><circle cx="13" cy="4" r="1.8"/><path d="M13 5.8V18"/><path d="M13 18l5 3.5"/><path d="M4 4v17.5"/><path d="M2 4h4"/><path d="M2 21.5h4"/></svg>`,
-  // hpush: trocánter al piso, en cuclillas con la rodilla a 90°.
-  piernaFlexionada: `<svg ${ATR}><circle cx="8" cy="10" r="1.8"/><path d="M9.5 11l8.5 1"/><path d="M18 12l-1.5 8"/><path d="M16.5 20H21"/><path d="M4 10v10"/><path d="M2 10h4"/><path d="M2 20h4"/><path d="M2 22h21"/></svg>`,
+};
+
+/** Dibujos grandes (64×64) para las guías paso a paso; los íconos de arriba son de 24×24. */
+export const FIGURA = {
+  // Figuras de perfil, hechas a mano para el paso a paso (no hay set libre con estas posturas).
+  // La medida va en `.medida` / `.punto` (color del club); el cuerpo, en currentColor.
+  // L0: parado en puntas, del trocánter (cadera) a la punta del pie.
+  piernaExtendida: `<svg viewBox="0 0 64 64" class="figura" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="34" cy="8" r="4"/><path d="M34 13v17"/><path d="M34 30v20"/><path d="M34 50l7 9"/><path d="M8 58h48" stroke-width="1.5"/><path class="medida" d="M18 30v29M14 30h8M14 59h8" stroke-width="2"/><path class="medida" d="M22 30h12" stroke-dasharray="2 3" stroke-width="1.5"/><circle class="punto" cx="34" cy="30" r="3"/></svg>`,
+  // hpush: posición de arranque del salto (semiflexión, no sentadilla profunda), del trocánter al piso.
+  piernaFlexionada: `<svg viewBox="0 0 64 64" class="figura" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="40" cy="9" r="4"/><path d="M38 14l-9 22"/><path d="M29 36l14 8"/><path d="M43 44l-8 13"/><path d="M35 57h9"/><path d="M8 58h48" stroke-width="1.5"/><path class="medida" d="M18 36v23M14 36h8M14 59h8" stroke-width="2"/><path class="medida" d="M22 36h7" stroke-dasharray="2 3" stroke-width="1.5"/><circle class="punto" cx="29" cy="36" r="3"/></svg>`,
 };
 
 /** Botón cuadrado con un solo ícono: `aria-label` y `title` cubren lo que en un botón de texto da la etiqueta. */

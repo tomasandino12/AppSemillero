@@ -431,11 +431,13 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Histórico de altura y peso en la ficha del jugador (0012) */
 .tabla-corporal{display:flex;flex-direction:column;margin:10px 0}
-.fila-corporal{display:grid;grid-template-columns:auto 1fr 1fr 2.5rem;gap:var(--sp-2);align-items:center;padding:10px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
-.fila-corporal .f{font-family:var(--ff-mono);color:var(--gris-cl)}
-.fila-corporal .sin{color:var(--gris-cl);font-size:var(--fs-125)}
-.fila-corporal.cab{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris-cl)}
-.fila-corporal .borrar{min-width:40px;min-height:40px;border:0;border-radius:8px;background:none;color:var(--gris-cl);font-size:var(--fs-145)}
+.fila-corporal{display:grid;grid-template-columns:3rem repeat(4,minmax(0,1fr)) 2.25rem;gap:var(--sp-1) var(--sp-2);align-items:center;padding:10px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
+.fila-corporal .f{font-family:var(--ff-mono);color:var(--gris-cl);font-size:var(--fs-125)}
+.fila-corporal .sin{color:var(--gris-cl)}
+.fila-corporal .u{color:var(--gris-cl);font-size:var(--fs-115)}
+.fila-corporal.cab{font-family:var(--ff-titulo);font-size:var(--fs-115);line-height:1.15;letter-spacing:.04em;text-transform:uppercase;color:var(--gris-cl);align-items:end}
+.fila-corporal .borrar{min-width:36px;min-height:40px;border:0;border-radius:8px;background:none;color:var(--gris-cl);font-size:var(--fs-145)}
+.aviso-corporal{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;margin:var(--sp-3) 0;font-size:var(--fs-135);font-weight:500;color:var(--primario-osc)}
 .campos-par{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 /* Card de HOY: zonas ordenadas de peor a mejor, barra en escala 0-100 fija */
@@ -886,6 +888,10 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .guia-paso .cuerpo p + p{margin-top:var(--sp-2)}
 .guia-paso .dibujo{grid-column:2;display:flex;gap:var(--sp-3);align-items:center;color:var(--primario)}
 .guia-paso .dibujo svg{width:3rem;height:3rem;flex:0 0 auto}
+/* figura de perfil: el cuerpo en tinta, la medida en el color del club */
+.guia-paso .dibujo svg.figura{width:5.5rem;height:5.5rem;color:var(--tinta);background:var(--fondo-chip);border-radius:var(--r-m)}
+.guia-paso .dibujo .medida{stroke:var(--primario)}
+.guia-paso .dibujo .punto{fill:var(--primario);stroke:none}
 .guia-clave{
   background:var(--blanco);border-left:3px solid var(--primario);
   border-radius:0 var(--r) var(--r) 0;padding:var(--sp-4);

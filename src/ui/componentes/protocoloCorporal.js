@@ -2,7 +2,7 @@
 // rangos se leen de antropometria.js: si cambian allá, cambian acá solos.
 import { html, crudo } from '../html.js';
 import { abrirHoja, cerrarHoja } from './hoja.js';
-import { ICONO } from './iconos.js';
+import { ICONO, FIGURA } from './iconos.js';
 import { $ } from '../dom.js';
 import { etiquetaMetodologia } from '../../data/metodologia.js';
 import {
@@ -23,14 +23,17 @@ export function abrirProtocoloCorporal(club) {
 
     <div class="guia-paso">
       <span class="num">1</span><span class="tit">Pierna extendida</span>
-      <div class="dibujo">${crudo(ICONO.piernaExtendida)}${rango(PIERNA_MIN_CM, PIERNA_MAX_CM, 'cm')}</div>
+      <div class="dibujo">${crudo(FIGURA.piernaExtendida)}${rango(PIERNA_MIN_CM, PIERNA_MAX_CM, 'cm')}</div>
       <div class="cuerpo">Del trocánter mayor (el hueso que sobresale en la cadera) a la punta del pie, con el tobillo estirado, como si estuviera en puntas. Al medio centímetro.</div>
     </div>
 
     <div class="guia-paso">
       <span class="num">2</span><span class="tit">Pierna flexionada</span>
-      <div class="dibujo">${crudo(ICONO.piernaFlexionada)}${rango(PIERNA_FLEXIONADA_MIN_CM, PIERNA_FLEXIONADA_MAX_CM, 'cm')}</div>
-      <div class="cuerpo">Del trocánter mayor al piso, en cuclillas con la rodilla a 90°. Es la posición de partida del salto.</div>
+      <div class="dibujo">${crudo(FIGURA.piernaFlexionada)}${rango(PIERNA_FLEXIONADA_MIN_CM, PIERNA_FLEXIONADA_MAX_CM, 'cm')}</div>
+      <div class="cuerpo">
+        <p>Del trocánter mayor al piso, en la posición desde la que el jugador arranca el salto.</p>
+        <p>No hace falta una sentadilla profunda: pedile que se flexione como cuando se prepara para saltar, y medí ahí.</p>
+      </div>
     </div>
 
     <div class="guia-paso">
@@ -38,12 +41,12 @@ export function abrirProtocoloCorporal(club) {
       <div class="dibujo">${rango(ALTURA_MIN_CM, ALTURA_MAX_CM, 'cm')}${rango(PESO_MIN_KG, PESO_MAX_KG, 'kg')}</div>
       <div class="cuerpo">
         <p>Altura: descalzo y de espaldas a la pared.</p>
-        <p>Peso: con poca ropa.</p>
+        <p>Peso: con la menor carga encima posible (sin mochila, buzo ni botines).</p>
       </div>
     </div>
 
     <div class="guia-clave">
-      Cualquiera de los cuatro datos se puede dejar vacío. Sin las dos medidas de pierna y el peso no hay potencia.
+      Cualquiera de las medidas se puede dejar vacía. Sin las dos medidas de pierna y el peso no hay potencia.
     </div>
 
     <button type="button" class="btn" id="guia-corporal-ok">Entendido</button>
