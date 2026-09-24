@@ -902,3 +902,4 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .cifra-clave{font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-cifra);line-height:1;color:var(--tinta)}
 .cifra-clave .u{font-size:var(--fs-160);color:var(--primario);margin-left:var(--sp-1)}
 .cifra-clave + .etq{display:block;margin-top:var(--sp-1);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
+.lista-guia{list-style:none;display:flex;flex-direction:column;gap:var(--sp-2);margin:var(--sp-2) 0}

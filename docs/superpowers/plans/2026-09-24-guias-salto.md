@@ -14,7 +14,7 @@ Antes de tocar CSS o una pantalla: leer DESIGN.md (tokens, "Reglas duras", "Chec
 | 2 migración 0046 | aplicada con db push (24/09) | ver git log |
 | 3 repo clubes | hecha | ver git log |
 | 4 estilos de guía | hecha | ver git log |
-| 5 guía de interpretación | pendiente | |
+| 5 guía de interpretación | hecha | ver git log |
 | 6 salto en la ficha | pendiente | |
 | 7 protocolo corporal | pendiente | |
 | 8 protocolo del salto en tarjetas | pendiente | |

@@ -151,3 +151,17 @@ test('pareceSinCamaraLenta: el vuelo sólo es posible leído a la velocidad del 
   assert.equal(pareceSinCamaraLenta(100, 240, a30), false);
   assert.equal(pareceSinCamaraLenta(0, 240, a30), false);
 });
+
+test('el ejemplo de la guía da 1852 W y 19,5 W/kg (pivot) y 1485 W y 22,9 W/kg (base)', () => {
+  const pivot = potenciaSamozino({
+    masaKg: 95, alturaCm: 30, piernaCm: 105, piernaFlexionadaCm: 58,
+  });
+  assert.equal(Math.round(pivot.potenciaW), 1852);
+  assert.equal(pivot.potenciaWKg.toFixed(1), '19.5');
+  const base = potenciaSamozino({
+    masaKg: 65, alturaCm: 35, piernaCm: 95, piernaFlexionadaCm: 50,
+  });
+  assert.equal(Math.round(base.potenciaW), 1485);
+  assert.equal(base.potenciaWKg.toFixed(1), '22.9');
+  assert.equal(alturaDeSalto(0.45).toFixed(1), '24.8');
+});
