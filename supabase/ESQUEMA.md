@@ -194,7 +194,7 @@ Qué cuenta de Auth ve a qué jugador: `(id, user_id, club_id, jugador_id, desde
 | `mi_ficha()` | club, nombre propio y planteles con pertenencia vigente. Null si no hay cuenta vigente: es lo que arranca la app. |
 | `mis_recursos()` | sólo los `envio_recurso` dirigidos a él. |
 | `mi_plan()` | por cada plantel suyo, el plan vigente (mismo criterio que `elegirPlanVisible`) con sus sesiones y líneas, más `pesos`: **su** último peso en cada ejercicio, con la clave para unirlo a la línea en el cliente (`clavearNombre` es JS y no se reproduce en SQL). |
-| `mi_progreso()` | `partidos`, `tiro`, `saltos` (0044: por sesión, `test` e `intentos` con `tiempoVueloMs`) y `escalones`, todo propio. Sin medidas corporales, sin promedios ni nombres de otros. |
+| `mi_progreso()` | `partidos`, `tiro`, `saltos` (0044: por sesión, `test` e `intentos` con `tiempoVueloMs`), `sprints` (0048: por sesión, `distanciaM` e `intentos` con `tiempoMs` y `origen`) y `escalones`, todo propio. Sin medidas corporales, sin promedios ni nombres de otros. |
 
 Con la cuenta cerrada devuelven null o cero filas, y no se borra nada. `src/data/accesoJugador.js` declara todo lo que 0029 y 0030 otorgan con `grant execute`, y `tests/contratoAccesoJugador.test.js` falla si aparece un grant que no está ahí. Sumar una función para el jugador es una RPC, una pantalla y una línea en `TABS_JUGADOR`; sacarla es `revoke execute`.
 
@@ -243,6 +243,16 @@ CMJ y Abalakov medidos con video en cámara lenta (spec `docs/superpowers/specs/
 ### Sin velocidad (0045)
 La medición de velocidad de 0009 (largo de cancha con cronómetro) se borró: daba ruido y lo cargado era de prueba (lo sembraba `tests/sembrarEntrenamientos.js`). 0045 borra `medicion_velocidad` y sus sesiones, deja `sesion_medicion.tipo` en `tiro` | `salto` y reemplaza `guardar_sesion_medicion` y `mi_progreso` sin esa rama ni esa clave. El sprint vuelve rediseñado, por video, con su propia tabla.
 
+### Sprint: `medicion_sprint` (0048)
+Sprint de 20 o 30 m con cronómetro de salida en el celular (spec `docs/superpowers/specs/2026-09-24-sprint-y-yoyo-design.md`).
+
+- `sesion_medicion.tipo` suma `sprint`, y `distancia_sprint_m` (20 | 30) es obligatoria sólo en ese tipo (`(tipo = 'sprint') = (distancia_sprint_m is not null)`). Una sesión es de una sola distancia.
+- `medicion_sprint`: `intento` (1–2), `tiempo_ms` (`integer`, 2500–12000), `origen` (`propio` | `crear`, default `propio`), `unique (sesion_id, jugador_id, intento)`. **Se guarda el tiempo crudo, nunca la velocidad**: `src/data/sprint.js` la calcula. `tiempo_ms` NULL = ausente, en una sola fila (intento 1).
+- `origen = 'crear'` marca lo medido con las fotocélulas del CReAR (más exacto). La app sólo inserta `propio`: el grant de insert por columna no incluye `origen`; `crear` se carga por SQL.
+- RLS por el plantel de la sesión, como `medicion_salto`; el insert exige sesión de tipo `sprint`. `revoke all` + `select` + `insert` por columna, sin update ni delete. Un trigger sella `creado_por` y `creado_en`.
+- `guardar_sesion_medicion` (0048) suma la rama `sprint`: `distanciaSprintM` obligatoria (y prohibida en tiro y salto), mediciones `{ jugadorId, intento, tiempoMs }`, misma idempotencia por `sesionId` (el reintento tiene que coincidir también en la distancia).
+- `tests/contratoSprint.test.js` compara los rangos con `sprint.js`; `tests/contratoRpcSprint.test.js`, que 0048 no haya perdido ninguna rama ni garantía de 0045.
+
 ## Políticas RLS
 
 Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde 0016 pasa por la asignación, y **lectura y escritura son ejes separados**. Desde 0018 el coordinador no lee datos individuales.
@@ -289,7 +299,7 @@ Son `security definer` por obligación, no por comodidad: se llaman desde las po
 |---|---|
 | `plantel_id` directo | `plantel`, `pertenencia`, `partido`, `sesion_medicion`, `meta_zona` |
 | vía `partido_id` | `estadistica_jugador_partido` |
-| vía `sesion_id` | `medicion_tiro`, `medicion_salto` |
+| vía `sesion_id` | `medicion_tiro`, `medicion_salto`, `medicion_sprint` |
 | vía `pertenencia` del jugador | `jugador`, `medicion_corporal`, `envio_recurso` |
 
 Un chico citado en dos categorías tiene dos pertenencias vigentes: con que **alguna** dé acceso alcanza.

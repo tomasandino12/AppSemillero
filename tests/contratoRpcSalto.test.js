@@ -4,15 +4,15 @@ import { readFileSync } from 'node:fs';
 
 /**
  * 0044 reemplazó enteras guardar_sesion_medicion (de 0038) y mi_progreso (de
- * 0030) para sumar el salto, y 0045 las volvió a reemplazar para sacar la
- * velocidad. Un reemplazo entero puede perder en silencio una rama o una
+ * 0030) para sumar el salto, 0045 las volvió a reemplazar para sacar la
+ * velocidad y 0048 para sumar el sprint. Un reemplazo entero puede perder en silencio una rama o una
  * garantía vieja, y los contratos de 0030 y 0038 siguen leyendo esas
  * migraciones. Este test fija en la última versión lo que ya garantizaban.
  *
  * Si una migración posterior vuelve a reemplazar alguna, actualizar la ruta.
  */
 
-const MIGRACION = 'supabase/migrations/0045_borrar_velocidad.sql';
+const MIGRACION = 'supabase/migrations/0048_sprint.sql';
 const leer = (ruta) => readFileSync(ruta, 'utf8').replace(/\r\n/g, '\n');
 const sinComentarios = (sql) => sql.replace(/--.*$/gm, '');
 const sql = sinComentarios(leer(MIGRACION));
@@ -28,8 +28,8 @@ function cuerpoDe(nombre, cierre) {
 const guardar = cuerpoDe('guardar_sesion_medicion', '$$');
 const progreso = cuerpoDe('mi_progreso', '$fn$');
 
-test('guardar_sesion_medicion guarda tiro y salto, y ya no velocidad', () => {
-  assert.match(guardar, /v_tipo not in \('tiro', 'salto'\)/);
+test('guardar_sesion_medicion guarda tiro, salto y sprint, y ya no velocidad', () => {
+  assert.match(guardar, /v_tipo not in \('tiro', 'salto', 'sprint'\)/);
   assert.match(guardar, /insert into medicion_tiro \(club_id, sesion_id, jugador_id, posicion, anotados, intentos\)/);
   assert.doesNotMatch(guardar, /velocidad/);
   assert.match(guardar, /insert into medicion_salto \(club_id, sesion_id, jugador_id, intento, tiempo_vuelo_ms, fps_captura\)/);
@@ -67,10 +67,11 @@ test('mi_progreso conserva sus claves, sin velocidad', () => {
   assert.doesNotMatch(progreso, /fps_captura/);
 });
 
-test('0045 borra la tabla y el tipo de sesión de velocidad', () => {
-  assert.match(sql, /drop table medicion_velocidad;/);
-  assert.match(sql, /delete from sesion_medicion where tipo = 'velocidad';/);
-  assert.match(sql, /check \(tipo in \('tiro', 'salto'\)\)/);
+test('0045 borró la tabla y el tipo de sesión de velocidad', () => {
+  const borrado = sinComentarios(leer('supabase/migrations/0045_borrar_velocidad.sql'));
+  assert.match(borrado, /drop table medicion_velocidad;/);
+  assert.match(borrado, /delete from sesion_medicion where tipo = 'velocidad';/);
+  assert.match(borrado, /check \(tipo in \('tiro', 'salto'\)\)/);
 });
 
 test('los dos siguen ejecutables sólo por authenticated', () => {
