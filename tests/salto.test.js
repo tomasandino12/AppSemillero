@@ -4,7 +4,7 @@ import {
   G, TV_MIN_S, TV_MAX_S, FPS_MIN,
   cuadrosEntre, tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo,
   potenciaSamozino, mejorIntento, rangoDeIntentos, vigenteALaFecha, sesionesDeSalto,
-  pareceSinCamaraLenta,
+  pareceSinCamaraLenta, ultimaYAnteriores,
 } from '../src/data/salto.js';
 
 const cerca = (real, esperado, tolerancia = 0.01) => assert.ok(
@@ -164,4 +164,22 @@ test('el ejemplo de la guía da 1852 W y 19,5 W/kg (pivot) y 1485 W y 22,9 W/kg 
   assert.equal(Math.round(base.potenciaW), 1485);
   assert.equal(base.potenciaWKg.toFixed(1), '22.9');
   assert.equal(alturaDeSalto(0.45).toFixed(1), '24.8');
+});
+
+test('ultimaYAnteriores separa la última de las anteriores', () => {
+  const sesiones = [
+    { sesionId: 'a', testSalto: 'cmj', mejor: { alturaCm: 30 } },
+    { sesionId: 'b', testSalto: 'abalakov', mejor: { alturaCm: 35 } },
+    { sesionId: 'c', testSalto: 'cmj', mejor: null },
+    { sesionId: 'd', testSalto: 'cmj', mejor: { alturaCm: 28 } },
+  ];
+  const r = ultimaYAnteriores(sesiones, 'cmj');
+  assert.equal(r.ultima.sesionId, 'a');
+  assert.deepEqual(r.anteriores.map((s) => s.sesionId), ['c', 'd']);
+});
+
+test('ultimaYAnteriores sin sesiones de ese test devuelve null', () => {
+  assert.equal(ultimaYAnteriores([], 'cmj'), null);
+  assert.equal(ultimaYAnteriores([{ sesionId: 'a', testSalto: 'abalakov', mejor: { alturaCm: 1 } }], 'cmj'), null);
+  assert.equal(ultimaYAnteriores([{ sesionId: 'a', testSalto: 'cmj', mejor: null }], 'cmj'), null);
 });

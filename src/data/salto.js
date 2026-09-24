@@ -167,3 +167,15 @@ export function sesionesDeSalto(intentos, corporales) {
     })
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
 }
+
+/**
+ * De las sesiones de UN test (la más reciente primero, como las deja
+ * `sesionesDeSalto`): la última con un intento válido y todas las demás,
+ * ausencias incluidas. null si no hay ninguna con dato.
+ */
+export function ultimaYAnteriores(sesiones, test) {
+  const delTest = (sesiones ?? []).filter((s) => s.testSalto === test);
+  const ultima = delTest.find((s) => s.mejor);
+  if (!ultima) return null;
+  return { ultima, anteriores: delTest.filter((s) => s !== ultima) };
+}

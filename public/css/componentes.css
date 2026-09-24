@@ -903,3 +903,7 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .cifra-clave .u{font-size:var(--fs-160);color:var(--primario);margin-left:var(--sp-1)}
 .cifra-clave + .etq{display:block;margin-top:var(--sp-1);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
 .lista-guia{list-style:none;display:flex;flex-direction:column;gap:var(--sp-2);margin:var(--sp-2) 0}
+.salto-tarj{margin-bottom:var(--sp-3)}
+.salto-datos{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);margin-top:var(--sp-2);font-family:var(--ff-mono);font-size:var(--fs-125);color:var(--gris-cl)}
+.salto-tarj.chica .cifra-clave{font-size:var(--fs-260)}
+.eyebrow .btn.chico{margin-left:auto}

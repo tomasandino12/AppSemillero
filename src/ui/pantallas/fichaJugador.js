@@ -10,7 +10,7 @@ import {
   serieDeTiroDelJugador, ultimaBateriaDeJugador, ultimaBateriaConDatosDeJugador, historialDePartidosDelJugador,
   ejeComun, compararPorcentajes,
 } from '../../data/estadisticas.js';
-import { sesionesDeSalto, TESTS_SALTO } from '../../data/salto.js';
+import { sesionesDeSalto, ultimaYAnteriores, TESTS_SALTO } from '../../data/salto.js';
 import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, validarMedicion, validarFechaNacimiento,
@@ -26,6 +26,7 @@ import { verDetallesHtml } from '../componentes/verDetalles.js';
 import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjetasDePesos.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { botonIcono, ICONO } from '../componentes/iconos.js';
+import { abrirGuiaSalto } from '../componentes/guiaSalto.js';
 import { html, crudo } from '../html.js';
 import { $ } from '../dom.js';
 import { avisoDeError, textoDeError, mensajeAlGuardar } from '../errores.js';
@@ -215,42 +216,64 @@ const NOMBRE_TEST_SALTO = { cmj: 'CMJ', abalakov: 'Abalakov' };
 const decimalEs = (n, dec = 1) => n.toFixed(dec).replace('.', ',');
 
 /**
- * Salto: el mejor intento de cada sesión, por test (CMJ y Abalakov no se
- * comparan entre sí). Sin gráfico de tendencia: el error de un cuadro son
- * ±2 cm y una línea mentiría. La potencia sólo sale
- * si hay peso y largos de pierna vigentes a esa fecha; si no, "sin datos".
+ * Salto: la última sesión de cada test en una tarjeta (CMJ y Abalakov no se
+ * comparan entre sí) y las anteriores en una lista corta, sin barras ni
+ * flechas: el error de un cuadro son ±2 cm y una diferencia de ese tamaño no
+ * es una mejora. La potencia sólo sale si hay peso y largos de pierna
+ * vigentes a esa fecha; si no, la cifra héroe es la altura y se dice qué falta.
  */
+function tarjetaSalto(s, chica) {
+  const m = s.mejor;
+  const conPotencia = m.potenciaWKg != null;
+  return html`
+    <div class="tarj salto-tarj${chica ? ' chica' : ''}">
+      <div class="det">${formatearFechaCorta(s.fecha)}</div>
+      <div class="cifra-clave">${conPotencia ? decimalEs(m.potenciaWKg) : decimalEs(m.alturaCm)}<span class="u">${conPotencia ? 'W/kg' : 'cm'}</span></div>
+      <span class="etq">${conPotencia ? 'Parámetro clave' : 'Altura'}</span>
+      <div class="salto-datos">
+        ${conPotencia ? html`<span>${decimalEs(m.alturaCm)} cm</span>` : ''}
+        <span>${decimalEs(m.tiempoVueloMs / 1000, 2)} s en el aire</span>
+        ${conPotencia ? html`<span>${Math.round(m.potenciaW)} W</span>` : ''}
+      </div>
+      ${conPotencia ? '' : html`<div class="det sin">Sin potencia: falta peso o medidas de pierna.</div>`}
+      ${s.intentos.length > 1 && s.rangoCm != null
+        ? html`<div class="det">${s.intentos.length} intentos · ${decimalEs(s.rangoCm)} cm entre el mejor y el peor</div>`
+        : ''}
+    </div>
+  `;
+}
+
+function filaSaltoAnterior(s) {
+  if (!s.mejor) {
+    return html`<div class="fila-ev tres"><div class="f">${formatearFechaCorta(s.fecha)}</div><div class="sin">Ausente</div><div></div></div>`;
+  }
+  return html`
+    <div class="fila-ev tres">
+      <div class="f">${formatearFechaCorta(s.fecha)}</div>
+      <div>${decimalEs(s.mejor.alturaCm)} cm</div>
+      <div>${s.mejor.potenciaWKg == null
+    ? crudo('<span class="sin">sin potencia</span>')
+    : `${decimalEs(s.mejor.potenciaWKg)} W/kg`}</div>
+    </div>
+  `;
+}
+
 function seccionSalto(sesiones) {
   if (!sesiones.length) {
     return html`<div class="eyebrow">Salto</div><div class="p">Sin medir.</div>`;
   }
+  const bloques = TESTS_SALTO.map((test) => {
+    const r = ultimaYAnteriores(sesiones, test);
+    if (!r) return '';
+    return html`
+      <div class="det">${NOMBRE_TEST_SALTO[test]}</div>
+      ${tarjetaSalto(r.ultima, test !== 'cmj')}
+      ${r.anteriores.length ? html`<div class="tabla-ev">${r.anteriores.map(filaSaltoAnterior)}</div>` : ''}
+    `;
+  });
   return html`
-    <div class="eyebrow">Salto</div>
-    <div class="det">Del mejor intento: altura, tiempo en el aire y potencia de piernas estimada, en watts y en watts por kilo de peso (ésta es la que sirve para comparar chicos de distinto tamaño).</div>
-    ${TESTS_SALTO.map((test) => {
-      const delTest = sesiones.filter((s) => s.testSalto === test);
-      if (!delTest.length) return '';
-      return html`
-        <div class="det">${NOMBRE_TEST_SALTO[test]}</div>
-        <div class="tabla-ev">
-          ${delTest.map((s) => html`
-            <div class="fila-ev">
-              <div class="f">${formatearFechaCorta(s.fecha)}</div>
-              ${s.mejor ? html`
-                <div>${decimalEs(s.mejor.alturaCm)} cm</div>
-                <div>${decimalEs(s.mejor.tiempoVueloMs / 1000, 2)} s</div>
-                <div>${s.mejor.potenciaW == null
-                  ? crudo('<span class="sin">sin datos</span>')
-                  : `${Math.round(s.mejor.potenciaW)} W · ${decimalEs(s.mejor.potenciaWKg)} W/kg`}</div>
-              ` : html`<div class="sin">Ausente</div><div></div><div></div>`}
-            </div>
-            ${s.intentos.length > 1 && s.rangoCm != null
-              ? html`<div class="det">${s.intentos.length} intentos · entre el mejor y el peor hubo ${decimalEs(s.rangoCm)} cm</div>`
-              : ''}
-          `)}
-        </div>
-      `;
-    })}
+    <div class="eyebrow">Salto <button type="button" class="btn chico sec" id="btn-guia-salto">¿Cómo interpretarlo?</button></div>
+    ${bloques}
   `;
 }
 
@@ -362,6 +385,7 @@ export async function renderFicha() {
     if (bateriaConDatos) cancha($('ficha-cancha'), bateriaConDatos.porPosicion);
     dibujarSerie('ficha-triples', series.triples);
     dibujarSerie('ficha-libres', series.libres);
+    $('btn-guia-salto')?.addEventListener('click', () => abrirGuiaSalto(club));
   } catch (e) {
     $('ficha-historia').innerHTML = `<div class="al"><div class="tx">${
       textoDeError(e, 'No se pudo cargar la historia del jugador.')
