@@ -7,6 +7,8 @@ import {
   insumosDeEstadisticas, acumuladosDePartidos, progresionDePesos, pesosPorBloque, bloquePorClaveDePlanes,
 } from '../../data/progresoDelJugador.js';
 import { sesionesDeSalto, TESTS_SALTO } from '../../data/salto.js';
+import { sesionesDeSprint } from '../../data/sprint.js';
+import { seccionSprint } from '../componentes/seccionSprint.js';
 import { obtenerFichaJugador } from '../sesion.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
@@ -117,6 +119,11 @@ function seccionSalto(saltos) {
   `;
 }
 
+/** mi_progreso trae los intentos ya agrupados por sesión; se aplanan para reusar `sesionesDeSprint`. */
+const intentosDeSprint = (sprints) => sprints.flatMap((s) => s.intentos.map((i) => ({
+  sesionId: s.sesionId, fecha: s.fecha, distanciaM: s.distanciaM, intento: i.intento, tiempoMs: i.tiempoMs, origen: i.origen,
+})));
+
 function seccionPartidos(historial, acumulados) {
   if (!historial.length) {
     return html`<div class="eyebrow">Partido a partido</div>
@@ -186,13 +193,13 @@ export async function renderJugProgreso() {
     return;
   }
 
-  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.saltos.length && !progreso.escalones.length;
+  const vacio = !progreso.partidos.length && !progreso.tiro.length && !progreso.saltos.length && !progreso.sprints.length && !progreso.escalones.length;
   if (vacio) {
     contenedor().innerHTML = html`
       <div class="pad">
         <div class="estado-vacio">
           <h2>Todavía no hay nada para mostrar</h2>
-          <div class="p">Cuando haya partidos, baterías de tiro, saltos o pesos tuyos cargados, tu progreso aparece acá.</div>
+          <div class="p">Cuando haya partidos, baterías de tiro, saltos, sprints o pesos tuyos cargados, tu progreso aparece acá.</div>
         </div>
       </div>
     `;
@@ -214,6 +221,7 @@ export async function renderJugProgreso() {
       ${seccionSerie('jug-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial, acumuladosDePartidos(progreso.partidos))}
       ${seccionSalto(progreso.saltos)}
+      ${seccionSprint(sesionesDeSprint(intentosDeSprint(progreso.sprints)), { sinDatos: 'Todavía no te midieron el sprint.' })}
       ${seccionPesos(pesos)}
     </div>
   `;

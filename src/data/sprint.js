@@ -101,3 +101,16 @@ export function ultimaYAnterioresSprint(sesiones, distanciaM) {
     : null;
   return { ultima, anteriores, variacionMs };
 }
+
+/**
+ * Cómo se lee la variación entre dos sesiones de la misma distancia. Bajar el
+ * tiempo es mejorar: `mejora` es true si bajó, false si subió y null si quedó
+ * igual a la décima (que es lo que se muestra) o no hay con qué comparar.
+ */
+export function variacionSprint(variacionMs) {
+  if (!sabido(variacionMs)) return { texto: null, mejora: null };
+  const decimas = Math.round(Math.abs(variacionMs) / 100);
+  if (decimas === 0) return { texto: 'igual', mejora: null };
+  const signo = variacionMs < 0 ? '−' : '+';
+  return { texto: `${signo}${(decimas / 10).toFixed(1).replace('.', ',')} s`, mejora: variacionMs < 0 };
+}

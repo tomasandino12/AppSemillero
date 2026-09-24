@@ -1,7 +1,7 @@
 import {
   obtenerJugadoresDelPlantel, obtenerPertenenciasDeJugador,
   obtenerSesionesDeMedicion, obtenerMedicionesTiroDelPlantel,
-  obtenerMedicionesSaltoDelPlantel,
+  obtenerMedicionesSaltoDelPlantel, obtenerMedicionesSprintDelPlantel,
   obtenerEstadisticasDelPlantel, obtenerPartidosDelPlantel, obtenerEnviosDeJugador,
   obtenerMedicionesCorporalesDeJugador, crearMedicionCorporal, borrarMedicionCorporal,
   actualizarFechaNacimiento, obtenerCargasDelPlantel, sacarDelPlantel,
@@ -13,6 +13,7 @@ import {
 import {
   sesionesDeSalto, ultimaYAnteriores, potenciaPrincipal, TESTS_SALTO,
 } from '../../data/salto.js';
+import { sesionesDeSprint } from '../../data/sprint.js';
 import { progresionDePesos, pesosPorBloque, pesosDeMovimientos } from '../../data/progresoDelJugador.js';
 import {
   edadEnAnios, hoyLocal, ordenarMediciones, vigentePorCampo, validarMedicion, validarFechaNacimiento,
@@ -27,6 +28,7 @@ import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjet
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { botonIcono, ICONO } from '../componentes/iconos.js';
 import { abrirGuiaSalto } from '../componentes/guiaSalto.js';
+import { seccionSprint } from '../componentes/seccionSprint.js';
 import { abrirProtocoloCorporal } from '../componentes/protocoloCorporal.js';
 import { html, crudo } from '../html.js';
 import { $ } from '../dom.js';
@@ -354,10 +356,11 @@ export async function renderFicha() {
   // están pintados arriba, así que un error de red trayendo la historia no
   // puede dejar la ficha entera en blanco.
   try {
-    const [sesiones, medicionesTiro, saltos, corporales, partidos, estadisticas, envios] = await Promise.all([
+    const [sesiones, medicionesTiro, saltos, sprints, corporales, partidos, estadisticas, envios] = await Promise.all([
       obtenerSesionesDeMedicion(club.id, plantel.id),
       obtenerMedicionesTiroDelPlantel(club.id, plantel.id),
       obtenerMedicionesSaltoDelPlantel(club.id, plantel.id),
+      obtenerMedicionesSprintDelPlantel(club.id, plantel.id),
       obtenerMedicionesCorporalesDeJugador(club.id, jugadorId),
       obtenerPartidosDelPlantel(club.id, plantel.id),
       obtenerEstadisticasDelPlantel(club.id, plantel.id),
@@ -382,6 +385,7 @@ export async function renderFicha() {
       ${bloqueDeSerie('ficha-libres', 'Tiro libre', series.libres, 'Todavía no hay datos de libres, ni de práctica ni de partido.')}
       ${seccionPartidos(historial)}
       ${seccionSalto(sesionesDeSaltoDelJugador)}
+      ${seccionSprint(sesionesDeSprint(sprints.filter((x) => x.jugadorId === jugadorId)))}
       ${seccionRecursos(envios)}
     `;
 

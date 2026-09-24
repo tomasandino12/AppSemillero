@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   DISTANCIAS_SPRINT, INTENTOS_SPRINT, TIEMPO_SPRINT_MIN_MS, TIEMPO_SPRINT_MAX_MS,
   validarTiempoSprint, formatearTiempoSprint, velocidadMedia, mejorIntentoSprint,
-  sesionesDeSprint, ultimaYAnterioresSprint,
+  sesionesDeSprint, ultimaYAnterioresSprint, variacionSprint,
 } from '../src/data/sprint.js';
 
 const intento = (sesionId, fecha, n, tiempoMs, extra = {}) => ({
@@ -93,4 +93,11 @@ test('con una sola sesión no hay variación', () => {
   const r = ultimaYAnterioresSprint(sesionesDeSprint([intento('a', '2026-08-01', 1, 5000)]), 30);
   assert.equal(r.variacionMs, null);
   assert.deepEqual(r.anteriores, []);
+});
+
+test('bajar el tiempo es mejorar, y menos de una décima es igual', () => {
+  assert.deepEqual(variacionSprint(-200), { texto: '−0,2 s', mejora: true });
+  assert.deepEqual(variacionSprint(340), { texto: '+0,3 s', mejora: false });
+  assert.deepEqual(variacionSprint(40), { texto: 'igual', mejora: null });
+  assert.deepEqual(variacionSprint(null), { texto: null, mejora: null });
 });

@@ -896,6 +896,7 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .sprint-tiempo .u{font-size:.5em;color:var(--primario);margin-left:.12em}
 .sprint-pie{display:flex;gap:var(--sp-2)}
 .sprint-pie .btn{flex:1}
+.tabla-ev + .det{margin-top:var(--sp-4)}
 
 /* ---- medir salto: fila por jugador con hasta 3 intentos ---- */
 .campo select{width:100%;min-height:var(--tap);padding:0 var(--sp-3);border:1px solid var(--linea);border-radius:var(--r-m);background:var(--blanco);color:var(--tinta);font-size:var(--fs-145)}
