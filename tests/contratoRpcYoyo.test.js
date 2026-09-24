@@ -4,17 +4,18 @@ import { readFileSync } from 'node:fs';
 
 /**
  * 0049 reemplazó enteras guardar_sesion_medicion y mi_progreso (partiendo de
- * las de 0048) para sumar el yoyo. Este test fija que no perdió ninguna rama
- * ni garantía: compara con 0048 los tramos que tienen que quedar iguales y
- * verifica lo nuevo.
+ * las de 0048) para sumar el yoyo, y 0050 las volvió a reemplazar para el
+ * parcial del sprint. Este test fija en la última versión que no se perdió
+ * ninguna rama ni garantía: compara con 0049 los tramos que tienen que quedar
+ * iguales y verifica lo nuevo del yoyo.
  *
  * Si una migración posterior vuelve a reemplazar alguna, actualizar la ruta
  * (y contratoRpcSalto.test.js y contratoRpcSprint.test.js).
  */
 
 const leer = (ruta) => readFileSync(ruta, 'utf8').replace(/\r\n/g, '\n').replace(/--.*$/gm, '');
-const nueva = leer('supabase/migrations/0049_yoyo.sql');
-const previa = leer('supabase/migrations/0048_sprint.sql');
+const nueva = leer('supabase/migrations/0050_sprint_ida_y_vuelta.sql');
+const previa = leer('supabase/migrations/0049_yoyo.sql');
 
 function cuerpoDe(sql, nombre, cierre) {
   const desde = sql.indexOf(`create or replace function ${nombre}(`);
@@ -36,8 +37,9 @@ const insertDe = (cuerpo, tabla) => {
   return m[0].replace(/\s+/g, ' ');
 };
 
-test('guardar_sesion_medicion conserva tiro, salto y sprint', () => {
-  for (const tabla of ['medicion_tiro', 'medicion_salto', 'medicion_sprint']) {
+test('guardar_sesion_medicion conserva tiro, salto, yoyo y el sprint', () => {
+  // El insert del sprint cambió a propósito en 0050 (suma parcial_ms): lo cubre contratoRpcSprint.
+  for (const tabla of ['medicion_tiro', 'medicion_salto', 'medicion_yoyo']) {
     assert.equal(insertDe(guardar, tabla), insertDe(guardarPrevia, tabla), tabla);
   }
   assert.match(guardar, /security invoker/, 'corre con los permisos y la RLS de quien guarda');
@@ -62,7 +64,7 @@ test('la rama yoyo rechaza distancia y test', () => {
   assert.match(guardar, /\(v_tipo = 'salto'\) <> \(v_test_salto is not null\)/);
 });
 
-test('mi_progreso suma yoyos sin perder nada de 0048', () => {
+test('mi_progreso conserva sus claves y el tramo del yoyo', () => {
   for (const clave of ['partidos', 'tiro', 'saltos', 'sprints', 'yoyos', 'escalones']) {
     assert.match(progreso, new RegExp(`'${clave}', coalesce\\(`), `falta la clave ${clave}`);
   }
@@ -72,8 +74,9 @@ test('mi_progreso suma yoyos sin perder nada de 0048', () => {
     assert.ok(a >= 0 && b > a, `no encontré el tramo ${desde}`);
     return cuerpo.slice(a, b).replace(/\s+/g, ' ');
   };
-  // Todo lo anterior a 'yoyos' es idéntico a 0048 hasta 'escalones'.
-  assert.equal(tramo(progreso, 'partidos', 'yoyos'), tramo(progresoPrevia, 'partidos', 'escalones'));
+  // Idéntico a 0049, salvo 'sprints' (0050 le suma el parcial).
+  assert.equal(tramo(progreso, 'partidos', 'sprints'), tramo(progresoPrevia, 'partidos', 'sprints'));
+  assert.equal(tramo(progreso, 'yoyos', 'escalones'), tramo(progresoPrevia, 'yoyos', 'escalones'));
 });
 
 test('mi_progreso sigue siendo sólo del propio jugador', () => {

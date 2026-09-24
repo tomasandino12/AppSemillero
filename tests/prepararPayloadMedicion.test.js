@@ -81,22 +81,27 @@ test('intento sin tiempo no viaja, y un chico sin nada no genera filas', () => {
 const SPRINT = { ...BASE, sesionId: 's1', distanciaSprintM: 30 };
 
 test('payload de sprint: ausente en una fila', () => {
-  const p = prepararPayloadSprint({ ...SPRINT, valores: { j1: { ausente: true, intentos: [4500] } } });
+  const p = prepararPayloadSprint({ ...SPRINT, valores: { j1: { ausente: true, intentos: [{ parcialMs: 4500, tiempoMs: 10000 }] } } });
   assert.equal(p.tipo, 'sprint');
   assert.equal(p.distanciaSprintM, 30);
   assert.equal(p.sesionId, 's1');
-  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', intento: 1, tiempoMs: null }]);
+  assert.deepEqual(p.mediciones, [{ jugadorId: 'j1', intento: 1, tiempoMs: null, parcialMs: null }]);
 });
 
 test('payload de sprint: no manda intentos vacíos y numera sin huecos', () => {
   const p = prepararPayloadSprint({
     ...SPRINT,
-    valores: { j1: { intentos: [null, 4600] }, j2: { intentos: [4500, 4400] }, j3: { intentos: [] }, j4: {} },
+    valores: {
+      j1: { intentos: [null, { parcialMs: 4600, tiempoMs: 10200 }] },
+      j2: { intentos: [{ parcialMs: 4500, tiempoMs: 10000 }, { parcialMs: 4400, tiempoMs: 9900 }] },
+      j3: { intentos: [] },
+      j4: {},
+    },
   });
   assert.deepEqual(p.mediciones, [
-    { jugadorId: 'j1', intento: 1, tiempoMs: 4600 },
-    { jugadorId: 'j2', intento: 1, tiempoMs: 4500 },
-    { jugadorId: 'j2', intento: 2, tiempoMs: 4400 },
+    { jugadorId: 'j1', intento: 1, tiempoMs: 10200, parcialMs: 4600 },
+    { jugadorId: 'j2', intento: 1, tiempoMs: 10000, parcialMs: 4500 },
+    { jugadorId: 'j2', intento: 2, tiempoMs: 9900, parcialMs: 4400 },
   ]);
 });
 

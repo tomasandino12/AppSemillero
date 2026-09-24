@@ -96,7 +96,7 @@ export async function obtenerMedicionesSprintDelPlantel(clubId, plantelId) {
     const hasta = desde + TAMANIO_PAGINA - 1;
     const { data: pagina, error } = await supabase
       .from('medicion_sprint')
-      .select('id, sesion_id, jugador_id, intento, tiempo_ms, origen, sesion_medicion!inner(plantel_id, fecha, distancia_sprint_m)')
+      .select('id, sesion_id, jugador_id, intento, tiempo_ms, parcial_ms, origen, sesion_medicion!inner(plantel_id, fecha, distancia_sprint_m)')
       .eq('club_id', clubId)
       .eq('sesion_medicion.plantel_id', plantelId)
       .order('id')
@@ -116,6 +116,8 @@ function sprintDesdeFila(f) {
     jugadorId: f.jugador_id,
     intento: f.intento,
     tiempoMs: f.tiempo_ms ?? null,
+    // NULL en las filas de antes de 0050 (un solo tramo) y en los ausentes.
+    parcialMs: f.parcial_ms ?? null,
     origen: f.origen,
     fecha: f.sesion_medicion?.fecha ?? null,
     distanciaM: f.sesion_medicion?.distancia_sprint_m ?? null,

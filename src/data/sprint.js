@@ -1,47 +1,81 @@
 /**
- * Sprint de 30 m: validación del tiempo tecleado o cronometrado, velocidad
- * media y armado de las sesiones de un jugador. Funciones puras: sin red, sin DOM.
+ * Sprint de ida y vuelta (30 + 30 m): validación de los tiempos tecleados o
+ * cronometrados, velocidad media y armado de las sesiones de un jugador.
+ * Funciones puras: sin red, sin DOM.
  *
- * En la base se guarda el tiempo en milisegundos (0048), nunca la velocidad:
- * la cuenta vive sólo acá. Menos tiempo es mejor: la variación negativa es
- * una mejora.
+ * Cada intento son dos tiempos desde el pitido: el parcial, cuando frena para
+ * girar (la ida), y el total, cuando vuelve a la línea. La vuelta (con el
+ * giro adentro) es la resta. Sobre el total, más largo, el error de un toque
+ * pesa menos, y por eso es el dato principal.
+ *
+ * En la base van en milisegundos (0048 y 0050), nunca la velocidad: la cuenta
+ * vive sólo acá. Menos tiempo es mejor: la variación negativa es una mejora.
  */
 import { decimalEstricto } from './numeros.js';
 
-/** 20 m sólo si no hay 30 despejados. Sesiones de distinta distancia no se comparan. */
+/** Largo de cada tramo (ida y vuelta). 20 m sólo si no hay 30 despejados. Sesiones de distinta distancia no se comparan. */
 export const DISTANCIAS_SPRINT = [20, 30];
 export const DISTANCIA_SPRINT_PREDETERMINADA = 30;
 export const INTENTOS_SPRINT = 2;
 
 /**
- * Tiempos posibles de un chico sobre 20 a 30 m. Fuera de eso casi siempre es
- * un dedo que se pasó. Los mismos números están como check en la base
- * (0048); tests/contratoSprint.test.js los compara.
+ * Tiempos posibles de un chico. `TIEMPO_SPRINT` es el total (ida y vuelta) y
+ * `PARCIAL_SPRINT` el de la ida. Fuera de rango casi siempre es un dedo que se
+ * pasó. Los mismos números están como check en la base (0048 y 0050);
+ * tests/contratoSprint.test.js los compara.
  */
 export const TIEMPO_SPRINT_MIN_MS = 2500;
-export const TIEMPO_SPRINT_MAX_MS = 12000;
+export const TIEMPO_SPRINT_MAX_MS = 30000;
+export const PARCIAL_SPRINT_MIN_MS = 2500;
+export const PARCIAL_SPRINT_MAX_MS = 12000;
 
 /** 'crear' = medido con las fotocélulas del CReAR (más exacto que el cronómetro del celular). */
 export const ORIGENES_SPRINT = ['propio', 'crear'];
 
 const sabido = (v) => typeof v === 'number' && Number.isFinite(v);
 
-/** Segundos tecleados ("4,5", "4.53") → `{ ok, ms, error }`. */
-export function validarTiempoSprint(texto) {
+const segundosEnTexto = (ms) => String(ms / 1000).replace('.', ',');
+
+/**
+ * Segundos tecleados ("4,5", "4.53") → `{ ok, ms, error }`. Por defecto valida
+ * el total; para el parcial se pasan sus límites.
+ */
+export function validarTiempoSprint(texto, { min = TIEMPO_SPRINT_MIN_MS, max = TIEMPO_SPRINT_MAX_MS } = {}) {
   const segundos = decimalEstricto(texto);
   if (segundos === null) return { ok: false, ms: null, error: 'Falta el tiempo.' };
   if (Number.isNaN(segundos)) {
     return { ok: false, ms: null, error: 'Escribí el tiempo en segundos, por ejemplo 4,5.' };
   }
   const ms = Math.round(segundos * 1000);
-  if (ms < TIEMPO_SPRINT_MIN_MS || ms > TIEMPO_SPRINT_MAX_MS) {
+  if (ms < min || ms > max) {
     return {
       ok: false,
       ms: null,
-      error: `El tiempo tiene que estar entre ${String(TIEMPO_SPRINT_MIN_MS / 1000).replace('.', ',')} y ${TIEMPO_SPRINT_MAX_MS / 1000} segundos.`,
+      error: `El tiempo tiene que estar entre ${segundosEnTexto(min)} y ${segundosEnTexto(max)} segundos.`,
     };
   }
   return { ok: true, ms, error: null };
+}
+
+/**
+ * Los dos tiempos de un intento tecleados: `{ ok, parcialMs, tiempoMs, error }`.
+ * El total tiene que ser mayor que el parcial: la vuelta no puede durar cero.
+ */
+export function validarIntentoSprint(parcialTexto, totalTexto) {
+  const parcial = validarTiempoSprint(parcialTexto, { min: PARCIAL_SPRINT_MIN_MS, max: PARCIAL_SPRINT_MAX_MS });
+  if (!parcial.ok) return { ok: false, parcialMs: null, tiempoMs: null, error: `Ida: ${parcial.error}` };
+  const total = validarTiempoSprint(totalTexto);
+  if (!total.ok) return { ok: false, parcialMs: null, tiempoMs: null, error: `Total: ${total.error}` };
+  if (total.ms <= parcial.ms) {
+    return { ok: false, parcialMs: null, tiempoMs: null, error: 'El total tiene que ser mayor que el tiempo de la ida.' };
+  }
+  return { ok: true, parcialMs: parcial.ms, tiempoMs: total.ms, error: null };
+}
+
+/** Lo que tardó la vuelta (con el giro adentro): total menos parcial. null si falta alguno. */
+export function vueltaSprint(intento) {
+  if (!sabido(intento?.tiempoMs) || !sabido(intento?.parcialMs)) return null;
+  return intento.tiempoMs - intento.parcialMs;
 }
 
 /** 4530 → "4,5 s". */
@@ -56,7 +90,7 @@ export function velocidadMedia(ms, distanciaM) {
   return Math.round((distanciaM / (ms / 1000)) * 10) / 10;
 }
 
-/** El de menor tiempo. null si no corrió. */
+/** El de menor tiempo total. null si no corrió. */
 export function mejorIntentoSprint(intentos) {
   const validos = (intentos ?? []).filter((i) => sabido(i?.tiempoMs));
   if (!validos.length) return null;

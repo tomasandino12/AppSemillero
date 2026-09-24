@@ -5,14 +5,14 @@ import { readFileSync } from 'node:fs';
 /**
  * 0044 reemplazó enteras guardar_sesion_medicion (de 0038) y mi_progreso (de
  * 0030) para sumar el salto, 0045 las volvió a reemplazar para sacar la
- * velocidad, 0048 para sumar el sprint y 0049 el yoyo. Un reemplazo entero puede perder en silencio una rama o una
+ * velocidad, 0048 para sumar el sprint, 0049 el yoyo y 0050 el parcial del sprint. Un reemplazo entero puede perder en silencio una rama o una
  * garantía vieja, y los contratos de 0030 y 0038 siguen leyendo esas
  * migraciones. Este test fija en la última versión lo que ya garantizaban.
  *
  * Si una migración posterior vuelve a reemplazar alguna, actualizar la ruta.
  */
 
-const MIGRACION = 'supabase/migrations/0049_yoyo.sql';
+const MIGRACION = 'supabase/migrations/0050_sprint_ida_y_vuelta.sql';
 const leer = (ruta) => readFileSync(ruta, 'utf8').replace(/\r\n/g, '\n');
 const sinComentarios = (sql) => sql.replace(/--.*$/gm, '');
 const sql = sinComentarios(leer(MIGRACION));

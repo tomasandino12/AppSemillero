@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 /**
  * 0048 reemplazó enteras guardar_sesion_medicion y mi_progreso (partiendo de
  * las de 0045) para sumar el sprint, y 0049 las volvió a reemplazar para el
- * yoyo. Este test fija en la última versión que no se perdió ninguna rama ni
+ * yoyo, y 0050 para el parcial del sprint. Este test fija en la última versión que no se perdió ninguna rama ni
  * garantía: compara con 0045 los tramos que tienen que quedar iguales y
  * verifica lo nuevo del sprint.
  *
@@ -14,7 +14,7 @@ import { readFileSync } from 'node:fs';
  */
 
 const leer = (ruta) => readFileSync(ruta, 'utf8').replace(/\r\n/g, '\n').replace(/--.*$/gm, '');
-const nueva = leer('supabase/migrations/0049_yoyo.sql');
+const nueva = leer('supabase/migrations/0050_sprint_ida_y_vuelta.sql');
 const previa = leer('supabase/migrations/0045_borrar_velocidad.sql');
 
 function cuerpoDe(sql, nombre, cierre) {
@@ -51,7 +51,8 @@ test('la rama sprint exige distancia y la idempotencia la compara', () => {
   assert.match(guardar, /payload->>'distanciaSprintM'/);
   assert.match(guardar, /\(v_tipo = 'sprint'\) <> \(v_distancia is not null\)/);
   assert.match(guardar, /'DISTANCIA_DE_SPRINT_INVALIDA'/);
-  assert.match(guardar, /insert into medicion_sprint \(club_id, sesion_id, jugador_id, intento, tiempo_ms\)/);
+  assert.match(guardar, /insert into medicion_sprint \(club_id, sesion_id, jugador_id, intento, tiempo_ms, parcial_ms\)/);
+  assert.match(guardar, /\(m->>'parcialMs'\)::int/);
   assert.match(guardar, /\(m->>'tiempoMs'\)::int/);
   // El reintento sólo es "el mismo" si coinciden plantel, tipo, test y distancia.
   assert.match(guardar, /payload->>'sesionId'/);

@@ -123,7 +123,7 @@ function seccionSalto(saltos) {
 
 /** mi_progreso trae los intentos ya agrupados por sesión; se aplanan para reusar `sesionesDeSprint`. */
 const intentosDeSprint = (sprints) => sprints.flatMap((s) => s.intentos.map((i) => ({
-  sesionId: s.sesionId, fecha: s.fecha, distanciaM: s.distanciaM, intento: i.intento, tiempoMs: i.tiempoMs, origen: i.origen,
+  sesionId: s.sesionId, fecha: s.fecha, distanciaM: s.distanciaM, intento: i.intento, tiempoMs: i.tiempoMs, parcialMs: i.parcialMs, origen: i.origen,
 })));
 
 function seccionPartidos(historial, acumulados) {

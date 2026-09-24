@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DISTANCIAS_SPRINT, INTENTOS_SPRINT, TIEMPO_SPRINT_MIN_MS, TIEMPO_SPRINT_MAX_MS,
+  PARCIAL_SPRINT_MIN_MS, PARCIAL_SPRINT_MAX_MS, validarIntentoSprint, vueltaSprint,
   validarTiempoSprint, formatearTiempoSprint, velocidadMedia, mejorIntentoSprint,
   sesionesDeSprint, ultimaYAnterioresSprint, variacionSprint,
 } from '../src/data/sprint.js';
@@ -14,7 +15,9 @@ test('constantes del protocolo', () => {
   assert.deepEqual(DISTANCIAS_SPRINT, [20, 30]);
   assert.equal(INTENTOS_SPRINT, 2);
   assert.equal(TIEMPO_SPRINT_MIN_MS, 2500);
-  assert.equal(TIEMPO_SPRINT_MAX_MS, 12000);
+  assert.equal(TIEMPO_SPRINT_MAX_MS, 30000);
+  assert.equal(PARCIAL_SPRINT_MIN_MS, 2500);
+  assert.equal(PARCIAL_SPRINT_MAX_MS, 12000);
 });
 
 test('acepta coma y punto y devuelve ms', () => {
@@ -24,7 +27,7 @@ test('acepta coma y punto y devuelve ms', () => {
 });
 
 test('rechaza vacío, texto y fuera de rango', () => {
-  for (const malo of ['', '  ', 'abc', '4e0', '1,2', '2,4', '12,1', '99']) {
+  for (const malo of ['', '  ', 'abc', '4e0', '1,2', '2,4', '30,1', '99']) {
     const r = validarTiempoSprint(malo);
     assert.equal(r.ok, false, malo);
     assert.equal(r.ms, null);
@@ -32,6 +35,8 @@ test('rechaza vacío, texto y fuera de rango', () => {
   }
   assert.equal(validarTiempoSprint('2,5').ok, true);
   assert.equal(validarTiempoSprint('12').ok, true);
+  assert.equal(validarTiempoSprint('12,1').ok, true, 'un total de ida y vuelta puede pasar de 12 s');
+  assert.equal(validarTiempoSprint('12,1', { min: PARCIAL_SPRINT_MIN_MS, max: PARCIAL_SPRINT_MAX_MS }).ok, false);
 });
 
 test('formatea en décimas con coma', () => {
@@ -100,4 +105,21 @@ test('bajar el tiempo es mejorar, y menos de una décima es igual', () => {
   assert.deepEqual(variacionSprint(340), { texto: '+0,3 s', mejora: false });
   assert.deepEqual(variacionSprint(40), { texto: 'igual', mejora: null });
   assert.deepEqual(variacionSprint(null), { texto: null, mejora: null });
+});
+
+test('un intento tecleado son dos tiempos y el total supera al parcial', () => {
+  assert.deepEqual(validarIntentoSprint('4,6', '10,2'), { ok: true, parcialMs: 4600, tiempoMs: 10200, error: null });
+  for (const [parcial, total] of [['', '10'], ['4,6', ''], ['1', '10'], ['13', '20'], ['4,6', '31'], ['5', '5'], ['6', '5,5']]) {
+    const r = validarIntentoSprint(parcial, total);
+    assert.equal(r.ok, false, `${parcial} / ${total}`);
+    assert.equal(r.parcialMs, null);
+    assert.ok(r.error);
+  }
+});
+
+test('la vuelta es el total menos el parcial, y null si falta alguno', () => {
+  assert.equal(vueltaSprint({ parcialMs: 4600, tiempoMs: 10200 }), 5600);
+  assert.equal(vueltaSprint({ parcialMs: null, tiempoMs: 10200 }), null);
+  assert.equal(vueltaSprint({ tiempoMs: 10200 }), null);
+  assert.equal(vueltaSprint(null), null);
 });

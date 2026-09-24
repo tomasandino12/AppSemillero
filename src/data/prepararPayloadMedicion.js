@@ -65,12 +65,13 @@ export function prepararPayloadSalto({ sesionId, clubId, plantelId, fecha, testS
 }
 
 /**
- * Borrador de sprint → payload. `valores[jugadorId]` es `{ ausente: true }` o
- * `{ intentos: [tiempoMs | null, ...] }` (un tiempo por intento, en ms).
+ * Borrador de sprint (ida y vuelta) → payload. `valores[jugadorId]` es
+ * `{ ausente: true }` o `{ intentos: [{ parcialMs, tiempoMs } | null, ...] }`:
+ * por intento, el tiempo de la ida (`parcialMs`) y el total (`tiempoMs`), en ms.
  *
- * Igual que en el salto: ausente es una sola fila sin tiempo (estuvo, no
- * corrió); un chico sin ningún tiempo cargado no genera nada; un intento vacío
- * no viaja y los que sí viajan se numeran 1..n sin huecos.
+ * Igual que en el salto: ausente es una sola fila sin tiempos (estuvo, no
+ * corrió); un chico sin ningún intento cargado no genera nada; un intento sin
+ * total no viaja y los que sí viajan se numeran 1..n sin huecos.
  */
 export function prepararPayloadSprint({
   sesionId, clubId, plantelId, fecha, distanciaSprintM, valores,
@@ -81,12 +82,14 @@ export function prepararPayloadSprint({
   const mediciones = [];
   for (const [jugadorId, datos] of Object.entries(valores ?? {})) {
     if (datos?.ausente) {
-      mediciones.push({ jugadorId, intento: 1, tiempoMs: null });
+      mediciones.push({ jugadorId, intento: 1, tiempoMs: null, parcialMs: null });
       continue;
     }
-    const cargados = (datos?.intentos ?? []).filter((t) => t != null);
-    cargados.forEach((tiempoMs, idx) => {
-      mediciones.push({ jugadorId, intento: idx + 1, tiempoMs });
+    const cargados = (datos?.intentos ?? []).filter((i) => i?.tiempoMs != null);
+    cargados.forEach((i, idx) => {
+      mediciones.push({
+        jugadorId, intento: idx + 1, tiempoMs: i.tiempoMs, parcialMs: i.parcialMs ?? null,
+      });
     });
   }
   return { clubId, plantelId, fecha, tipo: 'sprint', distanciaSprintM, mediciones, sesionId };

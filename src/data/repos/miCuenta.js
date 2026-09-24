@@ -113,7 +113,7 @@ export async function obtenerMiProgreso() {
     // Igual: un ausente llega con tiempoMs null.
     sprints: (data?.sprints ?? []).map((s) => ({
       ...s,
-      intentos: (s.intentos ?? []).map((i) => ({ ...i, tiempoMs: numeroONulo(i.tiempoMs) })),
+      intentos: (s.intentos ?? []).map((i) => ({ ...i, tiempoMs: numeroONulo(i.tiempoMs), parcialMs: numeroONulo(i.parcialMs) })),
     })),
     // Un ausente llega con idas null: se preserva, no se vuelve 0.
     yoyos: (data?.yoyos ?? []).map((y) => ({ ...y, idas: numeroONulo(y.idas) })),
