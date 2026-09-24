@@ -1,7 +1,7 @@
 import { html } from '../html.js';
 import { tablaDeCuadros, cuadroEnTiempo } from '../../data/tablaCuadros.js';
 import {
-  tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo, FPS_MIN, FPS_MAX,
+  tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo, pareceSinCamaraLenta, FPS_MIN, FPS_MAX,
 } from '../../data/salto.js';
 import { protocoloHtml } from './protocoloSalto.js';
 import { toast } from '../nav.js';
@@ -167,7 +167,9 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
     const tv = tiempoDeVuelo(cuadros, fpsCaptura);
     const veredicto = validarTiempoDeVuelo(tv);
     if (!veredicto.ok) {
-      texto.textContent = veredicto.motivo;
+      texto.textContent = pareceSinCamaraLenta(cuadros, fpsCaptura, intervaloS)
+        ? 'Este video parece estar a velocidad normal: se perdió la cámara lenta (pasa si se comprime o se manda por chat). Elegí el archivo original, desde la galería del celular.'
+        : veredicto.motivo;
       return;
     }
     // Centésimas de ms, como numeric(6,2) de medicion_salto.

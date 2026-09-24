@@ -44,6 +44,19 @@ export function alturaDeSalto(tvS) {
   return ((G * tvS * tvS) / 8) * 100;
 }
 
+/**
+ * Un video que perdió la cámara lenta (lo comprimió la galería, un chat o el
+ * paso a la PC) queda en tiempo real: el vuelo ocupa pocos cuadros y, tomado
+ * con los fps de captura, da un salto imposible. Si leído a la velocidad del
+ * archivo el vuelo sí es posible, casi seguro pasó eso. Una cámara lenta sana
+ * no confunde: estirada a 30 fps, un salto ocupa varios segundos de archivo.
+ */
+export function pareceSinCamaraLenta(nCuadros, fpsCaptura, intervaloArchivoS) {
+  const aVelocidadDelArchivo = nCuadros * intervaloArchivoS;
+  return tiempoDeVuelo(nCuadros, fpsCaptura) < TV_MIN_S
+    && aVelocidadDelArchivo >= TV_MIN_S && aVelocidadDelArchivo <= TV_MAX_S;
+}
+
 export function validarTiempoDeVuelo(tvS) {
   if (typeof tvS !== 'number' || !Number.isFinite(tvS)) {
     return { ok: false, motivo: 'Falta marcar el despegue y el aterrizaje.' };

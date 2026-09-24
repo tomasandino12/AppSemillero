@@ -4,6 +4,7 @@ import {
   G, TV_MIN_S, TV_MAX_S, FPS_MIN,
   cuadrosEntre, tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo,
   potenciaSamozino, mejorIntento, rangoDeIntentos, vigenteALaFecha, sesionesDeSalto,
+  pareceSinCamaraLenta,
 } from '../src/data/salto.js';
 
 const cerca = (real, esperado, tolerancia = 0.01) => assert.ok(
@@ -136,4 +137,17 @@ test('sin datos corporales la serie de salto no inventa potencia', () => {
   assert.equal(s.mejor.potenciaW, null);
   assert.equal(s.mejor.potenciaWKg, null);
   cerca(s.mejor.alturaCm, alturaDeSalto(0.4));
+});
+
+test('pareceSinCamaraLenta: el vuelo sólo es posible leído a la velocidad del archivo', () => {
+  const a30 = 1 / 30;
+  // El caso real: 14 cuadros de un archivo que perdió la cámara lenta.
+  assert.equal(pareceSinCamaraLenta(14, 240, a30), true);
+  // Cámara lenta sana, estirada a 30 fps: 104 cuadros son 3,5 s de archivo.
+  assert.equal(pareceSinCamaraLenta(104, 240, a30), false);
+  // Archivo a 240 fps reales: 14 cuadros son 58 ms también a la velocidad del archivo.
+  assert.equal(pareceSinCamaraLenta(14, 240, 1 / 240), false);
+  // Si el vuelo ya es posible con los fps de captura, no hay nada que avisar.
+  assert.equal(pareceSinCamaraLenta(100, 240, a30), false);
+  assert.equal(pareceSinCamaraLenta(0, 240, a30), false);
 });
