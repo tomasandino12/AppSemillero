@@ -39,7 +39,7 @@ categoria (catálogo global, sin club_id) ──< plantel
 
 ### `club`
 El club. Multi-club desde el día uno aunque el piloto sea uno solo.
-- `id`, `nombre`.
+- `id`, `nombre`, `apodos text[]` (0046: 1 a 3 apodos de hasta 20 caracteres, null = no tiene; para la etiqueta "Metodología <apodo>" de las guías; se cargan por SQL).
 
 ### `temporada`
 Una temporada de un club (p.ej. "2026"). `unique(club_id, nombre)`.
