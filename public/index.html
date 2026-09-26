@@ -114,6 +114,7 @@
     </div>
 
     <div class="futuro">Piloto en curso. Todo lo que está listado acá arriba está construido y funcionando; lo que no está en esa lista, todavía no existe.</div>
+    <div class="pie-legal"><a href="/public/legal/privacidad.html">Política de privacidad</a> · <a href="/public/legal/terminos.html">Términos y condiciones</a></div>
   </section>
 
   <section class="vista" id="v-ingresar">
@@ -193,6 +194,7 @@
 
       <div class="al" id="crear-error" role="alert" style="display:none"><div class="tx"></div></div>
       <button class="btn" id="btn-crear">Crear cuenta</button>
+      <div class="nota-legal">Al crear la cuenta vas a tener que aceptar los <a href="/public/legal/terminos.html" target="_blank" rel="noopener">Términos</a> y la <a href="/public/legal/privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>.</div>
 
       <div class="o">o</div>
       <button class="btn-google" id="btn-google-crear">
@@ -278,6 +280,34 @@
 
       <div class="enlaces">
         <button id="btn-nombre-salir">Salir de esta cuenta</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Aceptación de Términos y Privacidad: una vez por versión (VERSION_LEGAL
+       en src/data/legal.js), para toda cuenta, entre por mail o por Google.
+       Ver mostrarAceptarLegal en publico.js. -->
+  <section class="vista" id="v-legal">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="caja">
+      <h2>Antes de seguir</h2>
+      <div class="sub">La app guarda datos de jugadores, muchos de ellos menores. Leé cómo se cuidan y cuáles son las reglas para usarla.</div>
+
+      <div class="docs-legales">
+        <a href="/public/legal/privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>
+        <a href="/public/legal/terminos.html" target="_blank" rel="noopener">Términos y condiciones</a>
+      </div>
+
+      <label class="acepto" for="lg-acepto">
+        <input id="lg-acepto" type="checkbox">
+        <span>Leí y acepto los Términos y la Política de privacidad. Si soy menor de 18, un adulto responsable los leyó y me autorizó.</span>
+      </label>
+
+      <div class="al" id="legal-error" role="alert" style="display:none"><div class="tx"></div></div>
+      <button class="btn" id="btn-legal-aceptar">Continuar</button>
+
+      <div class="enlaces">
+        <button id="btn-legal-salir">Salir de esta cuenta</button>
       </div>
     </div>
   </section>

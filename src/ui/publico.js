@@ -1,9 +1,10 @@
 import {
   iniciarSesion, crearCuenta, enviarRecuperacionDeClave, cambiarClave,
   entrarConGoogle, cerrarSesion, alCambiarAuth, guardarMiNombre,
-  miPedidoDescartado, volverAPedirAcceso, fueSalidaVoluntaria,
+  miPedidoDescartado, volverAPedirAcceso, fueSalidaVoluntaria, aceptarLegal,
 } from '../data/repositorio.js';
 import { normalizarNombre } from '../data/cuenta.js';
+import { VERSION_LEGAL } from '../data/legal.js';
 import { esErrorDeRed } from './nav.js';
 import { $ } from './dom.js';
 import { SIN_CONEXION, textoDeError, marcarSesionCerrada, desmarcarSesionCerrada } from './errores.js';
@@ -146,9 +147,21 @@ export function mostrarPedirNombre({ sugerido } = {}) {
   $('nm-nombre').focus();
 }
 
+/**
+ * Términos y Privacidad sin aceptar en su versión vigente. Como el nombre, va
+ * antes que el club: sin esto no se entra a nada, ni siquiera a "falta el
+ * acceso". El checkbox arranca siempre destildado: aceptar tiene que ser un
+ * gesto de la persona, no algo que quedó marcado de antes.
+ */
+export function mostrarAceptarLegal() {
+  limpiarErrores();
+  $('lg-acepto').checked = false;
+  mostrarPublico('v-legal');
+}
+
 /* ---------- avisos ---------- */
 
-const ERRORES = ['ingresar-error', 'crear-error', 'recuperar-error', 'nueva-clave-error', 'nombre-error', 'jugador-error'];
+const ERRORES = ['ingresar-error', 'crear-error', 'recuperar-error', 'nueva-clave-error', 'nombre-error', 'legal-error', 'jugador-error'];
 
 function limpiarErrores() {
   ERRORES.forEach((id) => { $(id).style.display = 'none'; $(id).classList.remove('ok'); });
@@ -319,6 +332,19 @@ async function guardarNombre() {
   });
 }
 
+async function aceptarLegalYSeguir() {
+  limpiarErrores();
+  if (!$('lg-acepto').checked) return avisar('legal-error', 'Tildá la casilla para seguir.');
+  await conBoton($('btn-legal-aceptar'), 'Guardando...', async () => {
+    try {
+      await aceptarLegal(VERSION_LEGAL);
+      await alEntrar();
+    } catch (e) {
+      avisar('legal-error', textoDeError(e, 'No se pudo guardar. Intentá de nuevo.'));
+    }
+  });
+}
+
 async function google(idError) {
   limpiarErrores();
   try {
@@ -380,6 +406,9 @@ export function iniciarPublico({ onEntrar, onReintentarClub }) {
   $('btn-nombre-guardar').addEventListener('click', guardarNombre);
   alApretarEnter('nm-nombre', guardarNombre);
   $('btn-nombre-salir').addEventListener('click', salirDeLaCuenta);
+
+  $('btn-legal-aceptar').addEventListener('click', aceptarLegalYSeguir);
+  $('btn-legal-salir').addEventListener('click', salirDeLaCuenta);
 
   $('btn-sin-club-reintentar').addEventListener('click', () => onReintentarClub());
   $('btn-sin-club-jugador').addEventListener('click', () => abrirSolicitudJugador());

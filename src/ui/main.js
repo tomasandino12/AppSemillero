@@ -1,9 +1,10 @@
 import {
   obtenerSesionActual, obtenerClubesDelEntrenador, obtenerPlantelesDelClub, cerrarSesion,
   obtenerMisRoles, obtenerMisPlantelesAsignados, obtenerMiUsuario, obtenerMiFicha,
-  guardarErrorDeCliente,
+  guardarErrorDeCliente, yaAceptoLegal,
 } from '../data/repositorio.js';
 import { necesitaNombre, nombreSugerido, nombreDeUsuario, quiereSerJugador } from '../data/cuenta.js';
+import { VERSION_LEGAL } from '../data/legal.js';
 import { puedeHaberSesion } from '../data/sesionGuardada.js';
 import { registroDeError } from '../data/errorDeCliente.js';
 import { iniciarReporteDeErrores } from './reporteDeErrores.js';
@@ -20,6 +21,7 @@ import {
 } from './chrome.js';
 import {
   iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub, mostrarPedirNombre,
+  mostrarAceptarLegal,
 } from './publico.js';
 
 const pantallas = new Map();
@@ -194,6 +196,22 @@ async function entrarConSesion() {
     return;
   }
   setCuenta({ id: usuario.id, email: usuario.email, nombre: nombreDeUsuario(usuario) });
+
+  // Después del nombre y antes del club: cubre el alta por mail, la primera
+  // entrada con Google y a quien ya tenía cuenta antes de que existieran los
+  // Términos. Cambiar VERSION_LEGAL vuelve a pedirlo a todos.
+  let aceptado;
+  try {
+    aceptado = await yaAceptoLegal(VERSION_LEGAL);
+  } catch {
+    toast('No se pudo cargar tu cuenta. Revisá tu conexión.');
+    volverALaLanding();
+    return;
+  }
+  if (!aceptado) {
+    mostrarAceptarLegal();
+    return;
+  }
 
   let clubes;
   try {

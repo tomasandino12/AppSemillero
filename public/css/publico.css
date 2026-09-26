@@ -171,6 +171,22 @@
 }
 .enlaces button b{color:var(--primario);font-family:var(--ff-titulo);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-left:.35em}
 
+/* ---- Términos y Privacidad ---- */
+.pie-legal{text-align:center;font-size:var(--fs-125);color:var(--gris-osc);padding:0 var(--sp-4) var(--sp-8);margin-top:calc(-1 * var(--sp-5))}
+.pie-legal a,.nota-legal a,.docs-legales a{color:var(--sobre-oscuro)}
+.nota-legal{font-size:var(--fs-125);color:var(--gris-osc);text-align:center;line-height:1.45;margin-top:var(--sp-3)}
+.docs-legales{display:flex;flex-direction:column;gap:var(--sp-2);margin-bottom:var(--sp-5)}
+.docs-legales a{
+  display:flex;align-items:center;min-height:var(--tap);padding:0 var(--sp-4);
+  background:var(--pub-tarjeta);border:1px solid var(--pub-borde);border-radius:var(--r-m);
+  font-family:var(--ff-titulo);font-weight:600;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;
+}
+.docs-legales a::after{content:"↗";margin-left:auto;color:var(--gris-osc)}
+/* El texto entero es el blanco del toque: en el celular el checkbox solo es
+   chico para el dedo. */
+.acepto{display:flex;gap:var(--sp-3);align-items:flex-start;font-size:var(--fs-145);line-height:1.5;margin-bottom:var(--sp-4);cursor:pointer}
+.acepto input{width:1.375rem;height:1.375rem;flex:0 0 auto;margin-top:.1rem;accent-color:var(--primario)}
+
 /* ---- cuenta sin club ---- */
 .sin-club{max-width:28rem;margin-inline:auto;width:100%;padding:var(--sp-6) var(--sp-4) var(--sp-8);text-align:center}
 .sin-club .ico{

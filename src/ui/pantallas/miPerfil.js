@@ -149,6 +149,7 @@ export async function renderMiPerfil() {
       </section>
 
       <button class="btn sec" id="btn-cerrar-sesion">Cerrar sesión</button>
+      <p class="perfil-legal"><a href="/public/legal/privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a href="/public/legal/terminos.html" target="_blank" rel="noopener">Términos y condiciones</a></p>
     </div>
   `;
   $('btn-editar-nombre').addEventListener('click', abrirEditarNombre);
