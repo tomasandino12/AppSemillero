@@ -146,6 +146,30 @@ export async function guardarMiNombre(nombre) {
   return data.user;
 }
 
+/**
+ * Si la cuenta de la sesión ya aceptó esta versión de los Términos y la
+ * Política de privacidad (0051). RLS sólo le muestra sus propias filas, así
+ * que no hace falta filtrar por usuario.
+ */
+export async function yaAceptoLegal(version) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('aceptacion_legal').select('version').eq('version', version).limit(1);
+  if (error) throw error;
+  return data.length > 0;
+}
+
+/**
+ * Deja constancia de la aceptación. Autor y fecha los sella el servidor. Si ya
+ * estaba (doble toque, dos pestañas), el unique salta y da igual: lo que se
+ * quería registrar ya está registrado.
+ */
+export async function aceptarLegal(version) {
+  const supabase = obtenerCliente();
+  const { error } = await supabase.from('aceptacion_legal').insert({ version });
+  if (error && error.code !== '23505') throw error;
+}
+
 /** El id del usuario autenticado, para saber qué es propio y qué ajeno. */
 export async function obtenerUsuarioActual() {
   const supabase = obtenerCliente();

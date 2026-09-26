@@ -383,6 +383,17 @@ Tiene que ser `security definer` porque un jugador no puede leer su propia fila
 de `cuenta_jugador` (`cuenta_jugador_ver` es para el staff que ve el plantel).
 Devuelve un booleano sobre quien llama, nada más.
 
+## Aceptación de Términos y Privacidad (0051)
+
+`aceptacion_legal (version date, usuario, aceptado_en)`, `unique (usuario, version)`.
+Es una constancia, no un permiso: ninguna policy de otra tabla la consulta. La
+app no deja entrar a quien no aceptó la versión vigente (`VERSION_LEGAL` en
+`src/data/legal.js`). El cliente sólo concede `insert (version)` y
+`select (version, aceptado_en)`, y únicamente sobre las filas propias. El
+trigger sella `usuario` y `aceptado_en`. No hay update ni delete; si se borra
+la cuenta, sus filas se borran en cascada. Verificación:
+`tests/verificarAceptacionLegal.sql`.
+
 ## Orden de persistencia de una importación
 
 `src/data/repositorio.js` expone una función por operación de base de datos, sin transacción que las envuelva. Persistir un partido importado requiere, en este orden:
