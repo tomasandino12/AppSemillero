@@ -1,0 +1,31 @@
+/* =====================================================================
+   LEGAL — Política de privacidad y Términos (public/legal/*.html).
+   Páginas estáticas, sin JS: se tienen que poder leer sin cuenta, desde un
+   link de WhatsApp o impresas por el club. Texto largo, así que fondo claro
+   y renglón corto, a diferencia de la landing.
+   ===================================================================== */
+
+body{
+  margin:0;background:var(--papel);color:var(--tinta);
+  font-family:var(--ff-cuerpo);font-size:var(--fs-160);line-height:1.6;
+  -webkit-text-size-adjust:100%;
+}
+.legal{max-width:42rem;margin:0 auto;padding:var(--sp-6) var(--sp-4) var(--sp-8)}
+.legal-marca{display:flex;align-items:center;gap:var(--sp-3);text-decoration:none;color:inherit}
+.legal-marca img{width:2.5rem;height:2.5rem}
+.legal-marca span{font-family:var(--ff-titulo);font-size:var(--fs-200);font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+.legal h1{font-family:var(--ff-titulo);font-size:var(--fs-titulo);line-height:1.1;margin:var(--sp-6) 0 var(--sp-2)}
+.legal h2{font-family:var(--ff-titulo);font-size:var(--fs-220);line-height:1.2;margin:var(--sp-8) 0 var(--sp-2)}
+.legal .version{color:var(--gris-cl);font-size:var(--fs-145);margin:0 0 var(--sp-6)}
+.legal .resumen{background:var(--blanco);border:1px solid var(--linea);border-radius:var(--r);padding:var(--sp-4) var(--sp-5)}
+.legal .resumen p{margin:0}
+.legal ul{padding-left:var(--sp-5)}
+.legal li{margin-bottom:var(--sp-2)}
+.legal a:not(.legal-marca){color:var(--primario-osc)}
+.legal .leyenda{font-size:var(--fs-145);color:var(--gris-cl);border-top:1px solid var(--linea);padding-top:var(--sp-4);margin-top:var(--sp-8)}
+.legal .pie{margin-top:var(--sp-8);font-size:var(--fs-145)}
+
+@media print{
+  body{background:var(--blanco)}
+  .legal .pie{display:none}
+}

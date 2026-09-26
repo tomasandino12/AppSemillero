@@ -3,7 +3,9 @@
   "rewrites": [
     { "source": "/", "destination": "/public/index.html" },
     { "source": "/robots.txt", "destination": "/public/robots.txt" },
-    { "source": "/sitemap.xml", "destination": "/public/sitemap.xml" }
+    { "source": "/sitemap.xml", "destination": "/public/sitemap.xml" },
+    { "source": "/privacidad", "destination": "/public/legal/privacidad.html" },
+    { "source": "/terminos", "destination": "/public/legal/terminos.html" }
   ],
   "headers": [
     { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
