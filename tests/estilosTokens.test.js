@@ -156,6 +156,15 @@ test('los keyframes sólo definen "from": con reduced-motion el estado final que
   assert.deepEqual(malos, []);
 });
 
+test('sólo publico.css tiene una animación infinite, y es una sola', () => {
+  // Excepción de DESIGN.md: el giro del anillo del escudo. Cualquier otra
+  // animación continua es decorado que cuesta batería en gama baja.
+  const cuenta = (n) => (sinComentarios(css[n]).match(/\binfinite\b/g) ?? []).length;
+  const otros = ARCHIVOS.filter((n) => n !== 'publico' && cuenta(n) > 0);
+  assert.deepEqual(otros, []);
+  assert.ok(cuenta('publico') <= 1, `publico.css tiene ${cuenta('publico')} infinite`);
+});
+
 test('el texto de la landing llega a 4.5:1 sobre su tarjeta y su fondo', () => {
   // El texto secundario es --gris-osc y el principal --sobre-oscuro. El
   // resplandor del color del club sólo suma rojo oscuro atrás del hero: el peor
@@ -163,6 +172,7 @@ test('el texto de la landing llega a 4.5:1 sobre su tarjeta y su fondo', () => {
   const pares = [
     ['--gris-osc', '--pub-tarjeta'], ['--gris-osc', '--pub-fondo'],
     ['--sobre-oscuro', '--pub-tarjeta'], ['--sobre-oscuro', '--pub-fondo'],
+    ['--sube-osc', '--pub-tarjeta'],
   ];
   for (const [texto, fondo] of pares) {
     const [t, f] = [valorDeToken(texto), valorDeToken(fondo)];

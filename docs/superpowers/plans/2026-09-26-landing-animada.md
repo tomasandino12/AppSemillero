@@ -16,7 +16,7 @@
 
 | Task | Estado | Commit |
 |---|---|---|
-| T1 Regla, tokens y medición base | pendiente | |
+| T1 Regla, tokens y medición base | hecha | (ver git log) |
 | T2 Escudo con anillo | pendiente | |
 | T3 Grilla bento (sin demos) | pendiente | |
 | T4 Demos: plantel y estadísticas | pendiente | |
