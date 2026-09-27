@@ -16,13 +16,13 @@
 
 | Task | Estado |
 |---|---|
-| 1. Páginas legales + `legal.js` + contrato | pendiente |
-| 2. Migración 0051 + repo | pendiente |
-| 3. Vista "Antes de seguir" + enlaces | pendiente |
-| 4. Fuentes propias + CSP | pendiente |
-| 5. Aviso en evaluaciones | pendiente |
-| 6. Contraste WCAG | pendiente |
-| 7. Docs para el club + SEGURIDAD-LANZAMIENTO | pendiente |
+| 1. Páginas legales + `legal.js` + contrato | hecho (dc872ee) |
+| 2. Migración 0051 + repo | hecho (daffa95), falta db push |
+| 3. Vista "Antes de seguir" + enlaces | hecho (1da6bef) |
+| 4. Fuentes propias + CSP | hecho (c591dc3) |
+| 5. Aviso en evaluaciones | hecho (000e78b) |
+| 6. Contraste WCAG | hecho (db7f3c5) |
+| 7. Docs para el club + SEGURIDAD-LANZAMIENTO | hecho |
 
 ### Task 1: páginas legales
 
@@ -34,7 +34,7 @@
 
 ### Task 2: migración y repo
 
-- **Archivos:** crear `supabase/migrations/0051_aceptacion_legal.sql`, `src/data/repos/legal.js`; modificar la fachada `src/data/repositorio.js`, `supabase/ESQUEMA.md`.
+- **Archivos:** crear `supabase/migrations/0051_aceptacion_legal.sql`, `tests/verificarAceptacionLegal.sql`; modificar `src/data/repos/auth.js` (es el área de cuentas: no hace falta repo nuevo), `supabase/ESQUEMA.md`.
 - Tabla `aceptacion_legal(id, version text check largo ≤ 20, usuario uuid default auth.uid(), aceptado_en timestamptz)`, `unique (usuario, version)`. Grant: `insert (version)` y `select` a authenticated. Policies: insert y select sólo `usuario = auth.uid()`. Trigger que sella `usuario` y `aceptado_en`.
 - Repo: `yaAceptoLegal(version) → boolean` y `aceptarLegal(version) → void`. Un insert repetido (23505) cuenta como aceptado.
 - **Acepta:** la migración corre en la base local (`npx supabase db reset` si está levantada; si no, se revisa a mano) y la arquitectura pasa.

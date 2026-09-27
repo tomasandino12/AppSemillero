@@ -110,11 +110,21 @@ Auditoría pre-lanzamiento; plan en `docs/superpowers/plans/2026-09-22-blindaje-
 
 ## Datos de menores
 
-La app guarda nombres, fecha de nacimiento, altura y peso de menores. Antes de
-abrirla conviene tener resuelto con el club el consentimiento de las familias y
-una política de privacidad (en Argentina rige la Ley 25.326 de protección de
-datos personales). Esto no es asesoramiento legal: es un pendiente para hablar
-con quien corresponda.
+La app guarda nombres, fecha de nacimiento, altura y peso de menores (Ley
+25.326). Desde el 2026-09-26:
+
+- **Hecho en la app:** `/privacidad` y `/terminos` (`public/legal/`), la
+  pantalla "Antes de seguir" que registra la aceptación por cuenta y versión
+  (0051, `VERSION_LEGAL`), fuentes servidas sin Google y el aviso de que las
+  mediciones son estimaciones.
+- **Pendiente con el club:** `docs/legal/checklist-club.md`. Firmar el acuerdo
+  de datos (el club es el responsable y Tomás el encargado), sumar el
+  consentimiento a la ficha de inscripción (también para los chicos ya
+  cargados) y registrar la base en la AAIP.
+- **Pendiente técnico:** `db push` de 0051 **antes** del deploy y
+  `tests/verificarAceptacionLegal.sql`.
+
+Esto no es asesoramiento legal: los textos se revisan con el club.
 
 ## Si aparece un segundo club
 
