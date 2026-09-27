@@ -1,4 +1,5 @@
 import { $ } from './dom.js';
+import { valorContado } from '../data/animacion.js';
 
 /**
  * Animaciones de la landing. Todo es decoración: si algo falla o el navegador
@@ -20,6 +21,29 @@ function pausarAnilloFueraDePantalla() {
 }
 
 /**
+ * La cifra del salto está escrita en su valor final (42) en el HTML: sin JS o
+ * con movimiento reducido se queda así. Si hay animación, arranca en 38 y
+ * cuenta hasta 42 en lo que dura una demo, leyendo el token de CSS para no
+ * tener la duración escrita en dos lugares.
+ */
+function contarSalto() {
+  const cifra = $('cifra-salto');
+  if (!cifra || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const hasta = Number(cifra.textContent);
+  const duracion = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dur-demo'));
+  if (!Number.isFinite(hasta) || !(duracion > 0)) return;
+  const desde = hasta - 4;
+  const inicio = performance.now();
+  cifra.textContent = String(desde);
+  const cuadro = (ahora) => {
+    const t = (ahora - inicio) / duracion;
+    cifra.textContent = String(valorContado(desde, hasta, t));
+    if (t < 1) requestAnimationFrame(cuadro);
+  };
+  requestAnimationFrame(cuadro);
+}
+
+/**
  * Cada demo queda pausada en su primer cuadro hasta que su tarjeta entra en
  * pantalla: ahí se le pone .en-vista, corre una vez y se deja de observar,
  * así no se repite al volver a scrollear. Sin IntersectionObserver se
@@ -35,6 +59,7 @@ function arrancarDemosAlEntrarEnPantalla() {
     for (const e of entradas) {
       if (!e.isIntersecting) continue;
       e.target.classList.add('en-vista');
+      if (e.target.dataset.demo === 'salto') contarSalto();
       observador.unobserve(e.target);
     }
   }, { threshold: 0.4 });

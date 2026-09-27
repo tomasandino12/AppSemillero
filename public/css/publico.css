@@ -136,6 +136,34 @@
 .punto{fill:var(--primario);animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards}
 .cifra-tiro{fill:var(--sobre-oscuro);font-family:var(--ff-mono);font-weight:600;animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards}
 
+.demo-salto{align-items:baseline}
+.demo-salto .ej{flex-basis:100%}
+.etq{font-family:var(--ff-titulo);font-weight:600;font-size:var(--fs-125);letter-spacing:.11em;text-transform:uppercase;color:var(--gris-osc)}
+.cifra-salto{font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-260);color:var(--sobre-oscuro);font-variant-numeric:tabular-nums}
+.sube-osc{
+  font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-115);color:var(--sube-osc);
+  background:var(--pub-fondo);border-radius:var(--r-s);padding:var(--sp-1) var(--sp-2);
+  animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards;
+}
+
+/* Línea de tiempo: la línea se llena con scaleY desde arriba y los nodos se
+   prenden en secuencia. El texto de cada temporada se ve siempre. */
+.linea-t{list-style:none;margin:0;padding:0;position:relative;display:grid;gap:var(--sp-3);flex:1 1 100%}
+.linea-t li{position:relative;padding-left:var(--sp-6);font-size:var(--fs-125);line-height:1.2rem;color:var(--sobre-oscuro)}
+.linea-t::before{
+  content:"";position:absolute;left:calc(.3125rem - 1px);top:.6rem;bottom:.6rem;width:2px;
+  background:var(--primario);transform-origin:top;
+  animation:llena-demo var(--dur-demo) var(--ease-salida) backwards;
+}
+.linea-t li::before{
+  content:"";position:absolute;left:0;top:.3rem;width:.625rem;height:.625rem;border-radius:50%;background:var(--primario);
+  animation:nodo-demo var(--dur-3) var(--ease-salida) backwards;
+}
+.linea-t li:nth-child(2)::before{animation-delay:300ms}
+.linea-t li:nth-child(3)::before{animation-delay:600ms}
+@keyframes llena-demo{from{transform:scaleY(0)}}
+@keyframes nodo-demo{from{transform:scale(0);opacity:0}}
+
 /* Lo único que se dice del futuro, y se dice separado de lo que ya anda. */
 .futuro{
   color:var(--gris-osc);font-size:var(--fs-125);text-align:center;

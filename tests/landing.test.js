@@ -64,3 +64,13 @@ test('la curva de tiro tiene 10 puntos y termina más arriba de donde empieza', 
   // En SVG el eje y crece hacia abajo: "más arriba" es una y menor.
   assert.ok(puntos.at(-1)[1] < puntos[0][1]);
 });
+
+test('la cifra del salto está en su valor final en el HTML', () => {
+  // Sin JS o con movimiento reducido la cifra no cuenta: tiene que estar ya en 42.
+  assert.match(landing, /<span id="cifra-salto">42<\/span>/);
+});
+
+test('todo beneficio con data-demo trae su demo', () => {
+  const conDemo = [...landing.matchAll(/<div class="demo demo-([\w-]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(conDemo, beneficios.filter((b) => b.demo).map((b) => b.demo));
+});
