@@ -152,7 +152,7 @@
   --dur-1:120ms;          /* feedback al apretar */
   --dur-2:200ms;          /* entrada de pantalla, toast, velo */
   --dur-3:280ms;          /* hoja y barras */
-  --dur-demo:900ms;       /* demos de la landing: una vez al entrar en pantalla */
+  --dur-demo:1400ms;       /* demos de la landing: una vez al entrar en pantalla */
   --dur-giro:25s;         /* una vuelta del anillo del escudo (landing) */
   --ease-salida:cubic-bezier(.16,1,.3,1);   /* frena al llegar: entra */
   --ease-entrada:cubic-bezier(.3,0,.8,.15); /* acelera al irse: sale */

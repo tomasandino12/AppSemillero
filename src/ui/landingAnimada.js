@@ -44,13 +44,40 @@ function contarSalto() {
 }
 
 /**
+ * Vuelve a correr la demo de una tarjeta desde el primer cuadro. Se reemplaza
+ * el bloque .demo por un clon: es la forma de reiniciar también las animaciones
+ * de los pseudo-elementos y las ya terminadas, que getAnimations() no devuelve.
+ * La entrada de la tarjeta misma no se repite.
+ */
+function reproducir(tarjeta) {
+  const demo = tarjeta.querySelector('.demo');
+  if (!demo) return;
+  demo.replaceWith(demo.cloneNode(true));
+  if (tarjeta.dataset.demo === 'salto') contarSalto();
+}
+
+/**
  * Cada demo queda pausada en su primer cuadro hasta que su tarjeta entra en
- * pantalla: ahí se le pone .en-vista, corre una vez y se deja de observar,
- * así no se repite al volver a scrollear. Sin IntersectionObserver se
- * arrancan enseguida.
+ * pantalla: ahí se le pone .en-vista (con una pausa corta, para que no corra
+ * mientras todavía se está mirando el hero) y se deja de observar. Después se
+ * repite al pasar el mouse o tocar la tarjeta, no sola: no hay animación
+ * continua salvo el anillo. Sin IntersectionObserver se arrancan enseguida.
  */
 function arrancarDemosAlEntrarEnPantalla() {
   const tarjetas = document.querySelectorAll('.ben[data-demo]');
+  const soltar = (t) => {
+    t.classList.add('en-vista');
+    reproducir(t);
+    // Un rato en el que no se acepta otra repetición: si no, pasar el mouse
+    // por encima reinicia la demo a la mitad y parpadea.
+    t.dataset.corre = '1';
+    setTimeout(() => delete t.dataset.corre, 2600);
+  };
+  for (const t of tarjetas) {
+    const repetir = () => { if (t.classList.contains('en-vista') && !t.dataset.corre) soltar(t); };
+    t.addEventListener('pointerenter', repetir);
+    t.addEventListener('click', repetir);
+  }
   if (typeof IntersectionObserver === 'undefined') {
     tarjetas.forEach((t) => t.classList.add('en-vista'));
     return;
@@ -58,11 +85,10 @@ function arrancarDemosAlEntrarEnPantalla() {
   const observador = new IntersectionObserver((entradas) => {
     for (const e of entradas) {
       if (!e.isIntersecting) continue;
-      e.target.classList.add('en-vista');
-      if (e.target.dataset.demo === 'salto') contarSalto();
       observador.unobserve(e.target);
+      setTimeout(() => soltar(e.target), 500);
     }
-  }, { threshold: 0.4 });
+  }, { threshold: 0.3 });
   tarjetas.forEach((t) => observador.observe(t));
 }
 

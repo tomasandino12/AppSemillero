@@ -121,7 +121,7 @@ Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (ey
 | `--dur-1` | `120ms` | Feedback al apretar (`scale`). |
 | `--dur-2` | `200ms` | Entrada de pantalla, toast, velo, sombra de la tarjeta tocable. |
 | `--dur-3` | `280ms` | Hoja y relleno de barras. |
-| `--dur-demo` | `900ms` | Demos de la landing: corren una vez al entrar en pantalla. |
+| `--dur-demo` | `1400ms` | Demos de la landing: corren al entrar en pantalla y se repiten al pasar el mouse o tocar la tarjeta. |
 | `--dur-giro` | `25s` | Una vuelta del anillo del escudo de la landing (la única animación continua). |
 | `--ease-salida` | `cubic-bezier(.16,1,.3,1)` | Lo que entra o responde: frena al llegar. Es el default. |
 | `--ease-entrada` | `cubic-bezier(.3,0,.8,.15)` | Lo que se va: acelera al irse (hoy, el velo al cerrarse). |
