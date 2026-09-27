@@ -37,6 +37,19 @@
 
 /* ---- landing ---- */
 .hero{padding:var(--sp-6) var(--sp-4) var(--sp-5);text-align:center}
+.hero .club{font-family:var(--ff-titulo);font-size:var(--fs-125);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gris-osc);margin-bottom:var(--sp-3)}
+
+/* Escudo con el nombre del club girando alrededor. El SVG gira entero (su
+   centro es el del escudo) y sólo anima transform. Es la única animación
+   continua del proyecto (excepción en DESIGN.md): un observer le pone .quieto
+   cuando sale de pantalla, y con prefers-reduced-motion base.css la apaga y el
+   texto queda en su lugar, legible. */
+.escudo-anillo{position:relative;width:9rem;height:9rem;margin:0 auto var(--sp-5)}
+.escudo-anillo img{position:absolute;inset:26%;width:48%;height:48%;object-fit:contain}
+.anillo{position:absolute;inset:0;width:100%;height:100%;animation:giro var(--dur-giro) linear infinite}
+.anillo.quieto{animation-play-state:paused}
+.anillo text{font-family:var(--ff-titulo);font-weight:600;letter-spacing:.04em;fill:var(--gris-osc)}
+@keyframes giro{from{transform:rotate(-360deg)}}
 .hero h1{font-size:clamp(1.75rem,1.35rem + 2vw,2.75rem);line-height:1.03;letter-spacing:.01em}
 .hero h1 .r{color:var(--primario)}
 .hero .bajada{color:var(--gris-osc);font-size:var(--fs-170);line-height:1.45;margin:var(--sp-4) auto 0;max-width:34rem}
@@ -85,6 +98,71 @@
   transform:translateY(-.15em);transition:transform var(--dur-2) var(--ease-salida);
 }
 .ben .d{color:var(--gris-osc);font-size:var(--fs-135);line-height:1.5;margin-top:var(--sp-2)}
+
+/* ---- demos de la landing ----
+   Gráficos chicos con datos INVENTADOS (siempre dicen "ejemplo"), escritos en
+   HTML/SVG y decorativos (aria-hidden). Corren una sola vez: quedan pausadas,
+   con fill-mode backwards (se ve el primer cuadro), hasta que landingAnimada.js
+   le pone .en-vista a la tarjeta. Sólo se animan los gráficos: el texto de la
+   tarjeta (.t y .d) se ve desde el primer cuadro porque es el LCP. */
+.demo{margin-bottom:var(--sp-4);display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3)}
+.demo .ej{flex:0 0 100%;font-size:var(--fs-115);color:var(--gris-osc);letter-spacing:.06em}
+.ben:not(.en-vista) .demo *{animation-play-state:paused}
+@keyframes entra-demo{from{transform:translateY(.5rem);opacity:0}}
+@keyframes aparece-demo{from{opacity:0}}
+@keyframes destapa-demo{from{transform:translateX(0)}}
+
+.planilla{display:grid;grid-template-columns:repeat(4,2.25rem);gap:1px;background:var(--pub-borde);border:1px solid var(--pub-borde);border-radius:var(--r-s);overflow:hidden}
+.planilla i{font-style:normal;font-family:var(--ff-mono);font-size:var(--fs-115);color:var(--gris-osc);background:var(--pub-fondo);padding:var(--sp-1) var(--sp-2);text-align:right}
+.flecha{color:var(--gris-osc);font-size:var(--fs-190)}
+.chips-j{display:flex;flex-wrap:wrap;gap:var(--sp-2);flex:1 1 12rem}
+.chips-j span{
+  font-family:var(--ff-mono);font-weight:500;font-size:var(--fs-115);color:var(--sobre-oscuro);
+  background:var(--pub-fondo);border:1px solid var(--pub-borde);border-radius:var(--r-s);padding:var(--sp-1) var(--sp-2);
+  animation:entra-demo var(--dur-3) var(--ease-salida) backwards;
+}
+.chips-j span:nth-child(2){animation-delay:100ms}
+.chips-j span:nth-child(3){animation-delay:200ms}
+.chips-j span:nth-child(4){animation-delay:300ms}
+.chips-j span:nth-child(5){animation-delay:400ms}
+.chips-j span:nth-child(6){animation-delay:500ms}
+.chips-j .mas{color:var(--gris-osc)}
+
+.demo-tiro svg{width:100%;max-width:22rem;height:auto;display:block}
+.curva{fill:none;stroke:var(--primario);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+/* stroke-dashoffset repinta cada cuadro y está prohibido: la curva se "dibuja"
+   corriendo un rectángulo del color de la tarjeta, que en reposo ya está afuera. */
+.tapa{fill:var(--pub-tarjeta);transform:translateX(100%);animation:destapa-demo var(--dur-demo) var(--ease-salida) backwards}
+.punto{fill:var(--primario);animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards}
+.cifra-tiro{fill:var(--sobre-oscuro);font-family:var(--ff-mono);font-weight:600;animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards}
+
+.demo-salto{align-items:baseline}
+.demo-salto .ej{flex-basis:100%}
+.etq{font-family:var(--ff-titulo);font-weight:600;font-size:var(--fs-125);letter-spacing:.11em;text-transform:uppercase;color:var(--gris-osc)}
+.cifra-salto{font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-260);color:var(--sobre-oscuro);font-variant-numeric:tabular-nums}
+.sube-osc{
+  font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-115);color:var(--sube-osc);
+  background:var(--pub-fondo);border-radius:var(--r-s);padding:var(--sp-1) var(--sp-2);
+  animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards;
+}
+
+/* Línea de tiempo: la línea se llena con scaleY desde arriba y los nodos se
+   prenden en secuencia. El texto de cada temporada se ve siempre. */
+.linea-t{list-style:none;margin:0;padding:0;position:relative;display:grid;gap:var(--sp-3);flex:1 1 100%}
+.linea-t li{position:relative;padding-left:var(--sp-6);font-size:var(--fs-125);line-height:1.2rem;color:var(--sobre-oscuro)}
+.linea-t::before{
+  content:"";position:absolute;left:calc(.3125rem - 1px);top:.6rem;bottom:.6rem;width:2px;
+  background:var(--primario);transform-origin:top;
+  animation:llena-demo var(--dur-demo) var(--ease-salida) backwards;
+}
+.linea-t li::before{
+  content:"";position:absolute;left:0;top:.3rem;width:.625rem;height:.625rem;border-radius:50%;background:var(--primario);
+  animation:nodo-demo var(--dur-3) var(--ease-salida) backwards;
+}
+.linea-t li:nth-child(2)::before{animation-delay:300ms}
+.linea-t li:nth-child(3)::before{animation-delay:600ms}
+@keyframes llena-demo{from{transform:scaleY(0)}}
+@keyframes nodo-demo{from{transform:scale(0);opacity:0}}
 
 /* Lo único que se dice del futuro, y se dice separado de lo que ya anda. */
 .futuro{

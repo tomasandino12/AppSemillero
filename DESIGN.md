@@ -74,6 +74,7 @@ Todos viven en `public/css/tokens.css`, en `:root`. Es el único archivo con val
 | Token | Valor | Cuándo usarlo |
 |---|---|---|
 | `--sube` / `--sube-fondo` | `#15794F` / `#E1F0E9` | Mejora, "llegó", estado bien (`.chip.sube`, `.al.ok`). |
+| `--sube-osc` | `#4FD69C` | El "sube" sobre fondo oscuro (chip `+4 cm` de la landing). Sobre `--pub-tarjeta` llega a 4.5:1. |
 | `--baja` / `--baja-fondo` | `#985E0C` / `#F6ECD9` | Empeora, requiere refuerzo (`.chip.baja`). |
 | `--aviso` / `--aviso-fondo` | `#7A4E00` / `#FFE9A8` | Franja de "datos de ejemplo" (8.4:1). |
 | `--velo` | `rgba(19,19,22,.5)` | Fondo detrás de la hoja. |
@@ -120,6 +121,8 @@ Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (ey
 | `--dur-1` | `120ms` | Feedback al apretar (`scale`). |
 | `--dur-2` | `200ms` | Entrada de pantalla, toast, velo, sombra de la tarjeta tocable. |
 | `--dur-3` | `280ms` | Hoja y relleno de barras. |
+| `--dur-demo` | `900ms` | Demos de la landing: corren una vez al entrar en pantalla. |
+| `--dur-giro` | `25s` | Una vuelta del anillo del escudo de la landing (la única animación continua). |
 | `--ease-salida` | `cubic-bezier(.16,1,.3,1)` | Lo que entra o responde: frena al llegar. Es el default. |
 | `--ease-entrada` | `cubic-bezier(.3,0,.8,.15)` | Lo que se va: acelera al irse (hoy, el velo al cerrarse). |
 
@@ -143,7 +146,7 @@ Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (ey
 - **Entrada de las tarjetas de la landing con `opacity`**: sumaba ~+316 ms de LCP (+2,6 %), porque un párrafo de `.ben` es el LCP y no cuenta hasta que se ve. Hoy entran subiendo con `translateY` y sin `opacity` (no ocultan nada, así que se pintan desde el primer frame).
 - **`translateY` en la entrada de pantalla**: el navegador arma una capa del tamaño de la pantalla (más frames largos con CPU 4x) y un ancestro transformado re-ancla a los hijos `position:fixed` (el teclado de MEDIR). La entrada es sólo fade.
 - **Animar `width`, `height`, `top`/`left`, `box-shadow`, `background`, `filter` o `backdrop-filter`**: repintan cada frame. Una barra crece con `scaleX` desde el ancho final, no animando el ancho.
-- **Animaciones infinitas, parallax, marquee, blur de fondo, marcas de agua**: decorado de sitio institucional; el blur cuesta en Android gama baja y una marca de agua no escala a multi-club.
+- **Animaciones infinitas, parallax, marquee, blur de fondo, marcas de agua**: decorado de sitio institucional; el blur cuesta en Android gama baja y una marca de agua no escala a multi-club. **Única excepción:** el giro del anillo de texto del escudo en la landing (`publico.css`, verificado por test: una sola `infinite`, sólo ahí). Condiciones: anima sólo `transform` (keyframe con `from` solo), es lineal en `--dur-giro`, se pausa cuando el escudo sale de pantalla (IntersectionObserver) y con `prefers-reduced-motion` queda quieto y legible. Las demos de la landing no hacen loop.
 - **Una fuente más** (Oswald, Chakra Petch): ~20–30 KB para una diferencia que casi no se nota. **Sacar pesos de Inter**: es variable, no ahorra un byte.
 - **Tema oscuro para la app por dentro**: se usa en la cancha, con cualquier brillo.
 
@@ -167,6 +170,8 @@ html`<div class="zona-barra">
 </div>`
 ```
 Para barras comparativas simples (sin meta) está `.barras` > `.barra` con `.et`, `.pista`, `.relleno`, `.val` (`src/ui/componentes/barras.js`).
+
+**Escudo con anillo y demos de la landing** — el hero de `#v-landing` lleva el escudo con el nombre del club girando alrededor (`.escudo-anillo`, SVG con `textPath` y `textLength` igual a la circunferencia, así cualquier nombre llena el círculo), y 4 de las 6 tarjetas `.ben` traen una demo (`data-demo`: plantel, temporadas, tiro, salto). Reglas: el anillo es decorativo (`aria-hidden`) y el nombre del club está también como texto; cada demo dice "ejemplo" y usa datos inventados, nunca de jugadores reales; corren **una sola vez** al entrar en pantalla (`landingAnimada.js` le pone `.en-vista` a la tarjeta, y hasta entonces quedan pausadas en el primer cuadro); sólo se animan los gráficos, **el texto de la tarjeta nunca arranca oculto** (es el LCP); con `prefers-reduced-motion` todo queda en su estado final. Medición en `docs/rendimiento/landing-animada.md`.
 
 **Tarjeta con acento** — algo que pide atención. En la app es el aviso `.al`: tarjeta blanca con filete de 3 px en `--primario` a la izquierda (`.al.ok` lo pasa a `--sube`); es también lo que devuelve `avisoDeError`. En la landing, `.ben` (ver abajo). La variante `.tarj.acento` del spec no existe (ver Deuda).
 ```js

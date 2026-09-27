@@ -74,11 +74,21 @@
   </section>
 
   <section class="vista" id="v-landing">
-    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
-
     <div class="hero">
-      <h1>Lo que se trabaja en inferiores, <span class="r">queda</span></h1>
-      <div class="bajada">Partidos, mediciones y ejercicios de las formativas en un solo lugar, que sigue estando cuando cambia el cuerpo técnico.</div>
+      <!-- El anillo es decorativo (aria-hidden): el nombre del club está escrito como texto en .club.
+           textLength = circunferencia del path (2π·78), así cualquier nombre de club llena el círculo justo. -->
+      <div class="escudo-anillo">
+        <svg class="anillo" id="anillo-escudo" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+          <defs><path id="circulo-anillo" d="M100,22 a78,78 0 1,1 0,156 a78,78 0 1,1 0,-156"/></defs>
+          <text font-size="15"><textPath href="#circulo-anillo" textLength="490" lengthAdjust="spacing">BÁSQUET · NEWELL&#39;S OLD BOYS ·</textPath></text>
+        </svg>
+        <img src="/public/escudo.png" alt="" width="96" height="96">
+      </div>
+      <div class="hero-texto">
+        <div class="club">Inferiores · Newell&#39;s Old Boys</div>
+        <h1>Lo que se trabaja en inferiores, <span class="r">queda</span></h1>
+        <div class="bajada">Partidos, mediciones y ejercicios de las formativas en un solo lugar, que sigue estando cuando cambia el cuerpo técnico.</div>
+      </div>
     </div>
 
     <div class="acciones-landing">
@@ -90,19 +100,44 @@
     </div>
 
     <div class="beneficios">
-      <div class="ben">
-        <div class="t">El trabajo no se pierde</div>
-        <div class="d">El historial de cada jugador sobrevive a las temporadas, a los cambios de categoría y al cambio de entrenador. Lo que se midió hace dos años sigue estando.</div>
-      </div>
-      <div class="ben">
+      <div class="ben ancha" data-demo="plantel">
+        <div class="demo demo-plantel" aria-hidden="true">
+          <span class="ej">ejemplo</span>
+          <div class="planilla"><i>4</i><i>12</i><i>8</i><i>2</i><i>7</i><i>9</i><i>5</i><i>1</i><i>9</i><i>14</i><i>3</i><i>0</i></div>
+          <span class="flecha">→</span>
+          <div class="chips-j"><span>#4 Gómez</span><span>#7 Ferreyra</span><span>#9 Ibarra</span><span>#11 Sosa</span><span>#15 Molina</span><span class="mas">+ 9 más</span></div>
+        </div>
         <div class="t">El plantel se arma solo</div>
         <div class="d">Subís la planilla del partido de la CABB y los jugadores se crean solos. Un partido trae la enorme mayoría del plantel sin escribir un nombre a mano.</div>
       </div>
-      <div class="ben">
+      <div class="ben alta" data-demo="temporadas">
+        <div class="demo demo-temporadas" aria-hidden="true">
+          <span class="ej">ejemplo</span>
+          <ol class="linea-t"><li>Sub-13 · 2025 · Profe A</li><li>Sub-14 · 2026 · Profe B</li><li>Sub-15 · 2027 · Profe C</li></ol>
+        </div>
+        <div class="t">El trabajo no se pierde</div>
+        <div class="d">El historial de cada jugador sobrevive a las temporadas, a los cambios de categoría y al cambio de entrenador. Lo que se midió hace dos años sigue estando.</div>
+      </div>
+      <div class="ben ancha" data-demo="tiro">
+        <div class="demo demo-tiro" aria-hidden="true">
+          <span class="ej">ejemplo · % de tiro de campo, 10 partidos</span>
+          <svg viewBox="0 0 220 80" focusable="false">
+            <polyline class="curva" points="10,60.4 26,47.6 42,66.8 58,44.4 74,38 90,54 106,31.6 122,41.2 138,25.2 154,18.8"/>
+            <rect class="tapa" width="220" height="80"/>
+            <circle class="punto" cx="154" cy="18.8" r="3.5"/>
+            <text class="cifra-tiro" x="166" y="27" font-size="20">44 %</text>
+          </svg>
+        </div>
         <div class="t">Estadísticas con historia</div>
         <div class="d">Reparto de minutos y de puntos, y cómo se mueve el tiro del equipo partido a partido a lo largo de la temporada.</div>
       </div>
-      <div class="ben">
+      <div class="ben" data-demo="salto">
+        <div class="demo demo-salto" aria-hidden="true">
+          <span class="ej">ejemplo</span>
+          <span class="etq">Salto CMJ</span>
+          <span class="cifra-salto"><span id="cifra-salto">42</span> cm</span>
+          <span class="sube-osc">+4 cm</span>
+        </div>
         <div class="t">Mediciones en la cancha</div>
         <div class="d">La batería de tiro y los saltos se cargan durante la práctica, y queda la evolución de cada jugador y del equipo en el tiempo.</div>
       </div>

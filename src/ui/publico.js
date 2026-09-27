@@ -7,6 +7,7 @@ import { normalizarNombre } from '../data/cuenta.js';
 import { VERSION_LEGAL } from '../data/legal.js';
 import { esErrorDeRed } from './nav.js';
 import { $ } from './dom.js';
+import { iniciarLandingAnimada } from './landingAnimada.js';
 import { SIN_CONEXION, textoDeError, marcarSesionCerrada, desmarcarSesionCerrada } from './errores.js';
 import {
   iniciarSolicitudJugador, abrirSolicitudJugador, solicitudPendiente, textoDeSolicitudPendiente,
@@ -380,6 +381,7 @@ function alApretarEnter(idCampo, fn) {
 
 export function iniciarPublico({ onEntrar, onReintentarClub }) {
   alEntrar = onEntrar;
+  iniciarLandingAnimada();
 
   $('btn-ir-crear').addEventListener('click', () => abrirAlta('profe'));
   $('btn-ir-crear-2').addEventListener('click', () => abrirAlta('profe'));
