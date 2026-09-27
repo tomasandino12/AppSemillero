@@ -29,3 +29,23 @@ test('el texto del anillo usa textLength para llenar el círculo con cualquier n
 test('el nombre del club también está como texto en el hero', () => {
   assert.match(hero, /<div class="club">[^<]*Newell&#39;s Old Boys<\/div>/);
 });
+
+const beneficios = [...landing.matchAll(/<div class="(ben[^"]*)"([^>]*)>\s*<div class="t">([^<]*)<\/div>/g)]
+  .map((m) => ({ clases: m[1].split(' '), demo: m[2].match(/data-demo="([\w-]+)"/)?.[1], titulo: m[3] }));
+
+test('la landing tiene 6 beneficios en el orden de la spec', () => {
+  assert.deepEqual(beneficios.map((b) => b.titulo), [
+    'El plantel se arma solo',
+    'El trabajo no se pierde',
+    'Estadísticas con historia',
+    'Mediciones en la cancha',
+    'Los ejercicios quedan en el club',
+    'Pensada para el celular',
+  ]);
+  assert.deepEqual(beneficios.map((b) => b.clases.includes('ancha') ? 'ancha' : b.clases.includes('alta') ? 'alta' : ''),
+    ['ancha', 'alta', 'ancha', '', '', '']);
+});
+
+test('4 beneficios llevan data-demo', () => {
+  assert.deepEqual(beneficios.map((b) => b.demo), ['plantel', 'temporadas', 'tiro', 'salto', undefined, undefined]);
+});
