@@ -37,6 +37,19 @@
 
 /* ---- landing ---- */
 .hero{padding:var(--sp-6) var(--sp-4) var(--sp-5);text-align:center}
+.hero .club{font-family:var(--ff-titulo);font-size:var(--fs-125);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gris-osc);margin-bottom:var(--sp-3)}
+
+/* Escudo con el nombre del club girando alrededor. El SVG gira entero (su
+   centro es el del escudo) y sólo anima transform. Es la única animación
+   continua del proyecto (excepción en DESIGN.md): un observer le pone .quieto
+   cuando sale de pantalla, y con prefers-reduced-motion base.css la apaga y el
+   texto queda en su lugar, legible. */
+.escudo-anillo{position:relative;width:9rem;height:9rem;margin:0 auto var(--sp-5)}
+.escudo-anillo img{position:absolute;inset:26%;width:48%;height:48%;object-fit:contain}
+.anillo{position:absolute;inset:0;width:100%;height:100%;animation:giro var(--dur-giro) linear infinite}
+.anillo.quieto{animation-play-state:paused}
+.anillo text{font-family:var(--ff-titulo);font-weight:600;letter-spacing:.04em;fill:var(--gris-osc)}
+@keyframes giro{from{transform:rotate(-360deg)}}
 .hero h1{font-size:clamp(1.75rem,1.35rem + 2vw,2.75rem);line-height:1.03;letter-spacing:.01em}
 .hero h1 .r{color:var(--primario)}
 .hero .bajada{color:var(--gris-osc);font-size:var(--fs-170);line-height:1.45;margin:var(--sp-4) auto 0;max-width:34rem}

@@ -74,11 +74,21 @@
   </section>
 
   <section class="vista" id="v-landing">
-    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
-
     <div class="hero">
-      <h1>Lo que se trabaja en inferiores, <span class="r">queda</span></h1>
-      <div class="bajada">Partidos, mediciones y ejercicios de las formativas en un solo lugar, que sigue estando cuando cambia el cuerpo técnico.</div>
+      <!-- El anillo es decorativo (aria-hidden): el nombre del club está escrito como texto en .club.
+           textLength = circunferencia del path (2π·78), así cualquier nombre de club llena el círculo justo. -->
+      <div class="escudo-anillo">
+        <svg class="anillo" id="anillo-escudo" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+          <defs><path id="circulo-anillo" d="M100,22 a78,78 0 1,1 0,156 a78,78 0 1,1 0,-156"/></defs>
+          <text font-size="15"><textPath href="#circulo-anillo" textLength="490" lengthAdjust="spacing">BÁSQUET · NEWELL&#39;S OLD BOYS ·</textPath></text>
+        </svg>
+        <img src="/public/escudo.png" alt="" width="96" height="96">
+      </div>
+      <div class="hero-texto">
+        <div class="club">Inferiores · Newell&#39;s Old Boys</div>
+        <h1>Lo que se trabaja en inferiores, <span class="r">queda</span></h1>
+        <div class="bajada">Partidos, mediciones y ejercicios de las formativas en un solo lugar, que sigue estando cuando cambia el cuerpo técnico.</div>
+      </div>
     </div>
 
     <div class="acciones-landing">

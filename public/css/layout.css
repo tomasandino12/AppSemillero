@@ -375,6 +375,10 @@
 }
 @media (min-width:64rem){
   .publico .beneficios{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* Hero en dos columnas: texto a la izquierda, escudo más grande a la derecha. */
+  .publico .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-8);max-width:64rem;margin-inline:auto;text-align:left}
+  .publico .hero .escudo-anillo{width:14rem;height:14rem;order:2;margin:0}
+  .publico .hero .bajada{margin-left:0}
 }
 
 /* Editor de jugadas: en tablet vertical (mobile-first, la barra arriba como
