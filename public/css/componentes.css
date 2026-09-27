@@ -600,6 +600,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .perfil-fila .k{font-family:var(--ff-titulo);font-size:var(--fs-100);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)}
 .perfil-fila .v{font-size:var(--fs-145);margin-top:.125rem;overflow-wrap:anywhere}
 .perfil-fila .v .sin{color:var(--gris);font-style:italic}
+.aviso-estimacion{font-size:var(--fs-125);color:var(--gris-cl);font-style:italic;margin:var(--sp-3) 0 var(--sp-5)}
 .perfil-legal{text-align:center;font-size:var(--fs-125);color:var(--gris-cl);margin-top:var(--sp-5)}
 .perfil-legal a{color:inherit}
 .perfil-cats{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)}

@@ -31,6 +31,7 @@ import { botonIcono, ICONO } from '../componentes/iconos.js';
 import { abrirGuiaSalto } from '../componentes/guiaSalto.js';
 import { seccionSprint } from '../componentes/seccionSprint.js';
 import { seccionYoyo } from '../componentes/seccionYoyo.js';
+import { avisoEstimaciones } from '../componentes/avisoEstimaciones.js';
 import { abrirProtocoloCorporal } from '../componentes/protocoloCorporal.js';
 import { html, crudo } from '../html.js';
 import { $ } from '../dom.js';
@@ -390,6 +391,7 @@ export async function renderFicha() {
       ${seccionSalto(sesionesDeSaltoDelJugador)}
       ${seccionSprint(sesionesDeSprint(sprints.filter((x) => x.jugadorId === jugadorId)))}
       ${seccionYoyo(sesionesDeYoyo(yoyos.filter((x) => x.jugadorId === jugadorId)))}
+      ${avisoEstimaciones()}
       ${seccionRecursos(envios)}
     `;
 

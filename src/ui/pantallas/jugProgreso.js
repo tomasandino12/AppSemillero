@@ -11,6 +11,7 @@ import { sesionesDeSprint } from '../../data/sprint.js';
 import { seccionSprint } from '../componentes/seccionSprint.js';
 import { sesionesDeYoyo } from '../../data/yoyo.js';
 import { seccionYoyo } from '../componentes/seccionYoyo.js';
+import { avisoEstimaciones } from '../componentes/avisoEstimaciones.js';
 import { obtenerFichaJugador } from '../sesion.js';
 import { cancha, grafico } from '../componentes/graficos.js';
 import { variacionHtml } from '../componentes/variacion.js';
@@ -225,6 +226,7 @@ export async function renderJugProgreso() {
       ${seccionSalto(progreso.saltos)}
       ${seccionSprint(sesionesDeSprint(intentosDeSprint(progreso.sprints)), { sinDatos: 'Todavía no te midieron el sprint.' })}
       ${seccionYoyo(sesionesDeYoyo(progreso.yoyos), { sinDatos: 'Todavía no te midieron la resistencia.' })}
+      ${avisoEstimaciones()}
       ${seccionPesos(pesos)}
     </div>
   `;
