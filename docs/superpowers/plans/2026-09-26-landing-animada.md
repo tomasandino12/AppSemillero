@@ -21,7 +21,7 @@
 | T3 Grilla bento (sin demos) | hecha | (ver git log) |
 | T4 Demos: plantel y estadísticas | hecha | (ver git log) |
 | T5 Demos: mediciones y temporadas + contador | hecha | (ver git log) |
-| T6 Medición final y DESIGN.md | pendiente | |
+| T6 Medición final y DESIGN.md | hecha | (ver git log) |
 
 ---
 

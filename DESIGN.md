@@ -171,6 +171,8 @@ html`<div class="zona-barra">
 ```
 Para barras comparativas simples (sin meta) está `.barras` > `.barra` con `.et`, `.pista`, `.relleno`, `.val` (`src/ui/componentes/barras.js`).
 
+**Escudo con anillo y demos de la landing** — el hero de `#v-landing` lleva el escudo con el nombre del club girando alrededor (`.escudo-anillo`, SVG con `textPath` y `textLength` igual a la circunferencia, así cualquier nombre llena el círculo), y 4 de las 6 tarjetas `.ben` traen una demo (`data-demo`: plantel, temporadas, tiro, salto). Reglas: el anillo es decorativo (`aria-hidden`) y el nombre del club está también como texto; cada demo dice "ejemplo" y usa datos inventados, nunca de jugadores reales; corren **una sola vez** al entrar en pantalla (`landingAnimada.js` le pone `.en-vista` a la tarjeta, y hasta entonces quedan pausadas en el primer cuadro); sólo se animan los gráficos, **el texto de la tarjeta nunca arranca oculto** (es el LCP); con `prefers-reduced-motion` todo queda en su estado final. Medición en `docs/rendimiento/landing-animada.md`.
+
 **Tarjeta con acento** — algo que pide atención. En la app es el aviso `.al`: tarjeta blanca con filete de 3 px en `--primario` a la izquierda (`.al.ok` lo pasa a `--sube`); es también lo que devuelve `avisoDeError`. En la landing, `.ben` (ver abajo). La variante `.tarj.acento` del spec no existe (ver Deuda).
 ```js
 html`<div class="al"><div class="tx">${texto}<div class="mt">${detalle}</div></div></div>`
