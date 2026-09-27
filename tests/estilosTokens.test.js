@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
  * (el navegador la ignora en silencio) y un texto sobre el color del club que
  * deja de leerse.
  */
-const ARCHIVOS = ['tokens', 'base', 'layout', 'componentes', 'publico'];
+const ARCHIVOS = ['tokens', 'base', 'layout', 'componentes', 'publico', 'legal'];
 const css = Object.fromEntries(ARCHIVOS.map((n) => [n, readFileSync(`public/css/${n}.css`, 'utf8')]));
 const tokens = css.tokens;
 
@@ -170,4 +170,28 @@ test('el texto de la landing llega a 4.5:1 sobre su tarjeta y su fondo', () => {
     const c = contraste(t, f);
     assert.ok(c >= 4.5, `${texto} sobre ${fondo}: ${c.toFixed(2)}:1`);
   }
+});
+
+// Los pares de texto sobre fondo que usa de verdad el CSS de la app (WCAG AA,
+// 4.5:1 para texto normal). Si un par nuevo aparece en el CSS, va acá. Los
+// íconos y bordes quedan afuera: piden 3:1 y no son texto.
+test('el texto de la app llega a 4.5:1 sobre su fondo', () => {
+  const pares = [
+    ['--tinta', '--papel'], ['--tinta', '--blanco'],
+    ['--gris', '--papel'], ['--gris', '--blanco'], ['--gris', '--fondo-chip'],
+    ['--gris-cl', '--papel'], ['--gris-cl', '--blanco'],
+    ['--primario-osc', '--papel'], ['--primario-osc', '--blanco'], ['--primario-osc', '--primario-tenue'],
+    ['--sube', '--sube-fondo'], ['--baja', '--baja-fondo'], ['--aviso', '--aviso-fondo'],
+    ['--sobre-oscuro', '--sup-1'], ['--sobre-oscuro', '--sup-2'],
+    ['--gris-osc', '--sup-1'], ['--gris-osc', '--sup-2'],
+    ['--placeholder-osc', '--sup-2'],
+  ];
+  const malos = [];
+  for (const [texto, fondo] of pares) {
+    const [t, f] = [valorDeToken(texto), valorDeToken(fondo)];
+    assert.ok(t && f, `${texto} y ${fondo} tienen que ser hex en tokens.css`);
+    const c = contraste(t, f);
+    if (c < 4.5) malos.push(`${texto} sobre ${fondo}: ${c.toFixed(2)}:1`);
+  }
+  assert.deepEqual(malos, []);
 });

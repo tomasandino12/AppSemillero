@@ -49,7 +49,7 @@
   --fondo-chip:#EFECE6;   /* chips, etiquetas y fondos de ícono en reposo */
   --deshabilitado:#C9C5BE;
   --negro-puro:#000;      /* letterbox del video */
-  --placeholder-osc:#7C7870;
+  --placeholder-osc:#9A968E; /* 4.70:1 sobre --sup-2: un placeholder también es texto */
 
   /* ---- superficies sobre fondo oscuro ---- */
   --sup-1:#22222A;

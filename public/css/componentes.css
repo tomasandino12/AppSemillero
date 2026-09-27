@@ -175,7 +175,7 @@
 }
 .chip.sube{background:var(--sube-fondo);color:var(--sube)}
 .chip.baja{background:var(--baja-fondo);color:var(--baja)}
-.chip.sin{background:var(--fondo-chip);color:var(--gris-cl);font-style:italic}
+.chip.sin{background:var(--fondo-chip);color:var(--gris);font-style:italic}
 .flecha{color:var(--gris-cl);font-size:var(--fs-170);line-height:1}
 
 /* ---- datos de la ficha ---- */
