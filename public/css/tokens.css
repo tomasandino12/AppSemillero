@@ -5,6 +5,22 @@
    Cambio respecto del prototipo: la escala tipográfica pasa de px a rem
    (los NOMBRES se conservan para que el CSS portado siga funcionando).
    ===================================================================== */
+
+/* ---- fuentes propias ----
+   Servidas desde public/fonts/ (subconjunto latin de @fontsource, licencia
+   SIL OFL 1.1: ver public/fonts/LICENCIAS.txt). Sólo los pesos que usa el CSS;
+   uno nuevo necesita su archivo, o el navegador lo inventa engrosando otro. */
+@font-face{font-family:'Barlow Condensed';font-weight:400;font-display:swap;src:url(/public/fonts/barlow-condensed-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:500;font-display:swap;src:url(/public/fonts/barlow-condensed-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:600;font-display:swap;src:url(/public/fonts/barlow-condensed-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:700;font-display:swap;src:url(/public/fonts/barlow-condensed-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:400;font-display:swap;src:url(/public/fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:500;font-display:swap;src:url(/public/fonts/inter-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url(/public/fonts/inter-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-weight:700;font-display:swap;src:url(/public/fonts/inter-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:500;font-display:swap;src:url(/public/fonts/ibm-plex-mono-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:600;font-display:swap;src:url(/public/fonts/ibm-plex-mono-latin-600-normal.woff2) format('woff2')}
+
 :root{
   /* ---- marca: el color del club ----
      --club y --sobre-club son LOS ÚNICOS dos valores que cambia un club (el

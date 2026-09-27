@@ -34,9 +34,12 @@
 <meta property="og:image:alt" content="Escudo del club">
 <meta name="twitter:card" content="summary">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<!-- Las fuentes se sirven desde acá y no desde Google Fonts: así Google no
+     recibe la IP de cada persona que abre la app (ver /privacidad). Se
+     precargan las dos que pinta la primera pantalla; el resto las pide el
+     @font-face de tokens.css cuando hacen falta. -->
+<link rel="preload" href="/public/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/public/fonts/barlow-condensed-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/public/css/tokens.css">
 <link rel="stylesheet" href="/public/css/base.css">
 <link rel="stylesheet" href="/public/css/layout.css">

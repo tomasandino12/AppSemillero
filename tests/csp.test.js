@@ -81,3 +81,15 @@ test('el HTML no se guarda en caché, para que cada CSP nueva llegue', () => {
 test('no se puede embeber la app en otra página', () => {
   assert.deepEqual(directiva('frame-ancestors'), ["'none'"]);
 });
+
+// Las fuentes viven en public/fonts/: pedirlas a Google le pasaba la IP de
+// cada persona que abre la app, algo que la política de privacidad no cubre.
+test('las fuentes se sirven desde el propio dominio, sin Google Fonts', () => {
+  assert.deepEqual(directiva('font-src'), ["'self'"]);
+  assert.deepEqual(directiva('style-src'), ["'self'", "'unsafe-inline'"]);
+  assert.doesNotMatch(html, /fonts\.(googleapis|gstatic)\.com/);
+  const tokens = readFileSync(path.join(raiz, 'public', 'css', 'tokens.css'), 'utf8');
+  const archivos = [...tokens.matchAll(/url\((\/public\/fonts\/[^)]+)\)/g)].map((m) => m[1]);
+  assert.equal(archivos.length, 10);
+  for (const ruta of archivos) assert.ok(existsSync(path.join(raiz, ruta)), `falta ${ruta}`);
+});
