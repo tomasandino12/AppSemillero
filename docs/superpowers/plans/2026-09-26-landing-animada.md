@@ -19,7 +19,7 @@
 | T1 Regla, tokens y medición base | hecha | (ver git log) |
 | T2 Escudo con anillo | hecha | (ver git log) |
 | T3 Grilla bento (sin demos) | hecha | (ver git log) |
-| T4 Demos: plantel y estadísticas | pendiente | |
+| T4 Demos: plantel y estadísticas | hecha | (ver git log) |
 | T5 Demos: mediciones y temporadas + contador | pendiente | |
 | T6 Medición final y DESIGN.md | pendiente | |
 

@@ -30,7 +30,7 @@ test('el nombre del club también está como texto en el hero', () => {
   assert.match(hero, /<div class="club">[^<]*Newell&#39;s Old Boys<\/div>/);
 });
 
-const beneficios = [...landing.matchAll(/<div class="(ben[^"]*)"([^>]*)>\s*<div class="t">([^<]*)<\/div>/g)]
+const beneficios = [...landing.matchAll(/<div class="(ben(?: [^"]*)?)"([^>]*)>[\s\S]*?<div class="t">([^<]*)<\/div>/g)]
   .map((m) => ({ clases: m[1].split(' '), demo: m[2].match(/data-demo="([\w-]+)"/)?.[1], titulo: m[3] }));
 
 test('la landing tiene 6 beneficios en el orden de la spec', () => {
@@ -48,4 +48,19 @@ test('la landing tiene 6 beneficios en el orden de la spec', () => {
 
 test('4 beneficios llevan data-demo', () => {
   assert.deepEqual(beneficios.map((b) => b.demo), ['plantel', 'temporadas', 'tiro', 'salto', undefined, undefined]);
+});
+
+const demos = [...landing.matchAll(/<div class="demo [^"]*"[^>]*>([\s\S]*?)<div class="t">/g)].map((m) => m[1]);
+
+test('cada demo dice ejemplo', () => {
+  assert.ok(demos.length >= 2, 'no se encontraron demos');
+  for (const d of demos) assert.match(d, /<span class="ej">ejemplo/);
+});
+
+test('la curva de tiro tiene 10 puntos y termina más arriba de donde empieza', () => {
+  const puntos = (landing.match(/<polyline class="curva" points="([^"]+)"/)?.[1] ?? '')
+    .trim().split(/\s+/).map((p) => p.split(',').map(Number));
+  assert.equal(puntos.length, 10);
+  // En SVG el eje y crece hacia abajo: "más arriba" es una y menor.
+  assert.ok(puntos.at(-1)[1] < puntos[0][1]);
 });
