@@ -10,6 +10,9 @@
   "headers": [
     { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
     { "source": "/public/index.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/src/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+    { "source": "/public/css/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
+    { "source": "/public/config.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
     {
       "source": "/(.*)",
       "headers": [
