@@ -372,15 +372,20 @@
   .publico .beneficios{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-4);padding-inline:var(--sp-6);max-width:64rem;margin-inline:auto}
   .publico .acciones-landing{flex-direction:row;justify-content:center;max-width:30rem}
   .publico .futuro{padding-inline:var(--sp-6)}
-  /* Bento en 2 columnas: las anchas, las altas y la última ocupan el ancho completo. */
-  .publico .ben.ancha,.publico .ben.alta,.publico .ben:last-child{grid-column:1 / -1}
+  /* Bento en 2 columnas: las anchas y las altas ocupan el ancho completo; las dos últimas van lado a lado. */
+  .publico .ben.ancha,.publico .ben.alta{grid-column:1 / -1}
 }
 @media (min-width:64rem){
   .publico .beneficios{grid-template-columns:repeat(3,minmax(0,1fr))}
   /* Bento en 3 columnas: .ancha ocupa 2 y .alta ocupa 2 filas (queda 1 columna). */
   .publico .ben.ancha{grid-column:span 2}
   .publico .ben.alta{grid-column:auto;grid-row:span 2}
-  .publico .ben:last-child{grid-column:auto}
+  .publico .ben:last-child{grid-column:1 / -1}
+  /* La pizarra es cuadrada: al costado del texto la tarjeta no queda altísima. */
+  .publico .ben[data-demo="jugadas"]{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);column-gap:var(--sp-6);align-content:center}
+  .publico .ben[data-demo="jugadas"] .demo{grid-row:1 / span 2;margin-bottom:0}
+  .publico .ben[data-demo="jugadas"] .t{grid-column:2;align-self:end}
+  .publico .ben[data-demo="jugadas"] .d{grid-column:2;align-self:start}
   /* Hero en dos columnas: texto a la izquierda, escudo más grande a la derecha. */
   .publico .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--sp-8);max-width:64rem;margin-inline:auto;text-align:left}
   .publico .hero .escudo-anillo{width:14rem;height:14rem;order:2;margin:0}

@@ -33,28 +33,33 @@ test('el nombre del club también está como texto en el hero', () => {
 const beneficios = [...landing.matchAll(/<div class="(ben(?: [^"]*)?)"([^>]*)>[\s\S]*?<div class="t">([^<]*)<\/div>/g)]
   .map((m) => ({ clases: m[1].split(' '), demo: m[2].match(/data-demo="([\w-]+)"/)?.[1], titulo: m[3] }));
 
-test('la landing tiene 6 beneficios en el orden de la spec', () => {
+test('la landing tiene 6 beneficios en su orden', () => {
   assert.deepEqual(beneficios.map((b) => b.titulo), [
     'El plantel se arma solo',
     'El trabajo no se pierde',
     'Estadísticas con historia',
-    'Mediciones en la cancha',
+    'Las jugadas del club',
     'Los ejercicios quedan en el club',
     'Pensada para el celular',
   ]);
   assert.deepEqual(beneficios.map((b) => b.clases.includes('ancha') ? 'ancha' : b.clases.includes('alta') ? 'alta' : ''),
-    ['ancha', 'alta', 'ancha', '', '', '']);
+    ['ancha', 'alta', 'ancha', 'ancha', '', '']);
 });
 
 test('4 beneficios llevan data-demo', () => {
-  assert.deepEqual(beneficios.map((b) => b.demo), ['plantel', 'temporadas', 'tiro', 'salto', undefined, undefined]);
+  assert.deepEqual(beneficios.map((b) => b.demo), ['plantel', 'temporadas', 'tiro', 'jugadas', undefined, undefined]);
 });
 
 const demos = [...landing.matchAll(/<div class="demo [^"]*"[^>]*>([\s\S]*?)<div class="t">/g)].map((m) => m[1]);
 
-test('cada demo dice ejemplo', () => {
+test('las demos no llevan rótulo de ejemplo: se entienden solas', () => {
   assert.ok(demos.length >= 2, 'no se encontraron demos');
-  for (const d of demos) assert.match(d, /<span class="ej">ejemplo/);
+  for (const d of demos) assert.doesNotMatch(d, /ejemplo/i);
+});
+
+test('la línea de tiempo usa categorías que existen: dos años en una y después el pase', () => {
+  const filas = [...landing.matchAll(/<li>((?:U|Sub-)\d+) · (\d{4}) · Profe [A-Z]<\/li>/g)].map((m) => [m[1], Number(m[2])]);
+  assert.deepEqual(filas, [['U13', 2025], ['U13', 2026], ['U15', 2027]]);
 });
 
 test('la curva de tiro tiene 10 puntos y termina más arriba de donde empieza', () => {
