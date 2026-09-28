@@ -1,7 +1,7 @@
 import { html } from '../html.js';
 import { tablaDeCuadros, cuadroEnTiempo } from '../../data/tablaCuadros.js';
 import {
-  tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo, pareceSinCamaraLenta, FPS_MIN, FPS_MAX,
+  tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo, pareceSinCamaraLenta, fpsParaMedir,
 } from '../../data/salto.js';
 import { protocoloHtml } from './protocoloSalto.js';
 import { toast } from '../nav.js';
@@ -30,19 +30,16 @@ async function leerTabla(archivo) {
  * dura 1,17 s y, en pausa, un seek dentro del mismo cuadro no avisa nunca
  * (FUNDAMENTO.md §10). El video queda siempre en pausa y sin controles nativos.
  *
- * `fpsSupuestos`: el archivo no traía los fps de captura y se usan los del
- * selector. Pasa con videos recortados en el celular, que sirven, pero también
- * con los que se recomprimieron al compartirlos: ésos tienen tramos a
- * velocidad normal y pueden dar una altura creíble pero equivocada.
+ * Los fps salen del propio video (`fpsParaMedir`): los de la metadata del
+ * celular o, si los cuadros ya están en tiempo real, los del archivo. Un video
+ * sin ninguno de los dos (recomprimido por WhatsApp, Quick Share o la PC) no se
+ * mide: no dice cuánto se estiró y cualquier número sería una adivinanza, así
+ * que se muestra el motivo y se devuelve null.
  *
- * @param {{ archivo: File, fpsCaptura: number, fpsSupuestos?: boolean }} args
+ * @param {{ archivo: File, fpsMetadatos: number | null }} args
  * @returns {Promise<{ tiempoVueloMs: number, fpsCaptura: number } | null>}
  */
-export async function abrirMarcador({ archivo, fpsCaptura, fpsSupuestos = false }) {
-  if (!(fpsCaptura >= FPS_MIN && fpsCaptura <= FPS_MAX)) {
-    toast(`Los fps de captura tienen que estar entre ${FPS_MIN} y ${FPS_MAX}.`);
-    return null;
-  }
+export async function abrirMarcador({ archivo, fpsMetadatos }) {
   let tabla;
   try {
     tabla = await leerTabla(archivo);
@@ -53,10 +50,34 @@ export async function abrirMarcador({ archivo, fpsCaptura, fpsSupuestos = false 
     toast('No puedo leer los cuadros de este video. Grabalo con la app de Cámara, sin editarlo.');
     return null;
   }
-  return new Promise((resolver) => montar(archivo, tabla, fpsCaptura, fpsSupuestos, resolver));
+  const medida = fpsParaMedir({ fpsMetadatos, intervaloS: tabla.intervaloS });
+  if (!medida) return mostrarRechazo(Math.round(1 / tabla.intervaloS));
+  return new Promise((resolver) => montar(archivo, tabla, medida.fps, resolver));
 }
 
-function montar(archivo, { tiempos, intervaloS }, fpsCaptura, fpsSupuestos, resolver) {
+/** El motivo por el que el video no sirve, con el mismo marco que el marcador. */
+function mostrarRechazo(fpsDelArchivo) {
+  return new Promise((resolver) => {
+    const raiz = document.createElement('div');
+    raiz.className = 'marcador-cuadros';
+    raiz.setAttribute('role', 'dialog');
+    raiz.setAttribute('aria-modal', 'true');
+    raiz.setAttribute('aria-label', 'Este video no se puede medir');
+    raiz.innerHTML = html`
+      <div class="marcador-cuerpo">
+        <p class="marcador-resultado" role="alert"><b>Este video no se puede medir.</b> Está a ${fpsDelArchivo} cuadros por segundo y no trae la velocidad a la que se grabó: eso se pierde cuando el video pasa por WhatsApp, Quick Share o la compu. Sin ese dato la altura sería un número inventado, así que la app no la calcula.</p>
+        <p class="marcador-resultado">Elegí el video original, tal cual salió de la cámara en modo “Cámara lenta”, desde la galería del mismo celular con que se grabó.</p>
+        <button type="button" class="btn" data-m="cerrar">Entendido</button>
+      </div>
+    `.toString();
+    document.body.appendChild(raiz);
+    const cerrar = () => { raiz.remove(); resolver(null); };
+    raiz.querySelector('[data-m="cerrar"]').addEventListener('click', cerrar);
+    raiz.querySelector('[data-m="cerrar"]').focus();
+  });
+}
+
+function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
   const ultimo = tiempos.length - 1;
   const url = URL.createObjectURL(archivo);
   const raiz = document.createElement('div');
@@ -80,7 +101,6 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, fpsSupuestos, reso
   raiz.innerHTML = html`
     <div class="marcador-cuerpo">
       <button type="button" class="jvc-cerrar" data-m="cerrar" aria-label="Cerrar">&#10005;</button>
-      ${fpsSupuestos ? html`<p class="marcador-resultado" role="note">Este video no trae los fps de captura: se toma como grabado a ${fpsCaptura} fps. Si lo pasaste por un chat, Quick Share o la PC, puede haberse recomprimido y la altura saldría mal. Lo más seguro es elegir el archivo original, desde la galería del celular.</p>` : ''}
       <video class="marcador-video" muted playsinline preload="auto" src="${url}"></video>
       <p class="marcador-resultado" data-m="aviso-video" role="alert" hidden></p>
       <input type="range" class="marcador-slider" data-m="slider" min="0" max="${ultimo}" value="0" step="1" aria-label="Cuadro del video">
@@ -220,5 +240,9 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, fpsSupuestos, reso
   video.addEventListener('loadedmetadata', () => {
     actual = cuadroEnTiempo(tiempos, video.currentTime);
     irA(actual);
+    // Safari de iPhone no dibuja ningún cuadro de un video que nunca se
+    // reprodujo: queda en negro aunque los seeks funcionen. Un play() mudo
+    // seguido de pausa lo obliga a pintar; si lo rechaza, no hay nada que hacer.
+    video.play().then(() => video.pause()).catch(() => {});
   }, { once: true });
 }

@@ -35,6 +35,30 @@ export function cuadrosEntre(t1, t2, intervaloArchivoS) {
   return Math.round((t2 - t1) / intervaloArchivoS);
 }
 
+/**
+ * A cuántos fps se grabó el video, sólo con lo que el archivo sabe de sí mismo:
+ * 1) los que el celular anotó en la metadata (Samsung: la cámara lenta queda
+ * estirada a 30 fps y esto es lo único que dice que fue a 240); 2) si no hay,
+ * los del propio archivo, cuando sus cuadros ya están en tiempo real (un video
+ * a 240 fps cuyo intervalo entre cuadros es 1/240 s). Con ninguno de los dos
+ * devuelve null: un video de 30 fps sin metadata (lo dejó así WhatsApp, Quick
+ * Share o la compu) no dice cuánto se estiró, y adivinarlo —como hacía el
+ * selector manual— daba saltos creíbles pero falsos (6 cm en vez de ~24).
+ *
+ * @returns {{ fps: number, origen: 'metadatos' | 'archivo' } | null}
+ */
+export function fpsParaMedir({ fpsMetadatos, intervaloS }) {
+  if (sabido(fpsMetadatos) && fpsMetadatos >= FPS_MIN && fpsMetadatos <= FPS_MAX) {
+    return { fps: fpsMetadatos, origen: 'metadatos' };
+  }
+  // 1 de holgura: 120 fps grabados en NTSC son 119,88.
+  const delArchivo = sabido(intervaloS) && intervaloS > 0 ? Math.round(1 / intervaloS) : null;
+  if (delArchivo !== null && delArchivo >= FPS_MIN - 1 && delArchivo <= FPS_MAX) {
+    return { fps: delArchivo, origen: 'archivo' };
+  }
+  return null;
+}
+
 export function tiempoDeVuelo(nCuadros, fpsCaptura) {
   return nCuadros / fpsCaptura;
 }

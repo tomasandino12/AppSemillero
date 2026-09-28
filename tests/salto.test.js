@@ -5,7 +5,7 @@ import {
   cuadrosEntre, tiempoDeVuelo, alturaDeSalto, validarTiempoDeVuelo,
   potenciaSamozino, mejorIntento, rangoDeIntentos, vigenteALaFecha, sesionesDeSalto,
   pareceSinCamaraLenta, ultimaYAnteriores,
-  potenciaSayers, potenciaPrincipal,
+  potenciaSayers, potenciaPrincipal, fpsParaMedir,
 } from '../src/data/salto.js';
 
 const cerca = (real, esperado, tolerancia = 0.01) => assert.ok(
@@ -210,4 +210,24 @@ test('el CMJ con peso tiene pico aunque falten las piernas; el Abalakov sólo me
   assert.equal(aba.picoWKg, null);
   assert.equal(potenciaPrincipal(aba).tipo, 'media');
   assert.equal(potenciaPrincipal({ potenciaWKg: null, picoWKg: null }), null);
+});
+
+test('fpsParaMedir: los fps de la metadata mandan aunque el archivo esté estirado a 30', () => {
+  assert.deepEqual(fpsParaMedir({ fpsMetadatos: 240, intervaloS: 1 / 30 }), { fps: 240, origen: 'metadatos' });
+});
+
+test('fpsParaMedir: sin metadata, un archivo con cuadros en tiempo real da sus propios fps', () => {
+  assert.deepEqual(fpsParaMedir({ fpsMetadatos: null, intervaloS: 1 / 240 }), { fps: 240, origen: 'archivo' });
+  assert.deepEqual(fpsParaMedir({ fpsMetadatos: null, intervaloS: 1 / 119.88 }), { fps: 120, origen: 'archivo' });
+});
+
+test('fpsParaMedir: un video de 30 fps sin metadata no se puede medir (nada de adivinar)', () => {
+  assert.equal(fpsParaMedir({ fpsMetadatos: null, intervaloS: 1 / 30 }), null);
+  assert.equal(fpsParaMedir({ fpsMetadatos: null, intervaloS: 1 / 60 }), null);
+});
+
+test('fpsParaMedir: una metadata fuera de rango se ignora y se cae al archivo', () => {
+  assert.equal(fpsParaMedir({ fpsMetadatos: 60, intervaloS: 1 / 30 }), null);
+  assert.deepEqual(fpsParaMedir({ fpsMetadatos: 60, intervaloS: 1 / 240 }), { fps: 240, origen: 'archivo' });
+  assert.equal(fpsParaMedir({ fpsMetadatos: null, intervaloS: undefined }), null);
 });

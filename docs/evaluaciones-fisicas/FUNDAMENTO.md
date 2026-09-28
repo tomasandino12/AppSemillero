@@ -283,6 +283,16 @@ teléfonos.
 - **iPhone:** la cámara lenta guarda frecuencia variable, con tramos rápidos y
   lentos en el mismo archivo. Al elegirlo desde Safari puede convertirse
   [32].
+- **Decisión (28/09/2026): los fps salen sólo del archivo, no se eligen a
+  mano.** Un video de WhatsApp de la cámara lenta de un iPhone llegó a 30 fps,
+  848×480, sin ninguna metadata, y con el selector en 240 dio 6 cm. Ese archivo
+  no dice cuánto se estiró (ni si el iPhone grabó a 120 o a 240), así que la
+  app ya no lo mide: `fpsParaMedir` (salto.js) usa la metadata del celular o,
+  si los cuadros ya están en tiempo real (intervalo 1/240 s), los del propio
+  archivo; con ninguno de los dos muestra el motivo y no calcula. Pendiente de
+  probar con un iPhone real: que el original elegido desde Safari conserve el
+  intervalo de 1/240 s (si el selector de iOS lo aplana a 30 fps, va a caer en
+  el rechazo).
 - **Prohibido:** la "cámara lenta instantánea" o "super cámara lenta con IA"
   de los Galaxy S24 **inventa cuadros por interpolación** [31]. Los cuadros
   interpolados no son tiempo real. La app tiene que pedir el modo "Cámara
