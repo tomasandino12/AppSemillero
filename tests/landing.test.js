@@ -58,7 +58,7 @@ test('cada demo dice ejemplo', () => {
 });
 
 test('la curva de tiro tiene 10 puntos y termina más arriba de donde empieza', () => {
-  const puntos = (landing.match(/<polyline class="curva" points="([^"]+)"/)?.[1] ?? '')
+  const puntos = (landing.match(/<polyline class="curva-demo" points="([^"]+)"/)?.[1] ?? '')
     .trim().split(/\s+/).map((p) => p.split(',').map(Number));
   assert.equal(puntos.length, 10);
   // En SVG el eje y crece hacia abajo: "más arriba" es una y menor.

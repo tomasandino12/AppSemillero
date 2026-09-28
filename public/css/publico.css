@@ -147,7 +147,7 @@
 .chips-j .mas{color:var(--gris-osc)}
 
 .demo-tiro svg{width:100%;max-width:22rem;height:auto;display:block}
-.curva{fill:none;stroke:var(--primario);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.curva-demo{fill:none;stroke:var(--primario);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
 /* stroke-dashoffset repinta cada cuadro y está prohibido: la curva se "dibuja"
    corriendo un rectángulo del color de la tarjeta, que en reposo ya está afuera. */
 .tapa{fill:var(--pub-tarjeta);transform:translateX(100%);animation:destapa-demo var(--dur-demo) var(--ease-salida) backwards}
