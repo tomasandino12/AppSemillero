@@ -15,8 +15,6 @@ import { botonProtocolo } from '../componentes/protocoloSalto.js';
 const contenedor = () => $('salto-contenido');
 
 const NOMBRE_TEST = { cmj: 'CMJ (manos en la cadera)', abalakov: 'Abalakov (brazos libres)' };
-const CLAVE_FPS = 'salto.fps.predeterminado';
-const FPS_OPCIONES = [240, 120];
 // El átomo con los fps está al principio o al final del archivo, igual que el moov.
 const BYTES_EXTREMO = 4 * 1024 * 1024;
 
@@ -27,7 +25,6 @@ let testSalto = 'cmj';
 // Se genera con el borrador y se reutiliza en cada reintento: la RPC lo usa
 // para no duplicar la sesión (ver medirBateria.js).
 let sesionId = null;
-let fpsManual = 240;
 // A qué (jugador, intento) va el video que se está eligiendo.
 let destino = null;
 
@@ -42,23 +39,6 @@ function clave() {
 
 function persistir() {
   guardarBorrador(clave(), { fecha, valores, sesionId, testSalto });
-}
-
-function leerFpsRecordados() {
-  try {
-    const n = Number(localStorage.getItem(CLAVE_FPS));
-    return FPS_OPCIONES.includes(n) ? n : 240;
-  } catch {
-    return 240;
-  }
-}
-
-function recordarFps(n) {
-  try {
-    localStorage.setItem(CLAVE_FPS, String(n));
-  } catch {
-    // Sin localStorage el selector vuelve a 240 la próxima vez: no es grave.
-  }
 }
 
 /** fps que el celular anotó en el archivo, o null si el video no los trae. */
@@ -109,10 +89,6 @@ function render() {
         <label for="salto-fecha">Fecha</label>
         <input type="date" id="salto-fecha" value="${fecha}" max="${hoyLocal()}">
       </div>
-      <div class="campo">
-        <label for="salto-fps">fps, si el video no los trae</label>
-        <select id="salto-fps">${FPS_OPCIONES.map((n) => html`<option value="${n}" ${n === fpsManual ? 'selected' : ''}>${n}</option>`)}</select>
-      </div>
       <div class="salto-acciones" id="salto-protocolo">
         <button class="btn sec chico" disabled>Cargar resultado oficial — Próximamente</button>
       </div>
@@ -131,7 +107,6 @@ function render() {
     persistir();
     render();
   });
-  $('salto-fps').addEventListener('change', (e) => { fpsManual = Number(e.target.value); recordarFps(fpsManual); });
   contenedor().querySelectorAll('[data-intento]').forEach((b) => {
     b.addEventListener('click', () => elegirVideo(b.dataset.jugador, Number(b.dataset.intento)));
   });
@@ -160,10 +135,7 @@ async function alElegirArchivo(e) {
   const archivo = e.target.files?.[0];
   if (!archivo || !destino) return;
   const { jugadorId, indice } = destino;
-  const fpsLeidos = await fpsDelArchivo(archivo);
-  const resultado = await abrirMarcador({
-    archivo, fpsCaptura: fpsLeidos ?? fpsManual, fpsSupuestos: fpsLeidos == null,
-  });
+  const resultado = await abrirMarcador({ archivo, fpsMetadatos: await fpsDelArchivo(archivo) });
   if (!resultado) return;
   const intentos = [...intentosDe(jugadorId)];
   intentos[indice] = resultado;
@@ -228,7 +200,6 @@ export async function renderSalto() {
   valores = borrador?.valores ?? {};
   testSalto = TESTS_SALTO.includes(borrador?.testSalto) ? borrador.testSalto : 'cmj';
   sesionId = borrador?.sesionId ?? crypto.randomUUID();
-  fpsManual = leerFpsRecordados();
   destino = null;
   render();
 }

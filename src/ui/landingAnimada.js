@@ -1,5 +1,8 @@
 import { $ } from './dom.js';
 import { valorContado } from '../data/animacion.js';
+import { JUGADA_DEMO_LANDING as JUGADA } from '../data/jugadaDemoLanding.js';
+import { estadoEn, DURACION_PASO_MS } from '../data/animacionJugada.js';
+import { dibujarPizarra } from './componentes/pizarra.js';
 
 /**
  * Animaciones de la landing. Todo es decoración: si algo falla o el navegador
@@ -28,7 +31,7 @@ function pausarAnilloFueraDePantalla() {
  */
 function contarSalto() {
   const cifra = $('cifra-salto');
-  if (!cifra || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!cifra || sinMovimiento()) return;
   const hasta = Number(cifra.textContent);
   const duracion = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dur-demo'));
   if (!Number.isFinite(hasta) || !(duracion > 0)) return;
@@ -43,6 +46,42 @@ function contarSalto() {
   requestAnimationFrame(cuadro);
 }
 
+const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cuadroPizarra = null;
+
+/** Un cuadro de la jugada: `paso` (0-based) y avance `t` (0–1) dentro de él. */
+function dibujarJugada(svg, paso, t) {
+  dibujarPizarra(svg, JUGADA, estadoEn(JUGADA, paso, t), { paso, nosotrosDefiende: false });
+}
+
+/**
+ * La pizarra de la tarjeta de jugadas, con el mismo motor que el visor de la
+ * app. Reposa en el primer paso (con su trazo a la vista, para que no sea una
+ * cancha vacía) y, al soltarse la demo, recorre los pasos una vez con
+ * requestAnimationFrame. Con movimiento reducido queda en ese primer paso.
+ */
+function correrJugada(tarjeta) {
+  const svg = tarjeta.querySelector('svg.pz');
+  if (!svg) return;
+  if (cuadroPizarra != null) cancelAnimationFrame(cuadroPizarra);
+  cuadroPizarra = null;
+  dibujarJugada(svg, 0, 0);
+  if (sinMovimiento()) return;
+  const total = JUGADA.pasos.length;
+  const inicio = performance.now();
+  const cuadro = (ahora) => {
+    const avance = (ahora - inicio) / DURACION_PASO_MS;
+    if (avance >= total) {
+      dibujarJugada(svg, total - 1, 1);
+      cuadroPizarra = null;
+      return;
+    }
+    dibujarJugada(svg, Math.floor(avance), avance % 1);
+    cuadroPizarra = requestAnimationFrame(cuadro);
+  };
+  cuadroPizarra = requestAnimationFrame(cuadro);
+}
+
 /**
  * Vuelve a correr la demo de una tarjeta desde el primer cuadro. Se reemplaza
  * el bloque .demo por un clon: es la forma de reiniciar también las animaciones
@@ -53,7 +92,8 @@ function reproducir(tarjeta) {
   const demo = tarjeta.querySelector('.demo');
   if (!demo) return;
   demo.replaceWith(demo.cloneNode(true));
-  if (tarjeta.dataset.demo === 'salto') contarSalto();
+  if (tarjeta.querySelector('#cifra-salto')) contarSalto();
+  if (tarjeta.dataset.demo === 'jugadas') correrJugada(tarjeta);
 }
 
 /**
@@ -65,6 +105,10 @@ function reproducir(tarjeta) {
  */
 function arrancarDemosAlEntrarEnPantalla() {
   const tarjetas = document.querySelectorAll('.ben[data-demo]');
+  // El primer cuadro se dibuja ya: antes de que la tarjeta entre en pantalla
+  // no puede haber una cancha vacía.
+  const jugadas = document.querySelector('.ben[data-demo="jugadas"] svg.pz');
+  if (jugadas) dibujarJugada(jugadas, 0, 0);
   const soltar = (t) => {
     t.classList.add('en-vista');
     reproducir(t);

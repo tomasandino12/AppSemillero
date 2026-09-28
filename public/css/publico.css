@@ -100,13 +100,12 @@
 .ben .d{color:var(--gris-osc);font-size:var(--fs-135);line-height:1.5;margin-top:var(--sp-2)}
 
 /* ---- demos de la landing ----
-   Gráficos chicos con datos INVENTADOS (siempre dicen "ejemplo"), escritos en
-   HTML/SVG y decorativos (aria-hidden). Corren una sola vez: quedan pausadas,
+   Gráficos chicos con datos INVENTADOS, escritos en HTML/SVG y decorativos
+   (aria-hidden): sólo muestran cómo se ve la función, no dicen nada real. Corren una sola vez: quedan pausadas,
    con fill-mode backwards (se ve el primer cuadro), hasta que landingAnimada.js
    le pone .en-vista a la tarjeta. Sólo se animan los gráficos: el texto de la
    tarjeta (.t y .d) se ve desde el primer cuadro porque es el LCP. */
 .demo{margin-bottom:var(--sp-4);display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3)}
-.demo .ej{flex:0 0 100%;font-size:var(--fs-115);color:var(--gris-osc);letter-spacing:.06em}
 .ben:not(.en-vista) .demo *,.ben:not(.en-vista) .demo *::before{animation-play-state:paused}
 @keyframes entra-demo{from{transform:translateY(.5rem);opacity:0}}
 @keyframes aparece-demo{from{opacity:0}}
@@ -147,15 +146,15 @@
 .chips-j .mas{color:var(--gris-osc)}
 
 .demo-tiro svg{width:100%;max-width:22rem;height:auto;display:block}
-.curva{fill:none;stroke:var(--primario);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.demo-tiro{gap:var(--sp-3) var(--sp-6)}
+.curva-demo{fill:none;stroke:var(--primario);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
 /* stroke-dashoffset repinta cada cuadro y está prohibido: la curva se "dibuja"
    corriendo un rectángulo del color de la tarjeta, que en reposo ya está afuera. */
 .tapa{fill:var(--pub-tarjeta);transform:translateX(100%);animation:destapa-demo var(--dur-demo) var(--ease-salida) backwards}
 .punto{fill:var(--primario);animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards}
 .cifra-tiro{fill:var(--sobre-oscuro);font-family:var(--ff-mono);font-weight:600;animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards}
 
-.demo-salto{align-items:baseline}
-.demo-salto .ej{flex-basis:100%}
+.demo-salto{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--sp-3)}
 .etq{font-family:var(--ff-titulo);font-weight:600;font-size:var(--fs-125);letter-spacing:.11em;text-transform:uppercase;color:var(--gris-osc)}
 .cifra-salto{font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-260);color:var(--sobre-oscuro);font-variant-numeric:tabular-nums}
 .sube-osc{
@@ -163,6 +162,12 @@
   background:var(--pub-fondo);border-radius:var(--r-s);padding:var(--sp-1) var(--sp-2);
   animation:aparece-demo var(--dur-3) var(--ease-salida) var(--dur-demo) backwards;
 }
+
+/* La pizarra de la landing es la misma que la de la app (cancha clara, fichas
+   del club): sobre la tarjeta oscura queda como un recuadro de papel. La anima
+   landingAnimada.js con la jugada de jugadaDemoLanding.js. */
+.demo-jugadas{display:block}
+.demo-jugadas svg.pz{max-width:24rem;margin-inline:auto}
 
 /* Línea de tiempo: la línea se llena con scaleY desde arriba y los nodos se
    prenden en secuencia. El texto de cada temporada se ve siempre. */

@@ -6,7 +6,7 @@ import { obtenerClubActual } from '../sesion.js';
 
 const PASOS = [
   ['Cámara', crudo('Modo “Cámara lenta” común, nunca “instantánea” ni con IA. De costado al chico, al ras del piso (0–10 cm), a 2–3 m, en horizontal y fija. Tienen que verse los dos pies y el piso.')],
-  ['Grabación', crudo('Mucha luz y zapatillas. Grabar, esperar 2 s y recién ahí saltar. No editar ni recortar el video.')],
+  ['Grabación', crudo('Mucha luz y zapatillas. Grabar, esperar 2 s y recién ahí saltar. No editar ni recortar el video. Elegirlo en la app desde la galería del mismo celular: si pasa por WhatsApp, Quick Share o la compu pierde la cámara lenta y la app no lo mide.')],
   ['Test', crudo('<b>CMJ:</b> manos en la cadera toda la ejecución. <b>Abalakov:</b> brazos libres.')],
   ['Salto', crudo('Contramovimiento a la profundidad que elija el chico. Piernas extendidas en el aire y al aterrizar.')],
   ['Intentos', crudo('3 válidos, con 30–60 s de pausa. Cuenta el mejor.')],

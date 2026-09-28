@@ -17,6 +17,7 @@ import { cargasPorBloque } from '../../data/cargas.js';
 import { formatearKg } from '../../data/escalones.js';
 import { $ } from '../dom.js';
 import { textoDeError } from '../errores.js';
+import { renderPruebasDelPlantel } from './datosFisico.js';
 
 const contenedor = () => $('datos-contenido');
 
@@ -137,8 +138,7 @@ export async function renderDatos() {
   }
 
   // Tres bloques: Partidos (la lista y el reparto que sale de ellos), Tiro
-  // (partidos y baterías) y Físico. Los tests de velocidad y resistencia
-  // esperan a que se defina qué se mide.
+  // (partidos y baterías) y Físico (cargas y pruebas: velocidad, Yo-Yo, salto).
   contenedor().innerHTML = `
     <div class="pad">
       <h2 class="h2">Partidos</h2>
@@ -156,8 +156,7 @@ export async function renderDatos() {
 
       <h2 class="h2">Físico</h2>
       <div id="datos-cargas"></div>
-      <div class="eyebrow">Velocidad y resistencia</div>
-      <div class="p">Próximamente.</div>
+      <div id="datos-pruebas"></div>
     </div>
   `;
   $('btn-cargar-partido').addEventListener('click', () => $('input-archivo').click());
@@ -168,6 +167,7 @@ export async function renderDatos() {
   renderCurvasDeTiro(club, plantel);
   // Tampoco dependen de los partidos.
   renderCargas(club, plantel);
+  renderPruebasDelPlantel(club, plantel);
 
   let partidos;
   try {
