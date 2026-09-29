@@ -1,6 +1,8 @@
 /*
  * El visor animado: play/pausa, paso anterior/siguiente, velocidad y la nota
- * del paso actual. Anima con requestAnimationFrame llamando a estadoEn en
+ * del paso actual. Sirve para jugadas y para la pizarra de un ejercicio: el
+ * ejercicio suma la fase "Al terminar" (la rotación) y, al llegar al final,
+ * vuelve a empezar, porque un ejercicio es una repetición cíclica. Anima con requestAnimationFrame llamando a estadoEn en
  * cada cuadro; con prefers-reduced-motion salta de paso en paso sin
  * interpolar. `desmontar()` cancela lo que esté corriendo (rAF o intervalo):
  * sin esto, salir de la pantalla deja un timer animando un <svg> que ya no está.
@@ -8,11 +10,17 @@
 import { html } from '../html.js';
 import { dibujarPizarra } from './pizarra.js';
 import { estadoEn, DURACION_PASO_MS } from '../../data/animacionJugada.js';
+import { estadoEjercicioEn, totalFases, esFaseDeRotacion } from '../../data/animacionEjercicio.js';
 
 const VELOCIDADES = [0.5, 1, 2];
+// Cuánto se queda el ejercicio en la rotación terminada antes de repetir, para que se alcance a leer.
+const PAUSA_ANTES_DE_REPETIR_MS = 700;
 
 export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
-  const totalPasos = datos.pasos.length;
+  const esEjercicio = datos.modo === 'ejercicio';
+  const cantidadDePasos = datos.pasos.length;
+  // En un ejercicio, la rotación es una fase más después de los pasos.
+  const totalPasos = esEjercicio ? totalFases(datos) : cantidadDePasos;
   let paso = 0;
   let t = 0;
   let jugando = false;
@@ -20,6 +28,7 @@ export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
   let ultimoFrame = null;
   let raf = null;
   let intervalo = null;
+  let repiteEn = null;
   const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   contenedor.innerHTML = html`
@@ -49,9 +58,12 @@ export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
   if (!totalPasos) btnJugar.style.display = 'none';
 
   function dibujar() {
-    dibujarPizarra(svg, datos, estadoEn(datos, paso, t), { paso, nosotrosDefiende });
-    notaEl.textContent = datos.pasos[paso]?.nota || '';
-    indicador.textContent = totalPasos ? `Paso ${paso + 1} de ${totalPasos}` : 'Formación inicial';
+    const enRotacion = esEjercicio && esFaseDeRotacion(datos, paso);
+    const estado = esEjercicio ? estadoEjercicioEn(datos, paso, t) : estadoEn(datos, paso, t);
+    dibujarPizarra(svg, datos, estado, { paso: enRotacion ? undefined : paso, nosotrosDefiende, rotacion: enRotacion });
+    notaEl.textContent = enRotacion ? 'Al terminar, rotan.' : datos.pasos[paso]?.nota || '';
+    if (!totalPasos) indicador.textContent = 'Formación inicial';
+    else indicador.textContent = enRotacion ? 'Al terminar' : `Paso ${paso + 1} de ${cantidadDePasos}`;
   }
 
   function detener() {
@@ -60,6 +72,7 @@ export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
     if (intervalo != null) clearInterval(intervalo);
     raf = null;
     intervalo = null;
+    repiteEn = null;
     btnJugar.textContent = 'Reproducir';
   }
 
@@ -72,13 +85,22 @@ export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
 
   function cuadro(ahora) {
     if (!jugando) return;
+    // Un ejercicio se repite sin fin: si se salió de la pantalla (queda oculta, no desmontada), que no siga corriendo.
+    if (esEjercicio && !svg.getClientRects().length) { detener(); return; }
     if (ultimoFrame == null) ultimoFrame = ahora;
     t += ((ahora - ultimoFrame) * velocidad) / DURACION_PASO_MS;
     ultimoFrame = ahora;
     if (t >= 1) {
-      if (paso >= totalPasos - 1) { t = 1; dibujar(); detener(); return; }
-      paso += 1;
-      t = 0;
+      if (paso >= totalPasos - 1) {
+        t = 1;
+        if (!esEjercicio) { dibujar(); detener(); return; }
+        // El ejercicio se repite: una pausa con el final a la vista y arranca de nuevo.
+        if (repiteEn == null) repiteEn = ahora + PAUSA_ANTES_DE_REPETIR_MS / velocidad;
+        if (ahora >= repiteEn) { paso = 0; t = 0; repiteEn = null; }
+      } else {
+        paso += 1;
+        t = 0;
+      }
     }
     dibujar();
     raf = requestAnimationFrame(cuadro);
@@ -91,7 +113,11 @@ export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
     btnJugar.textContent = 'Pausar';
     if (reducido) {
       intervalo = setInterval(() => {
-        if (paso >= totalPasos - 1) { detener(); return; }
+        if (esEjercicio && !svg.getClientRects().length) { detener(); return; }
+        if (paso >= totalPasos - 1) {
+          if (!esEjercicio) { detener(); return; }
+          paso = -1;
+        }
         paso += 1;
         dibujar();
       }, DURACION_PASO_MS / velocidad);

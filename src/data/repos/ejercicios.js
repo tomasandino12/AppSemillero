@@ -36,7 +36,7 @@ export async function obtenerEjercicio(clubId, ejercicioId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('ejercicio')
-    .select('id, titulo, tema, descripcion, enlace, material, jugadores, categorias, creado_por, creado_en')
+    .select('id, titulo, tema, descripcion, enlace, material, jugadores, categorias, pizarra, creado_por, creado_en')
     .eq('club_id', clubId)
     .eq('id', ejercicioId)
     .maybeSingle();
@@ -51,6 +51,7 @@ export async function obtenerEjercicio(clubId, ejercicioId) {
     material: data.material,
     jugadores: data.jugadores,
     categorias: data.categorias,
+    pizarra: data.pizarra ?? null,
     creadoPor: data.creado_por,
     creadoEn: data.creado_en,
   };
@@ -102,6 +103,25 @@ export async function actualizarEjercicio(clubId, ejercicioId, campos) {
       categorias: campos.categorias || null,
       actualizado_en: new Date().toISOString(),
     })
+    .eq('club_id', clubId)
+    .eq('id', ejercicioId)
+    .select('id');
+  if (error) throw error;
+  if (!data.length) throw new Error('NO_ES_TUYO');
+}
+
+/**
+ * El dibujo del ejercicio (pizarra en modo ejercicio; null lo borra). Va aparte
+ * de actualizarEjercicio a propósito: guardar el dibujo no toca el texto y
+ * editar el texto no pisa el dibujo. Como allá, si el ejercicio es de otro la
+ * policy no devuelve ninguna fila y esto lanza 'NO_ES_TUYO'. El JSON viene
+ * validado por src/data/pizarraEjercicio.js; la base sólo cuida tamaño y notas.
+ */
+export async function guardarPizarraEjercicio(clubId, ejercicioId, pizarra) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('ejercicio')
+    .update({ pizarra, actualizado_en: new Date().toISOString() })
     .eq('club_id', clubId)
     .eq('id', ejercicioId)
     .select('id');
