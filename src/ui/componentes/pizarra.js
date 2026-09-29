@@ -16,6 +16,9 @@ import { W, altoDe, formasDeUnExtremo, AROS, MARGEN, limitesDe } from '../../dat
 const R_FICHA = 12;
 const LARGO_T = 9; // largo de la T de la cortina; también fija el alto del viewBox del ícono.
 
+// Los trazos que terminan en punta de flecha: el corte y la rotación ("al terminar").
+const MARCAN_PUNTA = ['corte', 'rotacion'];
+
 let contador = 0;
 
 /** Un extremo de cancha: zona, círculo de tiros libres, arco de tres y aro. Baseline en y=0 (medidas FIBA, geometriaCancha.js). */
@@ -76,6 +79,12 @@ function dibujarFicha(ficha, p, alto, nosotrosDefiende = false, extraClase = '',
   const x = p.x * W;
   const y = p.y * alto;
   const atributos = `data-ficha-id="${ficha.id}"${extra ? ` ${extra}` : ''}`;
+  if (ficha.tipo === 'fila') return dibujarFila(ficha, { x, y }, alto, extraClase, atributos);
+  if (ficha.tipo === 'entrenador') {
+    const lado = R_FICHA * 1.8;
+    return `<rect x="${x - lado / 2}" y="${y - lado / 2}" width="${lado}" height="${lado}" rx="4" class="pz-entrenador${extraClase}" ${atributos}/>`
+      + `<text x="${x}" y="${y + 4}" class="pz-numero pz-numero-entrenador${extraClase}" ${atributos}>E</text>`;
+  }
   if (ficha.tipo === 'cono') {
     return `<polygon points="${puntosTriangulo(x, y, R_FICHA * 0.6)}" class="pz-cono${extraClase}" ${atributos}/>`;
   }
@@ -88,6 +97,33 @@ function dibujarFicha(ficha, p, alto, nosotrosDefiende = false, extraClase = '',
   }
   let g = `<circle cx="${x}" cy="${y}" r="${R_FICHA}" class="${claseColor}${extraClase}" ${atributos}/>`;
   if (ficha.numero != null) g += `<text x="${x}" y="${y + 4}" class="pz-numero pz-numero-ataque${extraClase}" ${atributos}>${ficha.numero}</text>`;
+  return g;
+}
+
+// Cuántos círculos se apilan como máximo: más que eso no se distingue, y el "×N" ya dice cuántos son.
+const MAX_APILADOS = 4;
+const SALTO_APILADO = 8;
+
+/**
+ * Una fila: los chicos apilados en su lugar, con "×N". Cuando sale "el
+ * primero" (la ficha se mueve, `p` deja de ser la base), la fila queda con uno
+ * menos y ese círculo se dibuja aparte, donde esté. El fantasma de un ajuste
+ * es sólo ese primero.
+ */
+function dibujarFila(ficha, p, alto, extraClase, atributos) {
+  const baseX = ficha.x * W;
+  const baseY = ficha.y * alto;
+  const fantasma = extraClase.includes('pz-fantasma');
+  const salio = fantasma || Math.hypot(p.x - baseX, p.y - baseY) > 2;
+  const enFila = ficha.cantidad - (salio ? 1 : 0);
+  let g = '';
+  if (!fantasma) {
+    for (let i = Math.min(enFila, MAX_APILADOS) - 1; i >= 0; i--) {
+      g += `<circle cx="${baseX}" cy="${baseY + i * SALTO_APILADO}" r="${R_FICHA}" class="pz-nosotros pz-fila-apilada${extraClase}" ${atributos}/>`;
+    }
+    g += `<text x="${baseX + R_FICHA + 4}" y="${baseY + 4}" class="pz-fila-n${extraClase}" ${atributos}>×${enFila}</text>`;
+  }
+  if (salio) g += `<circle cx="${p.x}" cy="${p.y}" r="${R_FICHA}" class="pz-nosotros pz-fila-apilada${extraClase}" ${atributos}/>`;
   return g;
 }
 
@@ -114,6 +150,22 @@ function dibujarPelota(pelotaEn, posiciones, alto) {
   const x = (pelotaEn.x + off) * W;
   const y = (pelotaEn.y + off) * alto;
   return `<circle cx="${x}" cy="${y}" r="4" class="pz-pelota"/>`;
+}
+
+/**
+ * Dónde dibujar cada pelota. Una jugada tiene una (`pelotaEn` o `pelota`); un
+ * ejercicio, varias (`pelotasEn` en la animación, `pelotas` con el dueño de
+ * cada una al inicio de un paso; el dueño null es una pelota suelta en el aro).
+ */
+function puntosDePelotas(datos, estado) {
+  if (estado.pelotasEn) return estado.pelotasEn.filter(Boolean);
+  if (estado.pelotas) {
+    const aro = AROS[datos.cancha] ?? AROS.media;
+    return estado.pelotas.map((d) => (d === null ? aro : estado.posiciones.get(d))).filter(Boolean);
+  }
+  const una = estado.pelotaEn !== undefined ? estado.pelotaEn
+    : estado.pelota != null ? estado.posiciones.get(estado.pelota) : null;
+  return una ? [una] : [];
 }
 
 /** Escala un `d` de trazoSvg (coordenadas 0–1) a píxeles: alterna x,y en orden, ignora las letras de comando. */
@@ -144,7 +196,7 @@ function dibujarT(hasta, dx, dy, alto, extra) {
  */
 function svgDeTrazo({ tipo, desde, hasta, control }, alto, baseIdFlecha, extra = '') {
   const d = escalarPath(trazoSvg(desde, hasta, control, tipo), alto);
-  const marcador = tipo === 'corte' ? ` marker-end="url(#${baseIdFlecha}-${tipo})"` : '';
+  const marcador = MARCAN_PUNTA.includes(tipo) ? ` marker-end="url(#${baseIdFlecha}-${tipo})"` : '';
   let g = `<path d="${d}" class="pz-trazo pz-trazo-${tipo}" fill="none"${marcador} ${extra}/>`;
   if (tipo === 'cortina') {
     const { dx, dy } = direccionFinal(desde, hasta, control);
@@ -156,8 +208,11 @@ function svgDeTrazo({ tipo, desde, hasta, control }, alto, baseIdFlecha, extra =
 function dibujarTrazo(a, indice, inicio, cancha, alto, uid) {
   // 'ajuste' es un arrastre invisible: reposiciona la ficha sin dejar flecha ni trazo de toque.
   if (a.tipo === 'ajuste') return '';
-  const desde = inicio.posiciones.get(a.ficha);
-  const hasta = a.tipo === 'tiro' ? (AROS[cancha] ?? AROS.media)
+  // El rebote es la pelota que vuelve: sale del aro y llega a quien la agarra.
+  const aro = AROS[cancha] ?? AROS.media;
+  const desde = a.tipo === 'rebote' ? aro : inicio.posiciones.get(a.ficha);
+  const hasta = a.tipo === 'tiro' ? aro
+    : a.tipo === 'rebote' ? inicio.posiciones.get(a.ficha)
     : (a.tipo === 'pase' || a.tipo === 'handoff') ? inicio.posiciones.get(a.a)
     : a.hasta;
   if (!desde || !hasta) return '';
@@ -178,9 +233,27 @@ function dibujarAcciones(datos, paso, alto, uid) {
   return acciones.map((a, i) => dibujarTrazo(a, i, inicio, datos.cancha, alto, uid)).join('');
 }
 
-/** Un `<marker>` de flecha por tipo de acción (id `${baseIdFlecha}-${tipo}`), coloreado con `pz-flecha-${tipo}`: hoy sólo el corte la usa, pero los seis quedan listos y con su color. */
+/**
+ * La rotación de un ejercicio: cada ficha va desde donde quedó al terminar los
+ * pasos hasta su nuevo lugar. Flechas grises punteadas, para que no se
+ * confundan con un corte. `data-rotacion-indice` es lo que el editor toca.
+ */
+function dibujarRotacion(datos, alto, uid) {
+  if (!datos.rotacion?.length) return '';
+  const fin = estadoAlInicioDelPaso(datos, datos.pasos.length);
+  return datos.rotacion.map((r, i) => {
+    const desde = fin.posiciones.get(r.ficha);
+    if (!desde || !r.a) return '';
+    const extra = `data-rotacion-indice="${i}"`;
+    const g = svgDeTrazo({ tipo: 'rotacion', desde, hasta: r.a, control: null }, alto, `pz-flecha-${uid}`, extra);
+    const dToque = escalarPath(trazoSvg(desde, r.a, null, 'rotacion'), alto);
+    return `${g}<path d="${dToque}" class="pz-trazo-toque" fill="none" ${extra}/>`;
+  }).join('');
+}
+
+/** Un `<marker>` de flecha por tipo de acción (id `${baseIdFlecha}-${tipo}`), coloreado con `pz-flecha-${tipo}`: hoy sólo el corte y la rotación la usan, pero todos quedan listos y con su color. */
 function defs(baseIdFlecha) {
-  const marcadores = TIPOS_ACCION.map((tipo) => `<marker id="${baseIdFlecha}-${tipo}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="pz-flecha-${tipo}"/></marker>`).join('');
+  const marcadores = [...TIPOS_ACCION, 'rotacion'].map((tipo) => `<marker id="${baseIdFlecha}-${tipo}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="pz-flecha-${tipo}"/></marker>`).join('');
   return `<defs>${marcadores}</defs>`;
 }
 
@@ -227,17 +300,17 @@ export function dibujarPizarra(svg, datos, estado, opciones = {}) {
   if (!svg.dataset.pzId) svg.dataset.pzId = `u${contador++}`;
   const uid = svg.dataset.pzId;
   const alto = altoDe(datos.cancha);
-  const pelotaEn = estado.pelotaEn !== undefined ? estado.pelotaEn
-    : estado.pelota != null ? estado.posiciones.get(estado.pelota) : null;
+  const pelotas = puntosDePelotas(datos, estado);
 
   let g = defs(`pz-flecha-${uid}`);
   g += fondoDeCancha(datos.cancha);
   g += dibujarAcciones(datos, opciones.paso, alto, uid);
+  if (opciones.rotacion) g += dibujarRotacion(datos, alto, uid);
   for (const ficha of datos.fichas) {
     g += dibujarFicha(ficha, estado.posiciones.get(ficha.id) ?? ficha, alto, opciones.nosotrosDefiende);
   }
   if (opciones.fantasmas) g += dibujarFantasmas(datos, opciones.paso, alto, opciones.nosotrosDefiende);
-  if (pelotaEn) g += dibujarPelota(pelotaEn, estado.posiciones, alto);
+  for (const pelotaEn of pelotas) g += dibujarPelota(pelotaEn, estado.posiciones, alto);
 
   // El viewBox arranca en -MARGEN: la banda de afuera (saques de lateral y
   // de fondo) queda a la vista sin cambiar las coordenadas 0–1 de la cancha.
@@ -306,8 +379,10 @@ export function puntoDeControl(datos, k, indice) {
   const a = datos.pasos[k]?.acciones?.[indice];
   if (!a) return null;
   if (a.control) return a.control;
-  const desde = inicio.posiciones.get(a.ficha);
-  const hasta = a.tipo === 'tiro' ? (AROS[datos.cancha] ?? AROS.media)
+  const aro = AROS[datos.cancha] ?? AROS.media;
+  const desde = a.tipo === 'rebote' ? aro : inicio.posiciones.get(a.ficha);
+  const hasta = a.tipo === 'tiro' ? aro
+    : a.tipo === 'rebote' ? inicio.posiciones.get(a.ficha)
     : (a.tipo === 'pase' || a.tipo === 'handoff') ? inicio.posiciones.get(a.a)
     : a.hasta;
   if (!desde || !hasta) return null;
