@@ -39,9 +39,15 @@ function tarjetaEjercicio(e) {
         ${e.tieneNotas ? '<span class="probado" title="Tiene notas de uso">✓ probado</span>' : ''}
       </div>
       <div class="tit">${escaparHtml(e.titulo)}</div>
-      <div class="autor">${escaparHtml(nombreDe(e.creadoPor))}</div>
+      <div class="autor">${escaparHtml(nombreDe(e.creadoPor))}${textoVariaciones(e.cantidadVariaciones)}</div>
     </button>
   `;
+}
+
+/** Cuánto se puede progresar el ejercicio. Sin variaciones no dice nada: no es un "0". */
+function textoVariaciones(n) {
+  if (!n) return '';
+  return ` · <span class="n-var">${n === 1 ? '1 variación' : `${n} variaciones`}</span>`;
 }
 
 /** Sólo los temas que efectivamente tienen ejercicios: nunca se muestra un chip vacío. */

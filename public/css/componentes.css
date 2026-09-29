@@ -539,6 +539,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .ejercicio .probado{font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
 .ejercicio .tit{font-size:var(--fs-160);color:var(--tinta);margin:2px 0}
 .ejercicio .autor{font-size:var(--fs-125);color:var(--gris-cl)}
+.ejercicio .n-var{font-family:var(--ff-mono);color:var(--gris)}
 
 /* Etapa 5 — alta de ejercicio: plegado de detalles opcionales */
 #btn-mas-detalles{margin-bottom:var(--sp-3)}
