@@ -10,6 +10,7 @@
 
 import { LIMITE } from './limites.js';
 import { limitesDe } from './geometriaCancha.js';
+import { validarEjercicio, estadoAlInicioEjercicio } from './pizarraEjercicio.js';
 
 export const TIPOS_JUGADA = [
   { clave: 'ataque', etiqueta: 'Ataque' },
@@ -67,8 +68,14 @@ const enRango = (p, l) => Boolean(p) && esNumero(p.x) && esNumero(p.y)
   && p.x >= l.minX && p.x <= l.maxX && p.y >= l.minY && p.y <= l.maxY;
 const largoEnCaracteres = (texto) => [...texto].length;
 
-/** Devuelve `{ ok, errores }`; nunca lanza, aunque `datos` sea cualquier cosa. */
+/**
+ * Devuelve `{ ok, errores }`; nunca lanza, aunque `datos` sea cualquier cosa.
+ * La pizarra de un ejercicio (`modo: 'ejercicio'`) tiene otras reglas
+ * (pizarraEjercicio.js): al despachar acá, mover/ajustar/pasos/notas de este
+ * archivo sirven para los dos sin repetirse.
+ */
 export function validarJugada(datos) {
+  if (datos?.modo === 'ejercicio') return validarEjercicio(datos);
   const errores = [];
   if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
     return { ok: false, errores: ['La jugada no tiene el formato esperado.'] };
@@ -169,6 +176,7 @@ export function validarJugada(datos) {
  * (k = cantidad de pasos da el estado final).
  */
 export function estadoAlInicioDelPaso(datos, k) {
+  if (datos.modo === 'ejercicio') return estadoAlInicioEjercicio(datos, k);
   const posiciones = new Map(datos.fichas.map((f) => [f.id, { x: f.x, y: f.y }]));
   let pelota = datos.pelota ?? null;
   for (const paso of datos.pasos.slice(0, k)) {
