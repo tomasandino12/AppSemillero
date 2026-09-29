@@ -3,20 +3,32 @@
  * deshacer/rehacer y guardado. El estado vive acá como una pila de snapshots
  * de `datos` (el JSON es chico, ≤64KB): deshacer es simplemente mirar el
  * snapshot anterior, sin diffs ni comandos inversos.
+ *
+ * El mismo editor dibuja la pizarra de un ejercicio (`jugadaMeta.esEjercicio`):
+ * los datos llevan `modo: 'ejercicio'`, las funciones genéricas de jugadas.js
+ * validan con sus reglas, y sólo cambian las herramientas (fila, entrenador,
+ * varias pelotas, rebote, rotación) y adónde se guarda.
  */
-import { obtenerJugada, guardarJugada } from '../../data/repositorio.js';
+import {
+  obtenerJugada, guardarJugada, obtenerEjercicio, guardarPizarraEjercicio,
+} from '../../data/repositorio.js';
 import {
   pantallaAptaParaEditar, estadoAlInicioDelPaso, aplicarAccion, proximoNumeroLibre,
   agregarFicha, quitarFicha, moverFicha, quitarAccion, fijarControlDeAccion, ajustarFicha, fijarDestinoDeAccion, tieneDestinoLibre,
   agregarPaso, quitarPaso, fijarNotaDePaso, nosotrosDefiende, resumenDePaso, darPelotaInicial,
 } from '../../data/jugadas.js';
 import {
+  ejercicioVacio, validarEjercicio, agregarFichaEjercicio, quitarFichaEjercicio, alternarPelota,
+  fijarCantidadDeFila, fijarRotacion, quitarRotacion,
+} from '../../data/pizarraEjercicio.js';
+import {
   dibujarPizarra, puntoDesdeEvento, fichaEnPunto, resaltoDeFicha, puntoDeControl, asaDeControl, asaDeDestino,
 } from '../componentes/pizarra.js';
 import { montarVisor } from '../componentes/visorJugada.js';
 import { barraDeHerramientasHtml, panelDePasosHtml, cabeceraEditorHtml } from './jugadaEditorHerramientas.js';
-import { jugadaParaEditorActual } from './jugadas.js';
+import { jugadaParaEditorActual, ejercicioParaEditorActual } from './jugadas.js';
 import { obtenerClubActual } from '../sesion.js';
+import { cargarPerfiles, esMio } from '../perfil.js';
 import { LIMITE } from '../../data/limites.js';
 import { html } from '../html.js';
 import { toast } from '../nav.js';
@@ -28,7 +40,7 @@ import { avisoDeError, textoDeError } from '../errores.js';
 const contenedor = () => $('jugada-editor-contenido');
 
 let club = null;
-let jugadaMeta = null; // { id, nombre, tipo }: lo único de la jugada que este editor no toca.
+let jugadaMeta = null; // { id, nombre, tipo, esEjercicio }: lo único que este editor no toca (en un ejercicio, el id es el del ejercicio).
 
 let historial = [];
 let indiceHistorial = -1;
@@ -36,9 +48,9 @@ let indiceGuardado = -1;
 
 let pasoActual = 0;
 let herramienta = 'seleccionar';
-let seleccion = null; // { tipo: 'ficha', id } | { tipo: 'accion', indice }
+let seleccion = null; // { tipo: 'ficha', id } | { tipo: 'accion', indice } | { tipo: 'rotacion', indice }
 let origenAccion = null; // ficha ya tocada, a la espera del segundo toque de una herramienta de acción
-let arrastre = null; // { tipo: 'ficha'|'control'|'destino', id?, datosBase, ultimaVista? }
+let arrastre = null; // { tipo: 'ficha'|'control'|'destino'|'rotacion', id?, datosBase, ultimaVista? }
 let visorAnimacion = null;
 
 const datosActuales = () => historial[indiceHistorial];
@@ -82,7 +94,8 @@ function rehacer() {
 
 function borrarSeleccion() {
   if (!seleccion) return;
-  if (seleccion.tipo === 'ficha') aplicarCambio((d) => quitarFicha(d, seleccion.id));
+  if (seleccion.tipo === 'ficha') aplicarCambio((d) => (jugadaMeta.esEjercicio ? quitarFichaEjercicio(d, seleccion.id) : quitarFicha(d, seleccion.id)));
+  else if (seleccion.tipo === 'rotacion') aplicarCambio((d) => quitarRotacion(d, seleccion.indice));
   else aplicarCambio((d) => quitarAccion(d, pasoActual, seleccion.indice));
   seleccion = null;
   render();
@@ -90,19 +103,30 @@ function borrarSeleccion() {
 
 /* ---------- Dibujo ---------- */
 
+/** Con la herramienta Rotación se ve cómo terminó el último paso, que es de donde salen las flechas. */
+const verFinal = () => herramienta === 'rotacion';
+
+function estadoDeLaVista(datos) {
+  return estadoAlInicioDelPaso(datos, verFinal() ? datos.pasos.length : pasoActual);
+}
+
 function pintarCancha(datos) {
   const svg = $('jed-svg');
   if (!svg) return;
-  const estado = estadoAlInicioDelPaso(datos, pasoActual);
+  const estado = estadoDeLaVista(datos);
   dibujarPizarra(svg, datos, estado, {
-    paso: pasoActual < datos.pasos.length ? pasoActual : undefined,
+    paso: !verFinal() && pasoActual < datos.pasos.length ? pasoActual : undefined,
     nosotrosDefiende: nosotrosDefiende(jugadaMeta.tipo),
-    fantasmas: true,
+    fantasmas: !verFinal(),
+    rotacion: verFinal(),
   });
   if (origenAccion) {
     svg.insertAdjacentHTML('beforeend', resaltoDeFicha(datos, estado, origenAccion));
   } else if (seleccion?.tipo === 'ficha') {
     svg.insertAdjacentHTML('beforeend', resaltoDeFicha(datos, estado, seleccion.id));
+  } else if (seleccion?.tipo === 'rotacion') {
+    const destino = datos.rotacion?.[seleccion.indice]?.a;
+    if (destino) svg.insertAdjacentHTML('beforeend', asaDeDestino(datos, destino));
   } else if (seleccion?.tipo === 'accion') {
     const accion = datos.pasos[pasoActual]?.acciones?.[seleccion.indice];
     // Un ajuste no tiene curva (no dibuja trazo): el asa de control no aplica.
@@ -120,6 +144,7 @@ function actualizarBeforeUnload() {
 
 function render() {
   const datos = datosActuales();
+  const fichaElegida = seleccion?.tipo === 'ficha' ? datos.fichas.find((f) => f.id === seleccion.id) : null;
   contenedor().innerHTML = html`
     <div class="jed">
       ${cabeceraEditorHtml({
@@ -127,12 +152,15 @@ function render() {
         tipo: jugadaMeta.tipo,
         puedeDeshacer: indiceHistorial > 0,
         puedeRehacer: indiceHistorial < historial.length - 1,
+        esEjercicio: jugadaMeta.esEjercicio,
       })}
       <div class="jed-cuerpo">
         ${barraDeHerramientasHtml({
           herramienta,
           hayPasos: datos.pasos.length > 0,
           puedeAgregar: pasoActual === 0,
+          modo: jugadaMeta.esEjercicio ? 'ejercicio' : 'jugada',
+          cantidadDeFila: fichaElegida?.tipo === 'fila' ? fichaElegida.cantidad : null,
         })}
         <div class="jed-cancha"><svg class="pz" id="jed-svg" role="img" aria-label="Pizarra táctica"></svg></div>
         ${panelDePasosHtml(datos, pasoActual)}
@@ -164,7 +192,14 @@ function cablearHerramientas() {
   $('btn-jed-rehacer').addEventListener('click', rehacer);
   $('btn-jed-volver').addEventListener('click', pedirSalir);
   $('btn-jed-guardar').addEventListener('click', guardar);
-  $('btn-jed-renombrar').addEventListener('click', abrirRenombrar);
+  $('btn-jed-renombrar')?.addEventListener('click', abrirRenombrar);
+  contenedor().querySelectorAll('[data-fila-cantidad]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const ficha = datosActuales().fichas.find((f) => f.id === seleccion?.id);
+      if (ficha) aplicarCambio((d) => fijarCantidadDeFila(d, ficha.id, ficha.cantidad + Number(b.dataset.filaCantidad)));
+      render();
+    });
+  });
 }
 
 function agregarNuevaFicha(tipo) {
@@ -179,9 +214,11 @@ function agregarNuevaFicha(tipo) {
     tipo,
     x: Math.min(0.92, Math.max(0.08, 0.5 + ((n % 6) - 2.5) * 0.08)),
     y: 0.95,
-    numero: tipo === 'cono' ? null : proximoNumeroLibre(datos, tipo),
+    // En un ejercicio el número es opcional, y una fila o el entrenador no lo llevan.
+    numero: ['ataque', 'defensa'].includes(tipo) ? proximoNumeroLibre(datos, tipo) : null,
   };
-  aplicarCambio((d) => agregarFicha(d, ficha));
+  if (tipo === 'fila') ficha.cantidad = 4;
+  aplicarCambio((d) => (jugadaMeta.esEjercicio ? agregarFichaEjercicio(d, ficha) : agregarFicha(d, ficha)));
   render();
 }
 
@@ -250,7 +287,7 @@ function alPunteroBajar(evento) {
   const svg = $('jed-svg');
   const datos = datosActuales();
   const punto = puntoDesdeEvento(svg, datos, evento);
-  const estado = estadoAlInicioDelPaso(datos, pasoActual);
+  const estado = estadoDeLaVista(datos);
   const fantasmaEl = evento.target.closest('.pz-fantasma');
   const fichaId = evento.target.closest('[data-ficha-id]')?.dataset.fichaId
     ?? fichaEnPunto(datos, estado, punto.xSvg, punto.ySvg);
@@ -261,6 +298,11 @@ function alPunteroBajar(evento) {
   if (asa && seleccion?.tipo === 'accion') {
     svg.setPointerCapture(evento.pointerId);
     arrastre = { tipo: asa.classList.contains('pz-asa-destino') ? 'destino' : 'control', datosBase: datos };
+    return;
+  }
+  if (asa && seleccion?.tipo === 'rotacion') {
+    svg.setPointerCapture(evento.pointerId);
+    arrastre = { tipo: 'rotacion', datosBase: datos };
     return;
   }
 
@@ -292,11 +334,22 @@ function alPunteroBajar(evento) {
 
   if (herramienta === 'pelota') {
     if (pasoActual !== 0) { toast('Quién arranca con la pelota se elige en la formación inicial (paso 1).'); return; }
-    if (!fichaId) { toast('Tocá al atacante que arranca con la pelota.'); return; }
+    if (!fichaId) { toast(jugadaMeta.esEjercicio ? 'Tocá la ficha que arranca con una pelota.' : 'Tocá al atacante que arranca con la pelota.'); return; }
+    if (jugadaMeta.esEjercicio) {
+      // Cada ficha puede arrancar con la suya: tocar de nuevo a quien ya la tiene se la saca.
+      aplicarCambio((d) => alternarPelota(d, fichaId));
+      render();
+      return;
+    }
     // Tocar al que ya la tiene se la saca: así también se puede arrancar sin pelota.
     const nuevoDuenio = datos.pelota === fichaId ? null : fichaId;
     aplicarCambio((d) => darPelotaInicial(d, nuevoDuenio));
     render();
+    return;
+  }
+
+  if (herramienta === 'rotacion') {
+    alTocarConRotacion(datos, fichaId, punto, evento);
     return;
   }
 
@@ -306,7 +359,8 @@ function alPunteroBajar(evento) {
     seleccion = null; // encadenar: el asa de la acción anterior se va apenas se arranca la siguiente.
     if (!fichaId) { toast('Tocá primero la ficha que hace la acción.'); render(); return; }
     origenAccion = fichaId;
-    if (herramienta === 'tiro') completarAccion({ tipo: 'tiro', ficha: fichaId });
+    // El tiro y el rebote no necesitan segundo toque: uno sale al aro, el otro lo agarra.
+    if (herramienta === 'tiro' || herramienta === 'rebote') completarAccion({ tipo: herramienta, ficha: fichaId });
     else render();
     return;
   }
@@ -316,6 +370,35 @@ function alPunteroBajar(evento) {
     return;
   }
   completarAccion({ tipo: herramienta, ficha: origenAccion, hasta: { x: punto.x, y: punto.y } });
+}
+
+/**
+ * La rotación: primer toque la ficha que rota, segundo toque adónde va (si cae
+ * sobre una fila, se suma a ella). Tocar una flecha la elige, para arrastrarle
+ * la punta o borrarla con Supr.
+ */
+function alTocarConRotacion(datos, fichaId, punto, evento) {
+  const indiceAttr = evento.target.closest('[data-rotacion-indice]')?.dataset.rotacionIndice;
+  if (!origenAccion && indiceAttr != null) {
+    seleccion = { tipo: 'rotacion', indice: Number(indiceAttr) };
+    render();
+    return;
+  }
+  if (!origenAccion) {
+    seleccion = null;
+    if (!fichaId) { toast('Tocá primero la ficha que rota.'); render(); return; }
+    origenAccion = fichaId;
+    render();
+    return;
+  }
+  const fila = fichaId && fichaId !== origenAccion ? datos.fichas.find((f) => f.id === fichaId && f.tipo === 'fila') : null;
+  const destino = fila ? { x: fila.x, y: fila.y } : { x: punto.x, y: punto.y };
+  const origen = origenAccion;
+  origenAccion = null;
+  seleccion = aplicarCambio((d) => fijarRotacion(d, origen, destino))
+    ? { tipo: 'rotacion', indice: datosActuales().rotacion.findIndex((r) => r.ficha === origen) }
+    : null;
+  render();
 }
 
 function alPunteroMover(evento) {
@@ -329,6 +412,8 @@ function alPunteroMover(evento) {
       vista = pasoActual === 0
         ? moverFicha(arrastre.datosBase, arrastre.id, punto.x, punto.y)
         : ajustarFicha(arrastre.datosBase, pasoActual, arrastre.id, punto.x, punto.y);
+    } else if (arrastre.tipo === 'rotacion') {
+      vista = fijarRotacion(arrastre.datosBase, arrastre.datosBase.rotacion[seleccion.indice].ficha, hasta);
     } else if (arrastre.tipo === 'destino') {
       vista = fijarDestinoDeAccion(arrastre.datosBase, pasoActual, seleccion.indice, hasta);
     } else {
@@ -419,9 +504,12 @@ async function guardar() {
   boton.disabled = true;
   boton.textContent = 'Guardando...';
   try {
-    await guardarJugada(club.id, jugadaMeta.id, { nombre: jugadaMeta.nombre, tipo: jugadaMeta.tipo, datos: datosActuales() });
+    if (jugadaMeta.esEjercicio) await guardarPizarraEjercicio(club.id, jugadaMeta.id, datosActuales());
+    else await guardarJugada(club.id, jugadaMeta.id, { nombre: jugadaMeta.nombre, tipo: jugadaMeta.tipo, datos: datosActuales() });
   } catch (e) {
-    toast(e?.message === 'NO_ES_TUYA' ? 'Esta jugada ya no es tuya: no se puede guardar.' : textoDeError(e, 'No se pudo guardar.'));
+    toast(e?.message === 'NO_ES_TUYA' ? 'Esta jugada ya no es tuya: no se puede guardar.'
+      : e?.message === 'NO_ES_TUYO' ? 'Este ejercicio ya no es tuyo: no se puede guardar.'
+        : textoDeError(e, 'No se pudo guardar.'));
     boton.disabled = false;
     boton.textContent = 'Guardar';
     return;
@@ -454,9 +542,26 @@ function pedirSalir() {
 
 /* ---------- Entrada de la pantalla ---------- */
 
+/**
+ * El ejercicio con la forma que el resto del editor espera ({ id, nombre,
+ * tipo, datos }). Sin pizarra todavía, arranca vacía. Dibujarla es de quien
+ * creó el ejercicio, igual que editarlo (policy de 0015).
+ */
+async function cargarEjercicio(clubId, ejercicioId) {
+  const ejercicio = await obtenerEjercicio(clubId, ejercicioId);
+  if (!ejercicio) return null;
+  await cargarPerfiles(clubId);
+  if (!esMio(ejercicio.creadoPor)) return { error: 'La pizarra la dibuja quien creó el ejercicio.' };
+  if (ejercicio.pizarra && !validarEjercicio(ejercicio.pizarra).ok) return { error: 'La pizarra guardada no se puede abrir.' };
+  return {
+    id: ejercicio.id, nombre: ejercicio.titulo, tipo: null, datos: ejercicio.pizarra ?? ejercicioVacio(),
+  };
+}
+
 export async function renderJugadaEditor() {
   club = obtenerClubActual();
-  const id = jugadaParaEditorActual();
+  const ejercicioId = ejercicioParaEditorActual();
+  const id = ejercicioId ?? jugadaParaEditorActual();
   if (!club || !id) {
     contenedor().innerHTML = html`<div class="pad"><div class="p">No hay una jugada para editar.</div></div>`;
     return;
@@ -465,7 +570,7 @@ export async function renderJugadaEditor() {
   if (!pantallaAptaParaEditar(window.innerWidth, window.innerHeight)) {
     contenedor().innerHTML = html`
       <div class="pad">
-        <div class="p">El editor de jugadas es para compu o tablet. Desde la biblioteca podés verla, asignarla y duplicarla.</div>
+        <div class="p">El editor de pizarra es para compu o tablet. Desde la biblioteca podés verla${ejercicioId ? '' : ', asignarla y duplicarla'}.</div>
         <button class="btn sec" id="btn-jed-volver-chico">Volver</button>
       </div>
     `;
@@ -473,20 +578,27 @@ export async function renderJugadaEditor() {
     return;
   }
 
-  contenedor().innerHTML = html`<div class="pad"><div class="p">Cargando jugada...</div></div>`;
+  contenedor().innerHTML = html`<div class="pad"><div class="p">${ejercicioId ? 'Cargando ejercicio...' : 'Cargando jugada...'}</div></div>`;
   let jugada;
   try {
-    jugada = await obtenerJugada(club.id, id);
+    jugada = ejercicioId ? await cargarEjercicio(club.id, ejercicioId) : await obtenerJugada(club.id, id);
   } catch (e) {
-    contenedor().innerHTML = avisoDeError(e, 'No se pudo cargar la jugada.');
+    contenedor().innerHTML = avisoDeError(e, ejercicioId ? 'No se pudo cargar el ejercicio.' : 'No se pudo cargar la jugada.');
     return;
   }
   if (!jugada) {
-    contenedor().innerHTML = html`<div class="pad"><div class="p">Esta jugada ya no existe.</div></div>`;
+    contenedor().innerHTML = html`<div class="pad"><div class="p">${ejercicioId ? 'Este ejercicio ya no existe.' : 'Esta jugada ya no existe.'}</div></div>`;
+    return;
+  }
+  if (jugada.error) {
+    contenedor().innerHTML = html`<div class="pad"><div class="p">${jugada.error}</div><button class="btn sec" id="btn-jed-volver-error">Volver</button></div>`;
+    $('btn-jed-volver-error').addEventListener('click', () => volver());
     return;
   }
 
-  jugadaMeta = { id: jugada.id, nombre: jugada.nombre, tipo: jugada.tipo };
+  jugadaMeta = {
+    id: jugada.id, nombre: jugada.nombre, tipo: jugada.tipo, esEjercicio: Boolean(ejercicioId),
+  };
   historial = [jugada.datos];
   indiceHistorial = 0;
   indiceGuardado = 0;

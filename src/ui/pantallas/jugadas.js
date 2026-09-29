@@ -27,8 +27,11 @@ let abrirJugada = () => {};
 export function setAbrirJugada(fn) { abrirJugada = fn; }
 
 let jugadaParaEditor = null;
+let ejercicioParaEditor = null;
 /** El id que jugadaEditor.js lee para saber qué jugada cargar. */
 export function jugadaParaEditorActual() { return jugadaParaEditor; }
+/** Si el editor se abrió para dibujar un ejercicio (y no una jugada): el id del ejercicio. */
+export function ejercicioParaEditorActual() { return ejercicioParaEditor; }
 
 const MENSAJE_PANTALLA_CHICA = 'El editor de jugadas es para compu o tablet. Desde acá podés verlas, asignarlas y duplicarlas.';
 
@@ -43,6 +46,18 @@ export function abrirEditorDeJugada(id) {
     return;
   }
   jugadaParaEditor = id;
+  ejercicioParaEditor = null;
+  ir('p-jugada-editor', { push: true });
+}
+
+/** El mismo editor, para la pizarra de un ejercicio de la biblioteca. */
+export function abrirEditorDePizarraDeEjercicio(ejercicioId) {
+  if (!pantallaAptaParaEditar(window.innerWidth, window.innerHeight)) {
+    avisarPantallaNoApta();
+    return;
+  }
+  ejercicioParaEditor = ejercicioId;
+  jugadaParaEditor = null;
   ir('p-jugada-editor', { push: true });
 }
 

@@ -279,11 +279,18 @@ export function fijarCantidadDeFila(datos, fichaId, cantidad) {
   return conValidacion(nuevos);
 }
 
-/** Qué hace cada ficha al terminar la repetición. Una ficha tiene un solo destino: el nuevo reemplaza al anterior. */
+/**
+ * Qué hace cada ficha al terminar la repetición. Una ficha tiene un solo
+ * destino: el nuevo reemplaza al anterior, en el mismo lugar de la lista para
+ * que el índice del que se está arrastrando no cambie.
+ */
 export function fijarRotacion(datos, ficha, a) {
   const nuevos = copia(datos);
-  nuevos.rotacion = (nuevos.rotacion ?? []).filter((r) => r.ficha !== ficha);
-  nuevos.rotacion.push({ ficha, a: { x: a.x, y: a.y } });
+  nuevos.rotacion = nuevos.rotacion ?? [];
+  const movimiento = { ficha, a: { x: a.x, y: a.y } };
+  const i = nuevos.rotacion.findIndex((r) => r.ficha === ficha);
+  if (i >= 0) nuevos.rotacion[i] = movimiento;
+  else nuevos.rotacion.push(movimiento);
   return conValidacion(nuevos);
 }
 

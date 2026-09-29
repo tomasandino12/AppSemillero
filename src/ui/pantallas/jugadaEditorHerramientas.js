@@ -6,31 +6,36 @@
  */
 import { html, crudo } from '../html.js';
 import { TIPOS_ACCION, etiquetaDeTipo, resumenDePaso } from '../../data/jugadas.js';
+import { TIPOS_ACCION_EJERCICIO, FILA } from '../../data/pizarraEjercicio.js';
 import { LIMITE } from '../../data/limites.js';
 import { iconoDeAccion } from '../componentes/pizarra.js';
 import { ICONO, botonIcono } from '../componentes/iconos.js';
 
 const ETIQUETA_ACCION = {
-  corte: 'Corte', dribbling: 'Dribbling', pase: 'Pase', cortina: 'Cortina', tiro: 'Tiro', handoff: 'Handoff',
+  corte: 'Corte', dribbling: 'Dribbling', pase: 'Pase', cortina: 'Cortina', tiro: 'Tiro', handoff: 'Handoff', rebote: 'Rebote',
 };
 
 const AYUDA_AGREGAR = 'Las fichas y quién arranca con la pelota se eligen en la formación inicial (paso 1).';
+const AYUDA_ROTACION = 'Tocá la ficha que rota y después adónde va (o tocá la fila a la que se suma). Se dibuja donde termina el último paso.';
 
 const ICONO_PELOTA = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="6" class="pz-pelota"/></svg>';
 
 const ICONO_CONO = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="12,4 20,20 4,20" class="pz-cono"/></svg>';
 
-/** `‹ Volver` · nombre + lápiz + tipo · deshacer/rehacer + Guardar. */
+/**
+ * `‹ Volver` · nombre + lápiz + tipo · deshacer/rehacer + Guardar. El nombre
+ * de un ejercicio es el del ejercicio: no se renombra desde acá.
+ */
 export function cabeceraEditorHtml({
-  nombre, tipo, puedeDeshacer, puedeRehacer,
+  nombre, tipo, puedeDeshacer, puedeRehacer, esEjercicio = false,
 }) {
   return html`
     <div class="jed-cab">
       <button type="button" class="btn sec chico" id="btn-jed-volver">‹ Volver</button>
       <div class="jed-cab-nombre">
         <span class="nom" id="jed-cab-nombre">${nombre}</span>
-        ${botonIcono({ id: 'btn-jed-renombrar', icono: ICONO.lapiz, etiqueta: 'Renombrar jugada' })}
-        <span class="jed-cab-tipo">${etiquetaDeTipo(tipo)}</span>
+        ${esEjercicio ? '' : botonIcono({ id: 'btn-jed-renombrar', icono: ICONO.lapiz, etiqueta: 'Renombrar jugada' })}
+        <span class="jed-cab-tipo">${esEjercicio ? 'Ejercicio' : etiquetaDeTipo(tipo)}</span>
       </div>
       <div class="jed-cab-acciones">
         ${botonIcono({
@@ -45,18 +50,43 @@ export function cabeceraEditorHtml({
   `;
 }
 
-export function barraDeHerramientasHtml({ herramienta, hayPasos, puedeAgregar }) {
+/** "Fila  −  4  +": cuántos chicos hay en la fila tocada. */
+function cantidadDeFilaHtml(cantidad) {
+  return html`
+    <div class="jed-fila-cant" role="group" aria-label="Chicos en la fila">
+      <button type="button" class="jed-herr-btn" data-fila-cantidad="-1" aria-label="Uno menos en la fila" ${cantidad <= FILA.min ? 'disabled' : ''}><span class="jed-herr-letra">−</span></button>
+      <span class="jed-herr-letra" aria-live="polite">×${cantidad}</span>
+      <button type="button" class="jed-herr-btn" data-fila-cantidad="1" aria-label="Uno más en la fila" ${cantidad >= FILA.max ? 'disabled' : ''}><span class="jed-herr-letra">+</span></button>
+    </div>
+  `;
+}
+
+/**
+ * `modo` 'ejercicio' suma el rebote, la rotación, la fila y el entrenador.
+ * `cantidadDeFila` viene cuando la ficha elegida es una fila.
+ */
+export function barraDeHerramientasHtml({
+  herramienta, hayPasos, puedeAgregar, modo = 'jugada', cantidadDeFila = null,
+}) {
+  const esEjercicio = modo === 'ejercicio';
   return html`
     <div class="jed-barra">
       <span class="jed-barra-titulo">Trazos</span>
       <button type="button" class="jed-herr-btn ${herramienta === 'seleccionar' ? 'on' : ''}" data-herramienta="seleccionar">
         ${crudo(ICONO.cursor)}<span>Elegir</span>
       </button>
-      ${TIPOS_ACCION.map((t) => html`
+      ${(esEjercicio ? TIPOS_ACCION_EJERCICIO : TIPOS_ACCION).map((t) => html`
         <button type="button" class="jed-herr-btn ${herramienta === t ? 'on' : ''}" data-herramienta="${t}" ${hayPasos ? '' : 'disabled'}>
           ${crudo(iconoDeAccion(t))}<span>${ETIQUETA_ACCION[t]}</span>
         </button>
       `)}
+      ${esEjercicio && html`
+        <button type="button" class="jed-herr-btn ${herramienta === 'rotacion' ? 'on' : ''}" data-herramienta="rotacion" title="Al terminar, adónde va cada uno">
+          ${crudo(iconoDeAccion('rotacion'))}<span>Rotación</span>
+        </button>
+      `}
+      ${esEjercicio && herramienta === 'rotacion' && html`<div class="ayuda">${AYUDA_ROTACION}</div>`}
+      ${cantidadDeFila != null && cantidadDeFilaHtml(cantidadDeFila)}
       ${puedeAgregar ? html`
         <hr class="jed-barra-filete">
         <span class="jed-barra-titulo">Fichas</span>
@@ -66,6 +96,14 @@ export function barraDeHerramientasHtml({ herramienta, hayPasos, puedeAgregar })
         <button type="button" class="jed-herr-btn" data-agregar="defensa">
           <span class="jed-herr-letra">+D</span>
         </button>
+        ${esEjercicio && html`
+          <button type="button" class="jed-herr-btn" data-agregar="fila" title="Una fila de chicos">
+            <span class="jed-herr-letra">+F</span>
+          </button>
+          <button type="button" class="jed-herr-btn" data-agregar="entrenador" title="El entrenador">
+            <span class="jed-herr-letra">+E</span>
+          </button>
+        `}
         <button type="button" class="jed-herr-btn" data-agregar="cono">
           ${crudo(ICONO_CONO)}<span>Cono</span>
         </button>

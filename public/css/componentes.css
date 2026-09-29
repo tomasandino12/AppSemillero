@@ -785,6 +785,7 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .jed-herr-btn:disabled{color:var(--deshabilitado);border-color:var(--linea)}
 .jed-herr-btn .pz.pz-icono{width:1.75rem;height:0.875rem;margin-right:0}
 .jed-herr-letra{font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-160)}
+.jed-fila-cant{display:flex;align-items:center;justify-content:center;gap:var(--sp-1);flex:0 0 100%}
 /* Activa: borde y fondo suave del color de su tipo (no relleno rojo macizo:
    con seis tipos, un solo color de "activo" no distinguía cuál era cuál). */
 .jed-herr-btn.on{border-color:var(--gris);background:var(--fondo-chip)}
