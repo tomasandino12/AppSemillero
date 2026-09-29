@@ -85,6 +85,8 @@ export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
 
   function cuadro(ahora) {
     if (!jugando) return;
+    // Un ejercicio se repite sin fin: si se salió de la pantalla (queda oculta, no desmontada), que no siga corriendo.
+    if (esEjercicio && !svg.getClientRects().length) { detener(); return; }
     if (ultimoFrame == null) ultimoFrame = ahora;
     t += ((ahora - ultimoFrame) * velocidad) / DURACION_PASO_MS;
     ultimoFrame = ahora;
@@ -111,6 +113,7 @@ export function montarVisor(contenedor, datos, nosotrosDefiende = false) {
     btnJugar.textContent = 'Pausar';
     if (reducido) {
       intervalo = setInterval(() => {
+        if (esEjercicio && !svg.getClientRects().length) { detener(); return; }
         if (paso >= totalPasos - 1) {
           if (!esEjercicio) { detener(); return; }
           paso = -1;

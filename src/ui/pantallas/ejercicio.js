@@ -12,8 +12,11 @@ import { toast, formatearFechaCorta } from '../nav.js';
 import { html, crudo } from '../html.js';
 import { esEnlaceWeb } from '../../data/enlaces.js';
 import { reproductorHtml } from '../componentes/video.js';
+import { montarVisor } from '../componentes/visorJugada.js';
+import { validarEjercicio } from '../../data/pizarraEjercicio.js';
 import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
 import { abrirAltaEjercicio } from './ejercicios.js';
+import { abrirEditorDePizarraDeEjercicio } from './jugadas.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir, volver } from '../main.js';
 import { $ } from '../dom.js';
@@ -23,6 +26,9 @@ import { avisoDeError, textoDeError, mensajeAlGuardar } from '../errores.js';
 const contenedor = () => $('ejercicio-contenido');
 
 let ejercicioId = null;
+// El visor de la pizarra corre un requestAnimationFrame propio (y en bucle):
+// se desmonta antes de pintar de nuevo para no dejarlo animando un <svg> que ya no está.
+let visorActual = null;
 
 export function abrirEjercicio(id) {
   ejercicioId = id;
@@ -42,6 +48,28 @@ function bloqueDescripcion(ejercicio) {
       ejercicio.descripcion
         || 'Todavía no hay una descripción: se guardó sólo con título y tema. Quien lo cargó puede sumarla editando el ejercicio.'
     }</div>
+  `;
+}
+
+/**
+ * El dibujo del ejercicio: lo ve todo el cuerpo técnico (también en el celu);
+ * dibujarlo o cambiarlo es de quien creó el ejercicio y se hace desde una
+ * tablet o una compu. Sin dibujo, sólo quien puede hacerlo ve el bloque.
+ */
+function bloquePizarra(ejercicio, propio) {
+  const hayDibujo = Boolean(ejercicio.pizarra?.fichas?.length);
+  if (!hayDibujo && !propio) return '';
+  const sePuedeMostrar = hayDibujo && validarEjercicio(ejercicio.pizarra).ok;
+  return html`
+    <div class="seccion-cab">
+      <div class="eyebrow">Pizarra</div>
+      ${propio && html`<button class="btn chico" id="btn-ej-pizarra">${hayDibujo ? 'Editar' : 'Dibujar'}</button>`}
+    </div>
+    ${sePuedeMostrar ? html`<div id="ej-pizarra-visor"></div>` : html`<div class="p">${
+      hayDibujo
+        ? 'No se pudo mostrar el dibujo de este ejercicio.'
+        : 'Todavía no tiene dibujo. Con la pizarra se entiende de un vistazo dónde va cada fila, adónde pasa la pelota y cómo se rota. Se dibuja desde una tablet o una compu.'
+    }</div>`}
   `;
 }
 
@@ -102,6 +130,8 @@ function bloqueDetalleMenor(ejercicio) {
 
 function pintarEjercicio(club, ejercicio, notas, variaciones) {
   const propio = esMio(ejercicio.creadoPor);
+  visorActual?.desmontar();
+  visorActual = null;
   contenedor().innerHTML = html`
     <div class="ficha-top">
       <div class="nom">${ejercicio.titulo}</div>
@@ -110,6 +140,8 @@ function pintarEjercicio(club, ejercicio, notas, variaciones) {
     <div class="pad">
       ${crudo(reproductorHtml(ejercicio.enlace, ejercicio.titulo))}
       ${bloqueDescripcion(ejercicio)}
+
+      ${bloquePizarra(ejercicio, propio)}
 
       <div class="seccion-cab">
         <div class="eyebrow">Variaciones</div>
@@ -132,6 +164,8 @@ function pintarEjercicio(club, ejercicio, notas, variaciones) {
     </div>
   `;
 
+  if ($('ej-pizarra-visor')) visorActual = montarVisor($('ej-pizarra-visor'), ejercicio.pizarra);
+  $('btn-ej-pizarra')?.addEventListener('click', () => abrirEditorDePizarraDeEjercicio(ejercicio.id));
   $('btn-ej-agregar-nota').addEventListener('click', () => abrirAgregarNota(club, ejercicio));
   $('btn-ej-sumar-variacion').addEventListener('click', () => abrirFormVariacion(club, ejercicio, variaciones));
   cablearVariaciones(club, ejercicio, variaciones);

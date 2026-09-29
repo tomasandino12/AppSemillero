@@ -875,6 +875,8 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .visor-controles .visor-jugar{flex:1}
 .visor-velocidades{display:flex;gap:var(--sp-2)}
 .visor-indicador{font-size:var(--fs-115);color:var(--gris-cl)}
+/* La pizarra en la ficha de un ejercicio: la cancha entera de ancho en una compu sería enorme. */
+#ej-pizarra-visor{max-width:32rem;margin-inline:auto}
 .inv-cantidad input{width:5rem;text-align:center}
 
 /* Marcador de cuadros del salto (marcadorCuadros.js): tapa todo, como .jvc, y
