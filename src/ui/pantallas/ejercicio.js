@@ -1,8 +1,12 @@
 import {
   obtenerEjercicio, obtenerNotas, crearNota, borrarNota,
   borrarEjercicio,
+  obtenerVariaciones, crearVariacion, actualizarVariacion, borrarVariacion,
 } from '../../data/repositorio.js';
 import { nombreDeTema } from '../../data/temas.js';
+import {
+  EJES, NIVEL, nombreDeEje, nivelSugerido, ordenarVariaciones, validarVariacion,
+} from '../../data/variaciones.js';
 import { obtenerClubActual } from '../sesion.js';
 import { toast, formatearFechaCorta } from '../nav.js';
 import { html, crudo } from '../html.js';
@@ -14,7 +18,7 @@ import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { ir, volver } from '../main.js';
 import { $ } from '../dom.js';
 import { LIMITE } from '../../data/limites.js';
-import { avisoDeError, textoDeError } from '../errores.js';
+import { avisoDeError, textoDeError, mensajeAlGuardar } from '../errores.js';
 
 const contenedor = () => $('ejercicio-contenido');
 
@@ -96,7 +100,7 @@ function bloqueDetalleMenor(ejercicio) {
   return filas.length > 0 && html`<div class="detalle-menor">${filas}</div>`;
 }
 
-function pintarEjercicio(club, ejercicio, notas) {
+function pintarEjercicio(club, ejercicio, notas, variaciones) {
   const propio = esMio(ejercicio.creadoPor);
   contenedor().innerHTML = html`
     <div class="ficha-top">
@@ -106,6 +110,12 @@ function pintarEjercicio(club, ejercicio, notas) {
     <div class="pad">
       ${crudo(reproductorHtml(ejercicio.enlace, ejercicio.titulo))}
       ${bloqueDescripcion(ejercicio)}
+
+      <div class="seccion-cab">
+        <div class="eyebrow">Variaciones</div>
+        <button class="btn chico" id="btn-ej-sumar-variacion">Sumar</button>
+      </div>
+      ${bloqueVariaciones(variaciones)}
 
       <div class="eyebrow">Notas de uso</div>
       ${bloqueNotas(notas)}
@@ -123,6 +133,8 @@ function pintarEjercicio(club, ejercicio, notas) {
   `;
 
   $('btn-ej-agregar-nota').addEventListener('click', () => abrirAgregarNota(club, ejercicio));
+  $('btn-ej-sumar-variacion').addEventListener('click', () => abrirFormVariacion(club, ejercicio, variaciones));
+  cablearVariaciones(club, ejercicio, variaciones);
 
   // Las notas de otros no se pueden borrar: esMio() ya decide en notaHtml()
   // si el botón existe, así que acá sólo hay botones sobre notas propias.
@@ -170,14 +182,15 @@ export async function renderEjercicio() {
 
   contenedor().innerHTML = `<div class="pad"><div class="p">Cargando ejercicio...</div></div>`;
 
-  let ejercicio, notas;
+  let ejercicio, notas, variaciones;
   try {
     // cargarPerfiles junto con la lectura: sin nombres, el autor de cada
     // nota sería un UUID. Mismo patrón que renderSeccionEjercicios.
-    [, ejercicio, notas] = await Promise.all([
+    [, ejercicio, notas, variaciones] = await Promise.all([
       cargarPerfiles(club.id),
       obtenerEjercicio(club.id, ejercicioId),
       obtenerNotas(club.id, ejercicioId),
+      obtenerVariaciones(club.id, ejercicioId),
     ]);
   } catch (e) {
     contenedor().innerHTML = avisoDeError(e, 'No se pudo cargar el ejercicio.');
@@ -189,7 +202,161 @@ export async function renderEjercicio() {
     return;
   }
 
-  pintarEjercicio(club, ejercicio, notas);
+  pintarEjercicio(club, ejercicio, notas, ordenarVariaciones(variaciones));
+}
+
+/* ---------- Variaciones ---------- */
+
+/*
+ * Cómo subirle la complejidad al ejercicio, de la más fácil a la más difícil.
+ * Cualquier profe suma una sobre un ejercicio ajeno (lo que sabe uno le sirve
+ * al resto); editar y borrar es sólo de quien la cargó, y lo garantiza la
+ * policy de 0052, no el esMio() que decide si se ven los botones.
+ */
+function variacionHtml(v) {
+  return html`
+    <div class="variacion">
+      <div class="niv"><span class="k">Nivel</span><span class="n">${v.nivel}</span></div>
+      <div class="cuerpo">
+        <div class="tit">${v.titulo}</div>
+        ${v.descripcion && html`<div class="tx texto-libre">${v.descripcion}</div>`}
+        <div class="meta">
+          ${v.eje && html`<span class="chip">${nombreDeEje(v.eje)}</span>`}
+          <span class="autor">${nombreDe(v.creadoPor)}</span>
+          ${esMio(v.creadoPor) && html`
+            <button class="nota-borrar" data-editar-variacion="${v.id}" aria-label="Editar esta variación">&#9998;</button>
+            <button class="nota-borrar" data-borrar-variacion="${v.id}" aria-label="Borrar esta variación">&#10005;</button>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bloqueVariaciones(variaciones) {
+  if (!variaciones.length) {
+    return html`<div class="p">Todavía no hay variaciones. ¿Cómo le subís la dificultad? Con un defensor, menos espacio, un límite de tiempo… Sumá la primera.</div>`;
+  }
+  return html`<div class="variaciones">${variaciones.map(variacionHtml)}</div>`;
+}
+
+function cablearVariaciones(club, ejercicio, variaciones) {
+  contenedor().querySelectorAll('[data-editar-variacion]').forEach((boton) => {
+    const variacion = variaciones.find((v) => v.id === boton.dataset.editarVariacion);
+    boton.addEventListener('click', () => abrirFormVariacion(club, ejercicio, variaciones, variacion));
+  });
+  contenedor().querySelectorAll('[data-borrar-variacion]').forEach((boton) => {
+    boton.addEventListener('click', async () => {
+      if (boton.disabled) return;
+      boton.disabled = true;
+      try {
+        await borrarVariacion(club.id, boton.dataset.borrarVariacion);
+      } catch (e) {
+        toast(mensajeAlGuardar(e, {
+          reglas: [[/NO_ES_TUYO/, 'Esta variación ya no es tuya: no se puede borrar.']],
+          generico: 'No se pudo borrar la variación.',
+        }));
+        boton.disabled = false;
+        return;
+      }
+      toast('Variación borrada');
+      await renderEjercicio();
+    });
+  });
+}
+
+/** Chips que se comportan como radio. Con `opcional`, tocar el prendido lo apaga. */
+function cablearChips(grupo, opcional) {
+  const chips = grupo.querySelectorAll('.chip-tema');
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const prender = !(opcional && chip.classList.contains('on'));
+      chips.forEach((c) => {
+        const on = c === chip && prender;
+        c.classList.toggle('on', on);
+        c.setAttribute('aria-pressed', String(on));
+      });
+    });
+  });
+}
+
+async function abrirFormVariacion(club, ejercicio, variaciones, previa = null) {
+  // asegurarNombre ANTES de abrir la hoja: mismo motivo que abrirAgregarNota.
+  const hayNombre = await asegurarNombre(club.id);
+  if (!hayNombre) return;
+
+  const nivel = previa?.nivel ?? nivelSugerido(variaciones);
+  const niveles = Array.from({ length: NIVEL.max - NIVEL.min + 1 }, (_, i) => NIVEL.min + i);
+  abrirHoja({
+    titulo: previa ? 'Editar la variación' : 'Sumar una variación',
+    cuerpo: html`
+      <div class="campo">
+        <label for="in-var-titulo">Qué cambia</label>
+        <input id="in-var-titulo" type="text" maxlength="${LIMITE.titulo}" value="${previa?.titulo ?? ''}" placeholder="Ej.: con un defensor que sólo acompaña">
+      </div>
+      <div class="campo">
+        <label id="lbl-var-nivel">Nivel</label>
+        <div class="chips-tema" id="var-chips-nivel" role="group" aria-labelledby="lbl-var-nivel">
+          ${niveles.map((n) => html`<button type="button" class="chip-tema mono ${n === nivel ? 'on' : ''}" aria-pressed="${n === nivel}" data-nivel="${n}">${n}</button>`)}
+        </div>
+        <div class="ayuda">1 es la más fácil. Te sugerimos el que sigue a las que ya hay.</div>
+      </div>
+      <div class="campo">
+        <label id="lbl-var-eje">Qué se ajusta (opcional)</label>
+        <div class="chips-tema" id="var-chips-eje" role="group" aria-labelledby="lbl-var-eje">
+          ${EJES.map((e) => html`<button type="button" class="chip-tema ${previa?.eje === e.id ? 'on' : ''}" aria-pressed="${previa?.eje === e.id}" data-eje="${e.id}">${e.nombre}</button>`)}
+        </div>
+      </div>
+      <div class="campo">
+        <label for="in-var-descripcion">Cómo se hace (opcional)</label>
+        <textarea id="in-var-descripcion" rows="4" maxlength="${LIMITE.descripcion}" placeholder="Ej.: el defensor no roba, sólo acompaña. Cuando la sacan bien tres veces seguidas, defiende de verdad.">${previa?.descripcion ?? ''}</textarea>
+      </div>
+      <div id="var-aviso"></div>
+      <button class="btn" id="btn-guardar-variacion">Guardar la variación</button>
+    `,
+  });
+  cablearChips($('var-chips-nivel'), false);
+  cablearChips($('var-chips-eje'), true);
+  $('in-var-titulo').focus();
+  $('btn-guardar-variacion').addEventListener('click', () => confirmarVariacion(club, ejercicio, previa));
+}
+
+async function confirmarVariacion(club, ejercicio, previa) {
+  const boton = $('btn-guardar-variacion');
+  if (boton.disabled) return;
+
+  // Como en las notas, el texto va tal cual lo escribió el profe.
+  const campos = {
+    titulo: $('in-var-titulo').value,
+    nivel: Number($('var-chips-nivel').querySelector('.chip-tema.on')?.dataset.nivel),
+    eje: $('var-chips-eje').querySelector('.chip-tema.on')?.dataset.eje ?? null,
+    descripcion: $('in-var-descripcion').value,
+  };
+  const { ok, errores } = validarVariacion(campos);
+  if (!ok) {
+    $('var-aviso').innerHTML = html`<div class="al"><div class="tx">${errores[0]}</div></div>`;
+    return;
+  }
+
+  boton.disabled = true;
+  boton.textContent = 'Guardando...';
+  $('var-aviso').innerHTML = '';
+  try {
+    if (previa) await actualizarVariacion(club.id, previa.id, campos);
+    else await crearVariacion({ clubId: club.id, ejercicioId: ejercicio.id, ...campos });
+  } catch (e) {
+    $('var-aviso').innerHTML = html`<div class="al"><div class="tx">${mensajeAlGuardar(e, {
+      reglas: [[/NO_ES_TUYO/, 'Esta variación ya no es tuya: no se puede editar.']],
+      generico: 'No se pudo guardar la variación.',
+    })}</div></div>`;
+    boton.disabled = false;
+    boton.textContent = 'Guardar la variación';
+    return;
+  }
+
+  cerrarHoja();
+  toast(previa ? 'Variación actualizada' : 'Variación sumada');
+  await renderEjercicio();
 }
 
 /* ---------- Agregar una nota de uso ---------- */

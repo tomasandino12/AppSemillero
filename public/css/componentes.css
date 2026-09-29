@@ -554,6 +554,20 @@ svg.g{width:100%;display:block;overflow:visible}
 .nota .nota-borrar{min-width:40px;min-height:40px;border:0;background:none;color:var(--gris-cl);font-size:var(--fs-145);flex:0 0 auto}
 #btn-ej-agregar-nota{margin:var(--sp-2) 0 var(--sp-5)}
 
+/* Variaciones (0052): de la más fácil a la más difícil. El nivel va a la
+   izquierda en mono, como una escalera que se lee de arriba abajo. */
+.variaciones{margin-bottom:var(--sp-5)}
+.variacion{display:flex;gap:var(--sp-3);background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
+.variacion .niv{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:2.75rem;padding-right:var(--sp-3);border-right:1px solid var(--linea)}
+.variacion .niv .k{font-size:var(--fs-100);color:var(--gris);text-transform:uppercase;letter-spacing:.05em}
+.variacion .niv .n{font-family:var(--ff-mono);font-size:var(--fs-190);font-weight:700;color:var(--primario);line-height:1.1}
+.variacion .cuerpo{flex:1;min-width:0}
+.variacion .tit{font-size:var(--fs-145);font-weight:600;color:var(--tinta)}
+.variacion .tx{font-size:var(--fs-135);color:var(--tinta);line-height:1.4;margin-top:.1875rem}
+.variacion .meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);margin-top:var(--sp-2);font-size:var(--fs-125);color:var(--gris)}
+.variacion .meta .autor{flex:1}
+.variacion .nota-borrar{min-width:var(--tap);min-height:var(--tap);border:0;background:none;color:var(--gris);font-size:var(--fs-145);flex:0 0 auto}
+
 /* Task 8: campos opcionales con valor, en un bloque menor que Descripción y Notas */
 .video-embed{position:relative;aspect-ratio:16/9;margin-bottom:var(--sp-4);background:var(--negro-puro);border-radius:var(--r);overflow:hidden}
 .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
