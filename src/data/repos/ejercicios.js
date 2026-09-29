@@ -1,17 +1,18 @@
-// Biblioteca de ejercicios y sus notas.
+// Biblioteca de ejercicios, sus notas y sus variaciones.
 // Se importa a través de src/data/repositorio.js (fachada).
 import { obtenerCliente } from '../cliente.js';
 
 /**
  * Los ejercicios del club. `tieneNotas` es una señal BINARIA de presencia, no
  * un contador ni un ranking: se traen los ids de las notas sólo para saber si
- * hay alguna, y el número no se muestra en ninguna parte.
+ * hay alguna, y el número no se muestra en ninguna parte. Las variaciones sí
+ * se cuentan: "3 variaciones" dice cuánto se puede progresar, no quién gana.
  */
 export async function obtenerEjercicios(clubId) {
   const supabase = obtenerCliente();
   const { data, error } = await supabase
     .from('ejercicio')
-    .select('id, titulo, tema, descripcion, enlace, material, jugadores, categorias, creado_por, creado_en, nota_ejercicio(id)')
+    .select('id, titulo, tema, descripcion, enlace, material, jugadores, categorias, creado_por, creado_en, nota_ejercicio(id), variacion_ejercicio(id)')
     .eq('club_id', clubId)
     .order('creado_en', { ascending: false });
   if (error) throw error;
@@ -27,6 +28,7 @@ export async function obtenerEjercicios(clubId) {
     creadoPor: f.creado_por,
     creadoEn: f.creado_en,
     tieneNotas: (f.nota_ejercicio ?? []).length > 0,
+    cantidadVariaciones: (f.variacion_ejercicio ?? []).length,
   }));
 }
 
@@ -156,6 +158,77 @@ export async function borrarNota(clubId, notaId) {
     .delete()
     .eq('club_id', clubId)
     .eq('id', notaId)
+    .select('id');
+  if (error) throw error;
+  if (!data.length) throw new Error('NO_ES_TUYO');
+}
+
+function variacionDesdeFila(f) {
+  return {
+    id: f.id,
+    ejercicioId: f.ejercicio_id,
+    nivel: f.nivel,
+    eje: f.eje,
+    titulo: f.titulo,
+    descripcion: f.descripcion,
+    creadoPor: f.creado_por,
+    creadoEn: f.creado_en,
+  };
+}
+
+const COLUMNAS_VARIACION = 'id, ejercicio_id, nivel, eje, titulo, descripcion, creado_por, creado_en';
+
+/** Las variaciones de un ejercicio, sin ordenar: el orden lo decide ordenarVariaciones. */
+export async function obtenerVariaciones(clubId, ejercicioId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('variacion_ejercicio')
+    .select(COLUMNAS_VARIACION)
+    .eq('club_id', clubId)
+    .eq('ejercicio_id', ejercicioId);
+  if (error) throw error;
+  return data.map(variacionDesdeFila);
+}
+
+/** Una sola fila. Se le puede sumar a un ejercicio ajeno: la autoría la sella la base. */
+export async function crearVariacion({ clubId, ejercicioId, nivel, eje, titulo, descripcion }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('variacion_ejercicio')
+    .insert({
+      club_id: clubId,
+      ejercicio_id: ejercicioId,
+      nivel,
+      eje: eje || null,
+      titulo,
+      descripcion: descripcion || null,
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+/** Si la variación es de otro, la policy de 0052 no devuelve filas y esto lanza 'NO_ES_TUYO'. */
+export async function actualizarVariacion(clubId, variacionId, { nivel, eje, titulo, descripcion }) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('variacion_ejercicio')
+    .update({ nivel, eje: eje || null, titulo, descripcion: descripcion || null })
+    .eq('club_id', clubId)
+    .eq('id', variacionId)
+    .select('id');
+  if (error) throw error;
+  if (!data.length) throw new Error('NO_ES_TUYO');
+}
+
+export async function borrarVariacion(clubId, variacionId) {
+  const supabase = obtenerCliente();
+  const { data, error } = await supabase
+    .from('variacion_ejercicio')
+    .delete()
+    .eq('club_id', clubId)
+    .eq('id', variacionId)
     .select('id');
   if (error) throw error;
   if (!data.length) throw new Error('NO_ES_TUYO');
