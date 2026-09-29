@@ -21,7 +21,7 @@ for (const m of sql.matchAll(/alter table (\w+)\s+add constraint\s+\w+\s+check \
   enBase[`${m[1]}.${m[2]}`] = Number(m[3]);
 }
 
-const TABLAS_NUEVAS = ['0035_jugadas.sql'];
+const TABLAS_NUEVAS = ['0035_jugadas.sql', '0052_variacion_ejercicio.sql'];
 for (const archivo of TABLAS_NUEVAS) {
   for (const tabla of leer(archivo).matchAll(/create table (\w+) \(\n([\s\S]*?)\n\);/g)) {
     for (const m of tabla[2].matchAll(/^\s+(\w+) text\b[^\n]*check \(char_length\(\1\) <= (\d+)\)/gm)) {

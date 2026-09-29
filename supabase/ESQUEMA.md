@@ -230,6 +230,14 @@ La pizarra táctica del club (spec `docs/superpowers/specs/2026-09-21-jugadas-de
 - El jugador no tiene acceso a las tablas: lee por `mis_jugadas()` (`security definer`, arranca por `mi_jugador()`), que devuelve `jugada_id`, `nombre`, `tipo` y `datos` de lo asignado a sus planteles con pertenencia vigente. Nunca el autor. No está en `accesoJugador.js` porque ese contrato es de 0029 y 0030; lo cubre `contratoJugada.test.js`.
 - Verificación contra la base: `tests/verificarJugadas.sql` en el SQL Editor.
 
+### `variacion_ejercicio` (0052)
+Cómo subirle la complejidad a un ejercicio de la biblioteca. No hay datos de menores.
+
+- Columnas: `ejercicio_id` (FK compuesta por club con cascade, como `nota_ejercicio`), `nivel` (1 a 5, igual que `NIVEL` de `src/data/variaciones.js`; lo compara `tests/contratoVariacion.test.js`), `eje` (opcional, ≤ 100, **sin check**: la lista vive en `EJES`, como `tema`), `titulo` (≤ 150, no vacío) y `descripcion` (≤ 2000).
+- `nivel` lo elige quien la carga, y a igual nivel se ordena por `creado_en`. No hay un orden que se pueda reordenar porque las variaciones son de varios autores.
+- La lee y la suma cualquier entrenador del club (`es_entrenador_de`), sobre cualquier ejercicio; **sólo el autor** la edita o la borra. Update por columna: `nivel`, `eje`, `titulo`, `descripcion`. Un trigger sella la autoría y las fechas, y no deja cambiar `club_id` ni `ejercicio_id`.
+- El jugador no la ve.
+
 ### Salto: `medicion_salto` y pierna en `medicion_corporal` (0043)
 CMJ y Abalakov medidos con video en cámara lenta (spec `docs/superpowers/specs/2026-09-23-evaluacion-salto-design.md`). El video nunca llega a la base.
 
@@ -272,6 +280,7 @@ Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembr
 | `jugador`, `pertenencia`, `partido`, `estadistica_*`, `sesion_medicion`, `medicion_*`, `medicion_corporal`, `envio_recurso`, `meta_zona` | sus asignadas vigentes | **nada** | sus asignadas vigentes |
 | `jugadores_del_club_para_dedup` | sí | **rechaza** | sí |
 | `ejercicio`, `nota_ejercicio`, `recurso`, `perfil_entrenador` | todo el club | todo el club (la UI de coordinación no lo muestra) | todo el club |
+| `variacion_ejercicio` (0052), `jugada` (0035) | todo el club | **nada** (`es_entrenador_de`) | todo el club |
 | `material` (inventario) | lee todo el club | lee y **escribe** todo el club | lee y escribe |
 | Panel: pendientes, miembros, asignaciones, panorama | **rechaza** | su club | su club |
 | Habilitar, asignar, cerrar | **nunca** | a otros, en su club | a otros, en su club |
