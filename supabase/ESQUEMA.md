@@ -238,6 +238,12 @@ Cómo subirle la complejidad a un ejercicio de la biblioteca. No hay datos de me
 - La lee y la suma cualquier entrenador del club (`es_entrenador_de`), sobre cualquier ejercicio; **sólo el autor** la edita o la borra. Update por columna: `nivel`, `eje`, `titulo`, `descripcion`. Un trigger sella la autoría y las fechas, y no deja cambiar `club_id` ni `ejercicio_id`.
 - El jugador no la ve.
 
+### `ejercicio.pizarra` (0053)
+El dibujo del ejercicio (filas, varias pelotas, rebote, rotación). Columna `jsonb` nula; no hay datos de menores.
+
+- La forma la valida `src/data/pizarraEjercicio.js`. La base sólo impone que sea un objeto, que no pase de 65536 bytes (el `TOPES.bytes` de la jugada) y que ninguna nota de paso pase de 300 caracteres (reusa `jugada_notas_validas`). `tests/contratoPizarraEjercicio.test.js` compara los números con el JS.
+- Va en el ejercicio y no en `jugada`: un ejercicio no es una jugada de partido. La escribe **sólo quien creó el ejercicio** (la policy de update de 0015/0027); el `grant update (pizarra)` no abre el insert.
+
 ### Salto: `medicion_salto` y pierna en `medicion_corporal` (0043)
 CMJ y Abalakov medidos con video en cámara lenta (spec `docs/superpowers/specs/2026-09-23-evaluacion-salto-design.md`). El video nunca llega a la base.
 
