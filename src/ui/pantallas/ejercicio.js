@@ -4,7 +4,8 @@ import {
 } from '../../data/repositorio.js';
 import { nombreDeTema } from '../../data/temas.js';
 import { obtenerClubActual } from '../sesion.js';
-import { escaparHtml, toast, formatearFechaCorta } from '../nav.js';
+import { toast, formatearFechaCorta } from '../nav.js';
+import { html, crudo } from '../html.js';
 import { esEnlaceWeb } from '../../data/enlaces.js';
 import { reproductorHtml } from '../componentes/video.js';
 import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
@@ -31,12 +32,11 @@ export function abrirEjercicio(id) {
  * invita a completarla en vez de mostrar un hueco en blanco.
  */
 function bloqueDescripcion(ejercicio) {
-  return `
+  return html`
     <div class="eyebrow">Descripción</div>
     <div class="p texto-libre">${
       ejercicio.descripcion
-        ? escaparHtml(ejercicio.descripcion)
-        : 'Todavía no hay una descripción: se guardó sólo con título y tema. Quien lo cargó puede sumarla editando el ejercicio.'
+        || 'Todavía no hay una descripción: se guardó sólo con título y tema. Quien lo cargó puede sumarla editando el ejercicio.'
     }</div>
   `;
 }
@@ -56,13 +56,13 @@ function fechaLocalDeTimestamp(timestamptz) {
 }
 
 function notaHtml(n) {
-  return `
+  return html`
     <div class="nota">
       <div class="meta">
-        <span>${escaparHtml(nombreDe(n.creadoPor))} · ${escaparHtml(formatearFechaCorta(fechaLocalDeTimestamp(n.creadoEn)))}</span>
-        ${esMio(n.creadoPor) ? `<button class="nota-borrar" data-nota="${n.id}" aria-label="Borrar esta nota">&#10005;</button>` : ''}
+        <span>${nombreDe(n.creadoPor)} · ${formatearFechaCorta(fechaLocalDeTimestamp(n.creadoEn))}</span>
+        ${esMio(n.creadoPor) && html`<button class="nota-borrar" data-nota="${n.id}" aria-label="Borrar esta nota">&#10005;</button>`}
       </div>
-      <div class="tx texto-libre">${escaparHtml(n.texto)}</div>
+      <div class="tx texto-libre">${n.texto}</div>
     </div>
   `;
 }
@@ -75,37 +75,36 @@ function notaHtml(n) {
  */
 function bloqueNotas(notas) {
   if (!notas.length) {
-    return `<div class="p">Todavía nadie anotó qué pasó al usarlo. Si lo probaste, lo que aprendiste le sirve al que venga.</div>`;
+    return html`<div class="p">Todavía nadie anotó qué pasó al usarlo. Si lo probaste, lo que aprendiste le sirve al que venga.</div>`;
   }
-  return notas.map(notaHtml).join('');
+  return notas.map(notaHtml);
 }
 
 function filaMenor(etiqueta, valor) {
-  return `<div class="fila-menor"><span class="k">${escaparHtml(etiqueta)}</span><span class="v">${escaparHtml(valor)}</span></div>`;
+  return html`<div class="fila-menor"><span class="k">${etiqueta}</span><span class="v">${valor}</span></div>`;
 }
 
 /** Material, jugadores, categorías y enlace: sólo los que tengan valor, en un bloque menor. */
 function bloqueDetalleMenor(ejercicio) {
   const filas = [
-    ejercicio.material ? filaMenor('Material', ejercicio.material) : '',
-    ejercicio.jugadores ? filaMenor('Jugadores', ejercicio.jugadores) : '',
-    ejercicio.categorias ? filaMenor('Categorías', ejercicio.categorias) : '',
+    ejercicio.material && filaMenor('Material', ejercicio.material),
+    ejercicio.jugadores && filaMenor('Jugadores', ejercicio.jugadores),
+    ejercicio.categorias && filaMenor('Categorías', ejercicio.categorias),
     esEnlaceWeb(ejercicio.enlace)
-      ? `<div class="fila-menor"><span class="k">Enlace</span><a href="${escaparHtml(ejercicio.enlace)}" target="_blank" rel="noopener noreferrer">Abrir el enlace</a></div>`
-      : '',
+      && html`<div class="fila-menor"><span class="k">Enlace</span><a href="${ejercicio.enlace}" target="_blank" rel="noopener noreferrer">Abrir el enlace</a></div>`,
   ].filter(Boolean);
-  return filas.length ? `<div class="detalle-menor">${filas.join('')}</div>` : '';
+  return filas.length > 0 && html`<div class="detalle-menor">${filas}</div>`;
 }
 
 function pintarEjercicio(club, ejercicio, notas) {
   const propio = esMio(ejercicio.creadoPor);
-  contenedor().innerHTML = `
+  contenedor().innerHTML = html`
     <div class="ficha-top">
-      <div class="nom">${escaparHtml(ejercicio.titulo)}</div>
-      <div class="sub">${escaparHtml(nombreDeTema(ejercicio.tema))} · ${escaparHtml(nombreDe(ejercicio.creadoPor))}</div>
+      <div class="nom">${ejercicio.titulo}</div>
+      <div class="sub">${nombreDeTema(ejercicio.tema)} · ${nombreDe(ejercicio.creadoPor)}</div>
     </div>
     <div class="pad">
-      ${reproductorHtml(ejercicio.enlace, ejercicio.titulo)}
+      ${crudo(reproductorHtml(ejercicio.enlace, ejercicio.titulo))}
       ${bloqueDescripcion(ejercicio)}
 
       <div class="eyebrow">Notas de uso</div>
@@ -115,10 +114,10 @@ function pintarEjercicio(club, ejercicio, notas) {
       ${bloqueDetalleMenor(ejercicio)}
 
       <div class="acciones-hoy">
-        ${propio ? `
+        ${propio && html`
           <button class="btn sec" id="btn-ej-editar">Editar</button>
           <button class="btn sec" id="btn-ej-borrar">Borrar</button>
-        ` : ''}
+        `}
       </div>
     </div>
   `;
@@ -205,7 +204,7 @@ async function abrirAgregarNota(club, ejercicio) {
 
   abrirHoja({
     titulo: 'Agregar una nota',
-    cuerpo: `
+    cuerpo: html`
       <div class="campo">
         <label for="in-nota-texto">Qué pasó al usarlo</label>
         <textarea id="in-nota-texto" rows="4" maxlength="${LIMITE.nota}" placeholder="Ej.: con los de mini no funcionó hasta que achiqué la cancha"></textarea>
@@ -236,7 +235,7 @@ async function confirmarNota(club, ejercicio) {
   try {
     await crearNota({ clubId: club.id, ejercicioId: ejercicio.id, texto });
   } catch (e) {
-    $('nota-aviso').innerHTML = `<div class="al"><div class="tx">${
+    $('nota-aviso').innerHTML = html`<div class="al"><div class="tx">${
       textoDeError(e, 'No se pudo guardar la nota.')
     }</div></div>`;
     boton.disabled = false;
@@ -259,7 +258,7 @@ async function confirmarNota(club, ejercicio) {
 function confirmarBorrado(club, ejercicio) {
   abrirHoja({
     titulo: 'Borrar este ejercicio',
-    cuerpo: `
+    cuerpo: html`
       <div class="al"><div class="tx">Es para siempre: no se puede deshacer, y se borran con él todas las notas de uso que hayan cargado otros profes.</div></div>
       <div id="borrado-ej-aviso"></div>
       <button class="btn" id="btn-ej-confirmar-borrado">Borrar de todos modos</button>
@@ -278,7 +277,7 @@ function confirmarBorrado(club, ejercicio) {
       // La garantía es la policy de 0015, no el esMio() que decide si este
       // botón existe: si se editó desde otra sesión mientras tanto, esto
       // puede llegar igual, y no puede mostrarse como un error crudo.
-      $('borrado-ej-aviso').innerHTML = `<div class="al"><div class="tx">${
+      $('borrado-ej-aviso').innerHTML = html`<div class="al"><div class="tx">${
         e?.message === 'NO_ES_TUYO'
           ? 'Este ejercicio ya no es tuyo: no se puede borrar.'
           : (textoDeError(e, 'No se pudo borrar el ejercicio.'))
