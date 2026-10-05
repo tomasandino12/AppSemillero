@@ -46,6 +46,8 @@ Todos viven en `public/css/tokens.css`, en `:root`. Es el único archivo con val
 | `--primario-cl` | `#FFEBEE` (respaldo) | Fondo suave de una opción elegida. |
 | `--primario-tenue` | `#FBE5E8` (respaldo) | Fondo de una etiqueta del club. |
 
+**Los colores del club tampoco viven en el JS:** los gráficos leen `--primario` y `--tinta` con `getComputedStyle` una vez por render (`graficos.js`), y lo que se dibuja fuera del CSS (la imagen de `exportarJugada`) recibe el color leído como parámetro. Un test escanea `src/ui` y falla ante un literal del club.
+
 **Cómo se cambia por club:** se sobrescriben sólo `--club` y `--sobre-club` en `:root`. Los tres derivados se recalculan solos con `color-mix()` dentro de `@supports`; sin soporte (Android WebView anterior a Chrome 111) quedan los hex de respaldo del rojo por defecto. Quien carga el color elige `--sobre-club` (blanco o negro) según cuál llegue a 4.5:1; hoy nada lo carga desde la base (ver Deuda).
 
 ### Neutros y superficies
@@ -184,10 +186,14 @@ html`<div class="al"><div class="tx">${texto}<div class="mt">${detalle}</div></d
 html`<div class="tarj tocable" data-id="${item.id}" role="button" tabindex="0">…</div>`
 ```
 
-**Hoja** — detalle o formulario encima de la pantalla actual: sube desde abajo en el celu, centrada en escritorio. Se abre con `abrirHoja({ titulo, cuerpo, alCerrar })` de `src/ui/componentes/hoja.js` (que arma `.hoja` con `.asa`, `h2` y `.pad`, y prende `.velo`); se cierra con `cerrarHoja()`. El título lo escapa la función; el cuerpo va con `html`.
+**Hoja** — detalle o formulario encima de la pantalla actual: sube desde abajo en el celu, centrada en escritorio. Se abre con `abrirHoja({ titulo, cuerpo, alCerrar })` de `src/ui/componentes/hoja.js` (que arma `.hoja` con `.asa`, `h2` y `.pad`, y prende `.velo`); se cierra con `cerrarHoja()`. El título lo escapa la función; el cuerpo va con `html`. Mientras hay una hoja abierta, Atrás del sistema (el gesto o botón del celular) la cierra en vez de salir de la pantalla: ver "Atrás del sistema".
 ```js
 abrirHoja({ titulo: jugador.nombre, cuerpo: html`<div class="tarj">…</div>` })
 ```
+
+**Confirmación** — todo lo que borra o corta algo que la persona cargó pasa por `confirmarEnHoja({ titulo, texto, verbo, alConfirmar })` de `src/ui/componentes/confirmar.js`, nunca por un toque suelto (descartar una sesión, borrar una nota, una variación o una medición, terminar el Yo-Yo). El botón lleva el verbo ("Terminar", "Descartar"), no "Sí"; Cancelar va primero y siempre está; el texto dice qué se pierde y cuánto ("quedan 3 en carrera"); el botón se deshabilita mientras corre `alConfirmar`, así un doble toque no lo repite. Una pantalla con algo en curso que no se puede retomar declara `confirmarSalida` en `registrarPantalla`, y salir (volver, cambiar de categoría, Atrás del sistema) pide la misma confirmación.
+
+**Atrás del sistema** — `historial.js` espeja en el historial del navegador la pila interna de `main.js` (`ir(…, { push: true })`) y la hoja abierta: una entrada por cada paso hacia atrás. Con `popstate`, Atrás cierra la hoja o vuelve una pantalla; en la pantalla inicial del modo no hay entradas propias y Atrás sale de la app. La pila interna sigue siendo la fuente de verdad: el historial sólo la copia. Una pantalla nueva que se abre encima de otra usa `push: true`; no toca `history` a mano.
 
 **Landing** — la cara pública, dentro de `.publico` (fondo `--pub-fondo`, resplandor del club en `.publico::before`). Bloques: `.marca`, `.hero` (con `.r` para la palabra en color y `.bajada`), `.acciones-landing` y `.beneficios` > `.ben` (tarjeta `--pub-tarjeta`, filete de 3 px en `--primario`, título `.t` y texto `.d`). Es marcado estático de `public/index.html`; los campos oscuros son `.campo-osc`.
 ```html
@@ -198,9 +204,9 @@ abrirHoja({ titulo: jugador.nombre, cuerpo: html`<div class="tarj">…</div>` })
 
 **Cronómetro de salida y tarjeta de sprint** — `cronometroSalida.js` es una hoja a pantalla completa (`.crono-salida`, fondo `--papel`: claro, como el resto de la app, aunque la referencia de Stitch era oscura) con el nombre y la distancia (`.crono-quien`), el tiempo en mono enorme (`.crono-tiempo`, unidad en `--primario`) y un botón `.crono-llego` que ocupa casi media pantalla (primero *¡Giró!*, después *¡Llegó!*, con la ida en `.crono-parcial`; el resultado muestra `.crono-desglose` con ida y vuelta). El reloj en vivo se repinta con `requestAnimationFrame` sobre el texto, sin animaciones CSS. La pantalla `medirSprint.js` usa `.segmentado` (selector 30/20 m, `aria-pressed`), y una `.tarj.sprint-tarj` por jugador con dos `.sprint-celda` (botón *Correr* o el tiempo en `.sprint-tiempo`, con el chip "Mejor" y `.sprint-desglose` con ida y vuelta). La sección de la ficha y del progreso es `seccionSprint.js`: `.tarj.salto-tarj` con `.cifra-clave`, chip de variación (`.chip.sube` si el tiempo bajó) y `.tabla-ev` con las sesiones anteriores.
 
-**Yo-Yo** — `medirYoyo.js` tiene tres fases en la misma sección: *quién corre* (`.yoyo-elegir`, un botón por jugador con `aria-pressed`), *en curso* y *resumen*. En curso, `.yoyo-cab` muestra "Nivel n · Ida m" en grande (`.yoyo-nivel`), los km/h y el tiempo al próximo pitido, y `.yoyo-grilla` una tarjeta `.yoyo-jug` por corredor: el primer toque la deja en aviso (`.aviso`, ámbar con los tokens `--baja*`), con un botón *Llegó* que la limpia; el segundo la saca (`.out`, gris). *Deshacer* y *Terminar test* van en `.yoyo-pie`. El texto se repinta desde `requestAnimationFrame` sin animaciones CSS. El resumen usa `.yoyo-res` con `.cifra-clave.chica` para nivel y metros; la sección de la ficha y el progreso es `seccionYoyo.js` (mismas piezas que `seccionSprint.js`).
+**Yo-Yo** — `medirYoyo.js` tiene tres fases en la misma sección: *quién corre* (`.yoyo-elegir`, un botón por jugador con `aria-pressed`), *en curso* y *resumen*. En curso, `.yoyo-cab` muestra "Nivel n · Ida m" en grande (`.yoyo-nivel`), los km/h y el tiempo al próximo pitido, y `.yoyo-grilla` una tarjeta `.yoyo-jug` por corredor: el primer toque la deja en aviso (`.aviso`, ámbar con los tokens `--baja*`), con un botón *Llegó* que la limpia; el segundo la saca (`.out`, gris). *Deshacer* y *Terminar test* van en `.yoyo-pie`, separados (no mitad y mitad pegados), y *Terminar* pide confirmación diciendo cuántos quedan en carrera. El texto se repinta desde `requestAnimationFrame` sin animaciones CSS. El resumen usa `.yoyo-res` con `.cifra-clave.chica` para nivel y metros; la sección de la ficha y el progreso es `seccionYoyo.js` (mismas piezas que `seccionSprint.js`).
 
-**Piezas chicas que ya existen** (usalas antes de crear otra): `.btn` / `.btn.sec` / `.btn.chico`, `.eyebrow` (con `.der` para un dato a la derecha), `.h2` y `.p`, `.chip` (`.sube`, `.baja`, `.sin`), `.campo` (con `.ayuda`), `.sin` para un dato que falta, `.mono`, `.sr` para texto sólo para lectores de pantalla, y el toast con `toast()` de `src/ui/nav.js`.
+**Piezas chicas que ya existen** (usalas antes de crear otra): `.btn` / `.btn.sec` / `.btn.chico`, `.eyebrow` (con `.der` para un dato a la derecha), `.h2` y `.p`, `.chip` (`.sube`, `.baja`, `.sin`), `.campo` (con `.ayuda`), `.sin` para un dato que falta, `.mono`, `.sr` para texto sólo para lectores de pantalla, y el toast con `toast()` de `src/ui/nav.js`. Un `.btn:disabled` se lee como apagado y no sólo por color (fondo `--fondo-chip`, texto `--gris` ≥ 4.5:1, sin animación de apretado). Los gráficos de `graficos.js` salen con `role="img"` y un `aria-label` que cuenta el resumen en texto; los glifos decorativos (`.ic`) llevan `aria-hidden="true"`.
 
 ## Checklist para una pantalla o función nueva
 
@@ -208,12 +214,13 @@ abrirHoja({ titulo: jugador.nombre, cuerpo: html`<div class="tarj">…</div>` })
 2. Espacios, radios, tamaños de letra y sombras salen de tokens; ningún `px` nuevo salvo bordes de 1 px.
 3. Si algo se mueve: sólo `transform`/`opacity`, con `--dur-*` y `--ease-*`, keyframes con `from` solo; y nada que pueda ser el LCP entra animado.
 4. Con `prefers-reduced-motion: reduce` emulado, todo queda visible y en su estado final.
-5. A 375 px no hay scroll horizontal y todo lo tocable mide al menos `--tap`; a 1280 px el contenido respeta `--max-ancho` y la navegación lateral. Única excepción: `.pant.ancha`, sólo para herramientas-lienzo (hoy, el editor de jugadas), no para formularios ni listas.
+5. A 375 px no hay scroll horizontal y todo lo tocable mide al menos `--tap` (se agranda el área de toque, el ícono puede quedar chico; los bordes de los controles usan `--borde-control`); a 1280 px el contenido respeta `--max-ancho` y la navegación lateral. Única excepción: `.pant.ancha`, sólo para herramientas-lienzo (hoy, el editor de jugadas), no para formularios ni listas.
 6. Texto secundario con el gris de su fondo (`--gris` sobre blanco, `--gris-cl` sobre papel, `--gris-osc` sobre oscuro): así llega a 4.5:1. Nada de color como única señal.
 7. Números en `--ff-mono`; el dato principal, si hay uno, como `.cifra`.
-8. Tres estados resueltos: cargando (`<div class="p">Cargando …</div>` en `.pad`), error (`avisoDeError`), y vacío con un texto que diga qué falta y qué hacer. Un `NULL` se muestra como `.sin`/"—", nunca como 0.
+8. Tres estados resueltos: cargando (`<div class="p" role="status">Cargando…</div>` en `.pad`, un solo carácter `…` y anunciado), error (`avisoDeError`), y vacío con un texto que diga qué falta y qué hacer. Un `NULL` se muestra como `.sin`/"—", nunca como 0.
 9. Textos en español rioplatense con voseo ("Revisá", "Tocá"); el texto de error de red sale de `ui/errores.js`, no se reescribe.
 10. Marcado con `html\`...\``, reusando las clases de Componentes antes de inventar otra.
+11. Ningún borrado de datos cargados por la persona ocurre de un toque (`confirmarEnHoja`), y un error de guardado se anuncia con `avisoInline`/`mostrarAviso` (`role="alert"`), no con un toast que se va.
 
 ## Rendimiento
 
