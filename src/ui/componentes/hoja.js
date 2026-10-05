@@ -8,6 +8,19 @@ import { $ } from '../dom.js';
 // clase CSS de #hoja.
 let alCerrarActual = null;
 
+// Quien necesita saber que la hoja se abrió o cerró (el historial del botón
+// Atrás, en main.js) se registra acá; hoja.js no importa de main.js.
+let alCambiar = null;
+let abierta = false;
+
+export function hojaAbierta() {
+  return abierta;
+}
+
+export function alCambiarHoja(fn) {
+  alCambiar = fn;
+}
+
 /** Bottom sheet en celular; diálogo centrado a partir de 1024px (layout.css). */
 export function abrirHoja({ titulo, cuerpo, alCerrar }) {
   const hoja = $('hoja');
@@ -22,6 +35,8 @@ export function abrirHoja({ titulo, cuerpo, alCerrar }) {
   $('velo').classList.add('on');
   hoja.classList.add('on');
   alCerrarActual = alCerrar ?? null;
+  abierta = true;
+  alCambiar?.();
 }
 
 export function cerrarHoja() {
@@ -31,6 +46,8 @@ export function cerrarHoja() {
   // La hoja sólo se oculta, no se vacía: un video abierto seguiría sonando
   // desde adentro. Sacar los iframes lo corta.
   hoja.querySelectorAll('iframe').forEach((f) => f.remove());
+  abierta = false;
+  alCambiar?.();
   // Se limpia ANTES de invocar, no después: si alCerrar() abriera otra hoja
   // (que fijaría su propio alCerrarActual), limpiar después la pisaría a
   // ciegas. Así, además, un cierre por Escape mientras el velo ya disparó no

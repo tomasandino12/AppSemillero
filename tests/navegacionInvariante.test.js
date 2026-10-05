@@ -141,3 +141,90 @@ test('el profe llega al inventario desde el pie de FÍSICO, en una pantalla sól
   assert.match(fisico, /id="btn-ver-inventario"/);
   assert.match(fisico, /ir\('p-inventario', \{ push: true \}\)/);
 });
+
+// ---- Atrás del sistema (src/ui/historial.js) ----
+
+/** `history` simulado: registra las llamadas y lleva la cuenta de entradas. */
+function historiaFalsa() {
+  const llamadas = [];
+  return {
+    llamadas,
+    pushState: (estado) => llamadas.push(['push', estado.n]),
+    replaceState: (estado) => llamadas.push(['replace', estado.n]),
+    go: (n) => llamadas.push(['go', n]),
+  };
+}
+
+test('ir con push apila una entrada de historial por pantalla apilada', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const h = historiaFalsa();
+  const historial = crearHistorial(h);
+  historial.iniciar();
+  historial.ajustar(1);
+  historial.ajustar(2);
+  assert.deepEqual(h.llamadas, [['replace', 0], ['push', 1], ['push', 2]]);
+});
+
+test('abrir y cerrar una hoja apila una entrada y la retira; el eco no mueve la app', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const h = historiaFalsa();
+  const historial = crearHistorial(h);
+  historial.ajustar(1);
+  historial.ajustar(0);
+  assert.deepEqual(h.llamadas, [['push', 1], ['go', -1]]);
+  assert.equal(historial.alPop({ n: 0 }), 0, 'el popstate de nuestro propio go() no es un Atrás de la persona');
+});
+
+test('Atrás del sistema pide un paso y no vuelve a empujar la entrada gastada', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const h = historiaFalsa();
+  const historial = crearHistorial(h);
+  historial.ajustar(2);
+  assert.equal(historial.alPop({ n: 1 }), 1);
+  historial.ajustar(1); // la app ya volvió una pantalla
+  assert.deepEqual(h.llamadas, [['push', 1], ['push', 2]], 'no hay go() ni push extra');
+});
+
+test('Atrás del sistema con una confirmación que frena la salida repone la entrada', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const h = historiaFalsa();
+  const historial = crearHistorial(h);
+  historial.ajustar(1);
+  assert.equal(historial.alPop(null), 1);
+  historial.ajustar(1); // la app no se movió: hay que reponer la entrada
+  assert.deepEqual(h.llamadas, [['push', 1], ['push', 1]]);
+});
+
+test('el menú largo del historial puede saltar varias entradas de una vez', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const historial = crearHistorial(historiaFalsa());
+  historial.ajustar(3);
+  assert.equal(historial.alPop({ n: 0 }), 3);
+});
+
+test('no se empuja nada mientras una retirada está en vuelo', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const h = historiaFalsa();
+  const historial = crearHistorial(h);
+  historial.ajustar(1);
+  historial.ajustar(0); // cierra la hoja…
+  historial.ajustar(1); // …y abre otra en el mismo tick
+  assert.deepEqual(h.llamadas, [['push', 1], ['go', -1]]);
+  assert.equal(historial.alPop({ n: 0 }), 0);
+  assert.deepEqual(h.llamadas, [['push', 1], ['go', -1], ['push', 1]]);
+});
+
+test('sin pantallas apiladas Atrás no se intercepta: sale de la app', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const historial = crearHistorial(historiaFalsa());
+  assert.equal(historial.alPop({ n: 0 }), 0);
+});
+
+test('main.js y hoja.js conectan la pila y la hoja con el historial', () => {
+  const main = fuente('src/ui/main.js');
+  assert.match(main, /addEventListener\('popstate'/);
+  assert.match(main, /pila\.length \+ \(hojaAbierta\(\) \? 1 : 0\)/);
+  assert.match(main, /alCambiarHoja\(sincronizarHistorial\)/);
+  const hoja = fuente('src/ui/componentes/hoja.js');
+  assert.equal((hoja.match(/alCambiar\?\.\(\)/g) ?? []).length, 2, 'abrir y cerrar avisan');
+});

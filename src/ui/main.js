@@ -12,6 +12,8 @@ import { alReportarError } from './errores.js';
 import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
 import { confirmarEnHoja } from './componentes/confirmar.js';
+import { cerrarHoja, hojaAbierta, alCambiarHoja } from './componentes/hoja.js';
+import { crearHistorial } from './historial.js';
 import {
   setClubActual, obtenerClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo,
   setCuenta, setFichaJugador, setPlantelActivoId,
@@ -27,6 +29,26 @@ import {
 
 const pantallas = new Map();
 const pila = [];
+
+// Espejo de `pila` + la hoja abierta en el historial del navegador, para que
+// el Atrás del sistema cierre la hoja o vuelva una pantalla. La fuente de
+// verdad sigue siendo `pila`; ver historial.js.
+const historial = crearHistorial(window.history);
+
+function sincronizarHistorial() {
+  historial.ajustar(pila.length + (hojaAbierta() ? 1 : 0));
+}
+
+/** La persona tocó Atrás en el sistema: la hoja abierta consume el primero. */
+async function atrasDelSistema(pasos) {
+  for (let i = 0; i < pasos; i += 1) {
+    if (hojaAbierta()) cerrarHoja();
+    else if (pila.length > 0) await volver();
+  }
+  // Si una confirmación frenó la salida, la entrada que se gastó hay que
+  // volver a ponerla: la app sigue donde estaba.
+  sincronizarHistorial();
+}
 
 // Quien se registró por la puerta de jugadores cae en el formulario de pedir
 // acceso, pero una sola vez por sesión: si vuelve atrás a "todavía no tenés
@@ -96,6 +118,7 @@ export async function ir(id, { push = false } = {}) {
   if (desde !== id && frenaLaSalida(() => ir(id, { push }))) return;
   if (push && desde && desde !== id) pila.push(desde);
   if (!push) pila.length = 0;
+  sincronizarHistorial();
   mostrarPantalla(id);
   sincronizarChrome();
   if (def.render) await def.render();
@@ -129,6 +152,7 @@ export async function cambiarPlantel(id) {
 export async function volver() {
   if (frenaLaSalida(volver)) return;
   const destino = pila.pop() ?? pantallaInicialDelModo();
+  sincronizarHistorial();
   mostrarPantalla(destino);
   sincronizarChrome();
   const def = pantallas.get(destino);
@@ -140,6 +164,7 @@ function volverALaLanding() {
   yaSeLeAbrioElPedido = false;
   limpiarSesion();
   pila.length = 0;
+  sincronizarHistorial();
   mostrarLanding();
 }
 
@@ -328,6 +353,13 @@ async function iniciar() {
       agente: navigator.userAgent,
     });
     guardarErrorDeCliente(registro, obtenerClubActual()?.id ?? null);
+  });
+
+  historial.iniciar();
+  alCambiarHoja(sincronizarHistorial);
+  window.addEventListener('popstate', (e) => {
+    const pasos = historial.alPop(e.state);
+    if (pasos > 0) atrasDelSistema(pasos);
   });
 
   descartarBorradoresAnteriores();
