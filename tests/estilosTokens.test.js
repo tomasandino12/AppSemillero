@@ -273,3 +273,19 @@ test('los controles táctiles listados tienen al menos --tap', () => {
   }
   assert.deepEqual(malos, []);
 });
+
+// 12px (0,75rem) es el piso de lectura en un celular al sol: con 10-11,5px las
+// etiquetas de la cabecera, los chips y las unidades se leían mal en la cancha.
+test('ningún tamaño de fuente del sistema baja de 12px', () => {
+  const malos = [];
+  for (const m of sinComentarios(tokens).matchAll(/(--fs-[\w-]+)\s*:\s*([\d.]+)rem\s*;/g)) {
+    if (parseFloat(m[2]) * 16 < 12) malos.push(`${m[1]}: ${m[2]}rem`);
+  }
+  for (const [nombre, texto] of Object.entries(css)) {
+    for (const m of sinComentarios(texto).matchAll(/font-size\s*:\s*([\d.]+)(px|rem)\b/g)) {
+      const px = m[2] === 'px' ? parseFloat(m[1]) : parseFloat(m[1]) * 16;
+      if (px < 12) malos.push(`${nombre}.css: font-size ${m[1]}${m[2]}`);
+    }
+  }
+  assert.deepEqual(malos, []);
+});

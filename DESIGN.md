@@ -94,7 +94,7 @@ Todos viven en `public/css/tokens.css`, en `:root`. Es el único archivo con val
 | `--fs-cifra` | `clamp(2.5rem,2rem + 2.4vw,3.5rem)` | Sólo la cifra héroe. |
 | `--fs-titulo` | `clamp(1.5rem,1.25rem + 1.2vw,2rem)` | `h1`. |
 | `--fs-titulo-chico` | `clamp(1.5rem,1.3rem + 1vw,2rem)` | `h2` y `.h2` (título de sección; `.h2` lleva una barra roja debajo). Los `.eyebrow` (subtítulos) van en `--fs-190`, en `--tinta`, nunca en gris. |
-| `--fs-100` … `--fs-300` | `0.625rem` … `1.875rem` | Escala fija; el número es el px del prototipo ×10 (`--fs-160` = 1rem). |
+| `--fs-100` … `--fs-300` | `0.75rem` … `1.875rem` | Escala fija con piso de 12px (`--fs-100` y `--fs-115` valen lo mismo; lo exige `estilosTokens.test.js`); el número es el px del prototipo ×10 (`--fs-160` = 1rem). |
 
 Los usados con más frecuencia: `--fs-115` (ayudas, chips, meta), `--fs-125` (eyebrow, etiquetas en mayúsculas), `--fs-135` (texto de tarjeta y avisos), `--fs-145` (texto de fila), `--fs-160` (cuerpo), `--fs-190` (botón). Pesos cargados: Barlow 400–700, Inter 400–700 (variable, un archivo), Plex Mono 500 y 600.
 

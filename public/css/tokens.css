@@ -116,8 +116,8 @@
   --ff-mono:'IBM Plex Mono',ui-monospace,monospace;
 
   /* ---- escala tipográfica (mismos nombres que el prototipo, en rem) ---- */
-  --fs-100:0.625rem;
-  --fs-115:0.719rem;
+  --fs-100:0.75rem;
+  --fs-115:0.75rem;
   --fs-125:0.781rem;
   --fs-135:0.844rem;
   --fs-145:0.906rem;
