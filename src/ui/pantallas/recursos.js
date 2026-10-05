@@ -361,7 +361,7 @@ async function renderSeccionJugadores() {
     <div class="pad">
       ${filosofia}
       <div class="seccion-cab"><div class="eyebrow">Ofrecidos</div></div>
-      <div class="p" id="recursos-estado">Cargando recursos...</div>
+      <div class="p" id="recursos-estado" role="status">Cargando recursos…</div>
     </div>
   `;
 

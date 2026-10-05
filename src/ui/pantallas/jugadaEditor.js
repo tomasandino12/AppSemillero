@@ -578,7 +578,7 @@ export async function renderJugadaEditor() {
     return;
   }
 
-  contenedor().innerHTML = html`<div class="pad"><div class="p">${ejercicioId ? 'Cargando ejercicio...' : 'Cargando jugada...'}</div></div>`;
+  contenedor().innerHTML = html`<div class="pad"><div class="p" role="status">${ejercicioId ? 'Cargando ejercicio…' : 'Cargando jugada…'}</div></div>`;
   let jugada;
   try {
     jugada = ejercicioId ? await cargarEjercicio(club.id, ejercicioId) : await obtenerJugada(club.id, id);

@@ -78,7 +78,7 @@ export async function renderJugada() {
     return;
   }
 
-  contenedor().innerHTML = html`<div class="pad"><div class="p">Cargando jugada...</div></div>`;
+  contenedor().innerHTML = html`<div class="pad"><div class="p" role="status">Cargando jugada…</div></div>`;
 
   let jugada;
   try {

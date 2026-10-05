@@ -184,7 +184,7 @@ async function avanzarAJugadores() {
   const club = obtenerClubActual();
   document.getElementById('cargando-jugadores')?.remove();
   document.getElementById('btn-volver-inicio')?.remove();
-  contenedor().insertAdjacentHTML('beforeend', `<div class="p" id="cargando-jugadores">Cargando plantel...</div>`);
+  contenedor().insertAdjacentHTML('beforeend', `<div class="p" id="cargando-jugadores" role="status">Cargando plantel…</div>`);
   $('btn-confirmar-equipo-plantel').disabled = true;
 
   const plantel = estado.planteles.find((p) => p.id === estado.plantelId);

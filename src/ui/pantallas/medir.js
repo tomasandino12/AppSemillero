@@ -85,7 +85,7 @@ export async function renderMedir() {
         </button>
       </div>
       <div class="eyebrow">Sesiones cargadas</div>
-      <div class="p" id="medir-estado">Cargando sesiones...</div>
+      <div class="p" id="medir-estado" role="status">Cargando sesiones…</div>
       <div id="medir-lista"></div>
     </div>
   `;

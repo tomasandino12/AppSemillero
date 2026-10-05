@@ -260,7 +260,7 @@ export async function renderSprint() {
     contenedor().innerHTML = html`<div class="pad"><div class="p">No hay una categoría seleccionada.</div></div>`;
     return;
   }
-  contenedor().innerHTML = html`<div class="pad"><div class="p">Cargando plantel...</div></div>`;
+  contenedor().innerHTML = html`<div class="pad"><div class="p" role="status">Cargando plantel…</div></div>`;
   try {
     jugadores = await obtenerJugadoresDelPlantel(club.id, plantel.id);
   } catch (e) {

@@ -17,6 +17,7 @@ import { variacionHtml } from '../componentes/variacion.js';
 import { ir } from '../main.js';
 import { $ } from '../dom.js';
 import { textoDeError } from '../errores.js';
+import { saludoSegunHora } from '../../data/saludo.js';
 
 const contenedor = () => $('hoy-contenido');
 
@@ -136,8 +137,8 @@ export async function renderHoy() {
 
   contenedor().innerHTML = `
     <div class="pad">
-      <h2 class="h2">Buen día</h2>
-      <div class="p" id="hoy-estado">Cargando el resumen...</div>
+      <h2 class="h2">${saludoSegunHora(new Date().getHours())}</h2>
+      <div class="p" id="hoy-estado" role="status">Cargando el resumen…</div>
     </div>
   `;
 
@@ -164,7 +165,7 @@ export async function renderHoy() {
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
 
   if (!sesionesTiro.length) {
-    contenedor().innerHTML = `<div class="pad"><h2 class="h2">Buen día</h2>${estadoVacioHtml(plantel.categoria)}</div>`;
+    contenedor().innerHTML = `<div class="pad"><h2 class="h2">${saludoSegunHora(new Date().getHours())}</h2>${estadoVacioHtml(plantel.categoria)}</div>`;
     $('btn-vacio-plantel').addEventListener('click', () => ir('p-plantel'));
     $('btn-vacio-partido').addEventListener('click', () => ir('p-datos'));
     $('btn-vacio-medir').addEventListener('click', () => ir('p-medir'));
@@ -217,7 +218,7 @@ export async function renderHoy() {
   if (!zonasArco.some((z) => z.valor) && !zonaLibres.valor) {
     contenedor().innerHTML = `
       <div class="pad">
-        <h2 class="h2">Buen día</h2>
+        <h2 class="h2">${saludoSegunHora(new Date().getHours())}</h2>
         <div class="p">Hubo una batería el ${escaparHtml(formatearFechaCorta(actual.fecha))} en ${escaparHtml(plantel.categoria)}, pero quedó sin ninguna medición: todos los jugadores figuran como ausentes.</div>
         <button class="btn" id="btn-hoy-medir">Hacer una medición</button>
       </div>

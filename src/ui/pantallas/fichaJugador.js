@@ -313,7 +313,7 @@ export async function renderFicha() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p">Cargando jugador...</div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" role="status">Cargando jugador…</div></div>`;
 
   let jugador;
   let pertenencias = [];
@@ -345,8 +345,8 @@ export async function renderFicha() {
       <button class="btn sec chico" id="btn-ficha-sacar">Sacar del plantel</button>
     </div>
     <div class="pad" id="ficha-acceso"></div>
-    <div class="pad" id="ficha-corporal"><div class="p">Cargando mediciones...</div></div>
-    <div class="pad" id="ficha-historia"><div class="p">Cargando historia del jugador...</div></div>
+    <div class="pad" id="ficha-corporal"><div class="p" role="status">Cargando mediciones…</div></div>
+    <div class="pad" id="ficha-historia"><div class="p" role="status">Cargando historia del jugador…</div></div>
     <div class="pad" id="ficha-cargas"></div>
   `;
 

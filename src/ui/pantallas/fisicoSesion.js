@@ -43,7 +43,7 @@ export async function renderSesion() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p">Cargando la sesión…</div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" role="status">Cargando la sesión…</div></div>`;
   let pasos;
   try {
     pasos = await obtenerPasos(club.id);

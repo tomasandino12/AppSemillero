@@ -171,7 +171,7 @@ export async function renderSeccionJugadas() {
     return;
   }
 
-  contenedor().innerHTML = html`<div class="pad"><div class="p" id="jugadas-estado">Cargando jugadas...</div></div>`;
+  contenedor().innerHTML = html`<div class="pad"><div class="p" id="jugadas-estado" role="status">Cargando jugadas…</div></div>`;
 
   let jugadas;
   try {

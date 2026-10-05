@@ -217,7 +217,7 @@ export async function renderEjercicio() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p">Cargando ejercicio...</div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" role="status">Cargando ejercicio…</div></div>`;
 
   let ejercicio, notas, variaciones;
   try {

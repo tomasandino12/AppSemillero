@@ -189,7 +189,7 @@ export async function renderBateria() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p">Cargando plantel...</div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" role="status">Cargando plantel…</div></div>`;
 
   try {
     jugadores = await obtenerJugadoresDelPlantel(club.id, plantel.id);

@@ -182,7 +182,7 @@ function tarjetaHtml(t) {
 export async function renderPanorama() {
   const club = obtenerClubActual();
   if (!club) return;
-  contenedor().innerHTML = '<div class="pad"><div class="p">Cargando el panorama...</div></div>';
+  contenedor().innerHTML = '<div class="pad"><div class="p" role="status">Cargando el panorama…</div></div>';
 
   let vista;
   try {

@@ -62,7 +62,7 @@ async function pintar(idContenedor, editable) {
   const club = obtenerClubActual();
   const contenedor = $(idContenedor);
   if (!club || !contenedor) return;
-  contenedor.innerHTML = '<div class="pad"><div class="p">Cargando...</div></div>';
+  contenedor.innerHTML = '<div class="pad"><div class="p" role="status">Cargando…</div></div>';
 
   try {
     const [filas, nombres] = await Promise.all([

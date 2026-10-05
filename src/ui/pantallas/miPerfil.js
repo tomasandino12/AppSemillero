@@ -143,7 +143,7 @@ export async function renderMiPerfil() {
         <div class="perfil-fila">
           <div>
             <div class="k">${roles.esJugador ? 'Tu categoría' : 'Categorías a cargo'}</div>
-            <div class="v" id="perfil-categorias"><span class="sin">Cargando...</span></div>
+            <div class="v" id="perfil-categorias"><span class="sin" role="status">Cargando…</span></div>
           </div>
         </div>
       </section>

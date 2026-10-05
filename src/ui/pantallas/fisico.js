@@ -32,7 +32,7 @@ export async function renderFisico() {
   }
   if (planAbierto && planAbierto.plantelId !== plantel.id) planAbierto = null;
 
-  contenedor().innerHTML = `<div class="pad"><div class="p">Cargando el plan…</div></div>${pieCargar()}`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" role="status">Cargando el plan…</div></div>${pieCargar()}`;
   ligarCargar();
 
   let planes;

@@ -105,7 +105,7 @@ export async function renderPlantel() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p" id="plantel-estado">Cargando plantel...</div><div id="plantel-lista"></div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" id="plantel-estado" role="status">Cargando plantel…</div><div id="plantel-lista"></div></div>`;
 
   let jugadores;
   let mediciones = [];

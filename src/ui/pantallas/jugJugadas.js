@@ -52,7 +52,7 @@ function grupoDeJugadas(tipo, jugadas) {
 }
 
 export async function renderJugJugadas() {
-  contenedor().innerHTML = html`<div class="pad"><div class="p">Cargando tus jugadas...</div></div>`;
+  contenedor().innerHTML = html`<div class="pad"><div class="p" role="status">Cargando tus jugadas…</div></div>`;
 
   let jugadas;
   try {

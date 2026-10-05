@@ -31,7 +31,7 @@ const filaSesion = (s, hoy, { conCategoria }) => {
 };
 
 export async function renderJugFisico() {
-  contenedor().innerHTML = '<div class="pad"><div class="p">Cargando tu plan…</div></div>';
+  contenedor().innerHTML = '<div class="pad"><div class="p" role="status">Cargando tu plan…</div></div>';
 
   let plan;
   try {

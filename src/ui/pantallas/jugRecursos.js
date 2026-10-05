@@ -41,7 +41,7 @@ const introduccion = html`
   </section>`;
 
 export async function renderJugRecursos() {
-  contenedor().innerHTML = '<div class="pad"><div class="p">Cargando tus recursos...</div></div>';
+  contenedor().innerHTML = '<div class="pad"><div class="p" role="status">Cargando tus recursos…</div></div>';
 
   let recursos;
   try {

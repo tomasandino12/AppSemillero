@@ -50,7 +50,7 @@ export async function renderEscalones() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p">Cargando los escalones…</div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" role="status">Cargando los escalones…</div></div>`;
   try {
     const [pasos, jugadores] = await Promise.all([
       obtenerPasos(club.id),

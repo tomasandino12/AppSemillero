@@ -31,7 +31,7 @@ export async function renderMetas() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p">Cargando metas...</div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" role="status">Cargando metas…</div></div>`;
 
   let metas, sesiones, mediciones;
   try {

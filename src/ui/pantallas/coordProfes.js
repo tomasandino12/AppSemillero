@@ -340,7 +340,7 @@ function abrirDarDeBaja(profe) {
 export async function renderProfes() {
   const club = obtenerClubActual();
   if (!club) return;
-  contenedor().innerHTML = '<div class="pad"><div class="p">Cargando...</div></div>';
+  contenedor().innerHTML = '<div class="pad"><div class="p" role="status">Cargando…</div></div>';
 
   let notaCodigos = '';
   try {

@@ -90,7 +90,7 @@ export async function renderSeccionEjercicios() {
     return;
   }
 
-  contenedor().innerHTML = `<div class="pad"><div class="p" id="ejercicios-estado">Cargando ejercicios...</div></div>`;
+  contenedor().innerHTML = `<div class="pad"><div class="p" id="ejercicios-estado" role="status">Cargando ejercicios…</div></div>`;
 
   let ejercicios;
   try {

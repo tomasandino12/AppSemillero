@@ -178,7 +178,7 @@ function seccionPesos(grupos) {
 export async function renderJugProgreso() {
   const ficha = obtenerFichaJugador();
   if (!ficha) return;
-  contenedor().innerHTML = '<div class="pad"><div class="p">Cargando tu progreso…</div></div>';
+  contenedor().innerHTML = '<div class="pad"><div class="p" role="status">Cargando tu progreso…</div></div>';
 
   let progreso;
   let plan = null;
