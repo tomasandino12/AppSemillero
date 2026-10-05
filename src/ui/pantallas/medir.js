@@ -29,7 +29,7 @@ function tarjetaBorrador(borrador, tipo) {
   const nombre = NOMBRE_TIPO[tipo];
   return `
     <div class="al">
-      <div class="ico">!</div>
+      <div class="ico" aria-hidden="true">!</div>
       <div class="tx">
         <b>Sesión sin terminar</b>
         <div class="mt">${escaparHtml(nombre)} del ${escaparHtml(formatearFecha(borrador.fecha))} · ${cargados} jugador${cargados === 1 ? '' : 'es'} cargado${cargados === 1 ? '' : 's'}</div>
@@ -68,19 +68,19 @@ export async function renderMedir() {
       </div>
       <div class="lista-2col">
         <button class="test-fila" id="btn-medir-bateria">
-          <div class="ic">%</div>
+          <div class="ic" aria-hidden="true">%</div>
           <div><div class="t">Batería de tiro</div><div class="d">6 posiciones, 10 tiros cada una</div></div>
         </button>
         <button class="test-fila" id="btn-medir-salto">
-          <div class="ic">↑</div>
+          <div class="ic" aria-hidden="true">↑</div>
           <div><div class="t">Salto</div><div class="d">CMJ o Abalakov, por video</div></div>
         </button>
         <button class="test-fila" id="btn-medir-sprint">
-          <div class="ic">→</div>
+          <div class="ic" aria-hidden="true">→</div>
           <div><div class="t">Sprint</div><div class="d">20 o 30 m, cronómetro con pitido</div></div>
         </button>
         <button class="test-fila" id="btn-medir-yoyo">
-          <div class="ic">⟷</div>
+          <div class="ic" aria-hidden="true">⟷</div>
           <div><div class="t">Yo-Yo</div><div class="d">Resistencia, idas de 20 m con pitidos</div></div>
         </button>
       </div>

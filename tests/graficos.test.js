@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { grafico } from '../src/ui/componentes/graficos.js';
+import { grafico, cancha } from '../src/ui/componentes/graficos.js';
 
 /**
  * grafico() sólo toca setAttribute/removeAttribute/style/innerHTML del
@@ -124,4 +124,35 @@ test('con muchas fechas se escriben algunas, sin encimarse, y siempre la primera
   assert.equal(eje[eje.length - 1], e[31]);
   // Los puntos se dibujan todos igual: lo que se ralea es el texto.
   assert.equal((svg.innerHTML.match(/<circle/g) ?? []).length, 32);
+});
+
+test('todo gráfico lleva role=img y aria-label', () => {
+  const lineas = svgFalso();
+  grafico(lineas, {
+    etiquetas: ['05/03', '10/03'],
+    series: [{ nombre: 'Práctica', c: '#000', d: [40, 60] }],
+  });
+  assert.equal(lineas.atributos.role, 'img');
+  assert.match(lineas.atributos['aria-label'], /Práctica: 60% el 10\/03, desde 40% el 05\/03/);
+
+  const tiro = svgFalso();
+  cancha(tiro, { frontal: { pct: 50, anotados: 5, intentos: 10, muestraChica: false } });
+  assert.equal(tiro.atributos.role, 'img');
+  assert.match(tiro.atributos['aria-label'], /Frontal: 50%, 5 de 10/);
+  assert.match(tiro.atributos['aria-label'], /Esquina izquierda: sin medir/);
+});
+
+test('un gráfico vacío no deja role ni aria-label colgados', () => {
+  const svg = svgFalso();
+  svg.atributos.role = 'img';
+  svg.atributos['aria-label'] = 'viejo';
+  grafico(svg, { etiquetas: [], series: [] });
+  assert.ok(!('role' in svg.atributos));
+  assert.ok(!('aria-label' in svg.atributos));
+});
+
+test('los glifos de la pantalla Medir son decorativos para el lector de pantalla', async () => {
+  const { readFileSync } = await import('node:fs');
+  const fuente = readFileSync(new URL('../src/ui/pantallas/medir.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(fuente, /<div class="ic?o?">/);
 });

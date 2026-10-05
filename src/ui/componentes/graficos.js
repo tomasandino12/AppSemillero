@@ -2,6 +2,31 @@ import { POSICIONES } from '../../data/posiciones.js';
 
 const COL_MUTED = '#726E65'; // mismo tono que --gris-cl (auditoría de accesibilidad del prototipo)
 
+// El SVG se dibuja con coordenadas, así que un lector de pantalla no ve nada.
+// El aria-label repite en texto lo que el dibujo cuenta, con el mismo
+// denominador que se ve: ningún porcentaje sin sus intentos.
+export function resumenDeCancha(valores) {
+  const partes = POSICIONES.map((p) => {
+    const v = valores?.[p.id] ?? null;
+    return v?.pct == null ? `${p.nombre}: sin medir` : `${p.nombre}: ${v.pct}%, ${v.anotados} de ${v.intentos}`;
+  });
+  return `Cancha de tiro por posición. ${partes.join('; ')}.`;
+}
+
+export function resumenDeGrafico({ etiquetas, series }, { u = '%', dec = 0 } = {}) {
+  const partes = series.map((s) => {
+    const idx = s.d.map((v, i) => (v == null ? -1 : i)).filter((i) => i >= 0);
+    if (idx.length === 0) return null;
+    const ult = idx[idx.length - 1];
+    const unidad = u === '%' ? '%' : ` ${u}`;
+    const txt = `${s.nombre ? `${s.nombre}: ` : ''}${s.d[ult].toFixed(dec)}${unidad} el ${etiquetas[ult]}`;
+    if (idx.length === 1) return txt;
+    const primero = idx[0];
+    return `${txt}, desde ${s.d[primero].toFixed(dec)}${unidad} el ${etiquetas[primero]}`;
+  }).filter(Boolean);
+  return `Gráfico de evolución. ${partes.join('; ')}.`;
+}
+
 /**
  * Cancha con marcadores por posición. El dibujo viene del prototipo sin
  * cambios; lo que cambió en la Etapa 4 es que `valores` ahora trae el objeto
@@ -40,6 +65,8 @@ export function cancha(svg, valores, { alto = 200 } = {}) {
   });
 
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', resumenDeCancha(valores));
   svg.style.height = alto + 'px';
   svg.innerHTML = g;
   return hayAlguno;
@@ -71,6 +98,8 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
   if (n === 0 || todos.length === 0) {
     svg.innerHTML = '';
     svg.removeAttribute('viewBox');
+    svg.removeAttribute('role');
+    svg.removeAttribute('aria-label');
     svg.style.height = '0px';
     return false;
   }
@@ -132,6 +161,8 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
   });
 
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', resumenDeGrafico({ etiquetas, series }, { u, dec }));
   svg.style.height = alto + 'px';
   svg.innerHTML = g;
   return true;
