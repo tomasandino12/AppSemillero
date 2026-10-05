@@ -5,6 +5,7 @@ import {
 } from '../../data/salto.js';
 import { protocoloHtml } from './protocoloSalto.js';
 import { toast } from '../nav.js';
+import { registrarCapa } from './hoja.js';
 
 // El moov de un mp4/mov está al principio o al final del archivo.
 const BYTES_EXTREMO = 4 * 1024 * 1024;
@@ -71,7 +72,8 @@ function mostrarRechazo(fpsDelArchivo) {
       </div>
     `.toString();
     document.body.appendChild(raiz);
-    const cerrar = () => { raiz.remove(); resolver(null); };
+    const liberarCapa = registrarCapa(() => cerrar());
+    const cerrar = () => { liberarCapa(); raiz.remove(); resolver(null); };
     raiz.querySelector('[data-m="cerrar"]').addEventListener('click', cerrar);
     raiz.querySelector('[data-m="cerrar"]').focus();
   });
@@ -140,7 +142,10 @@ function montar(archivo, { tiempos, intervaloS }, fpsCaptura, resolver) {
     else if (e.key === 'ArrowRight') irA(actual + 1);
   }
 
+  const liberarCapa = registrarCapa(() => cerrar(null));
+
   function cerrar(valor) {
+    liberarCapa();
     document.removeEventListener('keydown', alTeclear);
     document.removeEventListener('securitypolicyviolation', alViolarCsp);
     video.removeAttribute('src');

@@ -1,6 +1,6 @@
 import { html } from '../html.js';
 import { $ } from '../dom.js';
-import { abrirHoja, cerrarHoja } from './hoja.js';
+import { abrirHoja, cerrarHoja, hojaAbierta } from './hoja.js';
 
 /**
  * Hoja de confirmación para lo que no se puede deshacer o cuesta rehacer.
@@ -29,9 +29,12 @@ export function confirmarEnHoja({ titulo, texto, verbo, alConfirmar }) {
     const boton = $('confirmar-ok');
     if (boton.disabled) return;
     boton.disabled = true;
+    $('confirmar-cancelar').disabled = true;
     try {
       await alConfirmar();
-      cerrarHoja();
+      // Si mientras tanto la hoja se cerró o se abrió otra encima, no es la
+      // nuestra: cerrarla a ciegas le sacaría otra confirmación a la persona.
+      if (hojaAbierta() && $('confirmar-ok') === boton) cerrarHoja();
     } catch (e) {
       console.error('La acción confirmada falló:', e);
       boton.disabled = false;

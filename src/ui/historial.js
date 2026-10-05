@@ -59,7 +59,13 @@ export function crearHistorial(historia) {
         return 0;
       }
       const destino = estado?.n ?? 0;
-      if (destino >= real) return 0;
+      if (destino >= real) {
+        // Adelante (o una entrada vieja): el navegador ya se movió, así que se
+        // lo anota y se lo reconcilia con lo que la app quiere.
+        real = destino;
+        reconciliar();
+        return 0;
+      }
       const pasos = real - destino;
       real = destino;
       return pasos;

@@ -1,4 +1,5 @@
 import { html } from '../html.js';
+import { registrarCapa } from './hoja.js';
 import { validarIntentoSprint, formatearTiempoSprint } from '../../data/sprint.js';
 
 const ESPERA_MIN_MS = 1000;
@@ -70,7 +71,10 @@ function montar({ jugador, intento, distanciaM }, resolver) {
     audio = null;
   }
 
+  const liberarCapa = registrarCapa(() => cerrar(null));
+
   function cerrar(valor) {
+    liberarCapa();
     limpiar();
     document.removeEventListener('keydown', alTeclear);
     raiz.remove();

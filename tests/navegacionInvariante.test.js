@@ -223,8 +223,37 @@ test('sin pantallas apiladas Atrás no se intercepta: sale de la app', async () 
 test('main.js y hoja.js conectan la pila y la hoja con el historial', () => {
   const main = fuente('src/ui/main.js');
   assert.match(main, /addEventListener\('popstate'/);
-  assert.match(main, /pila\.length \+ \(hojaAbierta\(\) \? 1 : 0\)/);
+  assert.match(main, /pila\.length \+ capasAbiertas\(\)/);
   assert.match(main, /alCambiarHoja\(sincronizarHistorial\)/);
   const hoja = fuente('src/ui/componentes/hoja.js');
-  assert.equal((hoja.match(/alCambiar\?\.\(\)/g) ?? []).length, 2, 'abrir y cerrar avisan');
+  assert.equal((hoja.match(/alCambiar\?\.\(\)/g) ?? []).length, 4, 'abrir/cerrar la hoja y registrar/liberar una capa avisan');
+});
+
+test('Adelante del navegador no desincroniza: el historial vuelve a lo que la app quiere', async () => {
+  const { crearHistorial } = await import('../src/ui/historial.js');
+  const h = historiaFalsa();
+  const historial = crearHistorial(h);
+  historial.ajustar(1);
+  assert.equal(historial.alPop({ n: 0 }), 1); // Atrás: la app vuelve
+  historial.ajustar(0);
+  assert.equal(historial.alPop({ n: 1 }), 0, 'Adelante no es un paso hacia atrás');
+  assert.deepEqual(h.llamadas.slice(-1), [['go', -1]], 'se retira la entrada que ya no corresponde');
+});
+
+test('las capas a pantalla completa cuentan para Atrás del sistema', () => {
+  for (const archivo of ['componentes/cronometroSalida', 'componentes/marcadorCuadros', 'pantallas/jugJugadas']) {
+    assert.match(fuente(`src/ui/${archivo}.js`), /registrarCapa\(/, archivo);
+  }
+  assert.match(fuente('src/ui/main.js'), /cerrarUltimaCapa\(\)/);
+});
+
+test('el editor de jugadas confirma al salir con cambios, también con Atrás del sistema', () => {
+  assert.match(fuente('src/ui/pantallas/registro.js'), /p-jugada-editor.*confirmarSalida: confirmarSalidaEditor/);
+  assert.match(fuente('src/ui/pantallas/jugadaEditor.js'), /export function confirmarSalidaEditor/);
+});
+
+test('cambiar de modo pasa por la confirmación de salida antes de fijar el modo', () => {
+  const main = fuente('src/ui/main.js');
+  const cuerpo = main.slice(main.indexOf('async function cambiarModo'));
+  assert.ok(cuerpo.indexOf('frenaLaSalida') < cuerpo.indexOf('setModo('));
 });

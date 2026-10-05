@@ -9,6 +9,7 @@ import {
 } from '../../data/jugadas.js';
 import { dibujarPizarra } from '../componentes/pizarra.js';
 import { montarVisor } from '../componentes/visorJugada.js';
+import { registrarCapa } from '../componentes/hoja.js';
 import { html, crudo } from '../html.js';
 import { avisoDeError } from '../errores.js';
 import { $ } from '../dom.js';
@@ -16,8 +17,11 @@ import { $ } from '../dom.js';
 const contenedor = () => $('jug-jugadas-contenido');
 
 let visorActivo = null;
+let liberarCapaVisor = null;
 
 function cerrarVisorCompleto() {
+  liberarCapaVisor?.();
+  liberarCapaVisor = null;
   visorActivo?.desmontar();
   visorActivo = null;
   $('jug-visor-completo').hidden = true;
@@ -25,6 +29,7 @@ function cerrarVisorCompleto() {
 }
 
 function abrirVisorCompleto(jugada) {
+  liberarCapaVisor ??= registrarCapa(cerrarVisorCompleto);
   $('jug-visor-completo').hidden = false;
   visorActivo = montarVisor($('jug-visor-completo-cuerpo'), jugada.datos, nosotrosDefiende(jugada.tipo));
 }

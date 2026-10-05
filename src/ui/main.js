@@ -12,7 +12,9 @@ import { alReportarError } from './errores.js';
 import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
 import { confirmarEnHoja } from './componentes/confirmar.js';
-import { cerrarHoja, hojaAbierta, alCambiarHoja } from './componentes/hoja.js';
+import {
+  cerrarHoja, hojaAbierta, alCambiarHoja, hayCapa, cerrarUltimaCapa, capasAbiertas,
+} from './componentes/hoja.js';
 import { crearHistorial } from './historial.js';
 import {
   setClubActual, obtenerClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo,
@@ -36,14 +38,26 @@ const pila = [];
 const historial = crearHistorial(window.history);
 
 function sincronizarHistorial() {
-  historial.ajustar(pila.length + (hojaAbierta() ? 1 : 0));
+  historial.ajustar(pila.length + capasAbiertas());
 }
 
-/** La persona tocó Atrás en el sistema: la hoja abierta consume el primero. */
+/**
+ * La persona tocó Atrás en el sistema: lo abierto encima (capa a pantalla
+ * completa, hoja) consume los primeros pasos y recién después se vuelve una
+ * pantalla. Lo abierto se cuenta ANTES de empezar: si volver() abre una
+ * confirmación, un paso más no tiene que cerrársela en la cara.
+ */
 async function atrasDelSistema(pasos) {
+  let encima = capasAbiertas();
   for (let i = 0; i < pasos; i += 1) {
-    if (hojaAbierta()) cerrarHoja();
-    else if (pila.length > 0) await volver();
+    if (encima > 0) {
+      encima -= 1;
+      if (hayCapa()) cerrarUltimaCapa();
+      else cerrarHoja();
+    } else if (pila.length > 0) {
+      await volver();
+      if (hojaAbierta()) break;
+    }
   }
   // Si una confirmación frenó la salida, la entrada que se gastó hay que
   // volver a ponerla: la app sigue donde estaba.
@@ -147,6 +161,17 @@ export async function cambiarPlantel(id) {
   if (frenaLaSalida(() => cambiarPlantel(id))) return;
   setPlantelActivoId(id);
   await refrescar();
+}
+
+/**
+ * Cambia entre entrenar y coordinar. Como con la categoría, el modo recién se
+ * fija si la persona confirma: cancelar con el Yo-Yo corriendo no puede dejar
+ * el modo cambiado y las pestañas de coordinación sobre la prueba.
+ */
+async function cambiarModo(modo) {
+  if (frenaLaSalida(() => cambiarModo(modo))) return;
+  setModo(modo);
+  await ir(pantallaInicialDelModo());
 }
 
 export async function volver() {
@@ -373,10 +398,7 @@ async function iniciar() {
     onPerfil: () => ir(PANTALLA_PERFIL, { push: true }),
     // Sólo existe para quien tiene los dos roles (ver chrome.js). Con los dos,
     // siempre se entra entrenando, así que los chips ya están cargados.
-    onModo: () => {
-      setModo(obtenerModo() === 'coordinar' ? 'entrenar' : 'coordinar');
-      ir(pantallaInicialDelModo());
-    },
+    onModo: () => cambiarModo(obtenerModo() === 'coordinar' ? 'entrenar' : 'coordinar'),
   });
 
   // Splash oscuro mientras se resuelve la sesión. Los dos shells arrancan

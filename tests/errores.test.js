@@ -113,6 +113,7 @@ test('los avisos de error de batería, yoyo y ficha usan avisoInline', () => {
   for (const archivo of ['medirBateria', 'medirYoyo', 'fichaJugador']) {
     const fuente = readFileSync(new URL(`../src/ui/pantallas/${archivo}.js`, import.meta.url), 'utf8');
     assert.doesNotMatch(fuente, /class="al"><div class="tx">\$\{/, `${archivo} arma un error a mano`);
-    assert.match(fuente, /mostrarAviso|avisoInline/, `${archivo} no usa los helpers`);
+    // Una llamada real, no sólo el import.
+    assert.match(fuente, /(mostrarAviso|avisoInline)\(/, `${archivo} no usa los helpers`);
   }
 });

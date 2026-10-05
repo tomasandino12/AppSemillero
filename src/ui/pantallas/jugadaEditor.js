@@ -190,7 +190,7 @@ function cablearHerramientas() {
   });
   $('btn-jed-deshacer').addEventListener('click', deshacer);
   $('btn-jed-rehacer').addEventListener('click', rehacer);
-  $('btn-jed-volver').addEventListener('click', pedirSalir);
+  $('btn-jed-volver').addEventListener('click', () => volver());
   $('btn-jed-guardar').addEventListener('click', guardar);
   $('btn-jed-renombrar')?.addEventListener('click', abrirRenombrar);
   contenedor().querySelectorAll('[data-fila-cantidad]').forEach((b) => {
@@ -521,23 +521,20 @@ async function guardar() {
   boton.textContent = 'Guardar';
 }
 
-function salir() {
-  window.onbeforeunload = null;
-  volver();
-}
-
-function pedirSalir() {
-  if (indiceHistorial === indiceGuardado) { salir(); return; }
-  abrirHoja({
+/**
+ * Con cambios sin guardar, salir (el botón, otra pestaña o Atrás del sistema)
+ * pide confirmación: lo decide main.js con esto antes de irse. Atrás del
+ * sistema es un popstate dentro del mismo documento, así que beforeunload no
+ * lo ve.
+ */
+export function confirmarSalidaEditor() {
+  if (indiceHistorial === indiceGuardado) return null;
+  return {
     titulo: 'Salir sin guardar',
-    cuerpo: html`
-      <div class="al"><div class="tx">Tenés cambios sin guardar. Si salís ahora se pierden.</div></div>
-      <button class="btn" id="btn-jed-salir-igual">Salir sin guardar</button>
-      <button class="btn sec" id="btn-jed-seguir">Seguir editando</button>
-    `,
-  });
-  $('btn-jed-salir-igual').addEventListener('click', () => { cerrarHoja(); salir(); });
-  $('btn-jed-seguir').addEventListener('click', cerrarHoja);
+    texto: 'Tenés cambios sin guardar. Si salís ahora se pierden.',
+    verbo: 'Salir sin guardar',
+    alSalir: () => { window.onbeforeunload = null; },
+  };
 }
 
 /* ---------- Entrada de la pantalla ---------- */

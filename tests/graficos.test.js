@@ -163,3 +163,11 @@ test('una serie con c: "primario" no deja la palabra en el SVG', () => {
   assert.ok(!svg.innerHTML.includes('primario'));
   assert.ok(svg.innerHTML.includes('<polyline'));
 });
+
+test('el resumen hablado de una curva sin unidad en el eje dice la unidad y usa coma decimal', async () => {
+  const { resumenDeGrafico } = await import('../src/ui/componentes/graficos.js');
+  const datos = { etiquetas: ['01/10', '03/10'], series: [{ nombre: '', d: [25, 26.3] }] };
+  const texto = resumenDeGrafico(datos, { u: '', unidadHablada: 'kg', dec: 1 });
+  assert.match(texto, /26,3 kg el 03\/10, desde 25,0 kg el 01\/10/);
+  assert.doesNotMatch(texto, / {2}/, 'sin doble espacio');
+});

@@ -76,7 +76,21 @@ export function asegurarNombre(clubId) {
   }
 
   return new Promise((resolver) => {
+    let resuelto = false;
+    // Toda salida sin guardar (Escape, velo, "Ahora no" o Atrás del sistema)
+    // pasa por cerrarHoja(), que avisa acá. Guardar resuelve ANTES de cerrar,
+    // así este camino no lo toma por una cancelación.
+    function finalizar(resultado) {
+      if (resuelto) return;
+      resuelto = true;
+      // Cancelar no deja ningún rastro visible más que este toast: sin él, el
+      // profe no entiende por qué no pasó nada. El éxito no lo necesita:
+      // quien llamó sigue con su propio flujo y su propio toast.
+      if (!resultado) toast('No se guardó nada: sin tu nombre no se sabe de quién es cada cosa que cargues.');
+      resolver(resultado);
+    }
     abrirHoja({
+      alCerrar: () => finalizar(false),
       titulo: '¿Cómo te llamás?',
       cuerpo: `
         <div class="p">Se muestra al lado de los ejercicios y las notas que cargues, para que los demás profes sepan de quién es cada cosa. Después lo podés cambiar desde Mi perfil.</div>
@@ -91,39 +105,7 @@ export function asegurarNombre(clubId) {
     });
     $('in-nombre-perfil').focus();
 
-    // hoja.js registra un keydown global para Escape que llama a
-    // cerrarHoja() directo (ver iniciarHoja() en hoja.js): no dispara ningún
-    // evento propio y no pasa por el velo ni por ningún botón de acá. Sin un
-    // listener propio de Escape, esa salida deja la promesa colgada para
-    // siempre y el await de quien llamó a asegurarNombre() no vuelve nunca.
-    // "Ahora no" es la salida visible para quien no usa el teclado; el
-    // listener de abajo cierra el agujero de Escape. finalizar() desregistra
-    // los tres (Escape, velo y a sí misma) apenas se resuelve por cualquiera
-    // de los caminos, para no dejar un listener global escuchando Escapes de
-    // otras pantallas.
-    const alEscape = (e) => { if (e.key === 'Escape') finalizar(false); };
-    const alVelo = () => finalizar(false);
-    function finalizar(resultado) {
-      document.removeEventListener('keydown', alEscape);
-      $('velo').removeEventListener('click', alVelo);
-      // Cancelar (Escape, velo o "Ahora no") no deja ningún rastro visible
-      // más que este toast: sin él, el profe no entiende por qué no pasó
-      // nada. El camino de éxito no lo necesita: guardar() ya cierra la hoja
-      // y quien llamó a asegurarNombre() sigue con su propio flujo (que va a
-      // mostrar su propio toast de éxito más adelante).
-      if (!resultado) toast('No se guardó nada: sin tu nombre no se sabe de quién es cada cosa que cargues.');
-      resolver(resultado);
-    }
-    // No usamos { once: true } acá: queremos que se desregistre al detectar
-    // Escape, no después de la primera tecla. La limpieza la hace finalizar()
-    // llamando a removeEventListener() explícitamente.
-    document.addEventListener('keydown', alEscape);
-    $('velo').addEventListener('click', alVelo, { once: true });
-
-    $('btn-nombre-ahora-no').addEventListener('click', () => {
-      cerrarHoja();
-      finalizar(false);
-    });
+    $('btn-nombre-ahora-no').addEventListener('click', cerrarHoja);
 
     const guardar = async () => {
       const boton = $('btn-guardar-perfil');
@@ -149,8 +131,8 @@ export function asegurarNombre(clubId) {
       setNombreDeCuenta(nombre);
       // Las iniciales de la cabecera salen del nombre.
       sincronizarChrome();
-      cerrarHoja();
       finalizar(true);
+      cerrarHoja();
     };
 
     $('btn-guardar-perfil').addEventListener('click', guardar);

@@ -31,16 +31,18 @@ export function resumenDeCancha(valores) {
   return `Cancha de tiro por posición. ${partes.join('; ')}.`;
 }
 
-export function resumenDeGrafico({ etiquetas, series }, { u = '%', dec = 0 } = {}) {
+export function resumenDeGrafico({ etiquetas, series }, { u = '%', dec = 0, unidadHablada = u } = {}) {
   const partes = series.map((s) => {
     const idx = s.d.map((v, i) => (v == null ? -1 : i)).filter((i) => i >= 0);
     if (idx.length === 0) return null;
     const ult = idx[idx.length - 1];
-    const unidad = u === '%' ? '%' : ` ${u}`;
-    const txt = `${s.nombre ? `${s.nombre}: ` : ''}${s.d[ult].toFixed(dec)}${unidad} el ${etiquetas[ult]}`;
+    const unidad = unidadHablada === '%' ? '%' : unidadHablada ? ` ${unidadHablada}` : '';
+    // Coma decimal, como se lee en pantalla: "26,3" y no "26.3".
+    const num = (v) => v.toFixed(dec).replace('.', ',');
+    const txt = `${s.nombre ? `${s.nombre}: ` : ''}${num(s.d[ult])}${unidad} el ${etiquetas[ult]}`;
     if (idx.length === 1) return txt;
     const primero = idx[0];
-    return `${txt}, desde ${s.d[primero].toFixed(dec)}${unidad} el ${etiquetas[primero]}`;
+    return `${txt}, desde ${num(s.d[primero])}${unidad} el ${etiquetas[primero]}`;
   }).filter(Boolean);
   return `Gráfico de evolución. ${partes.join('; ')}.`;
 }
@@ -111,7 +113,9 @@ export function cancha(svg, valores, { alto = 200 } = {}) {
  * Devuelve false si no había nada que dibujar, para que la pantalla muestre
  * su estado vacío en vez de un cuadro en blanco.
  */
-export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec = 0, min: minFijo = null, max: maxFijo = null } = {}) {
+export function grafico(svg, { etiquetas, series }, {
+  u = '%', alto = 170, dec = 0, min: minFijo = null, max: maxFijo = null, unidadHablada = u,
+} = {}) {
   const n = etiquetas?.length ?? 0;
   const todos = (series ?? []).flatMap((s) => s.d).filter((v) => v != null);
   if (n === 0 || todos.length === 0) {
@@ -183,7 +187,7 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
 
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', resumenDeGrafico({ etiquetas, series }, { u, dec }));
+  svg.setAttribute('aria-label', resumenDeGrafico({ etiquetas, series }, { u, dec, unidadHablada }));
   svg.style.height = alto + 'px';
   svg.innerHTML = g;
   return true;

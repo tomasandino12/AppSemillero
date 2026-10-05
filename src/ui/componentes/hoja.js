@@ -21,6 +21,37 @@ export function alCambiarHoja(fn) {
   alCambiar = fn;
 }
 
+// Capas a pantalla completa que no son la hoja (cronómetro de salida, marcador
+// de cuadros, visor de jugadas): cuentan igual para Atrás del sistema, que
+// cierra la última antes que la hoja o la pantalla.
+const capas = [];
+
+/** Registra una capa abierta. Devuelve la función que la libera al cerrarse. */
+export function registrarCapa(cerrar) {
+  const capa = { cerrar };
+  capas.push(capa);
+  alCambiar?.();
+  return () => {
+    const i = capas.indexOf(capa);
+    if (i < 0) return;
+    capas.splice(i, 1);
+    alCambiar?.();
+  };
+}
+
+export function hayCapa() {
+  return capas.length > 0;
+}
+
+export function cerrarUltimaCapa() {
+  capas.at(-1)?.cerrar();
+}
+
+/** Cuántos pasos hacia atrás aportan la hoja y las capas abiertas. */
+export function capasAbiertas() {
+  return capas.length + (abierta ? 1 : 0);
+}
+
 /** Bottom sheet en celular; diálogo centrado a partir de 1024px (layout.css). */
 export function abrirHoja({ titulo, cuerpo, alCerrar }) {
   const hoja = $('hoja');

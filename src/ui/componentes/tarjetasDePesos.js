@@ -65,6 +65,6 @@ export function dibujarCurvasDePesos(grupos, prefijo) {
       series: [{ nombre: e.nombre, c: 'primario', d: ultimos.map((m) => m.kg) }],
     // Sin unidad en el eje: con decimales ("26.3") la etiqueta se pisa con el
     // primer número, y los kg ya están escritos en la tarjeta.
-    }, { u: '', dec: 1, alto: 130 });
+    }, { u: '', unidadHablada: 'kg', dec: 1, alto: 130 });
   }));
 }
