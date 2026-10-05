@@ -139,8 +139,8 @@ function dibujarSerie(id, serie) {
   grafico(svg, {
     etiquetas: fechas.map(formatearFechaCorta),
     series: [
-      { nombre: 'Práctica', c: '#131316', d: a.map((v) => v?.pct ?? null) },
-      { nombre: 'Partido', c: '#D9122E', dash: true, d: b.map((v) => v?.pct ?? null) },
+      { nombre: 'Práctica', c: 'tinta', d: a.map((v) => v?.pct ?? null) },
+      { nombre: 'Partido', c: 'primario', dash: true, d: b.map((v) => v?.pct ?? null) },
     ],
   });
 }

@@ -224,8 +224,8 @@ export async function renderPanorama() {
       grafico(svg, {
         etiquetas: fechas.map(formatearFechaCorta),
         series: [
-          { nombre: 'Batería', c: '#131316', d: a.map((v) => v?.pct ?? null), chico: a.map((v) => v?.muestraChica === true) },
-          { nombre: 'Partidos', c: '#D9122E', dash: true, d: b.map((v) => v?.pct ?? null), chico: b.map((v) => v?.muestraChica === true) },
+          { nombre: 'Batería', c: 'tinta', d: a.map((v) => v?.pct ?? null), chico: a.map((v) => v?.muestraChica === true) },
+          { nombre: 'Partidos', c: 'primario', dash: true, d: b.map((v) => v?.pct ?? null), chico: b.map((v) => v?.muestraChica === true) },
         ],
       }, { alto: 140, min: 0, max: 100 });
     }

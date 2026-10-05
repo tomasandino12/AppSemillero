@@ -122,8 +122,8 @@ async function renderSeccionesDeEquipo(club, plantel) {
   grafico(document.getElementById('svg-evolucion'), {
     etiquetas: evolucion.map((e) => formatearFecha(e.fecha)),
     series: [
-      { nombre: '2P', c: '#D9122E', d: evolucion.map((e) => e.dos?.pct ?? null) },
-      { nombre: '3P', c: '#131316', d: evolucion.map((e) => e.tres?.pct ?? null) },
+      { nombre: '2P', c: 'primario', d: evolucion.map((e) => e.dos?.pct ?? null) },
+      { nombre: '3P', c: 'tinta', d: evolucion.map((e) => e.tres?.pct ?? null) },
       { nombre: 'TL', c: '#726E65', dash: true, d: evolucion.map((e) => e.libres?.pct ?? null) },
     ],
   });
@@ -281,7 +281,7 @@ async function renderCurvasDeTiro(club, plantel) {
       etiquetas: s.puntos.map((p) => formatearFechaCorta(p.fecha)),
       series: [{
         nombre: s.zona.nombre,
-        c: '#D9122E',
+        c: 'primario',
         d: s.puntos.map((p) => p.valor.pct),
         chico: s.puntos.map((p) => p.valor.muestraChica),
       }],
@@ -351,7 +351,7 @@ async function renderCargas(club, plantel) {
   bloques.forEach((b, i) => {
     grafico(document.getElementById(`svg-carga-${i}`), {
       etiquetas: b.serie.map((p) => formatearFechaCorta(p.fecha)),
-      series: [{ nombre: b.bloque, c: '#D9122E', d: b.serie.map((p) => p.pct) }],
+      series: [{ nombre: b.bloque, c: 'primario', d: b.serie.map((p) => p.pct) }],
     }, { alto: 140 });
   });
 }

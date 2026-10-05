@@ -343,7 +343,7 @@ function dibujarCurva(serie) {
     etiquetas: serie.map((p) => formatearFechaCorta(p.fecha)),
     series: [{
       nombre: 'Arco',
-      c: '#D9122E',
+      c: 'primario',
       d: serie.map((p) => p.valor.pct),
       chico: serie.map((p) => p.valor.muestraChica),
     }],

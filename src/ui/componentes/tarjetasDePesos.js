@@ -62,7 +62,7 @@ export function dibujarCurvasDePesos(grupos, prefijo) {
     const ultimos = e.movimientos.slice(-MAX_PUNTOS);
     grafico(svg, {
       etiquetas: ultimos.map((m) => formatearFechaCorta(m.fecha)),
-      series: [{ nombre: e.nombre, c: '#D9122E', d: ultimos.map((m) => m.kg) }],
+      series: [{ nombre: e.nombre, c: 'primario', d: ultimos.map((m) => m.kg) }],
     // Sin unidad en el eje: con decimales ("26.3") la etiqueta se pisa con el
     // primer número, y los kg ya están escritos en la tarjeta.
     }, { u: '', dec: 1, alto: 130 });

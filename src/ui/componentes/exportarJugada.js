@@ -5,6 +5,7 @@
  * PNG necesita entrar en img-src de vercel.json (riesgo del spec).
  */
 import { dibujarPizarra } from './pizarra.js';
+import { coloresDelClub } from './graficos.js';
 import { estadoAlInicioDelPaso, nosotrosDefiende } from '../../data/jugadas.js';
 import { escaparHtml } from '../nav.js';
 import { $ } from '../dom.js';
@@ -68,7 +69,7 @@ export async function descargarPaso(svg, { nombre, paso, totalPasos }) {
     URL.revokeObjectURL(svgUrl);
   }
 
-  ctx.fillStyle = '#131316';
+  ctx.fillStyle = coloresDelClub().tinta;
   ctx.font = '600 34px Inter, sans-serif';
   ctx.fillText(nombre, 32, 46);
   ctx.fillStyle = '#6E6B66';

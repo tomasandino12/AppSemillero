@@ -156,3 +156,10 @@ test('los glifos de la pantalla Medir son decorativos para el lector de pantalla
   const fuente = readFileSync(new URL('../src/ui/pantallas/medir.js', import.meta.url), 'utf8');
   assert.doesNotMatch(fuente, /<div class="ic?o?">/);
 });
+
+test('una serie con c: "primario" no deja la palabra en el SVG', () => {
+  const svg = svgFalso();
+  grafico(svg, { etiquetas: ['05/03', '10/03'], series: [{ nombre: 'x', c: 'primario', d: [10, 20] }] });
+  assert.ok(!svg.innerHTML.includes('primario'));
+  assert.ok(svg.innerHTML.includes('<polyline'));
+});

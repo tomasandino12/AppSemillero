@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 /**
  * Los cuatro CSS y tokens.css se leen como texto: no hay build ni navegador
@@ -289,3 +289,16 @@ test('ningún tamaño de fuente del sistema baja de 12px', () => {
   }
   assert.deepEqual(malos, []);
 });
+
+// El rojo del club y la tinta se declaran una sola vez, en tokens.css. Si el
+// JS los repite como hex, un club con otro color ve sus gráficos en rojo
+// Newell's. Los gráficos piden 'primario' / 'tinta' y graficos.js los lee del CSS.
+test('no hay colores del club literales en src/ui', () => {
+  const club = tokens.match(/--club\s*:\s*(#[0-9a-f]{6})/i)?.[1];
+  const tinta = tokens.match(/--tinta\s*:\s*(#[0-9a-f]{6})/i)?.[1];
+  assert.ok(club && tinta, 'tokens.css debe declarar --club y --tinta como #rrggbb');
+  const prohibidos = new RegExp(`${club}|${tinta}`.replace(/#/g, ''), 'i');
+  const archivos = readdirSync('src/ui', { recursive: true }).filter((f) => f.endsWith('.js'));
+  const malos = archivos.filter((f) => prohibidos.test(readFileSync(`src/ui/${f}`, 'utf8')));
+  assert.deepEqual(malos, []);
+});

@@ -109,7 +109,7 @@ export async function renderPruebasDelPlantel(club, plantel) {
   for (const b of lista) {
     grafico($(`svg-fis-${b.id}`), {
       etiquetas: b.serie.map((p) => formatearFechaCorta(p.fecha)),
-      series: [{ nombre: b.titulo, c: '#D9122E', d: b.serie.map((p) => p.valor / b.escala) }],
+      series: [{ nombre: b.titulo, c: 'primario', d: b.serie.map((p) => p.valor / b.escala) }],
     }, { alto: 140, u: b.u, dec: b.dec });
   }
 }

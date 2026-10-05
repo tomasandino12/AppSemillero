@@ -2,6 +2,24 @@ import { POSICIONES } from '../../data/posiciones.js';
 
 const COL_MUTED = '#726E65'; // mismo tono que --gris-cl (auditoría de accesibilidad del prototipo)
 
+/**
+ * El rojo del club y la tinta viven en tokens.css (--primario, --tinta): un
+ * club nuevo cambia el CSS y nada más. El SVG se arma como texto, donde un
+ * atributo `fill` no entiende `var()`, así que se lee el valor ya resuelto una
+ * vez por render. Sin documento (los tests, que corren en node) cae a
+ * `currentColor`, que igual es un color válido.
+ */
+export function coloresDelClub() {
+  if (typeof getComputedStyle !== 'function' || typeof document === 'undefined') {
+    return { primario: 'currentColor', tinta: 'currentColor' };
+  }
+  const estilo = getComputedStyle(document.documentElement);
+  return {
+    primario: estilo.getPropertyValue('--primario').trim() || 'currentColor',
+    tinta: estilo.getPropertyValue('--tinta').trim() || 'currentColor',
+  };
+}
+
 // El SVG se dibuja con coordenadas, así que un lector de pantalla no ve nada.
 // El aria-label repite en texto lo que el dibujo cuenta, con el mismo
 // denominador que se ve: ningún porcentaje sin sus intentos.
@@ -38,7 +56,8 @@ export function resumenDeGrafico({ etiquetas, series }, { u = '%', dec = 0 } = {
  */
 export function cancha(svg, valores, { alto = 200 } = {}) {
   const W = 300, H = 300;
-  const L = '#C9C5BE', T = '#131316';
+  const L = '#C9C5BE';
+  const { primario: P, tinta: T } = coloresDelClub();
   let g = `<rect x="6" y="6" width="288" height="278" fill="#FBFAF8" stroke="${L}" stroke-width="1.5"/>`;
   g += `<rect x="104" y="176" width="92" height="108" fill="none" stroke="${L}" stroke-width="1.5"/>`;
   g += `<circle cx="150" cy="176" r="34" fill="none" stroke="${L}" stroke-width="1.5"/>`;
@@ -53,11 +72,11 @@ export function cancha(svg, valores, { alto = 200 } = {}) {
     const pct = v?.pct ?? null;
     if (pct != null) hayAlguno = true;
     const op = pct == null ? 0 : Math.max(0.18, Math.min(1, (pct - 15) / 55));
-    g += `<circle cx="${p.x}" cy="${p.y}" r="21" fill="#D9122E" opacity="${op}"/>`;
+    g += `<circle cx="${p.x}" cy="${p.y}" r="21" fill="${P}" opacity="${op}"/>`;
     // Muestra chica: contorno punteado. Es una señal que no depende del color
     // ni del hover, así que sobrevive en cualquier pantalla.
-    g += `<circle cx="${p.x}" cy="${p.y}" r="21" fill="none" stroke="#D9122E" stroke-width="1.6"${v?.muestraChica ? ' stroke-dasharray="4 3"' : ''}/>`;
-    g += `<text x="${p.x}" y="${p.y + 5}" text-anchor="middle" font-family="IBM Plex Mono" font-size="14.5" font-weight="600" fill="${op > 0.55 ? '#fff' : '#131316'}">${pct == null ? '—' : pct}</text>`;
+    g += `<circle cx="${p.x}" cy="${p.y}" r="21" fill="none" stroke="${P}" stroke-width="1.6"${v?.muestraChica ? ' stroke-dasharray="4 3"' : ''}/>`;
+    g += `<text x="${p.x}" y="${p.y + 5}" text-anchor="middle" font-family="IBM Plex Mono" font-size="14.5" font-weight="600" fill="${op > 0.55 ? '#fff' : T}">${pct == null ? '—' : pct}</text>`;
     g += `<text x="${p.x}" y="${p.y + 34}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" letter-spacing="1" fill="#6E6B66">${p.corto}</text>`;
     if (v) {
       g += `<text x="${p.x}" y="${p.y + 45}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="${COL_MUTED}">${v.anotados}/${v.intentos}</text>`;
@@ -79,7 +98,7 @@ export function cancha(svg, valores, { alto = 200 } = {}) {
  * son el caso normal, no el borde.
  *
  * datos.etiquetas: string[]  — el eje X ya formateado
- * datos.series: [{ nombre, c: color, dash?: boolean, d: (number|null)[],
+ * datos.series: [{ nombre, c: 'primario' | 'tinta' | un color CSS, dash?: boolean, d: (number|null)[],
  *                   chico?: (boolean)[] }]
  *   `chico[i]` marca el punto i como muestra chica: se dibuja hueco y
  *   punteado. Es opcional — quien no lo pase se dibuja como siempre.
@@ -124,6 +143,7 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
     : (i) => ml + i * (W - ml - mr) / (n - 1);
   const Y = (v) => mt + (1 - (v - min) / (max - min)) * (H - mt - mb);
 
+  const colores = coloresDelClub();
   let g = '';
   for (let k = 0; k <= 3; k++) {
     const v = min + (max - min) * k / 3, y = Y(v);
@@ -144,7 +164,8 @@ export function grafico(svg, { etiquetas, series }, { u = '%', alto = 170, dec =
   });
   g += `<text x="4" y="9" font-family="Barlow Condensed" font-size="10" letter-spacing="1" fill="${COL_MUTED}">${u.toUpperCase()}</text>`;
 
-  series.forEach((s) => {
+  series.forEach((serie) => {
+    const s = { ...serie, c: colores[serie.c] ?? serie.c };
     const puntos = s.d
       .map((v, i) => (v == null ? null : { x: X(i), y: Y(v), ultimo: i === s.d.length - 1, chico: s.chico?.[i] === true }))
       .filter(Boolean);
