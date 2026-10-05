@@ -11,6 +11,7 @@ import { iniciarReporteDeErrores } from './reporteDeErrores.js';
 import { alReportarError } from './errores.js';
 import { abrirSolicitudJugador } from './pantallas/solicitudJugador.js';
 import { mostrarPantalla, toast } from './nav.js';
+import { confirmarEnHoja } from './componentes/confirmar.js';
 import {
   setClubActual, obtenerClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo,
   setCuenta, setFichaJugador,
@@ -45,9 +46,33 @@ const VIENE_A_CAMBIAR_LA_CLAVE = /[#&]type=recovery/.test(window.location.hash);
  * Registra una pantalla. `render` puede ser async; se llama cada vez que se
  * navega a la pantalla, así los datos se releen y no hace falta invalidar
  * cachés a mano después de un import.
+ *
+ * `confirmarSalida` es opcional: si devuelve `{ titulo, texto, verbo, alSalir }`
+ * se pide confirmación antes de irse de la pantalla (hay algo en curso que no
+ * se puede retomar); si devuelve null, se sale sin preguntar. `alSalir` corta
+ * lo que estaba en curso y corre sólo si la persona confirma.
  */
-export function registrarPantalla(id, { titulo, render } = {}) {
-  pantallas.set(id, { titulo, render });
+export function registrarPantalla(id, { titulo, render, confirmarSalida } = {}) {
+  pantallas.set(id, { titulo, render, confirmarSalida });
+}
+
+/**
+ * Si la pantalla actual pide confirmar antes de irse, abre la hoja y devuelve
+ * true: quien navega no sigue. Al confirmar se corta lo que corría y se repite
+ * la navegación, que esta vez ya no frena.
+ */
+function frenaLaSalida(reintentar) {
+  const pedido = pantallas.get(pantallaActualId())?.confirmarSalida?.();
+  if (!pedido) return false;
+  const { alSalir, ...hoja } = pedido;
+  confirmarEnHoja({
+    ...hoja,
+    alConfirmar: async () => {
+      alSalir?.();
+      await reintentar();
+    },
+  });
+  return true;
 }
 
 /** Id de la pantalla visible, derivado del DOM (ver nota de diseño en el spec). */
@@ -68,6 +93,7 @@ export async function ir(id, { push = false } = {}) {
   const def = pantallas.get(id);
   if (!def) return;
   const desde = pantallaActualId();
+  if (desde !== id && frenaLaSalida(() => ir(id, { push }))) return;
   if (push && desde && desde !== id) pila.push(desde);
   if (!push) pila.length = 0;
   mostrarPantalla(id);
@@ -90,6 +116,7 @@ export async function refrescar() {
 }
 
 export async function volver() {
+  if (frenaLaSalida(volver)) return;
   const destino = pila.pop() ?? pantallaInicialDelModo();
   mostrarPantalla(destino);
   sincronizarChrome();

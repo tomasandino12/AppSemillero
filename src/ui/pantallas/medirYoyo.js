@@ -11,6 +11,7 @@ import { $ } from '../dom.js';
 import { html } from '../html.js';
 import { avisoDeError, mensajeAlGuardar } from '../errores.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { confirmarEnHoja } from '../componentes/confirmar.js';
 import { crearPitidosYoyo, CUENTA_S } from '../componentes/pitidosYoyo.js';
 import { botonProtocolo } from '../componentes/protocoloYoyo.js';
 
@@ -164,7 +165,44 @@ function renderCurso() {
   `;
   pintarGrilla();
   $('btn-yoyo-deshacer').addEventListener('click', deshacer);
-  $('btn-yoyo-terminar').addEventListener('click', terminar);
+  $('btn-yoyo-terminar').addEventListener('click', pedirTerminar);
+}
+
+/**
+ * Terminar corta los pitidos y no se puede retomar, y a un dedo mal puesto
+ * le queda al lado de Deshacer: se confirma. La prueba sigue corriendo
+ * mientras la hoja está abierta, pero el momento que cuenta es el del toque,
+ * no el de confirmar.
+ */
+function pedirTerminar() {
+  const t = pitidos?.tiempoActual();
+  // Durante la cuenta no hay nada que perder: es cancelar la prueba.
+  if (t == null || t < 0) {
+    terminar();
+    return;
+  }
+  const quedan = Object.values(estados).filter((e) => e.estado !== 'out').length;
+  confirmarEnHoja({
+    titulo: 'Terminar el test',
+    texto: `Quedan ${quedan} ${quedan === 1 ? 'jugador' : 'jugadores'} en carrera: se les anota el nivel en que está la prueba ahora (${nivelYIda(posicionEn(t).idasCompletas)}). No se puede retomar.`,
+    verbo: 'Terminar',
+    alConfirmar: () => {
+      // Puede haber terminado sola (se acabó el tiempo o salieron todos) con la hoja abierta.
+      if (fase === 'curso') terminar(t);
+    },
+  });
+}
+
+/** Si el profe se va con la prueba corriendo, hay que avisarle que no hay vuelta atrás. */
+export function confirmarSalidaYoyo() {
+  const t = pitidos?.tiempoActual();
+  if (fase !== 'curso' || t == null || t < 0) return null;
+  return {
+    titulo: 'Salir de la prueba',
+    texto: 'La prueba está corriendo. Si salís se corta y se pierde lo marcado: no se puede retomar.',
+    verbo: 'Salir',
+    alSalir: cortarPrueba,
+  };
 }
 
 function tocar(id) {
@@ -221,10 +259,21 @@ function animar() {
   cuadro = requestAnimationFrame(animar);
 }
 
-function terminar() {
+function cortarPrueba() {
   if (cuadro) cancelAnimationFrame(cuadro);
   cuadro = null;
-  const t = pitidos?.tiempoActual() ?? null;
+  pitidos?.detener();
+  pitidos = null;
+  fase = 'preparar';
+}
+
+/** `tFijo`: el instante del toque en Terminar, si hubo una confirmación en el medio. */
+function terminar(tFijo = null) {
+  // Si terminó sola con la hoja de confirmación abierta, no puede quedar colgada.
+  cerrarHoja();
+  const t = tFijo ?? pitidos?.tiempoActual() ?? null;
+  if (cuadro) cancelAnimationFrame(cuadro);
+  cuadro = null;
   pitidos?.detener();
   pitidos = null;
   if (t == null || t < 0) {
@@ -366,10 +415,7 @@ async function guardarSesion() {
 export async function renderYoyo() {
   // Si se vuelve a la pantalla con una prueba en curso, se corta: los pitidos
   // no se pueden retomar a mitad.
-  if (cuadro) cancelAnimationFrame(cuadro);
-  cuadro = null;
-  pitidos?.detener();
-  pitidos = null;
+  cortarPrueba();
 
   const club = obtenerClubActual();
   const plantel = obtenerPlantelActivo();
