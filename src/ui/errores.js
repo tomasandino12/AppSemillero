@@ -59,6 +59,31 @@ export function avisoDeError(e, generico) {
 }
 
 /**
+ * El aviso de un error dentro de una pantalla que sigue en pie (un guardado que
+ * falló, un campo inválido). `role="alert"` hace que el lector de pantalla lo
+ * anuncie al aparecer; el "!" lo distingue de un aviso informativo sin depender
+ * del color (el filete del club es el mismo en los dos).
+ */
+export function avisoInline(texto) {
+  return `<div class="al error" role="alert"><div class="ico" aria-hidden="true">!</div><div class="tx">${escaparHtml(texto)}</div></div>`;
+}
+
+/**
+ * Muestra un error en `contenedor`, lo trae a la vista y, si se pasa `campo`,
+ * lo marca como inválido y le da el foco. Recibe los nodos en vez de buscarlos
+ * para que no dependa de `document` (se prueba en Node con nodos de mentira).
+ * La marca se saca sola cuando la persona toca el campo para corregirlo.
+ */
+export function mostrarAviso(contenedor, texto, { campo = null } = {}) {
+  contenedor.innerHTML = avisoInline(texto);
+  contenedor.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  if (!campo) return;
+  campo.setAttribute('aria-invalid', 'true');
+  campo.focus?.();
+  campo.addEventListener?.('input', () => campo.removeAttribute('aria-invalid'), { once: true });
+}
+
+/**
  * El mensaje de un guardado que falló. Orden: red, reglas propias de la
  * pantalla (mensajes que lanzan las funciones de la base), falta de permiso
  * y, si nada calza, el genérico.

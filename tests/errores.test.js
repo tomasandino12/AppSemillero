@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
-  SIN_CONEXION, SESION_CERRADA, textoDeError, avisoDeError, mensajeAlGuardar,
+  SIN_CONEXION, SESION_CERRADA, textoDeError, avisoDeError, avisoInline, mostrarAviso, mensajeAlGuardar,
   marcarSesionCerrada, desmarcarSesionCerrada, alReportarError,
 } from '../src/ui/errores.js';
 
@@ -70,5 +71,48 @@ test('mensajeAlGuardar reporta la rama de permiso y la genérica, pero no la de 
     ]);
   } finally {
     alReportarError(null);
+  }
+});
+
+test('avisoInline escapa el texto y lleva role=alert', () => {
+  const h = avisoInline('Falta <b>algo</b> & más.');
+  assert.match(h, /^<div class="al error" role="alert">/);
+  assert.ok(h.includes('Falta &lt;b&gt;algo&lt;/b&gt; &amp; más.'));
+  assert.ok(!h.includes('<b>'));
+});
+
+test('mostrarAviso pinta el aviso, lo trae a la vista y marca el campo hasta que se corrige', () => {
+  const contenedor = { innerHTML: '', vistas: 0, scrollIntoView() { this.vistas += 1; } };
+  const atributos = new Map();
+  let alEscribir = null;
+  let foco = 0;
+  const campo = {
+    setAttribute: (k, v) => atributos.set(k, v),
+    removeAttribute: (k) => atributos.delete(k),
+    focus: () => { foco += 1; },
+    addEventListener: (_evento, fn) => { alEscribir = fn; },
+  };
+  mostrarAviso(contenedor, 'Mal.', { campo });
+  assert.ok(contenedor.innerHTML.includes('role="alert"'));
+  assert.equal(contenedor.vistas, 1);
+  assert.equal(atributos.get('aria-invalid'), 'true');
+  assert.equal(foco, 1);
+  alEscribir();
+  assert.equal(atributos.has('aria-invalid'), false);
+});
+
+test('mostrarAviso sin campo no toca nada más', () => {
+  const contenedor = { innerHTML: '' };
+  mostrarAviso(contenedor, 'Mal.');
+  assert.ok(contenedor.innerHTML.includes('Mal.'));
+});
+
+test('los avisos de error de batería, yoyo y ficha usan avisoInline', () => {
+  // Un aviso con texto interpolado es un error: tiene que salir por avisoInline
+  // o mostrarAviso, que son los que lo anuncian al lector de pantalla.
+  for (const archivo of ['medirBateria', 'medirYoyo', 'fichaJugador']) {
+    const fuente = readFileSync(new URL(`../src/ui/pantallas/${archivo}.js`, import.meta.url), 'utf8');
+    assert.doesNotMatch(fuente, /class="al"><div class="tx">\$\{/, `${archivo} arma un error a mano`);
+    assert.match(fuente, /mostrarAviso|avisoInline/, `${archivo} no usa los helpers`);
   }
 });

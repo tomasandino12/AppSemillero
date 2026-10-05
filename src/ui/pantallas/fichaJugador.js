@@ -36,7 +36,7 @@ import { avisoEstimaciones } from '../componentes/avisoEstimaciones.js';
 import { abrirProtocoloCorporal } from '../componentes/protocoloCorporal.js';
 import { html, crudo } from '../html.js';
 import { $ } from '../dom.js';
-import { avisoDeError, textoDeError, mensajeAlGuardar } from '../errores.js';
+import { avisoDeError, textoDeError, mensajeAlGuardar, mostrarAviso, avisoInline } from '../errores.js';
 import { renderAccesoDeJugador } from './aprobarJugador.js';
 
 const contenedor = () => $('ficha-contenido');
@@ -405,9 +405,7 @@ export async function renderFicha() {
     $('btn-guia-salto')?.addEventListener('click', () => abrirGuiaSalto(club));
     $('ficha-historia').querySelectorAll('[data-como-medir]').forEach((b) => b.addEventListener('click', () => abrirProtocoloCorporal(club)));
   } catch (e) {
-    $('ficha-historia').innerHTML = `<div class="al"><div class="tx">${
-      textoDeError(e, 'No se pudo cargar la historia del jugador.')
-    }</div></div>`;
+    $('ficha-historia').innerHTML = avisoInline(textoDeError(e, 'No se pudo cargar la historia del jugador.'));
   }
 }
 
@@ -442,7 +440,7 @@ function abrirEditarNacimiento(jugador) {
     const aviso = $('nacimiento-aviso');
     const { ok, errores, valor } = validarFechaNacimiento($('in-nacimiento').value);
     if (!ok) {
-      aviso.innerHTML = `<div class="al"><div class="tx">${escaparHtml(errores.join(' '))}</div></div>`;
+      mostrarAviso(aviso, errores.join(' '), { campo: $('in-nacimiento') });
       return;
     }
 
@@ -452,9 +450,7 @@ function abrirEditarNacimiento(jugador) {
     try {
       await actualizarFechaNacimiento(obtenerClubActual().id, jugador.id, valor);
     } catch (e) {
-      aviso.innerHTML = `<div class="al"><div class="tx">${
-        textoDeError(e, 'No se pudo guardar la fecha.')
-      }</div></div>`;
+      mostrarAviso(aviso, textoDeError(e, 'No se pudo guardar la fecha.'));
       boton.disabled = false;
       boton.textContent = 'Guardar';
       return;
@@ -495,9 +491,7 @@ function abrirSacarDelPlantel(club, plantel, jugador) {
     try {
       await sacarDelPlantel(club.id, jugador.id, plantel.id);
     } catch (e) {
-      $('sacar-aviso').innerHTML = `<div class="al"><div class="tx">${
-        mensajeAlGuardar(e, { generico: 'No se pudo sacar al jugador.' })
-      }</div></div>`;
+      mostrarAviso($('sacar-aviso'), mensajeAlGuardar(e, { generico: 'No se pudo sacar al jugador.' }));
       boton.disabled = false;
       return;
     }
@@ -547,9 +541,7 @@ async function cargarCorporal(clubId, idJugador) {
   } catch (e) {
     cont.innerHTML = `
       <div class="eyebrow">Mediciones</div>
-      <div class="al"><div class="tx">${
-        textoDeError(e, 'No se pudieron cargar las mediciones.')
-      }</div></div>
+      ${avisoInline(textoDeError(e, 'No se pudieron cargar las mediciones.'))}
       <button class="btn sec" id="btn-reintentar-corporal">Reintentar</button>
     `;
     $('btn-reintentar-corporal').addEventListener('click', () => cargarCorporal(clubId, idJugador));
@@ -660,9 +652,7 @@ function renderCorporal(clubId, idJugador, mediciones) {
         try {
           await borrarMedicionCorporal(clubId, b.dataset.borrar);
         } catch (e) {
-          $('corporal-aviso').innerHTML = `<div class="al"><div class="tx">${
-            esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos.' : 'No se pudo borrar la medición.'
-          }</div></div>`;
+          mostrarAviso($('corporal-aviso'), esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos.' : 'No se pudo borrar la medición.');
           return;
         }
         await cargarCorporal(clubId, idJugador);
@@ -685,7 +675,7 @@ function renderCorporal(clubId, idJugador, mediciones) {
       piernaFlexionada: $('in-pierna-flexionada').value,
     });
     if (!ok) {
-      aviso.innerHTML = `<div class="al"><div class="tx">${escaparHtml(errores.join(' '))}</div></div>`;
+      mostrarAviso(aviso, errores.join(' '));
       return;
     }
 
@@ -703,11 +693,9 @@ function renderCorporal(clubId, idJugador, mediciones) {
         piernaFlexionadaCm: valores.piernaFlexionadaCm,
       });
     } catch (e) {
-      aviso.innerHTML = `<div class="al"><div class="tx">${
-        e?.message === 'MEDICION_DUPLICADA'
-          ? 'Ya hay una medición de este jugador en esa fecha. Borrá la que está o poné otra fecha.'
-          : (textoDeError(e, 'No se pudo agregar la medición.'))
-      }</div></div>`;
+      mostrarAviso(aviso, e?.message === 'MEDICION_DUPLICADA'
+        ? 'Ya hay una medición de este jugador en esa fecha. Borrá la que está o poné otra fecha.'
+        : textoDeError(e, 'No se pudo agregar la medición.'), e?.message === 'MEDICION_DUPLICADA' ? { campo: $('in-fecha-medicion') } : {});
       boton.disabled = false;
       boton.textContent = 'Agregar medición';
       return;

@@ -9,7 +9,7 @@ import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '..
 import { ir } from '../main.js';
 import { $ } from '../dom.js';
 import { html } from '../html.js';
-import { avisoDeError, mensajeAlGuardar } from '../errores.js';
+import { avisoDeError, mensajeAlGuardar, mostrarAviso } from '../errores.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
 import { confirmarEnHoja } from '../componentes/confirmar.js';
 import { crearPitidosYoyo, CUENTA_S } from '../componentes/pitidosYoyo.js';
@@ -100,12 +100,12 @@ function empezar() {
   pitidos = crearPitidosYoyo({
     alAviso: (texto) => {
       const aviso = $('yoyo-aviso');
-      if (aviso) aviso.innerHTML = html`<div class="al"><div class="tx">${texto}</div></div>`;
+      if (aviso) mostrarAviso(aviso, texto);
     },
   });
   // El toque de Empezar es el gesto que habilita el audio.
   if (!pitidos.empezar()) {
-    $('yoyo-aviso').innerHTML = html`<div class="al"><div class="tx">Este celular no puede reproducir los pitidos. Probá con otro navegador.</div></div>`;
+    mostrarAviso($('yoyo-aviso'), 'Este celular no puede reproducir los pitidos. Probá con otro navegador.');
     pitidos = null;
     return;
   }
@@ -351,7 +351,7 @@ function corregir(id) {
         <input id="yoyo-idas" inputmode="numeric" autocomplete="off" maxlength="3" value="${actual ?? ''}">
         <div class="ayuda">Cada ida son 20 m. De 0 a 223.</div>
       </div>
-      <div id="yoyo-idas-error" role="alert"></div>
+      <div id="yoyo-idas-error"></div>
       <div class="acciones-bateria">
         <button type="button" class="btn sec" id="yoyo-idas-ausente">No corrió</button>
         <button type="button" class="btn" id="yoyo-idas-ok">Guardar</button>
@@ -362,7 +362,7 @@ function corregir(id) {
   const aceptar = () => {
     const r = validarIdas(campo.value);
     if (!r.ok) {
-      $('yoyo-idas-error').innerHTML = html`<div class="al"><div class="tx">${r.error}</div></div>`;
+      mostrarAviso($('yoyo-idas-error'), r.error, { campo });
       return;
     }
     valores[id] = { idas: r.idas };
@@ -390,7 +390,7 @@ async function guardarSesion() {
     sesionId, clubId: club.id, plantelId: plantel.id, fecha, valores,
   });
   if (!payload.mediciones.length) {
-    $('yoyo-aviso').innerHTML = html`<div class="al"><div class="tx">Todavía no hay ningún resultado.</div></div>`;
+    mostrarAviso($('yoyo-aviso'), 'Todavía no hay ningún resultado.');
     return;
   }
 
@@ -402,7 +402,7 @@ async function guardarSesion() {
   try {
     await guardarSesionMedicion(payload);
   } catch (err) {
-    $('yoyo-aviso').innerHTML = html`<div class="al"><div class="tx">${mensajeAlGuardar(err, { generico: 'No se pudo guardar la sesión. Quedó en el celular para reintentar.' })}</div></div>`;
+    mostrarAviso($('yoyo-aviso'), mensajeAlGuardar(err, { generico: 'No se pudo guardar la sesión. Quedó en el celular para reintentar.' }));
     boton.disabled = false;
     boton.textContent = 'Guardar la sesión';
     return;

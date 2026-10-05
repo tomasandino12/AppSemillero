@@ -7,7 +7,7 @@ import { claveBorrador, guardarBorrador, leerBorrador, borrarBorrador } from '..
 import { iniciales } from './plantel.js';
 import { ir } from '../main.js';
 import { $ } from '../dom.js';
-import { avisoDeError } from '../errores.js';
+import { avisoDeError, mostrarAviso } from '../errores.js';
 
 const contenedor = () => $('bateria-contenido');
 
@@ -156,7 +156,7 @@ async function cerrarSesion() {
 
   const payload = prepararPayloadBateria({ clubId: club.id, plantelId: plantel.id, fecha, valores, sesionId });
   if (!payload.mediciones.length) {
-    $('bateria-aviso').innerHTML = `<div class="al"><div class="tx">Todavía no cargaste ninguna medición.</div></div>`;
+    mostrarAviso($('bateria-aviso'), 'Todavía no cargaste ninguna medición.');
     return;
   }
 
@@ -168,11 +168,9 @@ async function cerrarSesion() {
   } catch (e) {
     // El borrador NO se toca: es lo único que tiene el entrenador si esto
     // falló con el gimnasio sin señal.
-    $('bateria-aviso').innerHTML = `<div class="al"><div class="tx">${
-      esErrorDeRed(e)
-        ? 'Sin conexión. La sesión quedó guardada en el celular: probá de nuevo cuando tengas señal.'
-        : 'No se pudo guardar la sesión. Quedó guardada en el celular para reintentar.'
-    }</div></div>`;
+    mostrarAviso($('bateria-aviso'), esErrorDeRed(e)
+      ? 'Sin conexión. La sesión quedó guardada en el celular: probá de nuevo cuando tengas señal.'
+      : 'No se pudo guardar la sesión. Quedó guardada en el celular para reintentar.');
     boton.disabled = false;
     boton.textContent = 'Cerrar y guardar la sesión';
     return;

@@ -110,6 +110,11 @@
 .al .btn.chico{flex:0 0 auto;align-self:center;white-space:nowrap}
 .al.ok{border-left-color:var(--sube)}
 .al.ok .ico{color:var(--sube)}
+/* Error: fondo suave y filete más grueso, con un "!" (no sólo color) para distinguirlo de un aviso informativo. */
+.al.error{background:var(--primario-cl);border-left-width:5px}
+.al.error .ico{font-size:var(--fs-160)}
+/* Campo marcado por un error: el borde pasa al color del club y engruesa, para que no dependa sólo de un tono. */
+[aria-invalid="true"]{border-color:var(--primario);box-shadow:inset 0 0 0 1px var(--primario)}
 
 /* ---- estado vacío ---- */
 .estado-vacio{
