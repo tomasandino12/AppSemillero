@@ -205,3 +205,48 @@ test('el texto de la app llega a 4.5:1 sobre su fondo', () => {
   }
   assert.deepEqual(malos, []);
 });
+
+/** Cuerpo `{...}` de la regla cuyo selector es exactamente `selector` (o null). */
+function cuerpoDeRegla(texto, selector) {
+  for (const m of texto.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    if (m[1].trim() === selector) return m[2];
+  }
+  return null;
+}
+
+// Un borde de control (campo, número de la batería, paso, chip) es un límite
+// que hay que ver para saber dónde tocar: WCAG pide 3:1 contra el fondo. Con
+// --linea (1.4:1) a pleno sol la grilla 0-10 era papel sobre papel.
+test('el borde de los controles llega a 3:1 sobre papel y blanco', () => {
+  const borde = valorDeToken('--borde-control');
+  assert.ok(borde, 'tokens.css tiene que definir --borde-control con un hex');
+  for (const fondo of ['--papel', '--blanco']) {
+    const c = contraste(borde, valorDeToken(fondo));
+    assert.ok(c >= 3, `--borde-control sobre ${fondo}: ${c.toFixed(2)}:1`);
+  }
+});
+
+test('los controles de entrada y de elección usan --borde-control, no --linea', () => {
+  const componentes = sinComentarios(css.componentes);
+  const sinBorde = [
+    '.campo input,.campo textarea', '.tira .num', '.progreso-tira .paso',
+    '.campo-meta input', '.chip-tema', '.campo select',
+  ].filter((selector) => !/border:[^;]*var\(--borde-control\)/.test(cuerpoDeRegla(componentes, selector) ?? ''));
+  assert.deepEqual(sinBorde, []);
+});
+
+// "Guardando…" y "Agregando…" son el único feedback de que algo se está
+// guardando, y salen en un botón deshabilitado: tiene que poder leerse.
+test('el botón deshabilitado llega a 4.5:1', () => {
+  const componentes = sinComentarios(css.componentes);
+  const malos = [];
+  for (const selector of ['.btn:disabled', '.btn.sec:disabled']) {
+    const regla = cuerpoDeRegla(componentes, selector) ?? '';
+    const fondo = regla.match(/background:var\((--[\w-]+)\)/)?.[1];
+    const texto = regla.match(/(?:^|;)\s*color:var\((--[\w-]+)\)/)?.[1];
+    assert.ok(fondo && texto, `${selector} define fondo y color con tokens`);
+    const c = contraste(valorDeToken(texto), valorDeToken(fondo));
+    if (c < 4.5) malos.push(`${selector}: ${texto} sobre ${fondo} ${c.toFixed(2)}:1`);
+  }
+  assert.deepEqual(malos, []);
+});

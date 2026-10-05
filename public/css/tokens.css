@@ -41,6 +41,7 @@
   --papel:#F3F1ED;
   --blanco:#fff;
   --linea:#DFDBD3;
+  --borde-control:#85817A; /* 3.4:1 sobre --papel y 3.9:1 sobre blanco: el límite de un campo o botón de elección, que a pleno sol tiene que verse (--linea es sólo separador) */
   --tinta:#131316;
   --gris:#6E6B66;
   --gris-cl:#726E65;      /* 4.50:1 sobre --papel */

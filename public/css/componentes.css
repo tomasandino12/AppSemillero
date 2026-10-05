@@ -15,7 +15,7 @@
   transition:transform var(--dur-1) var(--ease-salida);
 }
 .btn:active{background:var(--primario-osc);transform:scale(.97)}
-.btn:disabled{background:var(--deshabilitado);color:var(--blanco);transform:none}
+.btn:disabled{background:var(--fondo-chip);color:var(--gris);transform:none}
 /* El secundario es negro macizo con letras blancas: rojo y negro son los dos
    colores del club, y un botón blanco sobre papel se perdía en el fondo. Con
    el mouse pasa a rojo. El borde del mismo negro está para que .publico
@@ -23,7 +23,7 @@
 .btn.sec{
   background:var(--tinta);color:var(--sobre-oscuro);border:1px solid var(--tinta);
 }
-.btn.sec:disabled{background:var(--deshabilitado);border-color:var(--deshabilitado);color:var(--blanco)}
+.btn.sec:disabled{background:var(--fondo-chip);border-color:var(--linea);color:var(--gris)}
 /* Con mouse el botón se enciende: sube 2px y aparece el brillo del club. Al
    volver usa la duración corta de la base (--dur-1), así suelta rápido. El
    brillo vive en un ::after y sólo cambia de opacity (regla de DESIGN.md).
@@ -48,7 +48,7 @@
 }
 .campo input,.campo textarea{
   width:100%;min-height:var(--tap);padding:var(--sp-3);
-  border-radius:var(--r-m);border:1px solid var(--linea);
+  border-radius:var(--r-m);border:1px solid var(--borde-control);
   font-size:var(--fs-160);font-family:var(--ff-mono);background:var(--blanco);
 }
 .campo textarea{resize:vertical}
@@ -360,7 +360,7 @@ svg.g{width:100%;display:block;overflow:visible}
    Targets de 48px: se usa de pie, con una mano, mirando a los chicos y no
    a la pantalla. La tira envuelve sola en dos líneas a 375px. */
 .tira{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.tira .num{min-height:48px;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600}
+.tira .num{min-height:48px;border:1px solid var(--borde-control);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-160);font-weight:600}
 .tira .num.on{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
 .posiciones{display:flex;flex-direction:column;gap:var(--sp-4);margin:14px 0}
 .posicion .et{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:var(--fs-135);color:var(--tinta)}
@@ -369,7 +369,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .jug-actual .nom{font-size:var(--fs-220);font-weight:700;color:var(--tinta)}
 .jug-actual .sub{font-size:var(--fs-125);color:var(--gris-cl)}
 .progreso-tira{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-bottom:var(--sp-2)}
-.progreso-tira .paso{min-width:38px;min-height:38px;padding:0 var(--sp-1);border-radius:8px;border:1px solid var(--linea);background:var(--papel);color:var(--gris-cl);font-family:var(--ff-mono);font-size:var(--fs-115)}
+.progreso-tira .paso{min-width:38px;min-height:38px;padding:0 var(--sp-1);border-radius:8px;border:1px solid var(--borde-control);background:var(--papel);color:var(--gris-cl);font-family:var(--ff-mono);font-size:var(--fs-115)}
 .progreso-tira .paso.completo{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
 .progreso-tira .paso.parcial{border-color:var(--primario);color:var(--primario)}
 .progreso-tira .paso.ausente{border-style:dashed}
@@ -483,7 +483,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .meta-fila .nom{font-size:var(--fs-145);color:var(--tinta)}
 .meta-fila .hoy{font-size:var(--fs-125);color:var(--gris-cl)}
 .campo-meta{display:flex;align-items:center;gap:6px;flex:0 0 auto}
-.campo-meta input{width:4.5rem;min-height:48px;text-align:right;border:1px solid var(--linea);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-160);padding:0 10px}
+.campo-meta input{width:4.5rem;min-height:48px;text-align:right;border:1px solid var(--borde-control);border-radius:10px;background:var(--papel);color:var(--tinta);font-family:var(--ff-mono);font-size:var(--fs-160);padding:0 10px}
 .campo-meta .u{font-family:var(--ff-titulo);font-size:var(--fs-135);color:var(--gris-cl)}
 .zonas{display:flex;flex-direction:column;gap:14px;margin:10px 0}
 .zona-cab{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-2);font-size:var(--fs-145);color:var(--tinta)}
@@ -528,7 +528,7 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Etapa 5 — lista de ejercicios */
 .chips-tema{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-.chip-tema{min-height:40px;padding:0 var(--sp-3);border:1px solid var(--linea);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
+.chip-tema{min-height:40px;padding:0 var(--sp-3);border:1px solid var(--borde-control);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
 .chip-tema.on{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
 @media (hover:hover){
   .chip-tema:not(.on):not(:disabled):hover{background:var(--fondo-chip);border-color:var(--gris-cl)}
@@ -953,7 +953,7 @@ svg.pz.pz-icono{width:2.75rem;height:1.375rem;display:inline-block;vertical-alig
 .yoyo-res-datos .etq{display:block;font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
 
 /* ---- medir salto: fila por jugador con hasta 3 intentos ---- */
-.campo select{width:100%;min-height:var(--tap);padding:0 var(--sp-3);border:1px solid var(--linea);border-radius:var(--r-m);background:var(--blanco);color:var(--tinta);font-size:var(--fs-145)}
+.campo select{width:100%;min-height:var(--tap);padding:0 var(--sp-3);border:1px solid var(--borde-control);border-radius:var(--r-m);background:var(--blanco);color:var(--tinta);font-size:var(--fs-145)}
 .salto-acciones{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-4)}
 .salto-fila{display:grid;gap:var(--sp-2);padding:var(--sp-3) 0;border-bottom:1px solid var(--linea)}
 .salto-fila .nom{font-size:var(--fs-145);color:var(--tinta)}

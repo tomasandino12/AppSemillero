@@ -60,8 +60,9 @@ Todos viven en `public/css/tokens.css`, en `:root`. Es el único archivo con val
 | `--gris-cl` | `#726E65` | Texto secundario sobre papel (4.50:1) y borde del botón secundario. |
 | `--gris-osc` | `#A9A5A0` | Texto secundario sobre fondo oscuro. |
 | `--linea` | `#DFDBD3` | Bordes, separadores y pista de las barras. |
+| `--borde-control` | `#85817A` | Borde de campos, números de la batería, pasos y chips de elección (3.4:1 sobre papel, 3.9:1 sobre blanco): el límite de lo que se toca. `--linea` queda para separadores. |
 | `--fondo-chip` | `#EFECE6` | Chips, etiquetas y fondos de ícono en reposo. |
-| `--deshabilitado` | `#C9C5BE` | Botón deshabilitado. |
+| `--deshabilitado` | `#C9C5BE` | Íconos deshabilitados. El botón deshabilitado va con `--fondo-chip` y texto `--gris` (4.5:1): "Guardando…" tiene que leerse. |
 | `--sobre-oscuro` | `#fff` | Texto sobre `--negro`, `--sup-*` y `--pub-*`. |
 | `--sup-1` / `--sup-2` | `#22222A` / `#2C2C34` | Superficies sobre oscuro dentro de la app (y avisos de `.publico`). |
 | `--linea-osc` | `#3A3A44` | Borde sobre fondo oscuro. |
