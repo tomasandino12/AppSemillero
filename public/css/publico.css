@@ -275,6 +275,8 @@
 /* ---- Términos y Privacidad ---- */
 .pie-legal{text-align:center;font-size:var(--fs-125);color:var(--gris-osc);padding:0 var(--sp-4) var(--sp-8);margin-top:calc(-1 * var(--sp-5))}
 .pie-legal a,.nota-legal a,.docs-legales a{color:var(--sobre-oscuro)}
+/* Dos links en línea: el área de toque llega a --tap sin cambiar el texto. */
+.pie-legal a{display:inline-flex;align-items:center;min-height:var(--tap);min-width:var(--tap)}
 .nota-legal{font-size:var(--fs-125);color:var(--gris-osc);text-align:center;line-height:1.45;margin-top:var(--sp-3)}
 .docs-legales{display:flex;flex-direction:column;gap:var(--sp-2);margin-bottom:var(--sp-5)}
 .docs-legales a{

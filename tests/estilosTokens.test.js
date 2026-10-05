@@ -250,3 +250,26 @@ test('el botón deshabilitado llega a 4.5:1', () => {
   }
   assert.deepEqual(malos, []);
 });
+
+// --tap (44px) es el mínimo para tocar con el pulgar: el ícono o el texto
+// pueden ser chicos, pero el área no. Con 36-40px el ✕ de una nota o la zona
+// de HOY se erraban seguido en la cancha.
+test('los controles táctiles listados tienen al menos --tap', () => {
+  const tap = parseFloat(tokens.match(/--tap\s*:\s*([\d.]+)rem/)?.[1]) * 16;
+  assert.equal(tap, 44);
+  const lugares = [
+    ['componentes', '.btn-zona-recurso'], ['componentes', '.progreso-tira .paso'],
+    ['componentes', '.chip-tema'], ['componentes', '.fila-corporal .borrar'],
+    ['componentes', '.nota .nota-borrar'], ['publico', '.pie-legal a'],
+  ];
+  const malos = [];
+  for (const [archivo, selector] of lugares) {
+    const regla = cuerpoDeRegla(sinComentarios(css[archivo]), selector) ?? '';
+    for (const prop of ['min-height', 'min-width']) {
+      const v = regla.match(new RegExp(`${prop}:([^;]+)`))?.[1].trim();
+      const px = v === 'var(--tap)' ? 44 : v?.endsWith('px') ? parseFloat(v) : 0;
+      if (px < 44) malos.push(`${selector}: ${prop} ${v ?? 'falta'}`);
+    }
+  }
+  assert.deepEqual(malos, []);
+});

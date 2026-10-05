@@ -369,7 +369,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .jug-actual .nom{font-size:var(--fs-220);font-weight:700;color:var(--tinta)}
 .jug-actual .sub{font-size:var(--fs-125);color:var(--gris-cl)}
 .progreso-tira{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-bottom:var(--sp-2)}
-.progreso-tira .paso{min-width:38px;min-height:38px;padding:0 var(--sp-1);border-radius:8px;border:1px solid var(--borde-control);background:var(--papel);color:var(--gris-cl);font-family:var(--ff-mono);font-size:var(--fs-115)}
+.progreso-tira .paso{min-width:var(--tap);min-height:var(--tap);padding:0 var(--sp-1);border-radius:8px;border:1px solid var(--borde-control);background:var(--papel);color:var(--gris-cl);font-family:var(--ff-mono);font-size:var(--fs-115)}
 .progreso-tira .paso.completo{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
 .progreso-tira .paso.parcial{border-color:var(--primario);color:var(--primario)}
 .progreso-tira .paso.ausente{border-style:dashed}
@@ -431,12 +431,12 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Histórico de altura y peso en la ficha del jugador (0012) */
 .tabla-corporal{display:flex;flex-direction:column;margin:10px 0}
-.fila-corporal{display:grid;grid-template-columns:3rem repeat(4,minmax(0,1fr)) 2.25rem;gap:var(--sp-1) var(--sp-2);align-items:center;padding:10px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
+.fila-corporal{display:grid;grid-template-columns:3rem repeat(4,minmax(0,1fr)) var(--tap);gap:var(--sp-1) var(--sp-2);align-items:center;padding:10px 0;border-bottom:1px solid var(--linea);font-size:var(--fs-145)}
 .fila-corporal .f{font-family:var(--ff-mono);color:var(--gris-cl);font-size:var(--fs-125)}
 .fila-corporal .sin{color:var(--gris-cl)}
 .fila-corporal .u{color:var(--gris-cl);font-size:var(--fs-115)}
 .fila-corporal.cab{font-family:var(--ff-titulo);font-size:var(--fs-115);line-height:1.15;letter-spacing:.04em;text-transform:uppercase;color:var(--gris-cl);align-items:end}
-.fila-corporal .borrar{min-width:36px;min-height:40px;border:0;border-radius:8px;background:none;color:var(--gris-cl);font-size:var(--fs-145)}
+.fila-corporal .borrar{min-width:var(--tap);min-height:var(--tap);border:0;border-radius:8px;background:none;color:var(--gris-cl);font-size:var(--fs-145)}
 .aviso-corporal{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;margin:var(--sp-3) 0;font-size:var(--fs-135);font-weight:500;color:var(--primario-osc)}
 .vigentes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-2);margin:10px 0}
 .vigente .k{font-family:var(--ff-titulo);font-size:var(--fs-115);letter-spacing:.04em;text-transform:uppercase;color:var(--gris-cl)}
@@ -518,7 +518,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .curva-pie{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-1) 10px;font-size:var(--fs-125);color:var(--gris-cl)}
 .curva-pie .ver{color:var(--primario);white-space:nowrap}
 .curva-zona{margin:var(--sp-4) 0}
-.btn-zona-recurso{border:0;background:none;padding:0;font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
+.btn-zona-recurso{min-height:var(--tap);min-width:var(--tap);border:0;background:none;padding:0 var(--sp-2);font-family:var(--ff-titulo);font-size:var(--fs-125);letter-spacing:.05em;text-transform:uppercase;color:var(--primario)}
 
 /* Etapa 5 — pestañas internas de RECURSOS. No es navegación: no se agrega un
    sexto ítem a la barra de abajo, que en celular ya está al límite. */
@@ -528,7 +528,7 @@ svg.g{width:100%;display:block;overflow:visible}
 
 /* Etapa 5 — lista de ejercicios */
 .chips-tema{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-.chip-tema{min-height:40px;padding:0 var(--sp-3);border:1px solid var(--borde-control);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
+.chip-tema{min-height:var(--tap);min-width:var(--tap);padding:0 var(--sp-3);border:1px solid var(--borde-control);border-radius:20px;background:var(--papel);color:var(--tinta);font-size:var(--fs-135)}
 .chip-tema.on{background:var(--primario);border-color:var(--primario);color:var(--sobre-club)}
 @media (hover:hover){
   .chip-tema:not(.on):not(:disabled):hover{background:var(--fondo-chip);border-color:var(--gris-cl)}
@@ -552,7 +552,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .nota{background:var(--blanco);border-radius:var(--r);padding:var(--sp-3);margin-bottom:var(--sp-2);box-shadow:var(--sombra)}
 .nota .meta{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);font-size:var(--fs-125);color:var(--gris-cl)}
 .nota .tx{font-size:var(--fs-135);color:var(--tinta);line-height:1.4;margin-top:.1875rem}
-.nota .nota-borrar{min-width:40px;min-height:40px;border:0;background:none;color:var(--gris-cl);font-size:var(--fs-145);flex:0 0 auto}
+.nota .nota-borrar{min-width:var(--tap);min-height:var(--tap);border:0;background:none;color:var(--gris-cl);font-size:var(--fs-145);flex:0 0 auto}
 #btn-ej-agregar-nota{margin:var(--sp-2) 0 var(--sp-5)}
 
 /* Variaciones (0052): de la más fácil a la más difícil. El nivel va a la
