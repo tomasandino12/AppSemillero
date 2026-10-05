@@ -51,3 +51,35 @@ test('Deshacer y Terminar no quedan mitad y mitad', () => {
   const css = fuente('public/css/componentes.css');
   assert.match(css, /\.yoyo-pie\{[^}]*gap:var\(--sp-6\)/);
 });
+
+test('cambiar de categoría con el Yo-Yo corriendo pide confirmación y no fija el plantel antes', () => {
+  const chrome = fuente('src/ui/chrome.js');
+  assert.doesNotMatch(chrome, /setPlantelActivoId/);
+  assert.match(chrome, /alElegirPlantel\(boton\.dataset\.plantel\)/);
+  const cambiar = cuerpoDe(main, 'export async function cambiarPlantel(');
+  assert.match(cambiar, /frenaLaSalida\(/);
+  assert.ok(cambiar.indexOf('frenaLaSalida(') < cambiar.indexOf('setPlantelActivoId('));
+  assert.match(main, /onPlantel: \(id\) => cambiarPlantel\(id\)/);
+});
+
+/** Los borrados de datos cargados por el usuario: [archivo, selector del botón, acción que borra]. */
+const BORRADOS = [
+  ['src/ui/pantallas/medir.js', '[data-descartar]', 'borrarBorrador('],
+  ['src/ui/pantallas/ejercicio.js', '[data-nota]', 'borrarNota('],
+  ['src/ui/pantallas/ejercicio.js', '[data-borrar-variacion]', 'borrarVariacion('],
+  ['src/ui/pantallas/fichaJugador.js', '[data-borrar]', 'borrarMedicionCorporal('],
+];
+
+for (const [ruta, selector, accion] of BORRADOS) {
+  test(`${selector} en ${ruta.split('/').pop()} no borra sin confirmar`, () => {
+    const src = fuente(ruta);
+    const ini = src.indexOf(`querySelectorAll('${selector}')`);
+    assert.notStrictEqual(ini, -1, `no está el handler de ${selector}`);
+    const fin = src.indexOf('\n  });', ini);
+    const handler = src.slice(ini, fin);
+    const iConfirmar = handler.indexOf('confirmarEnHoja(');
+    const iAlConfirmar = handler.indexOf('alConfirmar');
+    assert.ok(iConfirmar !== -1, 'el handler no pasa por confirmarEnHoja');
+    assert.ok(handler.indexOf(accion) > iAlConfirmar, `${accion} se llama fuera de alConfirmar`);
+  });
+}

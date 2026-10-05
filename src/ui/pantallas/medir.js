@@ -5,6 +5,7 @@ import { claveBorrador, leerBorrador, borrarBorrador } from '../borradorMedicion
 import { ir } from '../main.js';
 import { $ } from '../dom.js';
 import { textoDeError } from '../errores.js';
+import { confirmarEnHoja } from '../componentes/confirmar.js';
 
 const contenedor = () => $('medir-contenido');
 
@@ -97,9 +98,20 @@ export async function renderMedir() {
     b.addEventListener('click', () => ir(PANTALLA_TIPO[b.dataset.seguir], { push: true }));
   });
   contenedor().querySelectorAll('[data-descartar]').forEach((b) => {
-    b.addEventListener('click', async () => {
-      borrarBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, b.dataset.descartar));
-      await renderMedir();
+    b.addEventListener('click', () => {
+      const tipo = b.dataset.descartar;
+      const cargados = cuantosCargados(borradores[tipo]);
+      confirmarEnHoja({
+        titulo: 'Descartar la sesión',
+        texto: cargados
+          ? `Se pierde ${cargados === 1 ? 'el jugador cargado' : `los ${cargados} jugadores cargados`} en ${NOMBRE_TIPO[tipo].toLowerCase()}. No se puede deshacer.`
+          : `Se descarta la sesión de ${NOMBRE_TIPO[tipo].toLowerCase()} sin terminar. No se puede deshacer.`,
+        verbo: 'Descartar',
+        alConfirmar: async () => {
+          borrarBorrador(claveBorrador(obtenerCuenta()?.id, club.id, plantel.id, tipo));
+          await renderMedir();
+        },
+      });
     });
   });
 

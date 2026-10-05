@@ -27,6 +27,7 @@ import { variacionHtml } from '../componentes/variacion.js';
 import { verDetallesHtml } from '../componentes/verDetalles.js';
 import { tarjetasDePesosHtml, dibujarCurvasDePesos } from '../componentes/tarjetasDePesos.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { confirmarEnHoja } from '../componentes/confirmar.js';
 import { botonIcono, ICONO } from '../componentes/iconos.js';
 import { abrirGuiaSalto } from '../componentes/guiaSalto.js';
 import { seccionSprint } from '../componentes/seccionSprint.js';
@@ -650,20 +651,23 @@ function renderCorporal(clubId, idJugador, mediciones) {
   `;
 
   cont.querySelectorAll('[data-borrar]').forEach((b) => {
-    b.addEventListener('click', async () => {
-      if (b.disabled) return;
-      b.disabled = true;
-      try {
-        await borrarMedicionCorporal(clubId, b.dataset.borrar);
-      } catch (e) {
-        $('corporal-aviso').innerHTML = `<div class="al"><div class="tx">${
-          esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos.' : 'No se pudo borrar la medición.'
-        }</div></div>`;
-        b.disabled = false;
-        return;
-      }
-      await cargarCorporal(clubId, idJugador);
-    });
+    const medicion = ordenadas.find((m) => m.id === b.dataset.borrar);
+    b.addEventListener('click', () => confirmarEnHoja({
+      titulo: 'Borrar la medición',
+      texto: `Se borra la medición corporal del ${formatearFechaCorta(medicion?.fechaMedicion ?? '')}. No se puede deshacer.`,
+      verbo: 'Borrar',
+      alConfirmar: async () => {
+        try {
+          await borrarMedicionCorporal(clubId, b.dataset.borrar);
+        } catch (e) {
+          $('corporal-aviso').innerHTML = `<div class="al"><div class="tx">${
+            esErrorDeRed(e) ? 'Sin conexión. Revisá tu wifi/datos.' : 'No se pudo borrar la medición.'
+          }</div></div>`;
+          return;
+        }
+        await cargarCorporal(clubId, idJugador);
+      },
+    }));
   });
 
   $('btn-como-medir').addEventListener('click', () => abrirProtocoloCorporal(obtenerClubActual()));

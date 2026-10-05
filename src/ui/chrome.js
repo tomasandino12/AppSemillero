@@ -1,5 +1,5 @@
 import {
-  obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo, setPlantelActivoId,
+  obtenerClubActual, obtenerPlanteles, obtenerPlantelActivo,
   obtenerModo, obtenerRoles, obtenerCuenta,
 } from './sesion.js';
 import { escaparHtml } from './nav.js';
@@ -170,10 +170,9 @@ export function renderChrome({ pantallaId, titulo, mostrarAtras }) {
       </button>
     `).join('');
     cats.querySelectorAll('.cat').forEach((boton) => {
-      boton.addEventListener('click', () => {
-        setPlantelActivoId(boton.dataset.plantel);
-        alElegirPlantel();
-      });
+      // El plantel no se fija acá: si hay algo en curso (el Yo-Yo corriendo),
+      // quien navega pide confirmación antes de cambiarlo.
+      boton.addEventListener('click', () => alElegirPlantel(boton.dataset.plantel));
     });
   }
 

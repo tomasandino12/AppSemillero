@@ -14,7 +14,7 @@ import { mostrarPantalla, toast } from './nav.js';
 import { confirmarEnHoja } from './componentes/confirmar.js';
 import {
   setClubActual, obtenerClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo,
-  setCuenta, setFichaJugador,
+  setCuenta, setFichaJugador, setPlantelActivoId,
 } from './sesion.js';
 import { descartarBorradoresAnteriores } from './borradorMedicion.js';
 import {
@@ -113,6 +113,17 @@ export async function refrescar() {
   if (!def) return;
   sincronizarChrome();
   if (def.render) await def.render();
+}
+
+/**
+ * Cambia la categoría activa. Si la pantalla tiene algo en curso (Yo-Yo
+ * corriendo) pide confirmación antes: el plantel recién se fija si la persona
+ * confirma, así cancelar deja todo como estaba, chips incluidos.
+ */
+export async function cambiarPlantel(id) {
+  if (frenaLaSalida(() => cambiarPlantel(id))) return;
+  setPlantelActivoId(id);
+  await refrescar();
 }
 
 export async function volver() {
@@ -323,7 +334,7 @@ async function iniciar() {
   iniciarPublico({ onEntrar: entrarConSesion, onReintentarClub: entrarConSesion });
   iniciarChrome({
     onTab: (id) => ir(id),
-    onPlantel: () => refrescar(),
+    onPlantel: (id) => cambiarPlantel(id),
     onVolver: () => volver(),
     onInicio: () => ir(pantallaDeInicio()),
     // push: Mi perfil se abre encima de donde estaba, y volver regresa ahí.

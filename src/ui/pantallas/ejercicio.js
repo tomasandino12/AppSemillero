@@ -18,6 +18,7 @@ import { cargarPerfiles, nombreDe, esMio, asegurarNombre } from '../perfil.js';
 import { abrirAltaEjercicio } from './ejercicios.js';
 import { abrirEditorDePizarraDeEjercicio } from './jugadas.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { confirmarEnHoja } from '../componentes/confirmar.js';
 import { ir, volver } from '../main.js';
 import { $ } from '../dom.js';
 import { LIMITE } from '../../data/limites.js';
@@ -173,23 +174,25 @@ function pintarEjercicio(club, ejercicio, notas, variaciones) {
   // Las notas de otros no se pueden borrar: esMio() ya decide en notaHtml()
   // si el botón existe, así que acá sólo hay botones sobre notas propias.
   contenedor().querySelectorAll('[data-nota]').forEach((boton) => {
-    boton.addEventListener('click', async () => {
-      if (boton.disabled) return;
-      boton.disabled = true;
-      try {
-        await borrarNota(club.id, boton.dataset.nota);
-      } catch (e) {
-        // La garantía es la policy de 0015, no el esMio() de acá: si dos
-        // pestañas del mismo profe borran distinto, esto puede llegar igual.
-        toast(e?.message === 'NO_ES_TUYO'
-          ? 'Esta nota ya no es tuya: no se puede borrar.'
-          : (textoDeError(e, 'No se pudo borrar la nota.')));
-        boton.disabled = false;
-        return;
-      }
-      toast('Nota borrada');
-      await renderEjercicio();
-    });
+    boton.addEventListener('click', () => confirmarEnHoja({
+      titulo: 'Borrar la nota',
+      texto: 'Se borra tu nota del ejercicio. No se puede deshacer.',
+      verbo: 'Borrar',
+      alConfirmar: async () => {
+        try {
+          await borrarNota(club.id, boton.dataset.nota);
+        } catch (e) {
+          // La garantía es la policy de 0015, no el esMio() de acá: si dos
+          // pestañas del mismo profe borran distinto, esto puede llegar igual.
+          toast(e?.message === 'NO_ES_TUYO'
+            ? 'Esta nota ya no es tuya: no se puede borrar.'
+            : (textoDeError(e, 'No se pudo borrar la nota.')));
+          return;
+        }
+        toast('Nota borrada');
+        await renderEjercicio();
+      },
+    }));
   });
 
   // Comodidad, no garantía: la garantía de editar/borrar sólo lo propio es
@@ -280,22 +283,25 @@ function cablearVariaciones(club, ejercicio, variaciones) {
     boton.addEventListener('click', () => abrirFormVariacion(club, ejercicio, variaciones, variacion));
   });
   contenedor().querySelectorAll('[data-borrar-variacion]').forEach((boton) => {
-    boton.addEventListener('click', async () => {
-      if (boton.disabled) return;
-      boton.disabled = true;
-      try {
-        await borrarVariacion(club.id, boton.dataset.borrarVariacion);
-      } catch (e) {
-        toast(mensajeAlGuardar(e, {
-          reglas: [[/NO_ES_TUYO/, 'Esta variación ya no es tuya: no se puede borrar.']],
-          generico: 'No se pudo borrar la variación.',
-        }));
-        boton.disabled = false;
-        return;
-      }
-      toast('Variación borrada');
-      await renderEjercicio();
-    });
+    const variacion = variaciones.find((v) => v.id === boton.dataset.borrarVariacion);
+    boton.addEventListener('click', () => confirmarEnHoja({
+      titulo: 'Borrar la variación',
+      texto: `Se borra la variación "${variacion?.titulo ?? ''}". No se puede deshacer.`,
+      verbo: 'Borrar',
+      alConfirmar: async () => {
+        try {
+          await borrarVariacion(club.id, boton.dataset.borrarVariacion);
+        } catch (e) {
+          toast(mensajeAlGuardar(e, {
+            reglas: [[/NO_ES_TUYO/, 'Esta variación ya no es tuya: no se puede borrar.']],
+            generico: 'No se pudo borrar la variación.',
+          }));
+          return;
+        }
+        toast('Variación borrada');
+        await renderEjercicio();
+      },
+    }));
   });
 }
 
