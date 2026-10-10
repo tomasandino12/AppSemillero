@@ -82,9 +82,21 @@ test('el arranque del cuerpo técnico no suma ninguna llamada: la ficha se pide 
   const main = readFileSync('src/ui/main.js', 'utf8');
   const llamadas = [...main.matchAll(/await fichaDelJugador\(\)/g)];
   assert.equal(llamadas.length, 1, 'fichaDelJugador() se llama en un solo lugar');
-  const sinClub = main.indexOf('if (!clubes.length) {');
+  const sinClub = main.indexOf('if (!clubes.length || !(roles.esEntrenador || roles.esCoordinador)) {');
   const sigueConClub = main.indexOf('setClubActual(clubes[0])');
   assert.ok(sinClub >= 0 && sigueConClub > sinClub, 'no encontré la rama sin club');
   assert.ok(main.indexOf('await fichaDelJugador()') > sinClub && main.indexOf('await fichaDelJugador()') < sigueConClub,
     'la consulta de mi_ficha() tiene que estar adentro de la rama "sin club"');
+});
+
+test('sin ningún rol no queda coordinando: un profe dado de baja no es coordinador', () => {
+  setRoles({ esEntrenador: false, esCoordinador: false });
+  assert.notEqual(obtenerModo(), 'coordinar');
+});
+
+test('una fila de miembro_club sin roles entra por la rama sin club, no como cuerpo técnico', () => {
+  const main = readFileSync('src/ui/main.js', 'utf8');
+  const sinRoles = main.indexOf('if (!clubes.length || !(roles.esEntrenador || roles.esCoordinador)) {');
+  assert.ok(sinRoles >= 0, 'la rama sin club tiene que cubrir también a quien no tiene ningún rol');
+  assert.ok(main.indexOf('obtenerMisRoles(') < sinRoles, 'los roles se piden antes de decidir la rama');
 });

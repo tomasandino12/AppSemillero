@@ -309,7 +309,20 @@ async function entrarConSesion() {
     volverALaLanding();
     return;
   }
-  if (!clubes.length) {
+  let roles = { esEntrenador: false, esCoordinador: false };
+  if (clubes.length) {
+    try {
+      roles = await obtenerMisRoles(clubes[0].id);
+    } catch {
+      toast('No se pudo cargar tu acceso. Revisá tu conexión.');
+      volverALaLanding();
+      return;
+    }
+  }
+  // Un profe dado de baja conserva su fila de miembro_club sin ningún rol
+  // (0039) y por RLS sigue viendo el club: no es del cuerpo técnico, y
+  // tratarlo como tal lo dejaba en modo coordinar con todo vacío.
+  if (!clubes.length || !(roles.esEntrenador || roles.esCoordinador)) {
     // Sin club de staff puede ser un jugador con cuenta. Se pregunta recién acá
     // para que el arranque del cuerpo técnico no sume ni una llamada.
     const ficha = await fichaDelJugador();
@@ -326,14 +339,7 @@ async function entrarConSesion() {
     return;
   }
   setClubActual(clubes[0]);
-
-  try {
-    setRoles(await obtenerMisRoles(clubes[0].id));
-  } catch {
-    toast('No se pudo cargar tu acceso. Revisá tu conexión.');
-    volverALaLanding();
-    return;
-  }
+  setRoles(roles);
 
   // Los chips del modo entrenar son SÓLO las categorías asignadas vigentes.
   // Con RLS alcanzaba para un entrenador puro, pero quien además coordina ve
