@@ -95,9 +95,6 @@
       <button class="btn" id="btn-ir-crear">Crear cuenta</button>
       <button class="btn sec" id="btn-ir-ingresar">Ya tengo cuenta</button>
     </div>
-    <div class="enlaces">
-      <button id="btn-ir-crear-jugador">¿Sos jugador?<b>Creá tu cuenta</b></button>
-    </div>
 
     <div class="beneficios">
       <div class="ben ancha" data-demo="plantel">
@@ -199,11 +196,35 @@
     </div>
   </section>
 
+  <!-- Antes de crear la cuenta, quién sos: cambia lo que pasa después (el
+       jugador pide acceso a su categoría; al profe lo habilita el club). -->
+  <section class="vista" id="v-quien">
+    <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
+    <div class="caja">
+      <h2>¿Quién sos?</h2>
+      <div class="sub">Elegí la que te toca. Después, para entrar, todos usan el mismo "Ya tengo cuenta".</div>
+      <div class="quien">
+        <button type="button" class="quien-op" id="btn-alta-jugador">
+          <span class="t">Soy jugador</span>
+          <span class="d">Elegís tu club y tu categoría, y tu profe aprueba tu pedido.</span>
+        </button>
+        <button type="button" class="quien-op" id="btn-alta-profe">
+          <span class="t">Soy profe o coordinador</span>
+          <span class="d">El coordinador del club te da el acceso a tus categorías.</span>
+        </button>
+      </div>
+      <div class="enlaces">
+        <button id="btn-ir-ingresar-4">¿Ya tenés cuenta?<b>Ingresar</b></button>
+        <button id="btn-quien-volver">&lsaquo; Volver</button>
+      </div>
+    </div>
+  </section>
+
   <section class="vista" id="v-crear">
     <div class="marca"><img src="/public/escudo.png" alt=""><div><div class="t">Inferiores</div><div class="s">Newell&#39;s Old Boys</div></div></div>
     <div class="caja">
-      <h2 id="cr-titulo">Crear cuenta</h2>
-      <div class="sub" id="cr-sub">Crear la cuenta es el primer paso. Para ver los datos de un club, después alguien del club tiene que darte el acceso.</div>
+      <h2 id="cr-titulo">Cuenta de profe</h2>
+      <div class="sub" id="cr-sub">Creá tu cuenta con tu mail. Después el coordinador de tu club te da acceso a tus categorías: hasta entonces no ves datos del club.</div>
 
       <div class="campo-osc">
         <label for="cr-nombre">Nombre y apellido completos</label>
@@ -248,7 +269,7 @@
 
       <div class="enlaces">
         <button id="btn-ir-ingresar-2">¿Ya tenés cuenta?<b>Ingresar</b></button>
-        <button id="btn-volver-landing-2">&lsaquo; Volver</button>
+        <button id="btn-crear-volver">&lsaquo; Volver</button>
       </div>
     </div>
   </section>

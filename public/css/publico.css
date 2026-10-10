@@ -199,6 +199,20 @@
 .caja h2{font-size:var(--fs-260);text-align:center;margin-bottom:var(--sp-2)}
 .caja .sub{color:var(--gris-osc);font-size:var(--fs-135);text-align:center;line-height:1.45;margin-bottom:var(--sp-5)}
 
+/* "¿Quién sos?": dos opciones grandes con su explicación, para que nadie
+   elija mal por tocar el botón más visible. */
+.quien{display:flex;flex-direction:column;gap:var(--sp-3)}
+.quien-op{
+  display:flex;flex-direction:column;gap:var(--sp-1);text-align:left;width:100%;
+  min-height:var(--tap);padding:var(--sp-4);
+  background:var(--pub-tarjeta);border:1px solid var(--pub-borde);border-left:3px solid var(--primario);
+  border-radius:var(--r-m);color:var(--sobre-oscuro);
+  transition:transform var(--dur-1) var(--ease-salida);
+}
+.quien-op .t{font-family:var(--ff-titulo);font-size:var(--fs-190);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.quien-op .d{color:var(--gris-osc);font-size:var(--fs-135);line-height:1.45}
+.quien-op:active{transform:scale(.98)}
+
 /* El código de 6 caracteres que el chico le muestra al profe en la práctica (0037). */
 .codigo-solicitud{
   font-family:var(--ff-mono);font-weight:600;font-size:var(--fs-300);
@@ -320,4 +334,5 @@
   .publico .btn.sec:not(:disabled):hover{background:var(--toque-osc)}
   .btn-google:not(:disabled):not(:active):hover{background:var(--google-hover);transform:translateY(-2px);transition-duration:var(--dur-2)}
   .enlaces button:hover b{color:var(--sobre-oscuro)}
+  .quien-op:hover{background:var(--toque-osc)}
 }
