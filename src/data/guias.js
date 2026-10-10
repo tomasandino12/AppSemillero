@@ -95,3 +95,13 @@ export function estadoDePaso(indice, total) {
     textoSiguiente: indice >= total - 1 ? 'Empezar' : 'Siguiente',
   };
 }
+
+/**
+ * Qué guía abrir al entrar a un modo, o null. Nunca encima de otra hoja (la
+ * solicitud de jugador, una confirmación): taparía algo que la persona tiene
+ * que contestar, y al cerrarla quedaría marcada como vista sin haberla leído.
+ */
+export function guiaParaAbrir({ modo, hojaAbierta, vista }) {
+  if (!GUIAS[modo] || hojaAbierta || vista) return null;
+  return modo;
+}

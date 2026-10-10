@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { GUIAS, PISTAS, pasosDeGuia, estadoDePaso } from '../src/data/guias.js';
+import { GUIAS, PISTAS, pasosDeGuia, estadoDePaso, guiaParaAbrir } from '../src/data/guias.js';
 
 // chrome.js importa el DOM y no se carga en node: los ids de cada pestaña se
 // leen del texto de cada lista.
@@ -61,4 +61,18 @@ test('cada pista tiene texto y no pasa de 160 caracteres', () => {
   for (const [id, texto] of Object.entries(PISTAS)) {
     assert.ok(texto.length > 0 && texto.length <= 160, id);
   }
+});
+
+test('el modo jugar abre la guía del jugador', () => {
+  assert.equal(guiaParaAbrir({ modo: 'jugar', hojaAbierta: false, vista: false }), 'jugar');
+  assert.equal(guiaParaAbrir({ modo: 'coordinar', hojaAbierta: false, vista: false }), 'coordinar');
+  assert.equal(guiaParaAbrir({ modo: 'otro', hojaAbierta: false, vista: false }), null);
+});
+
+test('no se abre sobre otra hoja', () => {
+  assert.equal(guiaParaAbrir({ modo: 'entrenar', hojaAbierta: true, vista: false }), null);
+});
+
+test('ya vista no se abre', () => {
+  assert.equal(guiaParaAbrir({ modo: 'entrenar', hojaAbierta: false, vista: true }), null);
 });

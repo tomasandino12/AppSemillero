@@ -4,9 +4,12 @@ import {
 } from '../../data/repositorio.js';
 import { normalizarNombre, inicialesDeNombre, rolesLegibles } from '../../data/cuenta.js';
 import { temporadaMasReciente } from '../../data/coordinacion.js';
-import { obtenerCuenta, obtenerClubActual, obtenerRoles, obtenerFichaJugador, setNombreDeCuenta } from '../sesion.js';
+import {
+  obtenerCuenta, obtenerClubActual, obtenerRoles, obtenerFichaJugador, setNombreDeCuenta, obtenerModo,
+} from '../sesion.js';
 import { escaparHtml, esErrorDeRed, toast } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { abrirGuia } from '../componentes/guia.js';
 import { sincronizarChrome, salir } from '../main.js';
 import { $ } from '../dom.js';
 import { textoDeError } from '../errores.js';
@@ -148,11 +151,16 @@ export async function renderMiPerfil() {
         </div>
       </section>
 
+      <button class="btn sec perfil-guia" id="btn-ver-guia">Ver la guía</button>
       <button class="btn sec" id="btn-cerrar-sesion">Cerrar sesión</button>
       <p class="perfil-legal"><a href="/public/legal/privacidad.html" target="_blank" rel="noopener">Política de privacidad</a> · <a href="/public/legal/terminos.html" target="_blank" rel="noopener">Términos y condiciones</a></p>
     </div>
   `;
   $('btn-editar-nombre').addEventListener('click', abrirEditarNombre);
+  // Sin mirar si ya se vio: quien la pide la quiere ver de nuevo.
+  $('btn-ver-guia').addEventListener('click', () => {
+    abrirGuia({ guiaId: obtenerModo(), roles: obtenerRoles(), usuarioId: cuenta.id });
+  });
   $('btn-cerrar-sesion').addEventListener('click', () => salir());
 
   try {

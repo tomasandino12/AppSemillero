@@ -18,8 +18,11 @@ import {
 import { crearHistorial } from './historial.js';
 import {
   setClubActual, obtenerClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo,
-  setCuenta, setFichaJugador, setPlantelActivoId,
+  setCuenta, setFichaJugador, setPlantelActivoId, obtenerRoles, obtenerCuenta,
 } from './sesion.js';
+import { GUIAS, guiaParaAbrir } from '../data/guias.js';
+import { claveGuia, yaVista } from './guiaVista.js';
+import { abrirGuia } from './componentes/guia.js';
 import { descartarBorradoresAnteriores } from './borradorMedicion.js';
 import {
   iniciarChrome, renderChrome, pantallaInicialDelModo, pantallaDeInicio, PANTALLA_PERFIL,
@@ -172,6 +175,19 @@ async function cambiarModo(modo) {
   if (frenaLaSalida(() => cambiarModo(modo))) return;
   setModo(modo);
   await ir(pantallaInicialDelModo());
+  abrirGuiaSiFalta();
+}
+
+/**
+ * La intro del modo, la primera vez que se entra. Va después de dibujar la
+ * pantalla inicial: abierta antes, la hoja taparía una pantalla en blanco.
+ */
+function abrirGuiaSiFalta() {
+  const modo = obtenerModo();
+  const usuarioId = obtenerCuenta()?.id;
+  const vista = GUIAS[modo] ? yaVista(claveGuia(usuarioId, modo), GUIAS[modo].version) : true;
+  const guiaId = guiaParaAbrir({ modo, hojaAbierta: hojaAbierta(), vista });
+  if (guiaId) abrirGuia({ guiaId, roles: obtenerRoles(), usuarioId });
 }
 
 export async function volver() {
@@ -252,6 +268,7 @@ async function entrarComoJugador(ficha) {
   setPlanteles([]);
   mostrarApp();
   await ir(pantallaInicialDelModo());
+  abrirGuiaSiFalta();
 }
 
 /**
@@ -363,6 +380,7 @@ async function entrarConSesion() {
   // Entrenando arranca en PLANTEL, donde empieza el flujo de quien arranca de
   // cero; coordinando, en el Panorama.
   await ir(pantallaInicialDelModo());
+  abrirGuiaSiFalta();
 }
 
 async function iniciar() {

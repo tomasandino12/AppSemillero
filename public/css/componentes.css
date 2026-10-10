@@ -626,6 +626,7 @@ svg.g{width:100%;display:block;overflow:visible}
 .aviso-estimacion{font-size:var(--fs-125);color:var(--gris-cl);font-style:italic;margin:var(--sp-3) 0 var(--sp-5)}
 .perfil-legal{text-align:center;font-size:var(--fs-125);color:var(--gris-cl);margin-top:var(--sp-5)}
 .perfil-legal a{color:inherit}
+.perfil-guia{margin-bottom:var(--sp-3)}
 .perfil-cats{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)}
 .nota-codigos{font-size:var(--fs-125);color:var(--gris)}
 
