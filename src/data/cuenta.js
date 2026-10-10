@@ -39,7 +39,9 @@ export function nombreSugerido(usuario) {
 
 /** 'Tomás Andino' → 'TA'. Una palabra, una letra. Sin nombre, ''. */
 export function inicialesDeNombre(nombre) {
-  const palabras = normalizarNombre(nombre).split(' ').filter(Boolean);
+  // Sólo palabras que empiezan con letra: un "(coord)" o un número al final
+  // del nombre daban iniciales como "T(".
+  const palabras = normalizarNombre(nombre).split(' ').filter((p) => /^\p{L}/u.test(p));
   if (!palabras.length) return '';
   const primera = [...palabras[0]][0];
   const ultima = palabras.length > 1 ? [...palabras[palabras.length - 1]][0] : '';

@@ -46,6 +46,12 @@ test('las iniciales son la primera y la última palabra', () => {
   assert.equal(inicialesDeNombre(''), '');
 });
 
+test('las iniciales saltean lo que no empieza con una letra', () => {
+  assert.equal(inicialesDeNombre('Tomás (coord)'), 'T');
+  assert.equal(inicialesDeNombre('Juan Pérez 2'), 'JP');
+  assert.equal(inicialesDeNombre('(prueba)'), '');
+});
+
 test('los roles se leen en orden fijo', () => {
   assert.deepEqual(rolesLegibles({ esEntrenador: true, esCoordinador: true }), ['Entrenador', 'Coordinación']);
   assert.deepEqual(rolesLegibles({ esCoordinador: true }), ['Coordinación']);
