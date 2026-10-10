@@ -24,7 +24,7 @@
 | 2. Componente de la guía | hecha |
 | 3. Mostrarla al entrar y "Ver la guía" | hecha |
 | 4. Pistas de una vez y DESIGN.md | hecha |
-| 5. Prueba en el navegador por rol | pendiente |
+| 5. Prueba en el navegador por rol | hecha (coordinador, profe y jugador; sin arreglos) |
 
 ---
 
@@ -96,3 +96,5 @@
 Lo que se rompa se arregla en commits `fix(guia): …`. Al final, actualizar la tabla Estado y la memoria del proyecto.
 
 **Criterio:** los 6 puntos verificados en los 4 roles, con capturas de pantalla.
+
+**Resultado (10/10):** verificado con coordinador, profe y jugador. El caso "los dos roles" se sacó: la app no deja darle el rol de entrenador a un coordinador (docs/COORDINACION.md), así que sólo existiría tocando la base a mano. Las pistas sólo aplican a profe (coordinador y jugador no tienen Medir ni el editor). La app no tiene tema oscuro (DESIGN.md), así que "en oscuro" se ve igual.
