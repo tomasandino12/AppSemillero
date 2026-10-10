@@ -28,15 +28,15 @@ const CLAVE_MINIMA = 8;
 
 let alEntrar = async () => {};
 
-// Por qué puerta se abrió "Crear cuenta". El login es uno solo (la cuenta no
+// Qué eligió la persona en "¿Quién sos?" antes de crear la cuenta. El login es uno solo (la cuenta no
 // sabe qué es hasta que la base le da acceso); lo que cambia es la explicación
 // y llevar al jugador, apenas entra, al formulario de pedir acceso.
 let modoDeAlta = 'profe';
 
 const TEXTOS_DE_ALTA = {
   profe: {
-    titulo: 'Crear cuenta',
-    sub: 'Crear la cuenta es el primer paso. Para ver los datos de un club, después alguien del club tiene que darte el acceso.',
+    titulo: 'Cuenta de profe',
+    sub: 'Creá tu cuenta con tu mail. Después el coordinador de tu club te da acceso a tus categorías: hasta entonces no ves datos del club.',
   },
   jugador: {
     titulo: 'Cuenta de jugador',
@@ -346,8 +346,35 @@ async function aceptarLegalYSeguir() {
   });
 }
 
+// Google no lleva nuestra user_metadata, así que "Soy jugador" se pierde en el
+// ida y vuelta. Se anota en la pestaña antes de salir (sessionStorage
+// sobrevive a la redirección en la misma pestaña) y main.js lo lee al volver.
+// Como quiere_ser_jugador, sólo decide a qué formulario llevarla: no autoriza.
+const CLAVE_JUGADOR_POR_GOOGLE = 'alta.jugador-por-google';
+
+function anotarJugadorPorGoogle(esJugador) {
+  try {
+    if (esJugador) sessionStorage.setItem(CLAVE_JUGADOR_POR_GOOGLE, '1');
+    else sessionStorage.removeItem(CLAVE_JUGADOR_POR_GOOGLE);
+  } catch {
+    // Sin storage, el jugador cae en "falta el acceso", que tiene su botón.
+  }
+}
+
+/** Si eligió "Soy jugador" antes de ir a Google. Se lee una sola vez. */
+export function tomarJugadorPorGoogle() {
+  try {
+    const eligio = sessionStorage.getItem(CLAVE_JUGADOR_POR_GOOGLE) === '1';
+    sessionStorage.removeItem(CLAVE_JUGADOR_POR_GOOGLE);
+    return eligio;
+  } catch {
+    return false;
+  }
+}
+
 async function google(idError) {
   limpiarErrores();
+  anotarJugadorPorGoogle(idError === 'crear-error' && modoDeAlta === 'jugador');
   try {
     // Si sale bien esto navega a Google y la página se descarta.
     await entrarConGoogle();
@@ -383,15 +410,18 @@ export function iniciarPublico({ onEntrar, onReintentarClub }) {
   alEntrar = onEntrar;
   iniciarLandingAnimada();
 
-  $('btn-ir-crear').addEventListener('click', () => abrirAlta('profe'));
-  $('btn-ir-crear-2').addEventListener('click', () => abrirAlta('profe'));
-  $('btn-ir-crear-jugador').addEventListener('click', () => abrirAlta('jugador'));
+  $('btn-ir-crear').addEventListener('click', () => mostrarPublico('v-quien'));
+  $('btn-ir-crear-2').addEventListener('click', () => mostrarPublico('v-quien'));
+  $('btn-alta-jugador').addEventListener('click', () => abrirAlta('jugador'));
+  $('btn-alta-profe').addEventListener('click', () => abrirAlta('profe'));
+  $('btn-quien-volver').addEventListener('click', mostrarLanding);
+  $('btn-crear-volver').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-quien'); });
   $('btn-ir-ingresar').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-ingresar'); });
   $('btn-ir-ingresar-2').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-ingresar'); });
   $('btn-ir-ingresar-3').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-ingresar'); });
+  $('btn-ir-ingresar-4').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-ingresar'); });
   $('btn-ir-recuperar').addEventListener('click', () => { limpiarErrores(); mostrarPublico('v-recuperar'); });
   $('btn-volver-landing').addEventListener('click', mostrarLanding);
-  $('btn-volver-landing-2').addEventListener('click', mostrarLanding);
 
   $('btn-ingresar').addEventListener('click', ingresar);
   $('btn-crear').addEventListener('click', crear);

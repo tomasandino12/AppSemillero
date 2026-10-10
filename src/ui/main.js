@@ -18,15 +18,18 @@ import {
 import { crearHistorial } from './historial.js';
 import {
   setClubActual, obtenerClubActual, setPlanteles, limpiarSesion, setRoles, obtenerModo, setModo,
-  setCuenta, setFichaJugador, setPlantelActivoId,
+  setCuenta, setFichaJugador, setPlantelActivoId, obtenerRoles, obtenerCuenta,
 } from './sesion.js';
+import { GUIAS, guiaParaAbrir } from '../data/guias.js';
+import { claveGuia, yaVista } from './guiaVista.js';
+import { abrirGuia } from './componentes/guia.js';
 import { descartarBorradoresAnteriores } from './borradorMedicion.js';
 import {
   iniciarChrome, renderChrome, pantallaInicialDelModo, pantallaDeInicio, PANTALLA_PERFIL,
 } from './chrome.js';
 import {
   iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub, mostrarPedirNombre,
-  mostrarAceptarLegal,
+  mostrarAceptarLegal, tomarJugadorPorGoogle,
 } from './publico.js';
 
 const pantallas = new Map();
@@ -172,6 +175,19 @@ async function cambiarModo(modo) {
   if (frenaLaSalida(() => cambiarModo(modo))) return;
   setModo(modo);
   await ir(pantallaInicialDelModo());
+  abrirGuiaSiFalta();
+}
+
+/**
+ * La intro del modo, la primera vez que se entra. Va después de dibujar la
+ * pantalla inicial: abierta antes, la hoja taparía una pantalla en blanco.
+ */
+function abrirGuiaSiFalta() {
+  const modo = obtenerModo();
+  const usuarioId = obtenerCuenta()?.id;
+  const vista = GUIAS[modo] ? yaVista(claveGuia(usuarioId, modo), GUIAS[modo].version) : true;
+  const guiaId = guiaParaAbrir({ modo, hojaAbierta: hojaAbierta(), vista });
+  if (guiaId) abrirGuia({ guiaId, roles: obtenerRoles(), usuarioId });
 }
 
 export async function volver() {
@@ -252,6 +268,7 @@ async function entrarComoJugador(ficha) {
   setPlanteles([]);
   mostrarApp();
   await ir(pantallaInicialDelModo());
+  abrirGuiaSiFalta();
 }
 
 /**
@@ -309,7 +326,23 @@ async function entrarConSesion() {
     volverALaLanding();
     return;
   }
-  if (!clubes.length) {
+  let roles = { esEntrenador: false, esCoordinador: false };
+  if (clubes.length) {
+    try {
+      roles = await obtenerMisRoles(clubes[0].id);
+    } catch {
+      toast('No se pudo cargar tu acceso. Revisá tu conexión.');
+      volverALaLanding();
+      return;
+    }
+  }
+  // Se toma acá y no antes: pedir el nombre y los Términos cortan este camino
+  // y lo vuelven a empezar, y la marca tiene que llegar hasta la decisión.
+  const eligioJugador = tomarJugadorPorGoogle();
+  // Un profe dado de baja conserva su fila de miembro_club sin ningún rol
+  // (0039) y por RLS sigue viendo el club: no es del cuerpo técnico, y
+  // tratarlo como tal lo dejaba en modo coordinar con todo vacío.
+  if (!clubes.length || !(roles.esEntrenador || roles.esCoordinador)) {
     // Sin club de staff puede ser un jugador con cuenta. Se pregunta recién acá
     // para que el arranque del cuerpo técnico no sume ni una llamada.
     const ficha = await fichaDelJugador();
@@ -319,21 +352,14 @@ async function entrarConSesion() {
     }
     const sesion = await sesionSilenciosa();
     mostrarSinClub(sesion?.user?.email);
-    if (quiereSerJugador(usuario) && !yaSeLeAbrioElPedido) {
+    if ((quiereSerJugador(usuario) || eligioJugador) && !yaSeLeAbrioElPedido) {
       yaSeLeAbrioElPedido = true;
       await abrirSolicitudJugador();
     }
     return;
   }
   setClubActual(clubes[0]);
-
-  try {
-    setRoles(await obtenerMisRoles(clubes[0].id));
-  } catch {
-    toast('No se pudo cargar tu acceso. Revisá tu conexión.');
-    volverALaLanding();
-    return;
-  }
+  setRoles(roles);
 
   // Los chips del modo entrenar son SÓLO las categorías asignadas vigentes.
   // Con RLS alcanzaba para un entrenador puro, pero quien además coordina ve
@@ -357,6 +383,7 @@ async function entrarConSesion() {
   // Entrenando arranca en PLANTEL, donde empieza el flujo de quien arranca de
   // cero; coordinando, en el Panorama.
   await ir(pantallaInicialDelModo());
+  abrirGuiaSiFalta();
 }
 
 async function iniciar() {

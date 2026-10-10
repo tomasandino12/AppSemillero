@@ -6,6 +6,7 @@ import { ir } from '../main.js';
 import { $ } from '../dom.js';
 import { textoDeError } from '../errores.js';
 import { confirmarEnHoja } from '../componentes/confirmar.js';
+import { pistaUnaVez, conectarPista } from '../componentes/pista.js';
 
 const contenedor = () => $('medir-contenido');
 
@@ -60,6 +61,7 @@ export async function renderMedir() {
   contenedor().innerHTML = `
     <div class="pad">
       <div class="eyebrow">Medir ${escaparHtml(plantel.categoria)}</div>
+      ${pistaUnaVez('medir', obtenerCuenta()?.id)}
       <div id="medir-borradores">
         ${borradores.tiro ? tarjetaBorrador(borradores.tiro, 'tiro') : ''}
         ${borradores.salto ? tarjetaBorrador(borradores.salto, 'salto') : ''}
@@ -90,6 +92,7 @@ export async function renderMedir() {
     </div>
   `;
 
+  conectarPista('medir', obtenerCuenta()?.id);
   $('btn-medir-bateria').addEventListener('click', () => ir('p-medir-bateria', { push: true }));
   $('btn-medir-salto').addEventListener('click', () => ir('p-medir-salto', { push: true }));
   $('btn-medir-sprint').addEventListener('click', () => ir('p-medir-sprint', { push: true }));

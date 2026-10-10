@@ -61,7 +61,9 @@ export function setRoles(nuevos) {
   };
   if (roles.esEntrenador) modo = 'entrenar';
   else if (roles.esCoordinador) modo = 'coordinar';
-  else modo = roles.esJugador ? 'jugar' : 'coordinar';
+  // Sin ningún rol, entrenar y no coordinar: sin planteles queda vacío, en
+  // vez de mostrarle a alguien sin acceso la interfaz de coordinación.
+  else modo = roles.esJugador ? 'jugar' : 'entrenar';
 }
 
 export function obtenerRoles() {
