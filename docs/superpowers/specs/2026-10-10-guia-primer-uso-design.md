@@ -6,7 +6,7 @@ La app ya tiene muchas funciones: seis pestañas para el profe, tres para el coo
 
 ## Qué se hace
 
-1. **Intro por modo** (`entrenar`, `coordinar`, `jugador`): la primera vez que alguien entra a un modo, se abre una **hoja** con 2 o 3 pasos. Tiene Anterior y Siguiente, un contador "2 de 3" y "Saltar" siempre visible. En el último paso, Siguiente dice "Empezar".
+1. **Intro por modo** (`entrenar`, `coordinar`, `jugar`): la primera vez que alguien entra a un modo, se abre una **hoja** con 2 o 3 pasos. Tiene Anterior y Siguiente, un contador "2 de 3" y "Saltar" siempre visible. En el último paso, Siguiente dice "Empezar".
 2. **Pistas de una vez**: un aviso chico arriba de la pantalla, con un botón "Entendido". Sale la primera vez que alguien entra a una pantalla que necesita explicación. No bloquea ni encadena pasos.
 3. **"Ver la guía"** en Mi perfil: vuelve a abrir la intro del modo actual.
 

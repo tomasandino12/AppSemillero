@@ -20,7 +20,7 @@
 
 | Task | Estado |
 |---|---|
-| 1. Lógica pura y almacén | pendiente |
+| 1. Lógica pura y almacén | hecha |
 | 2. Componente de la guía | pendiente |
 | 3. Mostrarla al entrar y "Ver la guía" | pendiente |
 | 4. Pistas de una vez y DESIGN.md | pendiente |
@@ -33,7 +33,7 @@
 **Archivos:** crear `src/data/guias.js`, `src/ui/guiaVista.js`, `tests/guias.test.js` y `tests/guiaVista.test.js`.
 
 **Qué produce:**
-- `GUIAS`: objeto con `{ entrenar, coordinar, jugador }`. Cada guía tiene `{ version: entero, pasos: [{ pestana, titulo, texto }] }`. `pestana` es el id de una pestaña (`'p-medir'`). `ICONOS` es privado de `chrome.js`, así que la UI busca el ícono en `TABS`, `TABS_COORDINACION` o `TABS_JUGADOR`, que ya se exportan.
+- `GUIAS`: objeto con `{ entrenar, coordinar, jugar }` (los modos de `sesion.js`). Cada guía tiene `{ version: entero, pasos: [{ pestana, titulo, texto }] }`. `pestana` es el id de una pestaña (`'p-medir'`). `ICONOS` es privado de `chrome.js`, así que la UI busca el ícono en `TABS`, `TABS_COORDINACION` o `TABS_JUGADOR`, que ya se exportan.
 - `pasosDeGuia(guiaId, roles)`: los pasos de esa guía. En `entrenar` con `roles.esCoordinador` suma al último paso la frase del cambio de modo. Con una guía desconocida devuelve `[]`.
 - `estadoDePaso(indice, total)`: devuelve `{ contador: '2 de 3', hayAnterior, textoSiguiente: 'Siguiente' | 'Empezar' }`.
 - `PISTAS`: `{ medir: texto, 'jugada-editor': texto }`.
@@ -63,11 +63,11 @@
 
 **Archivos:** modificar `src/ui/main.js` (después de `ir(pantallaInicialDelModo())` en `entrarConSesion`, `entrarComoJugador` y `cambiarModo`) y `src/ui/pantallas/miPerfil.js` (un botón `btn sec` "Ver la guía" arriba de "Cerrar sesión").
 
-**Qué produce:** `abrirGuiaSiFalta()` en `main.js`. Toma el modo actual (`jugador` si `roles.esJugador`, si no `obtenerModo()`) y abre la guía sólo si `!hojaAbierta()` y `!yaVista(...)`. Mi perfil llama a `abrirGuia` del modo actual sin mirar si ya se vio.
+**Qué produce:** `abrirGuiaSiFalta()` en `main.js`. Toma `obtenerModo()`, que ya coincide con el id de la guía, y abre la guía sólo si `!hojaAbierta()` y `!yaVista(...)`. Mi perfil llama a `abrirGuia` del modo actual sin mirar si ya se vio.
 
 **Criterio:** una cuenta nueva ve la intro una vez. Al recargar no aparece. Quien tiene los dos roles ve la intro de coordinar la primera vez que cambia de modo. Con la solicitud de jugador abierta, la guía no se abre encima. `tests/navegacionInvariante.test.js` sigue pasando.
 
-**Tests:** extraer la decisión a una función pura `guiaParaAbrir({ esJugador, modo, hojaAbierta, vista })` en `guias.js` y testearla: `jugador ve la guía de jugador`, `no se abre sobre otra hoja`, `ya vista no se abre`.
+**Tests:** extraer la decisión a una función pura `guiaParaAbrir({ modo, hojaAbierta, vista })` en `guias.js` y testearla: `el modo jugar abre la guía del jugador`, `no se abre sobre otra hoja`, `ya vista no se abre`.
 
 **Commit:** `feat(guia): la intro se abre al entrar a cada modo y se repite desde Mi perfil`
 
