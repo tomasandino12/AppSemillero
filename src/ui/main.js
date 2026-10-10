@@ -29,7 +29,7 @@ import {
 } from './chrome.js';
 import {
   iniciarPublico, mostrarPublico, mostrarApp, mostrarLanding, mostrarSinClub, mostrarPedirNombre,
-  mostrarAceptarLegal,
+  mostrarAceptarLegal, tomarJugadorPorGoogle,
 } from './publico.js';
 
 const pantallas = new Map();
@@ -339,6 +339,9 @@ async function entrarConSesion() {
   // Un profe dado de baja conserva su fila de miembro_club sin ningún rol
   // (0039) y por RLS sigue viendo el club: no es del cuerpo técnico, y
   // tratarlo como tal lo dejaba en modo coordinar con todo vacío.
+  // Se toma acá y no antes: pedir el nombre y los Términos cortan este camino
+  // y lo vuelven a empezar, y la marca tiene que llegar hasta la decisión.
+  const eligioJugador = tomarJugadorPorGoogle();
   if (!clubes.length || !(roles.esEntrenador || roles.esCoordinador)) {
     // Sin club de staff puede ser un jugador con cuenta. Se pregunta recién acá
     // para que el arranque del cuerpo técnico no sume ni una llamada.
@@ -349,7 +352,7 @@ async function entrarConSesion() {
     }
     const sesion = await sesionSilenciosa();
     mostrarSinClub(sesion?.user?.email);
-    if (quiereSerJugador(usuario) && !yaSeLeAbrioElPedido) {
+    if ((quiereSerJugador(usuario) || eligioJugador) && !yaSeLeAbrioElPedido) {
       yaSeLeAbrioElPedido = true;
       await abrirSolicitudJugador();
     }

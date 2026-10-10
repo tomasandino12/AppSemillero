@@ -346,8 +346,35 @@ async function aceptarLegalYSeguir() {
   });
 }
 
+// Google no lleva nuestra user_metadata, así que "Soy jugador" se pierde en el
+// ida y vuelta. Se anota en la pestaña antes de salir (sessionStorage
+// sobrevive a la redirección en la misma pestaña) y main.js lo lee al volver.
+// Como quiere_ser_jugador, sólo decide a qué formulario llevarla: no autoriza.
+const CLAVE_JUGADOR_POR_GOOGLE = 'alta.jugador-por-google';
+
+function anotarJugadorPorGoogle(esJugador) {
+  try {
+    if (esJugador) sessionStorage.setItem(CLAVE_JUGADOR_POR_GOOGLE, '1');
+    else sessionStorage.removeItem(CLAVE_JUGADOR_POR_GOOGLE);
+  } catch {
+    // Sin storage, el jugador cae en "falta el acceso", que tiene su botón.
+  }
+}
+
+/** Si eligió "Soy jugador" antes de ir a Google. Se lee una sola vez. */
+export function tomarJugadorPorGoogle() {
+  try {
+    const eligio = sessionStorage.getItem(CLAVE_JUGADOR_POR_GOOGLE) === '1';
+    sessionStorage.removeItem(CLAVE_JUGADOR_POR_GOOGLE);
+    return eligio;
+  } catch {
+    return false;
+  }
+}
+
 async function google(idError) {
   limpiarErrores();
+  anotarJugadorPorGoogle(idError === 'crear-error' && modoDeAlta === 'jugador');
   try {
     // Si sale bien esto navega a Google y la página se descarta.
     await entrarConGoogle();
