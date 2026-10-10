@@ -21,7 +21,7 @@
 | Task | Estado |
 |---|---|
 | 1. Lógica pura y almacén | hecha |
-| 2. Componente de la guía | pendiente |
+| 2. Componente de la guía | hecha |
 | 3. Mostrarla al entrar y "Ver la guía" | pendiente |
 | 4. Pistas de una vez y DESIGN.md | pendiente |
 | 5. Prueba en el navegador por rol | pendiente |
