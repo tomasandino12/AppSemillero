@@ -206,6 +206,8 @@ abrirHoja({ titulo: jugador.nombre, cuerpo: html`<div class="tarj">…</div>` })
 
 **Yo-Yo** — `medirYoyo.js` tiene tres fases en la misma sección: *quién corre* (`.yoyo-elegir`, un botón por jugador con `aria-pressed`), *en curso* y *resumen*. En curso, `.yoyo-cab` muestra "Nivel n · Ida m" en grande (`.yoyo-nivel`), los km/h y el tiempo al próximo pitido, y `.yoyo-grilla` una tarjeta `.yoyo-jug` por corredor: el primer toque la deja en aviso (`.aviso`, ámbar con los tokens `--baja*`), con un botón *Llegó* que la limpia; el segundo la saca (`.out`, gris). *Deshacer* y *Terminar test* van en `.yoyo-pie`, separados (no mitad y mitad pegados), y *Terminar* pide confirmación diciendo cuántos quedan en carrera. El texto se repinta desde `requestAnimationFrame` sin animaciones CSS. El resumen usa `.yoyo-res` con `.cifra-clave.chica` para nivel y metros; la sección de la ficha y el progreso es `seccionYoyo.js` (mismas piezas que `seccionSprint.js`).
 
+**Guía de primer uso y pistas** — dos piezas distintas, no confundirlas con las guías de método de arriba. La *intro de un modo* (`componentes/guia.js`, pasos en `src/data/guias.js`) se abre sola la primera vez que alguien entra a entrenar, coordinar o jugar, y se repite desde Mi perfil con "Ver la guía": va en la hoja, como mucho **3 pasos**, cada uno con el ícono de la pestaña de la que habla, contador, Anterior / Siguiente (Empezar en el último) y Saltar. Cerrarla de cualquier forma cuenta como vista. La *pista de una vez* (`componentes/pista.js`, textos en `PISTAS`, ≤ 160 caracteres) es un `.al.pista` arriba de una pantalla puntual, con "Entendido"; no bloquea ni encadena pasos. Usá la intro para orientar en un modo entero y la pista para una pantalla que no se entiende sola; si la pantalla se puede arreglar para que se entienda sin pista, eso va primero. Las dos se recuerdan en el celular por usuario (`guiaVista.js`); subir `version` en `GUIAS` vuelve a mostrar una intro a todos.
+
 **Piezas chicas que ya existen** (usalas antes de crear otra): `.btn` / `.btn.sec` / `.btn.chico`, `.eyebrow` (con `.der` para un dato a la derecha), `.h2` y `.p`, `.chip` (`.sube`, `.baja`, `.sin`), `.campo` (con `.ayuda`), `.sin` para un dato que falta, `.mono`, `.sr` para texto sólo para lectores de pantalla, y el toast con `toast()` de `src/ui/nav.js`. Un `.btn:disabled` se lee como apagado y no sólo por color (fondo `--fondo-chip`, texto `--gris` ≥ 4.5:1, sin animación de apretado). Los gráficos de `graficos.js` salen con `role="img"` y un `aria-label` que cuenta el resumen en texto; los glifos decorativos (`.ic`) llevan `aria-hidden="true"`.
 
 ## Checklist para una pantalla o función nueva
@@ -221,6 +223,7 @@ abrirHoja({ titulo: jugador.nombre, cuerpo: html`<div class="tarj">…</div>` })
 9. Textos en español rioplatense con voseo ("Revisá", "Tocá"); el texto de error de red sale de `ui/errores.js`, no se reescribe.
 10. Marcado con `html\`...\``, reusando las clases de Componentes antes de inventar otra.
 11. Ningún borrado de datos cargados por la persona ocurre de un toque (`confirmarEnHoja`), y un error de guardado se anuncia con `avisoInline`/`mostrarAviso` (`role="alert"`), no con un toast que se va.
+12. ¿Necesita una pista? Sólo si no se entiende sin ella (ver *Guía de primer uso y pistas*).
 
 ## Rendimiento
 

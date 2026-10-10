@@ -23,7 +23,7 @@
 | 1. Lógica pura y almacén | hecha |
 | 2. Componente de la guía | hecha |
 | 3. Mostrarla al entrar y "Ver la guía" | hecha |
-| 4. Pistas de una vez y DESIGN.md | pendiente |
+| 4. Pistas de una vez y DESIGN.md | hecha |
 | 5. Prueba en el navegador por rol | pendiente |
 
 ---

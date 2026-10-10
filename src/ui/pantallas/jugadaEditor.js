@@ -27,12 +27,13 @@ import {
 import { montarVisor } from '../componentes/visorJugada.js';
 import { barraDeHerramientasHtml, panelDePasosHtml, cabeceraEditorHtml } from './jugadaEditorHerramientas.js';
 import { jugadaParaEditorActual, ejercicioParaEditorActual } from './jugadas.js';
-import { obtenerClubActual } from '../sesion.js';
+import { obtenerClubActual, obtenerCuenta } from '../sesion.js';
 import { cargarPerfiles, esMio } from '../perfil.js';
 import { LIMITE } from '../../data/limites.js';
 import { html } from '../html.js';
 import { toast } from '../nav.js';
 import { abrirHoja, cerrarHoja } from '../componentes/hoja.js';
+import { pistaUnaVez, conectarPista } from '../componentes/pista.js';
 import { volver, pantallaActualId } from '../main.js';
 import { $ } from '../dom.js';
 import { avisoDeError, textoDeError } from '../errores.js';
@@ -154,6 +155,7 @@ function render() {
         puedeRehacer: indiceHistorial < historial.length - 1,
         esEjercicio: jugadaMeta.esEjercicio,
       })}
+      ${pistaUnaVez('jugada-editor', obtenerCuenta()?.id)}
       <div class="jed-cuerpo">
         ${barraDeHerramientasHtml({
           herramienta,
@@ -168,6 +170,7 @@ function render() {
     </div>
   `;
   pintarCancha(datos);
+  conectarPista('jugada-editor', obtenerCuenta()?.id);
   cablearHerramientas();
   cablearPasos();
   cablearPuntero();
