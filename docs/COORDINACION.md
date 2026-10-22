@@ -234,6 +234,17 @@ comprobantes) viven en Google y **nunca pasan por Semillero ni por la base**.
 Quién los recibe y cómo se organizan en Drive: ver la guía de inscripción en
 Google (rama `claude/inscripcion-google-41cf4e`).
 
+### Noticias: se publican desde la app
+
+En Semillero, modo coordinar → **FAMILIAS** → **Noticias de la página del básquet**.
+
+1. **Nueva noticia:** título, resumen (la línea de la tarjeta), texto (párrafos separados por una línea en blanco) y de qué es (Club, Partidos, Eventos, Inscripción).
+2. **Fotos (hasta 6):** el celular las achica solo antes de subirlas. Cada una lleva una descripción de qué se ve, **sin nombres de chicos**. Para guardarla con fotos hay que tildar la autorización de imagen: tildala sólo si las familias de los chicos que se ven la firmaron.
+3. **Guardar borrador** la deja sin publicar; **Publicar** la muestra en el inicio (las 3 últimas) y en `/noticias`. La fecha que se ve es la de la primera vez que se publicó.
+4. **Despublicar** la saca de la página sin borrarla. **Borrar noticia** la borra con sus fotos, y no se puede deshacer.
+
+Lo publicado lo ve cualquiera, sin cuenta.
+
 ### Lugares especiales: Inscripción, Comprobante, "Quiero jugar", sponsors y recaudación
 
 Al agregar o editar un formulario, el selector **"Cómo se muestra en la página"**
@@ -303,6 +314,7 @@ que falta va en `null` y esa parte del portal no se ve.
 | ID del calendario público | `agenda.calendarios[0].id` | No hay calendario |
 | Categorías que ofrece el club | `categorias:` (los años NO: se calculan) | — |
 | Días y horario de cada categoría | `horario:` de cada categoría | La fila va sin horario |
+| Un texto sobre una categoría (opcional) | `detalle:` de cada categoría | No se muestra nada (se ve en `/categorias`) |
 | Dónde se entrena | `sede:` `{ nombre, direccion, mapa }` | No se ve |
 | WhatsApp del coordinador | `contacto:` | Sin botón "Ayuda" ni "¿Dudas?" |
 | Alias para transferir | `alias:` `{ alias, titular }` | La tarjeta del comprobante va sin alias |

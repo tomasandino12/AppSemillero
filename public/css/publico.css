@@ -308,25 +308,6 @@ a.portal-accion:active{transform:scale(.98)}
 .portal-formas b{display:block;font-family:var(--ff-titulo);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:var(--fs-200);line-height:1.1;color:var(--sobre-oscuro);margin-bottom:var(--sp-1)}
 .portal-colaborar .btn{text-decoration:none}
 
-/* La hoja de Ayuda (<dialog>): en el celular sube desde abajo y ocupa el
-   ancho; en compu es un diálogo centrado (layout.css). El fondo de afuera es
-   el propio <dialog>: tocarlo la cierra. */
-.portal-hoja{
-  position:fixed;inset:auto 0 0 0;margin:0;width:100%;max-width:100%;max-height:88dvh;padding:0;
-  border:0;border-radius:var(--r) var(--r) 0 0;background:var(--pub-fondo);color:var(--sobre-oscuro);
-  overflow:hidden;animation:subir-hoja var(--dur-3) var(--ease-salida);
-}
-.portal-hoja::backdrop{background:var(--velo)}
-/* El foco va a la X y a las preguntas, que lo muestran; el contorno del diálogo entero sobra. */
-.portal-hoja:focus-visible{outline:none}
-.portal-hoja-cuerpo{max-height:88dvh;overflow-y:auto;overscroll-behavior:contain;padding:var(--sp-4) var(--sp-4) calc(var(--sp-6) + env(safe-area-inset-bottom))}
-.portal-hoja-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-3);margin-bottom:var(--sp-3)}
-.portal-hoja-cab h2{font-size:var(--fs-260);line-height:1.05}
-.portal-hoja-x{
-  flex:0 0 auto;width:var(--tap);height:var(--tap);display:grid;place-items:center;font:inherit;font-size:var(--fs-260);line-height:1;
-  color:var(--sobre-oscuro);background:var(--pub-tarjeta);border:1px solid var(--pub-borde);border-radius:50%;cursor:pointer;
-}
-@keyframes subir-hoja{from{transform:translateY(100%)}}
 
 /* Preguntas frecuentes en acordeón: tocás la pregunta y se abre la respuesta. */
 .portal-faqs{border:1px solid var(--pub-borde);border-radius:var(--r);overflow:hidden;background:var(--pub-tarjeta)}
@@ -363,20 +344,6 @@ a.portal-accion:active{transform:scale(.98)}
   transition:transform var(--dur-1) var(--ease-salida);
 }
 .portal-copiar:active{transform:scale(.96)}
-
-/* Atajos: sólo a lo que existe en la página (src/ui/portal.js). */
-.portal-atajos{display:grid;grid-template-columns:repeat(auto-fit,minmax(4.5rem,1fr));gap:var(--sp-2);padding:var(--sp-5) var(--sp-4) 0}
-.portal-atajos:empty{display:none}
-.portal-atajos a{
-  display:flex;flex-direction:column;align-items:center;gap:var(--sp-2);min-height:var(--tap);
-  background:var(--pub-tarjeta);border:1px solid var(--pub-borde);border-radius:var(--r);
-  padding:var(--sp-3) var(--sp-1);text-align:center;text-decoration:none;color:var(--sobre-oscuro);
-  font-size:var(--fs-115);font-weight:600;line-height:1.2;
-  transition:transform var(--dur-1) var(--ease-salida);
-}
-.portal-atajos a:active{transform:scale(.96)}
-.portal-atajos i{display:grid;place-items:center;width:2.25rem;height:2.25rem;flex:0 0 auto;border-radius:50%;background:var(--pub-fondo);color:var(--primario)}
-.portal-atajos svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 .portal-sec{padding:var(--sp-8) var(--sp-4) 0;scroll-margin-top:var(--sp-4)}
 .portal-st{font-family:var(--ff-titulo);font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-size:var(--fs-115);color:var(--primario);margin-bottom:var(--sp-1)}
@@ -502,11 +469,7 @@ a.portal-accion:active{transform:scale(.98)}
 .portal-cat-sin{margin:var(--sp-2) 0 0;font-size:var(--fs-135)}
 .portal-cat-nada{margin:0;color:var(--gris-osc);font-size:var(--fs-145);line-height:1.45}
 .portal-cat-nada a{color:var(--sobre-oscuro);font-weight:600}
-.portal-todas{margin-top:var(--sp-4);border-top:1px solid var(--pub-borde);padding-top:var(--sp-1)}
-.portal-todas summary{display:flex;align-items:center;min-height:var(--tap);font-weight:600;font-size:var(--fs-145);cursor:pointer}
-.portal-todas[open] summary{margin-bottom:var(--sp-2)}
-/* Dentro de la banda, la lista va sobre el fondo, para que se despegue. */
-.portal-cat .portal-cats{background:var(--pub-fondo)}
+
 
 /* "Dónde se entrena": los lugares, "Cómo llegar" y el mapa 16:9. En el
    celular, el texto arriba y el mapa abajo; en compu, lado a lado (layout.css).
@@ -533,16 +496,6 @@ a.portal-accion:active{transform:scale(.98)}
 .portal-mapa-ver svg{width:1.5rem;height:1.5rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .portal-mapa-ver b{font-family:var(--ff-titulo);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:var(--fs-200)}
 .portal-mapa-ver small{font-size:var(--fs-115);color:var(--gris-osc)}
-.portal-cats{list-style:none;margin:0;padding:0;background:var(--pub-tarjeta);border:1px solid var(--pub-borde);border-radius:var(--r)}
-.portal-cats li{display:grid;grid-template-columns:1fr auto;gap:0 var(--sp-3);align-items:baseline;padding:var(--sp-3) var(--sp-4)}
-.portal-cats li + li{border-top:1px solid var(--pub-borde)}
-.portal-cats b{font-family:var(--ff-titulo);font-weight:700;text-transform:uppercase;font-size:var(--fs-190);letter-spacing:.03em}
-.portal-cats li > div:first-child span{margin-left:var(--sp-2);font-size:var(--fs-115);color:var(--gris-osc);text-transform:uppercase;letter-spacing:.08em}
-.portal-cats-anios{font-family:var(--ff-mono);font-size:var(--fs-135);color:var(--sobre-oscuro);text-align:right}
-.portal-cats-hora{grid-column:1 / -1;font-size:var(--fs-125);color:var(--gris-osc);margin-top:var(--sp-1)}
-/* Un día por renglón ("Mar 18 a 19 h (Estadio Cubierto)"): partido a la mitad no se lee. */
-.portal-cats-hora span{display:block}
-
 .portal-foto{margin:0;border:1px solid var(--pub-borde);border-radius:var(--r);overflow:hidden;background:var(--pub-tarjeta)}
 .portal-foto img{display:block;width:100%;height:auto;aspect-ratio:3 / 2;object-fit:cover}
 .portal-foto figcaption{padding:var(--sp-3) var(--sp-4);font-size:var(--fs-135);color:var(--gris-osc)}

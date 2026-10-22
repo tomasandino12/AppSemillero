@@ -72,8 +72,8 @@ test('connect-src llega al proyecto de Supabase que usa la app', () => {
 // El marcador de salto reproduce el video elegido como objectURL. Sin
 // media-src rige default-src 'self', que bloquea blob:, y el video queda en
 // negro sólo en producción.
-test('media-src deja reproducir el video local del marcador y nada más', () => {
-  assert.deepEqual(directiva('media-src'), ['blob:']);
+test('media-src deja reproducir el video del marcador (blob:) y el del hero del portal (\'self\'), y nada más', () => {
+  assert.deepEqual(directiva('media-src'), ['\'self\'', 'blob:']);
 });
 
 // Si el navegador guarda el HTML, lo revalida con el ETag, y el 304 de Vercel
@@ -99,7 +99,7 @@ test('las fuentes se sirven desde el propio dominio, sin Google Fonts', () => {
   assert.doesNotMatch(html, /fonts\.(googleapis|gstatic)\.com/);
   const tokens = readFileSync(path.join(raiz, 'public', 'css', 'tokens.css'), 'utf8');
   const archivos = [...tokens.matchAll(/url\((\/public\/fonts\/[^)]+)\)/g)].map((m) => m[1]);
-  assert.equal(archivos.length, 10);
+  assert.equal(archivos.length, 13);
   for (const ruta of archivos) assert.ok(existsSync(path.join(raiz, ruta)), `falta ${ruta}`);
 });
 
@@ -136,4 +136,11 @@ test('el import map de /consultas tiene su hash en script-src y no hay otros scr
   assert.ok(directiva('script-src')?.includes(hash), `script-src no tiene ${hash} de consultas.html`);
   const inline = [...pagina.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>/g)].filter((x) => !/type="importmap"/.test(x[1]));
   assert.deepEqual(inline.map((x) => x[0]), []);
+});
+
+// Las fotos de las noticias (0064) se sirven desde el bucket público del
+// proyecto de Supabase. blob: es la vista previa del panel y del marcador.
+test('img-src: el sitio, blob, las miniaturas de YouTube y el Storage de Supabase, nada más', () => {
+  const url = readFileSync(path.join(raiz, 'public', 'config.js'), 'utf8').match(/SUPABASE_URL = '([^']+)'/)[1];
+  assert.deepEqual(directiva('img-src'), ["'self'", 'blob:', 'https://i.ytimg.com', url]);
 });

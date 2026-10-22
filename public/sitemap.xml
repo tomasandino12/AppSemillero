@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Dos páginas públicas: el portal del básquet en / y Semillero (la app) en
-     /app, más las páginas legales, que sí tienen que poder encontrarse. Sirve
+<!-- Las páginas públicas: el portal del básquet (inicio, categorías, calendario,
+     ayuda y, con las noticias, /noticias) y Semillero (la app) en /app, más las
+     páginas legales, que sí tienen que poder encontrarse. Sirve
      menos para el ranking que para Search Console, que lo pide para confirmar
      qué se indexó.
 
@@ -9,6 +10,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://app-semillero.vercel.app/</loc>
+  </url>
+  <url>
+    <loc>https://app-semillero.vercel.app/noticias</loc>
+  </url>
+  <url>
+    <loc>https://app-semillero.vercel.app/categorias</loc>
+  </url>
+  <url>
+    <loc>https://app-semillero.vercel.app/calendario</loc>
+  </url>
+  <url>
+    <loc>https://app-semillero.vercel.app/ayuda</loc>
   </url>
   <url>
     <loc>https://app-semillero.vercel.app/app</loc>

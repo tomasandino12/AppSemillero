@@ -50,7 +50,8 @@ export const PORTAL = Object.freeze({
   // Horarios: descripción del formulario "Quiero jugar en Newell's" (temporada
   // 2026). Newell's no tiene Escuelita ni femeninos de inferiores: la única
   // femenina es Primera. Las dos Primeras no figuran en ningún formulario y van
-  // sin horario hasta que el club lo pase.
+  // sin horario hasta que el club lo pase. `detalle` opcional: un texto que
+  // pase el club sobre esa categoría (se muestra en /categorias). Sin él, nada.
   categorias: Object.freeze([
     Object.freeze({ grupo: 'U9', rama: 'Mixto', horario: 'Mar 18 a 19 h (Estadio Cubierto) · Jue 18 a 19 h (Playón Deportivo)' }),
     Object.freeze({ grupo: 'U11', rama: 'Mixto', horario: 'Mar 19 a 20 h (Estadio Cubierto) · Jue 19 a 20 h (Playón Deportivo)' }),
@@ -89,6 +90,17 @@ export const PORTAL = Object.freeze({
   // PENDIENTE: { src: '/public/portal/club.jpg', alt: 'qué se ve en la foto', epigrafe?: '…' }.
   foto: null,
 
+  // Video de fondo del hero del inicio: { src, poster, alt } con archivos de
+  // public/portal/ (ver heroVideoValido). Sin video, el hero queda rojo y negro.
+  // PENDIENTE: por ahora es un placeholder, el video del hero del sitio oficial
+  // del club (newellsoldboys.com.ar). Reemplazarlo por material propio, o tener
+  // el OK del club por escrito, antes de publicar (docs/SEGURIDAD-LANZAMIENTO.md).
+  heroVideo: Object.freeze({
+    src: '/public/portal/hero-placeholder.mp4',
+    poster: '/public/portal/hero-placeholder.jpg',
+    alt: 'Vista del estadio con la hinchada y una bandera enorme',
+  }),
+
   // Logos de sponsors y colaboradores, para la sección "Sumate como sponsor".
   // Cada uno: { nombre, logo: '/public/sponsors/archivo.png', enlace?: 'https://…' }.
   // El archivo va en public/sponsors/ (png, jpg, webp o svg). Un archivo que no
@@ -101,6 +113,39 @@ export const PORTAL = Object.freeze({
   // que mandar a un formulario viejo.
   formularios: Object.freeze([]),
 });
+
+/** Las páginas del portal, en el orden de la navegación (encabezado y pie). */
+export const PAGINAS_PORTAL = Object.freeze([
+  Object.freeze({ href: '/', texto: 'Inicio' }),
+  Object.freeze({ href: '/noticias', texto: 'Noticias' }),
+  Object.freeze({ href: '/categorias', texto: 'Categorías' }),
+  Object.freeze({ href: '/calendario', texto: 'Calendario' }),
+  Object.freeze({ href: '/ayuda', texto: 'Ayuda' }),
+]);
+
+// Los links de cuando el portal era una sola página siguen dando vueltas por
+// WhatsApp (el "Ayuda" de arriba, el atajo a Categorías). Map y no objeto:
+// así "#constructor" no encuentra nada heredado.
+const PAGINA_DE_ANCLA = new Map([['#ayuda', '/ayuda'], ['#categorias', '/categorias'], ['#calendario', '/calendario']]);
+
+/**
+ * A qué página nueva lleva un ancla vieja de "/". Cualquier otra cosa da null,
+ * en particular el #access_token de la vuelta de un login (eso lo resuelve
+ * portalEntrada.js, que manda a /app).
+ */
+export function paginaDeAncla(hash) {
+  return PAGINA_DE_ANCLA.get(hash) ?? null;
+}
+
+const ARCHIVO_DE_PAGINA = /^\/public\/(portal|noticias|categorias|calendario|ayuda)\.html$/;
+
+/** El href de PAGINAS_PORTAL que corresponde a la ruta (limpia o el .html que sirve el rewrite), o null. */
+export function paginaActual(ruta) {
+  const r = String(ruta ?? '').replace(/(.)\/+$/, '$1');
+  const m = r.match(ARCHIVO_DE_PAGINA);
+  if (m) return m[1] === 'portal' ? '/' : `/${m[1]}`;
+  return PAGINAS_PORTAL.some((p) => p.href === r) ? r : null;
+}
 
 /** Los calendarios que se pueden pedir: con un tipo conocido, un ID válido y la clave puesta. */
 export function calendariosActivos(agenda) {
@@ -142,6 +187,29 @@ export function categoriasDelAnio(lista, temporada, anio) {
     return a && Number.isInteger(anio) && (a.viejo == null || anio >= a.viejo) && (a.nuevo == null || anio <= a.nuevo);
   });
   return categoriasDelPortal(leTocan, temporada);
+}
+
+/** "Primera Femenino" → "primera-femenino": el ancla de una categoría en /categorias. */
+export function slugCategoria(texto) {
+  return String(texto ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Las categorías de /categorias: lo de categoriasDelPortal (mismo orden, mismo
+ * filtro) más el rótulo, el ancla y el detalle que haya pasado el club. La rama
+ * va en el rótulo y en el ancla sólo si dos categorías se llaman igual (las
+ * dos Primeras): "U13" sola se entiende, "Primera" sola no.
+ */
+export function categoriasConDetalle(lista, temporada) {
+  const crudas = (Array.isArray(lista) ? lista : []).filter((c) => aniosDeCategoria(c?.grupo, temporada));
+  const base = categoriasDelPortal(crudas, temporada);
+  const veces = new Map();
+  for (const c of base) veces.set(c.nombre, (veces.get(c.nombre) ?? 0) + 1);
+  return base.map((c, i) => {
+    const rotulo = veces.get(c.nombre) > 1 && c.rama ? `${c.nombre} ${c.rama}` : c.nombre;
+    return { ...c, rotulo, ancla: slugCategoria(rotulo), detalle: texto(crudas[i].detalle) || null };
+  });
 }
 
 const MAPA = /^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.com\/maps|maps\.google\.com)\/[^\s"<>]*$/;

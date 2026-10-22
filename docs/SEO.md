@@ -15,9 +15,11 @@ link se vea decente cuando alguien lo comparte.
 |---|---|
 | `public/index.html` | `<title>`, `description`, `canonical` y las etiquetas `og:*` |
 | `public/robots.txt` | Deja rastrear todo y declara el sitemap |
-| `public/sitemap.xml` | La única URL, `/` |
+| `public/sitemap.xml` | Las páginas públicas: el portal (inicio, noticias, categorías, calendario, ayuda), `/app` y las legales |
 | `vercel.json` | Los rewrites que sirven robots y sitemap **desde la raíz** |
 | `tests/metadatos.test.js` | Compara el dominio en los cuatro lados donde está escrito |
+
+El portal tiene cinco páginas (`/`, `/noticias`, `/categorias`, `/calendario` y `/ayuda`), cada una con su `title`, `description`, `canonical` y Open Graph propios, y todas están en `sitemap.xml`. El detalle de una noticia (`/noticias?n=…`) comparte el Open Graph genérico de `/noticias`: un sitio estático no puede armar uno por noticia.
 
 El dominio de producción está escrito a mano en varios archivos. Si alguna
 vez cambia (dominio propio en vez de `app-semillero.vercel.app`), hay que

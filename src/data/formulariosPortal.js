@@ -72,6 +72,23 @@ export function separarFormularios(lista) {
   return r;
 }
 
+/**
+ * Qué muestran los dos botones principales del portal: las tarjetas del hero
+ * del inicio y la barra de acciones de cada página. Con la inscripción
+ * activa (destino inscripcion, 0062), el primero es "Inscribir"; si no,
+ * "Quiero jugar" (destino consultas, 0061). El comprobante va aparte: alguien
+ * se puede inscribir sin pagar nada. Un enlace que no es de Google Forms
+ * cuenta como cerrado: nunca un botón a cualquier lado.
+ */
+export function accionesPrincipales({ inscripcion = null, consultas = null, comprobante = null } = {}) {
+  const url = (f) => (f ? enlaceFormulario(f.enlace) : null);
+  const ins = url(inscripcion);
+  return {
+    primera: ins ? { tipo: 'inscribir', url: ins } : { tipo: 'jugar', url: url(consultas) },
+    comprobante: { url: url(comprobante) },
+  };
+}
+
 /** El formulario que ya usa ese destino (salvo el que se está editando), o null. Sirve para avisar que se lo vamos a sacar. */
 export function quienTieneElDestino(lista, destino, exceptoId = null) {
   if (!destino) return null;

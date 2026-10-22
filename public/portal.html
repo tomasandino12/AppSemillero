@@ -33,6 +33,7 @@
 <link rel="stylesheet" href="/public/css/layout.css">
 <link rel="stylesheet" href="/public/css/componentes.css">
 <link rel="stylesheet" href="/public/css/publico.css">
+<link rel="stylesheet" href="/public/css/portal.css">
 <!-- El portal lee la lista de formularios de la base (una sola función anónima,
      formularios_publicos). Por eso lleva el MISMO import map que la app, letra
      por letra: así comparten el hash de la CSP de vercel.json y no hace falta
@@ -50,7 +51,9 @@
 <body>
 
 <!-- =====================================================================
-     PORTAL "BÁSQUET NEWELL'S": la puerta pública para las familias.
+     PORTAL "BÁSQUET NEWELL'S": la puerta pública para las familias. Son cinco
+     páginas (inicio, noticias, categorías, calendario y ayuda); este archivo
+     es el inicio, el resumen de todo.
      Sin sesión y sin service worker (la app instalable es /app). Quien más
      la usa es un padre que viene a inscribir o a mandar un comprobante: esas
      dos acciones son las protagonistas de la banda de arriba. Profes y
@@ -61,11 +64,16 @@
      src/data/portal.js. Textos en voseo y sin suponer que saben de computadoras.
      ===================================================================== -->
 <div class="publico portal-d" id="publico">
+  <!-- Las dos acciones que más usan las familias, siempre a la vista: fija abajo
+       en el celular, una franja arriba de todo en compu (portal.css). La pinta
+       src/ui/portalMarco.js cuando responde la base. -->
+  <div class="portal-acc-barra" id="portal-acc-barra" hidden></div>
   <header class="portal-barra">
-    <img src="/public/escudo.png" alt="" width="36" height="36">
-    <div class="portal-marca"><div class="t">Newell&#39;s <span>Básquet</span></div><div class="s">Formativas · Familias</div></div>
+    <a class="portal-logo" href="/">
+      <img src="/public/escudo.png" alt="" width="36" height="36">
+      <div class="portal-marca"><div class="t">Newell&#39;s <span>Básquet</span></div><div class="s">Formativas · Familias</div></div>
+    </a>
     <nav class="portal-barra-acc" aria-label="Accesos">
-      <a class="portal-barra-btn" href="#ayuda">Ayuda</a>
       <!-- Para profes y jugadores: la entrada a Semillero y cómo instalarla, sin buscarla en el portal de padres. -->
       <details class="portal-sem" id="semillero">
         <summary class="portal-barra-btn portal-sem-btn">Soy profe o jugador</summary>
@@ -81,26 +89,57 @@
         </div>
       </details>
     </nav>
+    <nav class="portal-nav" aria-label="Páginas del básquet"><a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/categorias">Categorías</a><a href="/calendario">Calendario</a><a href="/ayuda">Ayuda</a></nav>
   </header>
 
+
   <main class="portal">
-    <!-- El hero: la banda roja y negra (la camiseta) con el título de la
-         página y, adentro, las dos tarjetas protagonistas (src/ui/portal.js,
-         htmlHeroe): inscribir (o "Quiero jugar" si la inscripción está
-         cerrada) y enviar el comprobante, con el alias. Arranca con todo
-         cerrado hasta que responde la base. -->
-    <section class="portal-heroe" id="heroe" aria-label="Básquet formativo de Newell's">
-      <div id="portal-heroe"><div class="portal-heroe-ey">Formativas · Rosario</div><h1>Básquet formativo de Newell&#39;s</h1></div>
+    <!-- El hero partido: a la izquierda el título de la página y las dos acciones
+         protagonistas (src/ui/portal.js, htmlHeroe): inscribir (o "Quiero jugar" si la
+         inscripción está cerrada) y enviar el comprobante, con el alias; a la derecha el
+         poster y el video (src/ui/portalHeroVideo.js), en diagonal en compu y como tarjeta
+         debajo del texto en el celular. Sin PORTAL.heroVideo, portal.js saca con-fondo y
+         queda sólo el texto. Arranca con todo cerrado hasta que responde la base. -->
+    <section class="portal-heroe con-fondo" id="heroe" aria-label="Básquet formativo de Newell's">
+      <div class="portal-heroe-cont" id="portal-heroe"><div class="portal-heroe-ey">Formativas · Rosario</div><h1><span>Básquet</span> <em>formativo</em> <span>de Newell&#39;s</span></h1></div>
+      <div class="portal-heroe-fondo" id="portal-heroe-fondo"></div>
     </section>
 
-    <nav class="portal-atajos" id="portal-atajos" aria-label="Atajos"></nav>
+    <!-- La cinta de lo que ofrece el portal: corre sola, como la del sitio del gimnasio. Cada
+         lista está dos veces (la segunda, aria-hidden) y la pista se corre la mitad para que el
+         loop no se note. Los íconos son un sprite de acá mismo. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="i-inscribir" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></symbol><symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol><symbol id="i-categorias" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-pago" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol><symbol id="i-noticias" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"/></symbol><symbol id="i-ayuda" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></symbol></defs></svg>
+    <section class="portal-cinta" id="banda" aria-label="Lo que encontrás en esta página"><div class="portal-cinta-pista"><ul><li><svg aria-hidden="true"><use href="#i-inscribir"/></svg>Inscripción online</li><li><svg aria-hidden="true"><use href="#i-calendario"/></svg>Calendario de partidos y eventos</li><li><svg aria-hidden="true"><use href="#i-categorias"/></svg>Categorías por año de nacimiento</li><li><svg aria-hidden="true"><use href="#i-pago"/></svg>Comprobante de pago desde el celular</li><li><svg aria-hidden="true"><use href="#i-noticias"/></svg>Noticias del club</li><li><svg aria-hidden="true"><use href="#i-ayuda"/></svg>Ayuda para las familias</li></ul><ul aria-hidden="true"><li><svg aria-hidden="true"><use href="#i-inscribir"/></svg>Inscripción online</li><li><svg aria-hidden="true"><use href="#i-calendario"/></svg>Calendario de partidos y eventos</li><li><svg aria-hidden="true"><use href="#i-categorias"/></svg>Categorías por año de nacimiento</li><li><svg aria-hidden="true"><use href="#i-pago"/></svg>Comprobante de pago desde el celular</li><li><svg aria-hidden="true"><use href="#i-noticias"/></svg>Noticias del club</li><li><svg aria-hidden="true"><use href="#i-ayuda"/></svg>Ayuda para las familias</li></ul></div></section>
 
-    <section class="portal-sec" id="calendario" aria-labelledby="t-calendario" hidden>
+    <!-- Las últimas 4 noticias (src/ui/portalNoticias.js). Sin noticias, o
+         sin la migración 0064 en la base, queda oculta. -->
+    <section class="portal-papel alt" id="noticias" aria-labelledby="t-noticias" hidden>
+      <div class="portal-papel-cab"><div><div class="portal-st">Noticias</div><h2 id="t-noticias">Lo último del básquet</h2></div><a class="portal-ver" href="/noticias">Ver todas →</a></div>
+      <div id="portal-noticias" class="portal-destacadas"></div>
+    </section>
+
+    <!-- El próximo evento del calendario; la grilla entera está en /calendario. -->
+    <section class="portal-sec" id="proximo" aria-labelledby="t-proximo" hidden>
       <div class="portal-st">Agenda del club</div>
-      <h2 id="t-calendario">Calendario</h2>
-      <p class="intro">Partidos, eventos y charlas. Tocá un día para ver qué hay.</p>
+      <h2 id="t-proximo">Calendario</h2>
       <div id="portal-proximo"></div>
-      <div id="portal-calendario"></div>
+      <a class="portal-ver" href="/calendario">Ver el calendario completo →</a>
+    </section>
+
+    <!-- Elegís el año de nacimiento y al lado te dice la categoría y el
+         horario. El detalle de cada una está en /categorias. -->
+    <section class="portal-sec portal-cat alt" id="categorias" aria-labelledby="t-categorias" hidden>
+      <div class="portal-st">Categorías<span id="t-categorias-temp"></span></div>
+      <h2 id="t-categorias">¿En qué categoría juega?</h2>
+      <div class="portal-buscador" id="portal-buscador"></div>
+      <a class="portal-ver" href="/categorias">Ver todas las categorías →</a>
+    </section>
+
+    <!-- Dónde se entrena (PORTAL.sede): nombre, dirección y Cómo llegar. Sin sede válida, oculta. -->
+    <section class="portal-sec portal-sede-sec" id="sede" aria-labelledby="t-sede" hidden>
+      <div class="portal-st">Dónde se entrena</div>
+      <h2 id="t-sede">Parque de la Independencia</h2>
+      <div class="portal-sede" id="portal-sede"></div>
     </section>
 
     <!-- Banda roja a todo el ancho: aviso de los eventos de recaudación (destino recaudacion, 0063). -->
@@ -109,27 +148,10 @@
     </section>
 
     <!-- Para una empresa que quiere asociarse o alguien que quiere dar una mano (destino colaboradores, 0061). -->
-    <section class="portal-sec portal-colaborar" id="colaborar" aria-labelledby="t-colaborar">
+    <section class="portal-sec portal-colaborar alt" id="colaborar" aria-labelledby="t-colaborar">
       <div class="portal-st">Colaborá con el club</div>
       <h2 id="t-colaborar">Sumate al básquet de Newell&#39;s</h2>
       <div id="portal-colaborar"></div>
-    </section>
-
-    <!-- Elegís el año de nacimiento y al lado te dice la categoría y el
-         horario. La lista completa queda plegada abajo. -->
-    <section class="portal-sec portal-cat" id="categorias" aria-labelledby="t-categorias" hidden>
-      <div class="portal-st">Categorías<span id="t-categorias-temp"></span></div>
-      <h2 id="t-categorias">¿En qué categoría juega?</h2>
-      <div class="portal-buscador" id="portal-buscador"></div>
-      <details class="portal-todas"><summary>Ver todas las categorías</summary><div id="portal-categorias"></div></details>
-    </section>
-
-    <!-- Al lado de los horarios: los lugares, "Cómo llegar" y el mapa de Google,
-         que se carga recién al tocar "Ver mapa" (frame-src www.google.com). -->
-    <section class="portal-sec portal-sede-sec" id="sede" aria-labelledby="t-sede" hidden>
-      <div class="portal-st">Dónde se entrena</div>
-      <h2 id="t-sede">Parque de la Independencia</h2>
-      <div class="portal-sede" id="portal-sede"></div>
     </section>
 
     <section class="portal-sec" id="formularios" aria-labelledby="t-formularios" hidden>
@@ -138,35 +160,31 @@
       <div class="portal-lista" id="portal-formularios"></div>
     </section>
 
+    <section class="portal-sec alt" id="dudas" aria-label="Ayuda">
+      <div class="portal-dudas"><div><b>¿Dudas?</b><span>Preguntas frecuentes, la sede y el alias para transferir.</span></div><a class="btn sec" href="/ayuda">Ver la ayuda</a></div>
+    </section>
+
     <!-- La foto del club (PORTAL.foto): sólo con la autorización de imagen de las familias. -->
     <section class="portal-sec" id="club" aria-label="El club" hidden>
       <div id="portal-foto"></div>
     </section>
 
     <!-- Los logos de sponsors y colaboradores (PORTAL.sponsors). Sin ninguno, oculta. -->
-    <section class="portal-sec" id="sponsors" aria-labelledby="t-sponsors" hidden>
+    <section class="portal-sec alt" id="sponsors" aria-labelledby="t-sponsors" hidden>
       <div class="portal-st">Gracias</div>
       <h2 id="t-sponsors">Nos acompañan</h2>
       <div class="portal-logos" id="portal-logos"></div>
     </section>
 
-    <div class="pie-legal"><a href="/app">Entrar a Semillero</a> · <a href="/public/legal/privacidad.html">Política de privacidad</a> · <a href="/public/legal/terminos.html">Términos y condiciones</a></div>
   </main>
 
-  <!-- Ayuda: no ocupa lugar en la página. Todo link a #ayuda la abre encima
-       (src/ui/portal.js): en el celular, una hoja que sube desde abajo; en
-       compu, un diálogo. Preguntas frecuentes en acordeón y, al final, la
-       única vez que aparece el coordinador. Se cierra con la X, tocando
-       afuera o con Escape (lo da <dialog>). -->
-  <dialog class="portal-hoja" id="ayuda" aria-labelledby="t-ayuda">
-    <div class="portal-hoja-cuerpo">
-      <div class="portal-hoja-cab">
-        <div><div class="portal-st">Ayuda</div><h2 id="t-ayuda">Preguntas frecuentes</h2></div>
-        <button type="button" class="portal-hoja-x" data-cerrar-ayuda aria-label="Cerrar la ayuda">×</button>
-      </div>
-      <div class="portal-faqs" id="portal-ayuda-lista"></div>
-    </div>
-  </dialog>
+  <footer class="portal-pie">
+    <div class="portal-pie-marca"><img src="/public/escudo.png" alt="" width="40" height="40"><div><b>Newell&#39;s Básquet</b><span>Formativas · Rosario</span></div></div>
+    <nav class="portal-pie-nav" aria-label="Páginas del básquet (pie)"><a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/categorias">Categorías</a><a href="/calendario">Calendario</a><a href="/ayuda">Ayuda</a></nav>
+    <div class="portal-pie-sede" id="portal-pie-sede"></div>
+    <div class="pie-legal"><a href="/app">Entrar a Semillero</a> · <a href="/public/legal/privacidad.html">Política de privacidad</a> · <a href="/public/legal/terminos.html">Términos y condiciones</a></div>
+  </footer>
+
 </div>
 
 <!-- Primero el reenvío: los mails de Supabase ya enviados apuntan a "/" y tienen

@@ -261,3 +261,19 @@ Privacidad (decidido por Tomás el 18/10): el calendario de Google va embebido, 
 que la política dice que Google puede guardar sus cookies y que los formularios
 de las familias son tratamiento del club en Google. `VERSION_LEGAL` subió a
 `2026-10-19` y todos reaceptan (incluye las cuentas de familia y los datos de emergencia de 0059). Detalle: `docs/legal/cambios-portal.md`.
+
+## Video del hero del portal: PENDIENTE antes de publicar (2026-10-21)
+
+El video y el poster de `public/portal/hero-placeholder.*` son **un placeholder tomado del
+sitio oficial del club** (`newellsoldboys.com.ar/videos/hero-drone.mp4`), bajados con el
+permiso de quien pidió el cambio pero sin una autorización escrita del club. Se ve a la
+hinchada y banderas con retratos de personas reales.
+
+Antes de publicar el portal:
+
+- Reemplazar los dos archivos por material propio (o conseguir el OK del club por escrito
+  para usar ese video) y actualizar `PORTAL.heroVideo` (`src/data/portal.js`).
+- Si el material nuevo muestra chicos reconocibles: sólo con la autorización de imagen
+  firmada por las familias (ver `docs/legal/checklist-club.md`).
+- Con `heroVideo: null` el hero vuelve a ser rojo y negro: es la salida segura si no hay
+  material a tiempo.

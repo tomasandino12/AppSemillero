@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LIMITE } from '../src/data/limites.js';
 import { readFileSync } from 'node:fs';
-import { validarFormulario, moverFormulario, ordenarFormularios, formularioDesdeFila, formularioPublicoDesdeFila, resolverFormularios, resolverConsultas, DESTINOS, separarFormularios, quienTieneElDestino, enlaceDeConsultas } from '../src/data/formulariosPortal.js';
+import { validarFormulario, moverFormulario, ordenarFormularios, formularioDesdeFila, formularioPublicoDesdeFila, resolverFormularios, resolverConsultas, DESTINOS, separarFormularios, quienTieneElDestino, enlaceDeConsultas, accionesPrincipales } from '../src/data/formulariosPortal.js';
 
 /**
  * Lo que la coordinación escribe en el panel termina en una tarjeta de la
@@ -203,4 +203,30 @@ test('resolverConsultas: sin formulario de consultas (o con enlace no válido) n
 
 test('resolverConsultas: si la base falla, dice error (no inventa un destino) y no tira', async () => {
   assert.deepEqual(await resolverConsultas(async () => { throw new Error('sin red'); }), { estado: 'error' });
+});
+
+// ---- Los dos botones principales (hero y barra de acciones) ----
+
+const F = (enlace) => ({ titulo: 'x', texto: 'y', enlace, destino: null });
+
+test('accionesPrincipales: inscripción activa → inscribir, aunque haya consultas', () => {
+  assert.deepEqual(
+    accionesPrincipales({ inscripcion: F('https://forms.gle/Ins1'), consultas: F('https://forms.gle/Jug1'), comprobante: F('https://forms.gle/Com1') }),
+    { primera: { tipo: 'inscribir', url: 'https://forms.gle/Ins1' }, comprobante: { url: 'https://forms.gle/Com1' } },
+  );
+});
+
+test('accionesPrincipales: inscripción cerrada → "Quiero jugar" al formulario de consultas', () => {
+  assert.deepEqual(accionesPrincipales({ consultas: F('https://forms.gle/Jug1') }),
+    { primera: { tipo: 'jugar', url: 'https://forms.gle/Jug1' }, comprobante: { url: null } });
+});
+
+test('accionesPrincipales: sin formularios, las dos sin url', () => {
+  assert.deepEqual(accionesPrincipales({}), { primera: { tipo: 'jugar', url: null }, comprobante: { url: null } });
+  assert.deepEqual(accionesPrincipales(), { primera: { tipo: 'jugar', url: null }, comprobante: { url: null } });
+});
+
+test('accionesPrincipales: un enlace que no es de Google Forms cuenta como cerrado', () => {
+  const r = accionesPrincipales({ inscripcion: F('https://evil.com/forms/x'), consultas: F('https://forms.gle/Jug1'), comprobante: F('javascript:alert(1)') });
+  assert.deepEqual(r, { primera: { tipo: 'jugar', url: 'https://forms.gle/Jug1' }, comprobante: { url: null } });
 });

@@ -44,9 +44,17 @@ export const LIMITE = {
   // Línea de ayuda de un formulario del portal: para qué es y qué tener a mano.
   // Va entera en la tarjeta que ve cualquiera, así que no es texto libre largo.
   textoFormulario: 500,
+  // Noticias del portal (0064): el título y el resumen van en la tarjeta, el
+  // cuerpo es la nota entera. altFoto es la descripción de cada foto (qué se
+  // ve, sin nombres de chicos): vive dentro del jsonb `fotos`, así que la
+  // compara tests/contratoNoticia.test.js y no contratoLimites.
+  tituloNoticia: 120,
+  resumenNoticia: 200,
+  cuerpoNoticia: 8000,
+  altFoto: 150,
 };
 
-/** 'tabla.columna' → largo máximo. Es el espejo exacto de 0028 y de los checks en línea de las tablas nuevas (0035, 0052, 0054, 0055, 0057, 0058, 0059). */
+/** 'tabla.columna' → largo máximo. Es el espejo exacto de 0028 y de los checks en línea de las tablas nuevas (0035, 0052, 0054, 0055, 0057, 0058, 0059, 0064). */
 export const LIMITES_POR_COLUMNA = {
   'jugador.nombre_clave': LIMITE.nombrePersona,
   'jugador.nombre_limpio': LIMITE.nombrePersona,
@@ -100,4 +108,7 @@ export const LIMITES_POR_COLUMNA = {
   'formulario_portal.titulo': LIMITE.titulo,
   'formulario_portal.texto': LIMITE.textoFormulario,
   'formulario_portal.enlace': LIMITE.enlace,
+  'noticia.titulo': LIMITE.tituloNoticia,
+  'noticia.resumen': LIMITE.resumenNoticia,
+  'noticia.cuerpo': LIMITE.cuerpoNoticia,
 };

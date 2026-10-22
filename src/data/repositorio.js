@@ -22,3 +22,4 @@ export * from './repos/familia.js';
 export * from './repos/temporadas.js';
 export * from './repos/emergencias.js';
 export * from './repos/portal.js';
+export * from './repos/noticias.js';

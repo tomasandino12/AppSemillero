@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   htmlFormularios, htmlAvisoRespaldo, htmlLogos, htmlHeroe, htmlAlias, htmlBuscador, htmlCategoriaDelAnio, htmlProximo,
-  htmlRecaudacion, htmlColaborar, htmlAyuda, htmlAtajos, htmlCalendario, htmlCategorias, htmlFoto, htmlSede, diaInicial, htmlSuscripcion,
+  htmlRecaudacion, htmlColaborar, htmlContacto, htmlAyuda, htmlCalendario, htmlFoto, htmlSede, diaInicial, htmlSuscripcion,
 } from '../src/ui/portal.js';
+import { PAGINAS_PORTAL } from '../src/data/portal.js';
 import { eventoDesdeGoogle, eventosPorDia, proximosEventos } from '../src/data/agenda.js';
 
 /**
@@ -16,21 +17,67 @@ const pagina = readFileSync('public/portal.html', 'utf8');
 const portal = readFileSync('src/ui/portal.js', 'utf8');
 const seccion = (id) => pagina.match(new RegExp(`<section [^>]*id="${id}"[\\s\\S]*?</section>`))?.[0] ?? '';
 
-test('arriba de todo, la banda con las dos acciones; después el resto, en orden', () => {
-  const orden = ['heroe', 'calendario', 'recaudacion', 'colaborar', 'categorias', 'sede', 'formularios', 'club', 'sponsors'];
+test('el inicio es el resumen de todo: hero, banda, noticias, lo que viene, categorías, sede, recaudación, colaborar, formularios, dudas, club y sponsors', () => {
+  const orden = ['heroe', 'banda', 'noticias', 'proximo', 'categorias', 'sede', 'recaudacion', 'colaborar', 'formularios', 'dudas', 'club', 'sponsors'];
   const posiciones = orden.map((id) => pagina.search(new RegExp(`<section [^>]*id="${id}"`)));
   assert.ok(posiciones.every((p) => p > 0), `faltan secciones: ${posiciones}`);
   assert.deepEqual([...posiciones].sort((a, b) => a - b), posiciones, 'las secciones están desordenadas');
   assert.match(seccion('heroe'), /<h1>/, 'el h1 de la página está en la banda');
+  assert.doesNotMatch(pagina, /portal-atajos|id="portal-calendario"|portal-todas/, 'atajos, grilla y lista plegada tienen página propia');
 });
 
-test('las secciones que dependen de datos arrancan ocultas; la banda, recaudación y colaborar se ven siempre', () => {
-  for (const id of ['calendario', 'categorias', 'sede', 'formularios', 'club', 'sponsors']) {
+test('las secciones que dependen de datos arrancan ocultas; la banda, recaudación, colaborar y dudas se ven siempre', () => {
+  for (const id of ['noticias', 'proximo', 'categorias', 'sede', 'formularios', 'club', 'sponsors']) {
     assert.match(seccion(id).split('>')[0], /\bhidden\b/, `#${id} tiene que arrancar oculta`);
   }
-  for (const id of ['heroe', 'recaudacion', 'colaborar']) {
-    assert.doesNotMatch(seccion(id).split('>')[0], /\bhidden\b/, `#${id} se ve siempre`);
+  for (const id of ['heroe', 'banda', 'recaudacion', 'colaborar', 'dudas']) {
+    // aria-hidden (la banda decorativa) no es el atributo hidden.
+    assert.doesNotMatch(seccion(id).split('>')[0], /(?<!aria-)\bhidden\b/, `#${id} se ve siempre`);
   }
+});
+
+test('la cinta del inicio lista lo que ofrece el portal dos veces (la copia, aria-hidden) y corre sin tocar más que transform', () => {
+  const cinta = seccion('banda');
+  assert.match(cinta.split('>')[0], /aria-label="[^"]+"/, 'tiene nombre para el lector de pantalla');
+  const listas = [...cinta.matchAll(/<ul( aria-hidden="true")?>([\s\S]*?)<\/ul>/g)];
+  assert.equal(listas.length, 2, 'la lista va dos veces para que el loop no se note');
+  assert.equal(listas[0][1], undefined, 'la primera la lee el lector de pantalla');
+  assert.equal(listas[1][1], ' aria-hidden="true"', 'la copia no se lee dos veces');
+  assert.equal(listas[0][2], listas[1][2], 'las dos son iguales');
+  assert.ok((listas[0][2].match(/<li>/g) ?? []).length >= 5);
+  for (const [, , cuerpo] of listas) {
+    for (const id of cuerpo.matchAll(/<use href="#([^"]+)"/g)) assert.match(pagina, new RegExp(`<symbol id="${id[1]}"`), `falta el ícono ${id[1]}`);
+  }
+  const css = readFileSync('public/css/portal.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const reglas = css.split('}').filter((r) => r.includes('portal-cinta'));
+  assert.ok(reglas.length > 0, 'falta el estilo de la cinta');
+  assert.ok(reglas.every((r) => !/transition/.test(r)), 'la cinta corre por animation, sin transition');
+  assert.match(css, /@keyframes cinta\s*\{\s*from\s*\{\s*transform:[^}]*\}\s*\}/, 'el keyframe sólo mueve transform y sólo define from');
+});
+
+test('la sede de Ayuda muestra nombre, dirección y Cómo llegar; sin sede, nada', () => {
+  const sede = { nombre: 'Estadio <Cubierto>', direccion: 'Parque', mapa: 'https://maps.app.goo.gl/abc' };
+  const out = htmlContacto({ sede }).toString();
+  assert.match(out, /<b>Estadio &lt;Cubierto&gt;<\/b>/);
+  assert.match(out, /Cómo llegar/);
+  assert.doesNotMatch(out, /portal-alias/);
+  assert.equal(htmlContacto({ sede: null }).toString(), '');
+  assert.match(portal, /mostrar\('sede', htmlSede\(PORTAL\.sede\)\)/, 'el inicio pinta la sede (con el mapa a pedido) con los datos de PORTAL.sede');
+});
+
+test('cada resumen lleva a su página', () => {
+  assert.match(seccion('noticias'), /<a class="portal-ver" href="\/noticias">Ver todas →<\/a>/);
+  assert.match(seccion('proximo'), /<a class="portal-ver" href="\/calendario">Ver el calendario completo →<\/a>/);
+  assert.match(seccion('categorias'), /<a class="portal-ver" href="\/categorias">Ver todas las categorías →<\/a>/);
+  assert.match(seccion('dudas'), /<a class="btn sec" href="\/ayuda">Ver la ayuda<\/a>/);
+});
+
+test('un link viejo (/#ayuda) redirige antes de pintar nada', () => {
+  const desde = portal.indexOf('export async function iniciarPortal(');
+  const cuerpo = portal.slice(desde, portal.indexOf('\n}\n', desde));
+  const redirige = cuerpo.indexOf('paginaDeAncla(window.location.hash)');
+  assert.ok(redirige > 0 && redirige < cuerpo.indexOf('mostrar('), 'la redirección va primero');
+  assert.match(cuerpo, /window\.location\.replace\(pagina\)/);
 });
 
 test('ni la página ni su código dicen "Próximamente"', () => {
@@ -38,30 +85,23 @@ test('ni la página ni su código dicen "Próximamente"', () => {
   assert.doesNotMatch(portal, /Próximamente/i);
 });
 
-test('el encabezado tiene Ayuda (a las preguntas frecuentes) y Semillero, con cómo instalarla', () => {
+test('el encabezado: la marca lleva al inicio, la navegación de las páginas y Semillero, con cómo instalarla', () => {
   const barra = pagina.match(/<header class="portal-barra">[\s\S]*?<\/header>/)[0];
-  assert.match(barra, /<a class="portal-barra-btn" href="#ayuda">Ayuda<\/a>/);
+  assert.match(barra, /<a class="portal-logo" href="\/">/);
+  const nav = barra.match(/<nav class="portal-nav" aria-label="Páginas del básquet">([\s\S]*?)<\/nav>/)[1];
+  assert.deepEqual([...nav.matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((m) => [m[1], m[2]]), PAGINAS_PORTAL.map((p) => [p.href, p.texto]));
   const sem = barra.match(/<details class="portal-sem" id="semillero">[\s\S]*?<\/details>/)[0];
   assert.match(sem, /<summary[^>]*>Soy profe o jugador<\/summary>/);
   assert.match(sem, /<a class="btn" href="\/app">Entrar a Semillero<\/a>/);
   assert.match(sem, /Instalar app/);
   assert.match(sem, /Agregar a inicio/);
+  assert.match(pagina, /<div class="portal-acc-barra" id="portal-acc-barra" hidden><\/div>/, 'la barra arranca oculta');
 });
 
-test('Ayuda no ocupa lugar en la página: es una hoja (<dialog>) con la X, que abre todo link a #ayuda', () => {
-  assert.doesNotMatch(pagina, /<section [^>]*id="ayuda"/);
-  const hoja = pagina.match(/<dialog class="portal-hoja" id="ayuda" aria-labelledby="t-ayuda">[\s\S]*?<\/dialog>/)?.[0];
-  assert.ok(hoja, 'falta la hoja de Ayuda');
-  assert.match(hoja, /<h2 id="t-ayuda">Preguntas frecuentes<\/h2>/);
-  assert.match(hoja, /<button type="button" class="portal-hoja-x" data-cerrar-ayuda aria-label="Cerrar la ayuda">/);
-  assert.match(hoja, /id="portal-ayuda-lista"/);
-  const desde = portal.indexOf('function iniciarAyuda()');
-  const cuerpo = portal.slice(desde, portal.indexOf('\n}\n', desde));
-  assert.match(cuerpo, /closest\('a\[href="#ayuda"\]'\)/);
-  assert.match(cuerpo, /hoja\.showModal\(\)/, 'showModal: foco atrapado y Escape');
-  assert.match(cuerpo, /ev\.target === hoja/, 'tocar afuera la cierra');
-  assert.match(cuerpo, /\[data-cerrar-ayuda\]/);
-  assert.match(portal, /iniciarAyuda\(\);/);
+test('Ayuda es una página (/ayuda): el inicio no tiene la hoja ni la abre, y nada apunta a #ayuda', () => {
+  assert.doesNotMatch(pagina, /<dialog/);
+  assert.doesNotMatch(portal, /iniciarAyuda|showModal/);
+  assert.doesNotMatch(portal, /href="#ayuda"|'#ayuda'/);
 });
 
 test('el coordinador aparece una sola vez: al final de las preguntas frecuentes', () => {
@@ -104,12 +144,14 @@ test('portal.js sólo pide datos por el repositorio: ni repos/, ni cliente, ni S
   assert.doesNotMatch(readFileSync('src/ui/portalEntrada.js', 'utf8'), /repositorio/);
 });
 
-test('el portal no consulta nada si la URL es la vuelta de un login: esos links van a /app', () => {
+test('el inicio no pide nada si la URL es la vuelta de un login: esos links van a /app', () => {
   // El cliente de Supabase canjearía el ?code= o el #access_token en esta página.
-  assert.match(portal, /destinoDeAuth\(window\.location\.search, window\.location\.hash\)/);
-  const guarda = portal.indexOf('destinoDeAuth(');
-  assert.ok(guarda > 0 && guarda < portal.indexOf('resolverFormularios('), 'la guarda tiene que ir antes de leer la base');
-  assert.ok(guarda < portal.lastIndexOf('iniciarCalendario(calendarios)'), 'y antes de pedir el calendario');
+  // La lectura de formularios la guarda el marco (tests/portalMarco.test.js).
+  const desde = portal.indexOf('export async function iniciarPortal(');
+  const cuerpo = portal.slice(desde, portal.indexOf('\n}\n', desde));
+  const guarda = cuerpo.indexOf('destinoDeAuth(window.location.search, window.location.hash)');
+  assert.ok(guarda > 0 && guarda < cuerpo.indexOf('crearAgenda('), 'la guarda va antes de pedir el calendario');
+  assert.ok(cuerpo.indexOf('iniciarMarco()') < guarda, 'el marco arranca antes (completa el pie aunque no lea la base)');
 });
 
 // ---- El hero: el título de la página y las dos tarjetas protagonistas ----
@@ -121,7 +163,7 @@ const acciones = (out) => out.match(/class="portal-accion [^"]*"/g) ?? [];
 test('el hero es el título de la página, no una pregunta', () => {
   const out = htmlHeroe({ temporada: 2027 }).toString();
   assert.match(out, /<div class="portal-heroe-ey">Formativas · Rosario · Temporada 2027<\/div>/);
-  assert.match(out, /<h1>Básquet formativo de Newell's<\/h1>/);
+  assert.match(out, /<h1><span>Básquet<\/span> <em>formativo<\/em> <span>de Newell's<\/span><\/h1>/);
   assert.match(out, /<p class="portal-heroe-bajada">/);
   assert.doesNotMatch(out, /¿Qué (necesitás|querés) hacer\?/);
 });
@@ -160,16 +202,6 @@ test('alias: escapado y con botón para copiarlo; uno inválido no se muestra', 
   assert.match(out, /<b>NOB\.BASQUET<\/b>/);
   assert.match(out, /data-copiar="NOB\.BASQUET"/);
   assert.equal(htmlAlias({ alias: 'mal alias' }).toString(), '');
-});
-
-test('atajos: con menos de dos no hay fila; el de ayuda abre afuera', () => {
-  assert.equal(htmlAtajos([{ clave: 'jugar', texto: 'Quiero jugar', href: '#jugar' }]).toString(), '');
-  const out = htmlAtajos([
-    { clave: 'jugar', texto: 'Quiero jugar', href: '#jugar' },
-    { clave: 'ayuda', texto: 'Ayuda', href: 'https://wa.me/5493410000000', externo: true },
-  ]).toString();
-  assert.match(out, /<a href="#jugar"><i><svg/);
-  assert.match(out, /<a href="https:\/\/wa\.me\/5493410000000" target="_blank" rel="noopener">/);
 });
 
 // ---- Calendario propio ----
@@ -231,11 +263,11 @@ test('"Lo que viene": fecha grande, tipo, título escapado, hora y lugar, y para
 });
 
 test('"Lo que viene" busca en el mes siguiente si en lo que queda del mes no hay nada', () => {
-  const desde = portal.indexOf('async function mostrarProximo()');
-  const cuerpo = portal.slice(desde, portal.indexOf('\n  }\n', desde));
+  const desde = portal.indexOf('async function mostrarProximo(agenda)');
+  const cuerpo = portal.slice(desde, portal.indexOf('\n}\n', desde));
   assert.match(cuerpo, /mesVecino\(anio, mes, 1\)/);
   assert.match(cuerpo, /Number\(hoy\.slice/, 'sale del mes de hoy, no del que muestra la grilla');
-  assert.match(portal, /cargar\(estado\.anio, estado\.mes\)\.then\(mostrarProximo\)/);
+  assert.match(portal, /iniciarCalendario\(agenda\)\.then\(\(\) => mostrarProximo\(agenda\)\)/);
 });
 
 test('día inicial: hoy si es del mes; si no, el primero con algo, o el 1', () => {
@@ -247,7 +279,6 @@ test('día inicial: hoy si es del mes; si no, el primero con algo, o el 1', () =
 // ---- Categorías, sede, foto, contacto: sin datos, nada ----
 
 test('sin datos, cada parte no devuelve nada (la sección queda oculta)', () => {
-  assert.equal(htmlCategorias([]).toString(), '');
   assert.equal(htmlFoto(null).toString(), '');
   assert.equal(htmlFormularios([]).toString(), '');
 });
@@ -277,17 +308,8 @@ test('categoría del año: el nombre, sus años y su horario; sin horario, lo di
 test('categoría del año: sin ninguna, lo dice y manda a las preguntas frecuentes, no al coordinador', () => {
   const out = htmlCategoriaDelAnio(2021, []).toString();
   assert.match(out, /Para chicos nacidos en 2021 todavía no hay categoría\./);
-  assert.match(out, /<a href="#ayuda">/);
+  assert.match(out, /<a href="\/ayuda">/);
   assert.doesNotMatch(out, /wa\.me|coordinador/);
-});
-
-test('categorías: nombre, rama, años y horario, escapados', () => {
-  const out = htmlCategorias([{ nombre: 'U9', rama: 'Mixto', anios: '2017 y 2018', horario: 'Lun <18 h>' }]).toString();
-  assert.match(out, /<b>U9<\/b><span>Mixto<\/span>/);
-  assert.match(out, /2017 y 2018/);
-  assert.match(out, /Lun &lt;18 h&gt;/);
-  const dos = htmlCategorias([{ nombre: 'U13', rama: null, anios: 'x', horario: 'Lun 18 h · Mié 19 h' }]).toString();
-  assert.match(dos, /<span>Lun 18 h<\/span><span>Mié 19 h<\/span>/);
 });
 
 test('dónde se entrena: los tres lugares, "Cómo llegar" y el mapa SIN cargar hasta tocar "Ver mapa"', () => {
@@ -308,7 +330,6 @@ test('dónde se entrena: los tres lugares, "Cómo llegar" y el mapa SIN cargar h
   assert.match(cuerpo, /createElement\('iframe'\)/);
   assert.match(cuerpo, /iframe\.src = caja\.dataset\.embed/);
 });
-
 test('foto con su alt', () => {
   assert.match(htmlFoto({ src: '/public/portal/club.jpg', alt: 'La cancha' }).toString(), /<img src="\/public\/portal\/club\.jpg" alt="La cancha" loading="lazy">/);
 });
@@ -327,7 +348,7 @@ test('cada formulario muestra su línea de ayuda y abre en otra pestaña; uno co
 });
 
 test('el portal aparta los formularios con lugar propio: no aparecen dos veces', () => {
-  assert.match(portal, /const \{ inscripcion, comprobante, consultas, colaboradores, recaudacion, comunes \} = separarFormularios\(formularios\);/);
+  assert.match(portal, /const \{ estado, inscripcion, comprobante, consultas, colaboradores, recaudacion, comunes \} = datos;/);
   assert.match(portal, /htmlHeroe\(\{ inscripcion, consultas, comprobante,/);
   assert.match(portal, /htmlColaborar\(colaboradores\)/);
   assert.match(portal, /htmlRecaudacion\(recaudacion\)/);
@@ -403,7 +424,7 @@ test('ayuda: "me equivoqué en un dato" es volver a mandarlo (el Tablero toma la
 test('ayuda: "¿cómo inscribo?" no manda a un botón apagado', () => {
   assert.match(htmlAyuda({ inscripcionAbierta: true }).toString(), /Tocá <b>Inscribir a mi hijo o hija<\/b>/);
   assert.match(htmlAyuda({ consultasAbierto: true, temporada: 2027 }).toString(), /La inscripción 2027 todavía no abrió\. Mientras tanto, tocá <b>Quiero jugar en Newell's<\/b>/);
-  assert.match(htmlAyuda({}).toString(), /Cuando abra, el botón se habilita arriba de todo/);
+  assert.match(htmlAyuda({}).toString(), /Cuando abra, el botón aparece en el inicio y en la barra de botones/);
   assert.doesNotMatch(htmlAyuda({ contacto: 'javascript:alert(1)' }).toString(), /javascript|No encontraste/);
 });
 
@@ -443,4 +464,10 @@ test('seguir el calendario: Android/compu e iPhone; sin ID válido, nada', () =>
   assert.match(out, /href="webcal:\/\/calendar\.google\.com\/calendar\/ical\/abc%40group\.calendar\.google\.com\/public\/basic\.ics"/);
   assert.equal(htmlSuscripcion([{ tipo: 'evento', id: 'roto' }]).toString(), '');
   assert.match(htmlCalendario(estado(), CALS).toString(), /Querés tener todo el calendario en tu celular/);
+});
+
+test('un link viejo también redirige si el inicio ya estaba abierto (cambio de hash sin recarga)', () => {
+  const desde = portal.indexOf('export async function iniciarPortal(');
+  const cuerpo = portal.slice(desde, portal.indexOf('\n}\n', desde));
+  assert.match(cuerpo, /addEventListener\('hashchange'/);
 });

@@ -13,3 +13,4 @@ backups/
 
 # Insumos de trabajo (estructura de formularios, listas de la CABB): no van a git
 docs/insumos/
+.superpowers/

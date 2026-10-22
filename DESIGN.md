@@ -252,3 +252,23 @@ Presupuesto de la rama: ninguna regresión contra la medición previa, con toler
 - **Botón principal `.btn`**: rojo del club, letras blancas, casi recto (`--r-btn`), mayúsculas con `letter-spacing:.14em`. **Secundario `.btn.sec`**: negro macizo con letras blancas; con mouse pasa a rojo. Los dos suben 2 px y muestran el brillo del club en el `::after` al pasar el mouse. Sobre fondo oscuro (`.publico`) el secundario sigue siendo contorno.
 - **Títulos**: `.h2` grande, en `--tinta` y con barra roja debajo; `.eyebrow` en `--fs-190`, `--tinta`, negrita. `--gris-osc` es para fondo oscuro: no usarlo sobre papel.
 - **Acción de un bloque**: `.seccion-cab` pone el botón (`.btn.chico`) a la derecha del título del bloque que afecta (ej. "Cargar partido" en DATOS), en vez de una barra fija abajo.
+
+## Portal multipágina (spec 2026-10-21)
+
+- **Ritmo de lo público:** ver "Estilo gimnasio" más abajo (reemplaza al negro/papel/rojo de esta primera versión). La landing y la autenticación de `/app` siguen como estaban.
+- **Archivos:** lo nuevo vive en `public/css/portal.css`. Las reglas `.portal-*` anteriores siguen en `publico.css`. Los cortes de ancho están en `layout.css`.
+- **Barra de acciones (`.portal-acc-barra`):** las dos acciones principales. En el celular va fija abajo y entra subiendo (`portal-sube`, sólo `transform`). En compu va pegada arriba. En el inicio se esconde mientras se ven las tarjetas del hero (`.escondida`) y después flota (`.flotante`). Sin formularios abiertos, no aparece.
+- **Tarjeta de noticia (`.portal-not`):** foto 16:10, etiqueta roja, título condensado, fecha en mono y "LEER →". La etiqueta es `--sobre-club` sobre `--primario` (4.5:1, lo mide `estilosTokens`).
+- **Lo que no se copió del sitio del club, a propósito:** la cuenta regresiva por segundo y los contadores animados. Son animaciones continuas, que este documento prohíbe (ver Reglas duras).
+
+## Estilo gimnasio del portal
+
+Reemplaza al ritmo negro/papel/rojo y a la home inmersiva. El portal copia el diseño del home de un sitio de gimnasio de referencia (React + Tailwind), en nuestro rojo y sin cambiar de stack.
+
+- **Paleta:** negro casi puro (`--pf-fondo`), tarjetas `--pf-sup`, bordes `--pf-borde`, y las secciones pares con un tinte del club (`--pf-alt`, clase `.alt`). Todo vive en `tokens.css`: `.portal-d` redefine `--pub-*`, `--gris-osc`, `--r` (1.5rem), `--r-btn` (píldora) y `--ff-titulo` (Poppins), así lo que ya usaba esos tokens cambió sin tocarlo. Las secciones que eran "papel" invierten sus neutros en `.portal-d .portal-papel`.
+- **Tipografía:** títulos en Poppins (600/700/800, `public/fonts/`, mismo criterio que las otras fuentes: propias, sin Google Fonts); cuerpo en Inter. El texto en rojo sobre negro usa `--pf-pill-texto` (el rojo del club solo no llega a 4.5:1).
+- **Encabezado:** pegado arriba (`position:sticky`) con vidrio; en compu, marca, navegación al centro y "Soy profe o jugador" a la derecha. La barra de acciones (`.portal-acc-barra`) es el aviso: una franja arriba de todo en compu, fija abajo en el celular.
+- **Hero partido:** texto a la izquierda y video a la derecha cortado en diagonal (`clip-path`), como tarjeta debajo del texto en el celular. Las dos acciones son píldoras (roja y de contorno). Sin `PORTAL.heroVideo` válido, `portal.js` saca `con-fondo` y queda sólo el texto. Las condiciones del video siguen siendo las de la home anterior (muted, `preload="none"`, sin movimiento reducido ni ahorro de datos, pausa fuera de pantalla).
+- **Cinta (`.portal-cinta`):** lo que ofrece el portal, con íconos de un sprite inline; sólo cosas que el portal tiene. Es la única `infinite` de `portal.css`, sólo `transform`, keyframe con `from`.
+- **Secciones:** franjas a todo el ancho con el contenido a 76 rem (`--lado`), pastilla (`.portal-st`), título centrado, tarjetas redondeadas que suben 6 px al pasar el mouse (`transform` + borde del club en un `::after` que sólo cambia de `opacity`).
+- **Qué se descartó:** la banda ANOTATE, la noticia destacada grande y el "Lo que viene" agrandado. Tampoco se copió del sitio de referencia lo que no tenemos (precios, profesores, cuenta de pases gratis).

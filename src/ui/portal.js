@@ -1,17 +1,21 @@
 import { html } from './html.js';
 import { $ } from './dom.js';
-import { formulariosPublicos, eventosDelMes } from '../data/repositorio.js';
+import { eventosDelMes } from '../data/repositorio.js';
 import {
   PORTAL, enlaceFormulario, enlaceContacto, sponsorsValidos, calendariosActivos, categoriasDelPortal,
-  categoriasDelAnio, sedeValida, aliasValido, fotoValida,
+  categoriasDelAnio, categoriasConDetalle, sedeValida, paginaDeAncla, aliasValido, fotoValida,
 } from '../data/portal.js';
 import { temporadaComoAnio } from '../data/categorias.js';
-import { resolverFormularios, separarFormularios } from '../data/formulariosPortal.js';
+import { accionesPrincipales } from '../data/formulariosPortal.js';
 import {
   eventosPorDia, proximosEventos, semanasDelMes, mesVecino, hoyEnRosario, tituloMes, fechaLarga,
   TIPOS_AGENDA, NOMBRE_TIPO, enlaceAgregarGoogle, textoIcs, enlacesSuscripcion, partesDeFecha, cuandoEs,
 } from '../data/agenda.js';
 import { destinoDeAuth } from '../data/entradaAuth.js';
+import { iniciarMarco, esconderBarraMientrasSeVea } from './portalMarco.js';
+import { iniciarUltimasNoticias } from './portalNoticias.js';
+import { heroVideoValido } from '../data/heroVideo.js';
+import { htmlFondoHero, iniciarVideoHero } from './portalHeroVideo.js';
 
 /*
  * Portal "Básquet Newell's": la página pública que se reparte a las familias
@@ -32,10 +36,6 @@ const ABRE = '↗';
 /** Los íconos de los atajos y de las acciones: trazos simples en currentColor, decorativos. */
 const ICONO = {
   jugar: html`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-3 3-3 15 0 18M12 3c3 3 3 15 0 18"/></svg>`,
-  calendario: html`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>`,
-  categorias: html`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
-  colaborar: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`,
-  ayuda: html`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg>`,
   comprobante: html`<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>`,
   inscribir: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg>`,
   empresa: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>`,
@@ -53,6 +53,8 @@ const botonExterno = (url, texto, clase = 'btn') => html`<a class="${clase}" hre
  */
 const botonCerrado = (texto, clase = 'btn') => html`<button type="button" class="${clase}" disabled aria-disabled="true">${texto}</button>`;
 
+const abierto = (f) => Boolean(f && enlaceFormulario(f.enlace));
+
 /**
  * Una de las dos tarjetas de arriba: ícono, título y una línea; toda la
  * tarjeta es el botón. Sin formulario activo se ve igual de maciza, con la
@@ -65,27 +67,26 @@ function accion({ clase, icono, titulo, detalle, url, cerrado }) {
 }
 
 /**
- * El hero: la banda roja y negra (la camiseta) con el título de la página y,
- * adentro, las dos tarjetas protagonistas. La primera es "Inscribir a mi hijo
+ * El hero: el título de la página y,
+ * abajo, las dos acciones protagonistas. La primera es "Inscribir a mi hijo
  * o hija" si el formulario de inscripción está activo (destino inscripcion,
  * 0062) y, si no, "Quiero jugar en Newell's" (destino consultas, 0061). La
  * segunda, "Enviar comprobante" (destino comprobante), con el alias pegado
  * abajo. Son independientes: alguien se puede inscribir sin pagar nada.
  */
 export function htmlHeroe({ inscripcion = null, consultas = null, comprobante = null, temporada = null, alias = null } = {}) {
-  const url = (f) => (f ? enlaceFormulario(f.enlace) : null);
-  const ins = url(inscripcion);
-  const primera = ins
-    ? accion({ clase: 'principal', icono: 'inscribir', titulo: 'Inscribir a mi hijo o hija', url: ins, detalle: `Inscripción${temporada ? ` ${temporada}` : ''} abierta: formulario de Google` })
-    : accion({ clase: 'principal', icono: 'jugar', titulo: 'Quiero jugar en Newell\'s', url: url(consultas),
+  const { primera: p, comprobante: c } = accionesPrincipales({ inscripcion, consultas, comprobante });
+  const primera = p.tipo === 'inscribir'
+    ? accion({ clase: 'principal', icono: 'inscribir', titulo: 'Inscribir a mi hijo o hija', url: p.url, detalle: `Inscripción${temporada ? ` ${temporada}` : ''} abierta: formulario de Google` })
+    : accion({ clase: 'principal', icono: 'jugar', titulo: 'Quiero jugar en Newell\'s', url: p.url,
       detalle: 'Dejá tus datos y te contactamos para venir a probar', cerrado: 'Se habilita cuando abra el formulario' });
   return html`<div class="portal-heroe-ey">Formativas · Rosario${temporada ? html` · Temporada ${temporada}` : ''}</div>
-    <h1>Básquet formativo de Newell's</h1>
+    <h1><span>Básquet</span> <em>formativo</em> <span>de Newell's</span></h1>
     <p class="portal-heroe-bajada">Inscripción, pagos, calendario y todo lo del básquet del club, en un solo lugar.</p>
     <div class="portal-acciones">
       ${primera}
       <div class="portal-pago">
-        ${accion({ clase: 'pago', icono: 'comprobante', titulo: 'Enviar comprobante', url: url(comprobante),
+        ${accion({ clase: 'pago', icono: 'comprobante', titulo: 'Enviar comprobante', url: c.url,
           detalle: 'Subí la foto de la transferencia', cerrado: 'Se habilita cuando haya algo para pagar' })}
         ${htmlAlias(alias)}
       </div>
@@ -100,15 +101,6 @@ export function htmlAlias(alias) {
     <div><small>Alias para transferir</small><b>${a.alias}</b>${a.titular && html`<span>${a.titular}</span>`}</div>
     <button type="button" class="portal-copiar" data-copiar="${a.alias}">Copiar</button>
   </div>`;
-}
-
-/**
- * Los atajos de abajo de la banda: sólo a lo que existe en la página. Con
- * menos de dos no vale la fila: no devuelve nada.
- */
-export function htmlAtajos(atajos) {
-  if (atajos.length < 2) return html``;
-  return html`${atajos.map(({ clave, texto, href, externo }) => html`<a href="${href}"${externo && html` target="_blank" rel="noopener"`}><i>${ICONO[clave]}</i>${texto}</a>`)}`;
 }
 
 /** Si la base no respondió se muestra una copia: mejor eso que nada, pero que se note. */
@@ -171,16 +163,6 @@ export function htmlFormularios(formularios) {
   </div>`)}`;
 }
 
-/** Categorías con sus años de nacimiento y, si el club los pasó, sus horarios. Sin ninguna, nada. */
-export function htmlCategorias(categorias) {
-  if (!categorias.length) return html``;
-  return html`<ul class="portal-cats">${categorias.map(({ nombre, rama, anios, horario }) => html`<li>
-    <div><b>${nombre}</b>${rama && html`<span>${rama}</span>`}</div>
-    <div class="portal-cats-anios">${anios}</div>
-    ${horario && html`<div class="portal-cats-hora">${horario.split(' · ').map((h) => html`<span>${h}</span>`)}</div>`}
-  </li>`)}</ul>`;
-}
-
 /** El selector de año del "¿En qué categoría juega?": − y + alrededor del año, y el lugar del resultado al lado. */
 export function htmlBuscador(anio, { min, max }) {
   return html`<div class="portal-anio-caja">
@@ -201,14 +183,42 @@ export function htmlBuscador(anio, { min, max }) {
  */
 export function htmlCategoriaDelAnio(anio, categorias) {
   if (!categorias.length) {
-    return html`<p class="portal-cat-nada">Para chicos nacidos en ${anio} todavía no hay categoría. <a href="#ayuda">¿Dudas? Mirá las preguntas frecuentes</a>.</p>`;
+    return html`<p class="portal-cat-nada">Para chicos nacidos en ${anio} todavía no hay categoría. <a href="/ayuda">¿Dudas? Mirá las preguntas frecuentes</a>.</p>`;
   }
-  return html`${categorias.map(({ nombre, rama, anios, horario }) => html`<div class="portal-cat-res">
+  return html`${categorias.map(({ nombre, rama, anios, horario, href }) => html`<div class="portal-cat-res">
     <div class="portal-cat-nombre"><b>${nombre}</b>${rama && html`<span>${rama}</span>`}<small>Nacidos ${anios}</small></div>
     ${horario
       ? html`<ul class="portal-cat-hora">${horario.split(' · ').map((h) => html`<li>${h}</li>`)}</ul>`
       : html`<p class="portal-cat-sin">Horario a confirmar.</p>`}
+    ${href && html`<a class="portal-cat-ir" href="${href}">Ver horarios y sede de ${nombre}</a>`}
   </div>`)}`;
+}
+
+/** Los atajos a cada categoría de /categorias. Con menos de dos no vale la fila. */
+export function htmlIndiceCategorias(categorias) {
+  if (categorias.length < 2) return html``;
+  return html`${categorias.map((c) => html`<a href="#${c.ancla}">${c.rotulo}</a>`)}`;
+}
+
+/**
+ * Una categoría entera en /categorias: años, cada horario (día, hora y lugar,
+ * como los pasó el club) y la sede. Sin horario, "a confirmar": nunca uno
+ * inventado. El detalle, sólo si el club lo pasó.
+ */
+export function htmlCategoriaDetalle({ rotulo, rama, anios, horario, detalle, ancla }, sede) {
+  const s = sedeValida(sede);
+  return html`<section class="portal-cat-sec" id="${ancla}" aria-labelledby="t-${ancla}">
+    ${rama && html`<div class="portal-st">${rama}</div>`}
+    <h2 id="t-${ancla}">${rotulo}</h2>
+    <dl class="portal-cat-datos">
+      <div><dt>Nacidos</dt><dd>${anios}</dd></div>
+      <div><dt>Entrenamientos</dt><dd>${horario
+        ? html`<ul>${horario.split(' · ').map((h) => html`<li>${h}</li>`)}</ul>`
+        : html`<span class="portal-cat-confirmar">Horario a confirmar.</span>`}</dd></div>
+      ${s && html`<div><dt>Dónde</dt><dd>${s.nombre}${s.mapa && html` · <a href="${s.mapa}" target="_blank" rel="noopener">Cómo llegar</a>`}</dd></div>`}
+    </dl>
+    ${detalle && html`<p class="portal-cat-detalle">${detalle}</p>`}
+  </section>`;
 }
 
 /**
@@ -223,14 +233,14 @@ export function htmlAyuda({ inscripcionAbierta = false, consultasAbierto = false
   const coordinador = enlaceContacto(contacto);
   const pregunta = (titulo, respuesta) => html`<details class="portal-faq"><summary>${titulo}</summary><div class="portal-faq-r">${respuesta}</div></details>`;
   const comoInscribir = inscripcionAbierta
-    ? html`<p>Tocá <b>Inscribir a mi hijo o hija</b>, arriba de todo. Se abre un formulario de Google: completalo desde el celular. Tené a mano el DNI del chico o la chica y el tuyo.</p>`
+    ? html`<p>Tocá <b>Inscribir a mi hijo o hija</b>: está arriba de todo en el inicio y en la barra de botones de cada página. Se abre un formulario de Google: completalo desde el celular. Tené a mano el DNI del chico o la chica y el tuyo.</p>`
     : html`<p>La inscripción${temporada ? html` ${temporada}` : ''} todavía no abrió. ${consultasAbierto
-      ? html`Mientras tanto, tocá <b>Quiero jugar en Newell's</b>, arriba de todo: dejás tus datos y te contactamos para que venga a probar.`
-      : html`Cuando abra, el botón se habilita arriba de todo.`}</p>`;
+      ? html`Mientras tanto, tocá <b>Quiero jugar en Newell's</b> (en el inicio o en la barra de botones): dejás tus datos y te contactamos para que venga a probar.`
+      : html`Cuando abra, el botón aparece en el inicio y en la barra de botones de cada página.`}</p>`;
   const alCoordinador = coordinador ? 'escribile al coordinador (el botón de acá abajo)' : 'escribile al coordinador';
   // Las preguntas van en la voz del padre y con sujeto: así las busca con la vista.
   return html`${pregunta('¿Cómo inscribo a mi hijo o hija?', comoInscribir)}
-    ${pregunta('¿Cómo pago la cuota o mando el comprobante?', html`<p>${a ? html`Transferí al alias <b>${a.alias}</b> (con <b>Copiar</b>, arriba de todo, lo pegás en tu banco). ` : ''}Después tocá <b>Enviar comprobante</b> y subí la foto o la captura de la transferencia. Si ese botón está apagado, es que ahora no hay nada para pagar.</p>`)}
+    ${pregunta('¿Cómo pago la cuota o mando el comprobante?', html`<p>${a ? html`Transferí al alias <b>${a.alias}</b> (con <b>Copiar</b>, en el inicio o acá abajo, lo pegás en tu banco). ` : ''}Después tocá <b>Enviar comprobante</b> y subí la foto o la captura de la transferencia. Si ese botón está apagado, es que ahora no hay nada para pagar.</p>`)}
     ${pregunta('Me pide iniciar sesión con Google, ¿qué hago?', html`<p>La inscripción y el comprobante la piden porque se suben fotos (los DNI, la transferencia). Si no tenés Gmail, creá una cuenta de Google con el mail que ya usás, sin abrir uno nuevo:</p>
       <ol class="portal-faq-pasos">
         <li>Entrá a <a href="https://accounts.google.com/signup" target="_blank" rel="noopener">accounts.google.com</a> y tocá <b>Crear cuenta</b> → <b>Para uso personal</b>.</li>
@@ -238,9 +248,9 @@ export function htmlAyuda({ inscripcionAbierta = false, consultasAbierto = false
         <li>Pegá el código que te llega a ese mail y elegí una contraseña.</li>
       </ol>
       <p>Si no podés, ${alCoordinador} y te ayuda.</p>`)}
-    ${pregunta('¿En qué categoría juega mi hijo o hija?', html`<p>Va por el año de nacimiento, como lo arma la CABB. En <a href="#categorias">¿En qué categoría juega?</a> elegís el año y te dice la categoría y los horarios.</p>`)}
+    ${pregunta('¿En qué categoría juega mi hijo o hija?', html`<p>Va por el año de nacimiento, como lo arma la CABB. En <a href="/categorias">¿En qué categoría juega?</a> elegís el año y te dice la categoría y los horarios.</p>`)}
     ${pregunta('Me equivoqué en un dato del formulario, ¿qué hago?', html`<p>Volvé a mandar el formulario con el dato bien: tomamos siempre el último que mandaste. Si te equivocaste en el DNI, ${alCoordinador.replace('escribile', 'avisale')}.</p>`)}
-    ${pregunta('¿Dónde y cuándo entrena mi hijo o hija?', html`<p>Los días y los horarios dependen de la categoría: los ves en <a href="#categorias">¿En qué categoría juega?</a>.${s ? html` Se entrena en el <b>${s.nombre}</b>${s.direccion && html` (${s.direccion})`}.` : ''}</p>${s?.mapa && botonExterno(s.mapa, 'Cómo llegar', 'btn sec chico')}`)}
+    ${pregunta('¿Dónde y cuándo entrena mi hijo o hija?', html`<p>Los días y los horarios dependen de la categoría: los ves en <a href="/categorias">¿En qué categoría juega?</a>.${s ? html` Se entrena en el <b>${s.nombre}</b>${s.direccion && html` (${s.direccion})`}.` : ''}</p>${s?.mapa && botonExterno(s.mapa, 'Cómo llegar', 'btn sec chico')}`)}
     ${coordinador && html`<div class="portal-faq-fin">
       <b>¿No encontraste tu respuesta?</b>
       <span>Escribile al coordinador y te ayuda.</span>
@@ -278,6 +288,21 @@ function iniciarMapa() {
     caja.replaceChildren(iframe);
     caja.classList.add('abierto');
   });
+}
+
+/**
+ * La sede y el alias, abajo de las preguntas frecuentes de /ayuda. El
+ * coordinador NO va acá: sale una sola vez, al final de htmlAyuda.
+ */
+export function htmlContacto({ sede = null, alias = null } = {}) {
+  const s = sedeValida(sede);
+  const a = htmlAlias(alias);
+  if (!s && !a.toString()) return html``;
+  return html`${s && html`<div class="portal-contacto-sede">
+      <div class="portal-st">Dónde se entrena</div>
+      <b>${s.nombre}</b>${s.direccion && html`<p>${s.direccion}</p>`}
+      ${s.mapa && botonExterno(s.mapa, 'Cómo llegar', 'btn sec chico')}
+    </div>`}${a}`;
 }
 
 export function htmlFoto(foto) {
@@ -421,13 +446,9 @@ function bajarIcs(evento) {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-function iniciarCalendario(calendarios) {
-  const hoy = hoyEnRosario();
+/** Los eventos de Google por mes, con caché: los comparten la grilla y "Lo que viene". */
+export function crearAgenda(calendarios) {
   const cache = new Map();
-  const estado = { anio: Number(hoy.slice(0, 4)), mes: Number(hoy.slice(5, 7)), elegido: hoy, hoy, porDia: new Map(), fallidos: 0, cargando: true };
-  const pintar = () => { $('portal-calendario').innerHTML = htmlCalendario(estado, calendarios); };
-
-  /** Los eventos de un mes, de la caché o de Google (y quedan en la caché). */
   async function traer(anio, mes) {
     const clave = `${anio}-${mes}`;
     if (!cache.has(clave)) {
@@ -436,49 +457,67 @@ function iniciarCalendario(calendarios) {
     }
     return cache.get(clave);
   }
+  return {
+    calendarios,
+    traer,
+    yaTraido: (anio, mes) => cache.has(`${anio}-${mes}`),
+    // El botón "iPhone" busca su evento en todos los meses ya traídos: "Lo que viene" puede ser de otro mes que la grilla.
+    eventos: () => [...cache.values()].flatMap((c) => [...c.porDia.values()].flat()),
+  };
+}
+
+/**
+ * "Lo que viene": el próximo desde hoy. Si en lo que queda del mes no hay
+ * nada, lo busca en el mes siguiente (a fin de mes, el próximo partido suele
+ * caer ahí). Devuelve si encontró algo, para mostrar u ocultar su sección.
+ */
+export async function mostrarProximo(agenda) {
+  const hoy = hoyEnRosario();
+  const anio = Number(hoy.slice(0, 4));
+  const mes = Number(hoy.slice(5, 7));
+  let [proximo] = proximosEventos((await agenda.traer(anio, mes)).porDia, hoy, 1);
+  if (!proximo) {
+    const sig = mesVecino(anio, mes, 1);
+    [proximo] = proximosEventos((await agenda.traer(sig.anio, sig.mes)).porDia, hoy, 1);
+  }
+  const contenido = htmlProximo(proximo, hoy).toString();
+  $('portal-proximo').innerHTML = contenido;
+  return Boolean(contenido);
+}
+
+/** El botón "iPhone" de cualquier evento de la sección baja su .ics. */
+export function cablearIcs(seccion, agenda) {
+  seccion.addEventListener('click', (ev) => {
+    const ics = ev.target.closest('[data-ics]');
+    if (!ics) return;
+    const evento = agenda.eventos().find((e) => claveEvento(e) === ics.dataset.ics);
+    if (evento) bajarIcs(evento);
+  });
+}
+
+/** La grilla del mes: elegir un día y pasar de mes. */
+export function iniciarCalendario(agenda) {
+  const hoy = hoyEnRosario();
+  const estado = { anio: Number(hoy.slice(0, 4)), mes: Number(hoy.slice(5, 7)), elegido: hoy, hoy, porDia: new Map(), fallidos: 0, cargando: true };
+  const pintar = () => { $('portal-calendario').innerHTML = htmlCalendario(estado, agenda.calendarios); };
 
   async function cargar(anio, mes) {
-    const clave = `${anio}-${mes}`;
-    Object.assign(estado, { anio, mes, cargando: !cache.has(clave) });
-    if (!cache.has(clave)) {
+    const yaEsta = agenda.yaTraido(anio, mes);
+    Object.assign(estado, { anio, mes, cargando: !yaEsta });
+    if (!yaEsta) {
       estado.porDia = new Map();
       estado.elegido = diaInicial(anio, mes, hoy, estado.porDia);
       pintar();
-      await traer(anio, mes);
-      // Si mientras tanto la persona pasó a otro mes, este resultado queda guardado y no se pinta.
-      if (estado.anio !== anio || estado.mes !== mes) return;
     }
-    Object.assign(estado, cache.get(clave), { cargando: false });
+    const datos = await agenda.traer(anio, mes);
+    // Si mientras tanto la persona pasó a otro mes, este resultado queda guardado y no se pinta.
+    if (estado.anio !== anio || estado.mes !== mes) return;
+    Object.assign(estado, datos, { cargando: false });
     estado.elegido = diaInicial(anio, mes, hoy, estado.porDia);
     pintar();
   }
 
-  /**
-   * "Lo que viene": el próximo desde hoy. Si en lo que queda del mes no hay
-   * nada, lo busca en el mes siguiente (a fin de mes, el próximo partido suele
-   * caer ahí). No cambia al pasar de mes en la grilla.
-   */
-  async function mostrarProximo() {
-    const anio = Number(hoy.slice(0, 4));
-    const mes = Number(hoy.slice(5, 7));
-    let [proximo] = proximosEventos((await traer(anio, mes)).porDia, hoy, 1);
-    if (!proximo) {
-      const sig = mesVecino(anio, mes, 1);
-      [proximo] = proximosEventos((await traer(sig.anio, sig.mes)).porDia, hoy, 1);
-    }
-    $('portal-proximo').innerHTML = htmlProximo(proximo, hoy);
-  }
-
-  // En la sección entera: el "iPhone" de "Lo que viene" y los del mes. El
-  // evento se busca en todos los meses ya traídos, porque "Lo que viene"
-  // puede ser de otro mes que el de la grilla.
-  $('calendario').addEventListener('click', (ev) => {
-    const ics = ev.target.closest('[data-ics]');
-    if (ics) {
-      const evento = [...cache.values()].flatMap((c) => [...c.porDia.values()].flat()).find((e) => claveEvento(e) === ics.dataset.ics);
-      if (evento) bajarIcs(evento);
-      return;
-    }
+  $('portal-calendario').addEventListener('click', (ev) => {
     const dia = ev.target.closest('[data-dia]');
     if (dia) {
       estado.elegido = dia.dataset.dia;
@@ -491,7 +530,7 @@ function iniciarCalendario(calendarios) {
       cargar(anio, mes);
     }
   });
-  cargar(estado.anio, estado.mes).then(mostrarProximo);
+  return cargar(estado.anio, estado.mes);
 }
 
 /* ---------- ¿En qué categoría juega? ---------- */
@@ -501,18 +540,25 @@ function iniciarCalendario(calendarios) {
  * a uno. Los topes cubren de Primera a unos años más chicos que la U9, para
  * que quien busca a un nene de 4 vea que todavía no hay categoría.
  */
-function iniciarBuscador(temporada) {
+function iniciarBuscador(temporada, hrefDe = null) {
   const rango = { min: temporada - 30, max: temporada - 4 };
   let anio = temporada - 13;
   const buscador = $('portal-buscador');
   buscador.innerHTML = htmlBuscador(anio, rango);
+  // Para el link "Ver horarios y sede": el ancla sale de la lista completa,
+  // así las dos Primeras llevan cada una a la suya.
+  const detalle = categoriasConDetalle(PORTAL.categorias, PORTAL.temporada);
+  const conEnlace = (cats) => cats.map((c) => {
+    const d = detalle.find((x) => x.nombre === c.nombre && x.rama === c.rama);
+    return { ...c, href: d && hrefDe ? hrefDe(d) : null };
+  });
   // Se cambian el año, los topes y el resultado, no el selector entero: así el
   // foco queda en el botón y el resultado (aria-live) se anuncia al cambiar.
   const pintar = () => {
     $('portal-anio').textContent = anio;
     buscador.querySelector('[data-anio="-1"]').disabled = anio <= rango.min;
     buscador.querySelector('[data-anio="1"]').disabled = anio >= rango.max;
-    $('portal-cat-res').innerHTML = htmlCategoriaDelAnio(anio, categoriasDelAnio(PORTAL.categorias, temporada, anio));
+    $('portal-cat-res').innerHTML = htmlCategoriaDelAnio(anio, conEnlace(categoriasDelAnio(PORTAL.categorias, temporada, anio)));
   };
   buscador.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-anio]');
@@ -523,30 +569,6 @@ function iniciarBuscador(temporada) {
   pintar();
 }
 
-/* ---------- Ayuda: una hoja encima de la página ---------- */
-
-/**
- * Todo link a #ayuda (el botón del encabezado, el atajo, "¿Dudas?") abre la
- * hoja en vez de saltar a una sección. <dialog> con showModal da el foco
- * atrapado, Escape y la vuelta del foco al botón que la abrió; acá se suman
- * la X y el toque afuera (el fondo es el propio <dialog>, el contenido está
- * en .portal-hoja-cuerpo). Un link de adentro a otra parte de la página
- * (#categorias) cierra la hoja y deja que el navegador baje hasta ahí.
- */
-function iniciarAyuda() {
-  const hoja = $('ayuda');
-  if (typeof hoja.showModal !== 'function') return; // Sin <dialog>: queda la página sin la hoja, nada se rompe.
-  document.addEventListener('click', (ev) => {
-    if (!ev.target.closest('a[href="#ayuda"]')) return;
-    ev.preventDefault();
-    if (!hoja.open) hoja.showModal();
-  });
-  hoja.addEventListener('click', (ev) => {
-    if (ev.target === hoja || ev.target.closest('[data-cerrar-ayuda]') || ev.target.closest('a[href^="#"]')) hoja.close();
-  });
-  if (window.location.hash === '#ayuda') hoja.showModal();
-}
-
 /* ---------- Armado de la página ---------- */
 
 function mostrar(id, contenido, contenedor = `portal-${id}`) {
@@ -555,68 +577,115 @@ function mostrar(id, contenido, contenedor = `portal-${id}`) {
   $(id).hidden = !texto.trim();
 }
 
-function iniciarCopiar() {
-  document.addEventListener('click', async (ev) => {
-    const b = ev.target.closest('[data-copiar]');
-    if (!b) return;
-    try {
-      await navigator.clipboard.writeText(b.dataset.copiar);
-      b.textContent = '¡Copiado!';
-    } catch {
-      // Sin permiso para el portapapeles: el alias queda a la vista para copiarlo a mano.
-      b.textContent = 'Copialo a mano';
-    }
-  });
+/** /ayuda: las preguntas (que cambian con lo que esté abierto) y la sede con el alias. */
+export async function iniciarPaginaAyuda() {
+  const pintar = ({ inscripcion = null, consultas = null } = {}) => {
+    $('portal-ayuda-lista').innerHTML = htmlAyuda({
+      inscripcionAbierta: abierto(inscripcion), consultasAbierto: abierto(consultas),
+      temporada: PORTAL.temporada, alias: PORTAL.alias, sede: PORTAL.sede, contacto: PORTAL.contacto,
+    });
+  };
+  // Hasta que responda la base, las respuestas suponen todo cerrado: nunca mandan a un botón apagado.
+  pintar();
+  mostrar('contacto', htmlContacto({ sede: PORTAL.sede, alias: PORTAL.alias }));
+  const datos = await iniciarMarco();
+  if (datos) pintar(datos);
+}
+
+/** /categorias: el buscador, los atajos y una sección por categoría. */
+export async function iniciarPaginaCategorias() {
+  const temporada = temporadaComoAnio(PORTAL.temporada);
+  const categorias = temporada ? categoriasConDetalle(PORTAL.categorias, PORTAL.temporada) : [];
+  if (temporada) $('t-categorias-temp').textContent = ` ${temporada}`;
+  $('buscar').hidden = !categorias.length;
+  if (categorias.length) {
+    iniciarBuscador(temporada, (c) => `#${c.ancla}`);
+    $('portal-cat-indice').innerHTML = htmlIndiceCategorias(categorias);
+    mostrar('detalle', html`${categorias.map((c) => htmlCategoriaDetalle(c, PORTAL.sede))}`, 'portal-cat-detalle');
+    // Si se llegó con /categorias#u13, la sección recién existe ahora: el navegador ya no va a bajar solo.
+    if (window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
+  }
+  await iniciarMarco();
+}
+
+/** /calendario: la grilla, "Lo que viene" y suscribirse. */
+export async function iniciarPaginaCalendario() {
+  const marco = iniciarMarco();
+  const calendarios = calendariosActivos(PORTAL.agenda);
+  $('calendario').hidden = !calendarios.length;
+  $('calendario-sin').hidden = calendarios.length > 0;
+  if (calendarios.length) {
+    const agenda = crearAgenda(calendarios);
+    cablearIcs($('calendario'), agenda);
+    iniciarCalendario(agenda).then(() => mostrarProximo(agenda));
+  }
+  await marco;
+}
+
+/** Lo del inicio que depende de los formularios. Sin argumentos, todo cerrado. */
+function pintarFormularios({ inscripcion = null, comprobante = null, consultas = null, colaboradores = null, recaudacion = null } = {}) {
+  $('portal-heroe').innerHTML = htmlHeroe({ inscripcion, consultas, comprobante, temporada: PORTAL.temporada, alias: PORTAL.alias });
+  $('portal-recaudacion').innerHTML = htmlRecaudacion(recaudacion);
+  $('portal-colaborar').innerHTML = htmlColaborar(colaboradores);
+}
+
+/** Con un video válido, el hero lo muestra a la derecha; sin uno, queda sólo el texto (el HTML arranca con la clase puesta para evitar el salto). */
+function iniciarFondoDelHero() {
+  const video = heroVideoValido(PORTAL.heroVideo);
+  if (!video) {
+    $('heroe').classList.remove('con-fondo');
+    return;
+  }
+  const fondo = $('portal-heroe-fondo');
+  fondo.innerHTML = htmlFondoHero(video);
+  iniciarVideoHero(fondo);
 }
 
 export async function iniciarPortal() {
-  const categorias = categoriasDelPortal(PORTAL.categorias, PORTAL.temporada);
-  $('portal-categorias').innerHTML = htmlCategorias(categorias);
-  $('categorias').hidden = !categorias.length;
+  // Un link viejo de cuando todo era una página (/#ayuda, /#categorias, /#calendario) va a su página nueva.
+  const pagina = paginaDeAncla(window.location.hash);
+  if (pagina) {
+    window.location.replace(pagina);
+    return;
+  }
+  // Pasar de "/" a "/#ayuda" en la misma pestaña es sólo un cambio de hash: no recarga, hay que escucharlo.
+  window.addEventListener('hashchange', () => {
+    const destino = paginaDeAncla(window.location.hash);
+    if (destino) window.location.replace(destino);
+  });
+
   const temporada = temporadaComoAnio(PORTAL.temporada);
+  const categorias = categoriasDelPortal(PORTAL.categorias, PORTAL.temporada);
+  $('categorias').hidden = !(temporada && categorias.length);
   if (temporada) $('t-categorias-temp').textContent = ` ${temporada}`;
-  if (temporada && categorias.length) iniciarBuscador(temporada);
+  if (temporada && categorias.length) iniciarBuscador(temporada, (c) => `/categorias#${c.ancla}`);
   mostrar('sede', htmlSede(PORTAL.sede));
   iniciarMapa();
   mostrar('club', htmlFoto(PORTAL.foto), 'portal-foto');
   mostrar('sponsors', htmlLogos(PORTAL.sponsors), 'portal-logos');
 
   // Hasta que responda la base, todo cerrado: nunca un botón a un formulario que quizá ya no está.
-  const pintarFormularios = ({ inscripcion = null, comprobante = null, consultas = null, colaboradores = null, recaudacion = null } = {}) => {
-    const abierto = (f) => Boolean(f && enlaceFormulario(f.enlace));
-    $('portal-heroe').innerHTML = htmlHeroe({ inscripcion, consultas, comprobante, temporada: PORTAL.temporada, alias: PORTAL.alias });
-    $('portal-recaudacion').innerHTML = htmlRecaudacion(recaudacion);
-    $('portal-colaborar').innerHTML = htmlColaborar(colaboradores);
-    $('portal-ayuda-lista').innerHTML = htmlAyuda({
-      inscripcionAbierta: abierto(inscripcion), consultasAbierto: abierto(consultas),
-      temporada: PORTAL.temporada, alias: PORTAL.alias, sede: PORTAL.sede, contacto: PORTAL.contacto,
-    });
-  };
   pintarFormularios();
-  iniciarAyuda();
-
-  const calendarios = calendariosActivos(PORTAL.agenda);
-  $('calendario').hidden = !calendarios.length;
-  iniciarCopiar();
-
-  $('portal-atajos').innerHTML = htmlAtajos([
-    !$('calendario').hidden && { clave: 'calendario', texto: 'Calendario', href: '#calendario' },
-    !$('categorias').hidden && { clave: 'categorias', texto: 'Categorías', href: '#categorias' },
-    { clave: 'colaborar', texto: 'Sumate', href: '#colaborar' },
-    { clave: 'ayuda', texto: 'Ayuda', href: '#ayuda' },
-  ].filter(Boolean));
+  esconderBarraMientrasSeVea($('portal-heroe'));
+  const marco = iniciarMarco();
 
   // Si la URL es la vuelta de un login, portalEntrada.js ya está mandando a la
-  // persona a /app. Acá no se consulta nada: el cliente de Supabase canjearía
-  // el ?code= o el #access_token en esta página, y la sesión es de /app.
+  // persona a /app: acá no se pide nada más (el marco tampoco lee la base).
   if (destinoDeAuth(window.location.search, window.location.hash)) return;
 
-  if (calendarios.length) iniciarCalendario(calendarios);
+  iniciarFondoDelHero();
+  const calendarios = calendariosActivos(PORTAL.agenda);
+  if (calendarios.length) {
+    const agenda = crearAgenda(calendarios);
+    cablearIcs($('proximo'), agenda);
+    mostrarProximo(agenda).then((hay) => { $('proximo').hidden = !hay; }, () => {});
+  }
+  iniciarUltimasNoticias();
 
-  const { estado, formularios } = await resolverFormularios(() => formulariosPublicos(PORTAL.clubId), PORTAL.formularios);
-
+  const datos = await marco;
+  if (!datos) return;
   // Los que tienen lugar propio (la banda, recaudación, colaborar) no se repiten en "Otros formularios".
-  const { inscripcion, comprobante, consultas, colaboradores, recaudacion, comunes } = separarFormularios(formularios);
+  const { estado, inscripcion, comprobante, consultas, colaboradores, recaudacion, comunes } = datos;
   pintarFormularios({ inscripcion, comprobante, consultas, colaboradores, recaudacion });
 
   const lista = htmlFormularios(comunes);

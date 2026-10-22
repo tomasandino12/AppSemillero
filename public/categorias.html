@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<!-- Se sirve con Cache-Control: no-store (vercel.json), como el inicio: guardado,
+     el navegador lo revalida y el 304 no trae la CSP vigente. -->
+<link rel="icon" href="/public/escudo.png" type="image/png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D0D10">
+<title>Categorías · Básquet Newell&#39;s</title>
+<meta name="description" content="Categorías del básquet formativo de Newell's: en qué categoría juega cada año de nacimiento, días y horarios de entrenamiento, y dónde se entrena.">
+
+<link rel="canonical" href="https://app-semillero.vercel.app/categorias">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Básquet Newell's">
+<meta property="og:locale" content="es_AR">
+<meta property="og:url" content="https://app-semillero.vercel.app/categorias">
+<meta property="og:title" content="Categorías · Básquet Newell's">
+<meta property="og:description" content="Categorías del básquet formativo de Newell's: en qué categoría juega cada año de nacimiento, días y horarios de entrenamiento, y dónde se entrena.">
+<meta property="og:image" content="https://app-semillero.vercel.app/public/escudo.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Escudo del club">
+<meta name="twitter:card" content="summary">
+
+<link rel="preload" href="/public/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/public/fonts/barlow-condensed-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/public/css/tokens.css">
+<link rel="stylesheet" href="/public/css/base.css">
+<link rel="stylesheet" href="/public/css/layout.css">
+<link rel="stylesheet" href="/public/css/componentes.css">
+<link rel="stylesheet" href="/public/css/publico.css">
+<link rel="stylesheet" href="/public/css/portal.css">
+<!-- El MISMO import map que la app, letra por letra (hash de la CSP). -->
+<script type="importmap">
+{
+  "imports": {
+    "xlsx": "/public/vendor/xlsx.mjs",
+    "@supabase/supabase-js": "/public/vendor/supabase-js.mjs"
+  }
+}
+</script>
+<script src="/public/config.js"></script>
+</head>
+<body>
+
+<div class="publico portal-d" id="publico">
+  <!-- Las dos acciones que más usan las familias, siempre a la vista: fija abajo
+       en el celular, una franja arriba de todo en compu (portal.css). La pinta
+       src/ui/portalMarco.js cuando responde la base. -->
+  <div class="portal-acc-barra" id="portal-acc-barra" hidden></div>
+  <header class="portal-barra">
+    <a class="portal-logo" href="/">
+      <img src="/public/escudo.png" alt="" width="36" height="36">
+      <div class="portal-marca"><div class="t">Newell&#39;s <span>Básquet</span></div><div class="s">Formativas · Familias</div></div>
+    </a>
+    <nav class="portal-barra-acc" aria-label="Accesos">
+      <!-- Para profes y jugadores: la entrada a Semillero y cómo instalarla, sin buscarla en el portal de padres. -->
+      <details class="portal-sem" id="semillero">
+        <summary class="portal-barra-btn portal-sem-btn">Soy profe o jugador</summary>
+        <div class="portal-sem-panel">
+          <b>Semillero</b>
+          <p>La aplicación del cuerpo técnico y de los jugadores. Las familias no la necesitan: todo lo suyo está en esta página.</p>
+          <a class="btn" href="/app">Entrar a Semillero</a>
+          <div class="portal-sem-inst">
+            <small>Tenela como una app en el celular</small>
+            <p><b>Android:</b> abrila con Chrome, tocá el menú (los tres puntitos) → <b>Instalar app</b>.</p>
+            <p><b>iPhone:</b> abrila con Safari, tocá <b>Compartir</b> → <b>Agregar a inicio</b>.</p>
+          </div>
+        </div>
+      </details>
+    </nav>
+    <nav class="portal-nav" aria-label="Páginas del básquet"><a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/categorias">Categorías</a><a href="/calendario">Calendario</a><a href="/ayuda">Ayuda</a></nav>
+  </header>
+
+
+  <main class="portal">
+    <section class="portal-sec portal-cat" id="buscar" aria-labelledby="t-categorias">
+      <div class="portal-st">Categorías<span id="t-categorias-temp"></span></div>
+      <h1 id="t-categorias">¿En qué categoría juega?</h1>
+      <p class="intro">Va por el año de nacimiento, como lo arma la CABB. Elegí el año y te decimos la categoría y los horarios.</p>
+      <div class="portal-buscador" id="portal-buscador"></div>
+      <nav class="portal-cat-indice" id="portal-cat-indice" aria-label="Todas las categorías"></nav>
+    </section>
+
+    <!-- Una sección por categoría (htmlCategoriaDetalle), con su ancla: /categorias#u13. -->
+    <section class="portal-papel alt" id="detalle" aria-label="Horarios y sede de cada categoría" hidden>
+      <div id="portal-cat-detalle"></div>
+    </section>
+  </main>
+
+  <footer class="portal-pie">
+    <div class="portal-pie-marca"><img src="/public/escudo.png" alt="" width="40" height="40"><div><b>Newell&#39;s Básquet</b><span>Formativas · Rosario</span></div></div>
+    <nav class="portal-pie-nav" aria-label="Páginas del básquet (pie)"><a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/categorias">Categorías</a><a href="/calendario">Calendario</a><a href="/ayuda">Ayuda</a></nav>
+    <div class="portal-pie-sede" id="portal-pie-sede"></div>
+    <div class="pie-legal"><a href="/app">Entrar a Semillero</a> · <a href="/public/legal/privacidad.html">Política de privacidad</a> · <a href="/public/legal/terminos.html">Términos y condiciones</a></div>
+  </footer>
+</div>
+
+<script type="module" src="/src/ui/categoriasArranque.js"></script>
+</body>
+</html>

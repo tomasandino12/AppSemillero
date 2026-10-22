@@ -14,6 +14,9 @@
 @font-face{font-family:'Barlow Condensed';font-weight:500;font-display:swap;src:url(/public/fonts/barlow-condensed-latin-500-normal.woff2) format('woff2')}
 @font-face{font-family:'Barlow Condensed';font-weight:600;font-display:swap;src:url(/public/fonts/barlow-condensed-latin-600-normal.woff2) format('woff2')}
 @font-face{font-family:'Barlow Condensed';font-weight:700;font-display:swap;src:url(/public/fonts/barlow-condensed-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Poppins';font-weight:600;font-display:swap;src:url(/public/fonts/poppins-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Poppins';font-weight:700;font-display:swap;src:url(/public/fonts/poppins-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Poppins';font-weight:800;font-display:swap;src:url(/public/fonts/poppins-latin-800-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter';font-weight:400;font-display:swap;src:url(/public/fonts/inter-latin-400-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter';font-weight:500;font-display:swap;src:url(/public/fonts/inter-latin-500-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter';font-weight:600;font-display:swap;src:url(/public/fonts/inter-latin-600-normal.woff2) format('woff2')}
@@ -56,6 +59,20 @@
   --sup-1:#22222A;
   --sup-2:#2C2C34;
   --linea-osc:#3A3A44;    /* borde sobre fondo oscuro: el par de --linea */
+
+  /* ---- portal público (estilo gimnasio): negro casi puro, un tinte del color
+     del club para alternar secciones y un solo acento. Sólo los usa .portal-d. */
+  --pf-fondo:#050505;
+  --pf-alt:#100307;          /* el tinte de las secciones pares (el #000e04 verde del gimnasio, en rojo) */
+  --pf-sup:#0a0a0a;
+  --pf-hover:#1c1c1c;
+  --pf-borde:#262626;
+  --pf-borde-btn:#555555;
+  --pf-muted:#A3A3A3;        /* 7.9:1 sobre --pf-sup */
+  --pf-vidrio:rgba(0,0,0,.6);
+  --pf-pill-fondo:rgba(217,18,46,.12);
+  --pf-pill-borde:rgba(217,18,46,.3);
+  --pf-pill-texto:#FF6B7D;   /* el rojo del club no llega a 4.5:1 sobre negro: éste sí */
 
   /* ---- superficies de la landing y la autenticación ----
      Más profundas que --negro/--sup-1 (que siguen siendo las de la app por
@@ -123,6 +140,7 @@
   --ff-titulo:'Barlow Condensed',system-ui,sans-serif;
   --ff-cuerpo:'Inter',system-ui,sans-serif;
   --ff-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --ff-portal:'Poppins','Inter',system-ui,sans-serif;   /* títulos del portal público */
 
   /* ---- escala tipográfica (mismos nombres que el prototipo, en rem) ---- */
   --fs-100:0.75rem;
@@ -184,6 +202,39 @@
     --primario-osc:color-mix(in srgb,var(--club) 73.7%,black);
     --primario-cl:color-mix(in oklab,var(--club) 9%,white);
     --primario-tenue:color-mix(in srgb,var(--club) 11%,white);
+  }
+}
+
+/* El portal público toma la paleta del estilo gimnasio: se redefinen los tokens
+   de lo público en su ámbito, así todo lo que ya los usa cambia sin tocarlo.
+   Esquinas redondeadas y botones en píldora. Fuera de .portal-d no cambia nada. */
+.portal-d{
+  --ff-titulo:var(--ff-portal);
+  --pub-fondo:var(--pf-fondo);
+  --pub-tarjeta:var(--pf-sup);
+  --pub-borde:var(--pf-borde);
+  --gris-osc:var(--pf-muted);
+  --r:1.5rem;
+  --r-s:.75rem;
+  --r-btn:999px;
+  /* Contenido de hasta 76 rem centrado; el fondo de cada franja va a todo el ancho. --lado-vw es lo mismo medido sobre la ventana (el hero, donde la columna es la mitad). */
+  --lado:max(var(--sp-4),calc((100% - 76rem) / 2));
+  --lado-vw:max(var(--sp-4),calc((100vw - 76rem) / 2));
+}
+/* Las secciones que eran "papel" son ahora oscuras: se invierten los neutros claros. */
+.portal-d .portal-papel{
+  --tinta:var(--sobre-oscuro);
+  --gris:var(--pf-muted);
+  --linea:var(--pf-borde);
+  --blanco:var(--pf-sup);
+  --fondo-chip:var(--pf-hover);
+  --primario-osc:var(--pf-pill-texto);
+}
+@supports (color:color-mix(in srgb,red,blue)){
+  :root{
+    --pf-pill-fondo:color-mix(in srgb,var(--club) 12%,transparent);
+    --pf-pill-borde:color-mix(in srgb,var(--club) 30%,transparent);
+    --pf-pill-texto:color-mix(in srgb,var(--club) 55%,white);
   }
 }
 

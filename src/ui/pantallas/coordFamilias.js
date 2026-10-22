@@ -20,12 +20,16 @@ const anfitrion = () => $('coord-familias-contenido');
 
 const REGLAS = [[/VINCULO_NO_ENCONTRADO/, 'Ese vínculo ya no está. Actualizá la lista.']];
 
-// Los formularios de la página del básquet (0058) viven acá porque son de las
-// familias: se suman, ocultan y ordenan desde esa pantalla, no desde una
-// pestaña más (la barra de coordinación ya tiene cinco).
+// Los formularios (0058) y las noticias (0064) de la página del básquet viven
+// acá porque son de las familias: se cargan desde estas pantallas, no desde
+// una pestaña más (la barra de coordinación ya tiene cinco).
 const accesoFormularios = html`
-  <div class="acciones"><button class="btn sec" id="fam-ir-formularios">Formularios de la página del básquet</button></div>`;
-const cablearFormularios = () => $('fam-ir-formularios').addEventListener('click', () => ir('p-coord-formularios', { push: true }));
+  <div class="acciones"><button class="btn sec" id="fam-ir-formularios">Formularios de la página del básquet</button>
+    <button class="btn sec" id="fam-ir-noticias">Noticias de la página del básquet</button></div>`;
+const cablearFormularios = () => {
+  $('fam-ir-formularios').addEventListener('click', () => ir('p-coord-formularios', { push: true }));
+  $('fam-ir-noticias').addEventListener('click', () => ir('p-coord-noticias', { push: true }));
+};
 
 const filaHtml = (v) => html`
   <div class="profe">

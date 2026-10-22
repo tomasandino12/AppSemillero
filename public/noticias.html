@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<!-- Se sirve con Cache-Control: no-store (vercel.json), como el inicio: guardado,
+     el navegador lo revalida y el 304 no trae la CSP vigente. -->
+<link rel="icon" href="/public/escudo.png" type="image/png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D0D10">
+<title>Noticias · Básquet Newell&#39;s</title>
+<meta name="description" content="Noticias del básquet formativo de Newell's.">
+
+<link rel="canonical" href="https://app-semillero.vercel.app/noticias">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Básquet Newell's">
+<meta property="og:locale" content="es_AR">
+<meta property="og:url" content="https://app-semillero.vercel.app/noticias">
+<meta property="og:title" content="Noticias · Básquet Newell's">
+<meta property="og:description" content="Noticias del básquet formativo de Newell's.">
+<meta property="og:image" content="https://app-semillero.vercel.app/public/escudo.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Escudo del club">
+<meta name="twitter:card" content="summary">
+
+<link rel="preload" href="/public/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/public/fonts/barlow-condensed-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/public/css/tokens.css">
+<link rel="stylesheet" href="/public/css/base.css">
+<link rel="stylesheet" href="/public/css/layout.css">
+<link rel="stylesheet" href="/public/css/componentes.css">
+<link rel="stylesheet" href="/public/css/publico.css">
+<link rel="stylesheet" href="/public/css/portal.css">
+<!-- El MISMO import map que la app, letra por letra (hash de la CSP). -->
+<script type="importmap">
+{
+  "imports": {
+    "xlsx": "/public/vendor/xlsx.mjs",
+    "@supabase/supabase-js": "/public/vendor/supabase-js.mjs"
+  }
+}
+</script>
+<script src="/public/config.js"></script>
+</head>
+<body>
+
+<div class="publico portal-d" id="publico">
+  <!-- Las dos acciones que más usan las familias, siempre a la vista: fija abajo
+       en el celular, una franja arriba de todo en compu (portal.css). La pinta
+       src/ui/portalMarco.js cuando responde la base. -->
+  <div class="portal-acc-barra" id="portal-acc-barra" hidden></div>
+  <header class="portal-barra">
+    <a class="portal-logo" href="/">
+      <img src="/public/escudo.png" alt="" width="36" height="36">
+      <div class="portal-marca"><div class="t">Newell&#39;s <span>Básquet</span></div><div class="s">Formativas · Familias</div></div>
+    </a>
+    <nav class="portal-barra-acc" aria-label="Accesos">
+      <!-- Para profes y jugadores: la entrada a Semillero y cómo instalarla, sin buscarla en el portal de padres. -->
+      <details class="portal-sem" id="semillero">
+        <summary class="portal-barra-btn portal-sem-btn">Soy profe o jugador</summary>
+        <div class="portal-sem-panel">
+          <b>Semillero</b>
+          <p>La aplicación del cuerpo técnico y de los jugadores. Las familias no la necesitan: todo lo suyo está en esta página.</p>
+          <a class="btn" href="/app">Entrar a Semillero</a>
+          <div class="portal-sem-inst">
+            <small>Tenela como una app en el celular</small>
+            <p><b>Android:</b> abrila con Chrome, tocá el menú (los tres puntitos) → <b>Instalar app</b>.</p>
+            <p><b>iPhone:</b> abrila con Safari, tocá <b>Compartir</b> → <b>Agregar a inicio</b>.</p>
+          </div>
+        </div>
+      </details>
+    </nav>
+    <nav class="portal-nav" aria-label="Páginas del básquet"><a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/categorias">Categorías</a><a href="/calendario">Calendario</a><a href="/ayuda">Ayuda</a></nav>
+  </header>
+
+
+  <main class="portal">
+    <!-- La lista de a 12 (src/ui/portalNoticias.js) o, con ?n=<id>, una noticia entera. -->
+    <section class="portal-papel" id="noticias" aria-labelledby="t-noticias">
+      <div class="portal-papel-cab" id="noticias-cab"><div><div class="portal-st">Noticias</div><h1 id="t-noticias">Lo último del básquet</h1></div></div>
+      <div id="portal-noticias" aria-live="polite"><p class="portal-not-nada">Cargando…</p></div>
+      <div class="portal-mas" id="noticias-mas" hidden><button type="button" class="btn sec" id="btn-noticias-mas">Ver más noticias</button></div>
+    </section>
+  </main>
+
+  <footer class="portal-pie">
+    <div class="portal-pie-marca"><img src="/public/escudo.png" alt="" width="40" height="40"><div><b>Newell&#39;s Básquet</b><span>Formativas · Rosario</span></div></div>
+    <nav class="portal-pie-nav" aria-label="Páginas del básquet (pie)"><a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/categorias">Categorías</a><a href="/calendario">Calendario</a><a href="/ayuda">Ayuda</a></nav>
+    <div class="portal-pie-sede" id="portal-pie-sede"></div>
+    <div class="pie-legal"><a href="/app">Entrar a Semillero</a> · <a href="/public/legal/privacidad.html">Política de privacidad</a> · <a href="/public/legal/terminos.html">Términos y condiciones</a></div>
+  </footer>
+</div>
+
+<script type="module" src="/src/ui/noticiasArranque.js"></script>
+</body>
+</html>

@@ -4,6 +4,10 @@
     { "source": "/", "destination": "/public/portal.html" },
     { "source": "/app", "destination": "/public/index.html" },
     { "source": "/consultas", "destination": "/public/consultas.html" },
+    { "source": "/ayuda", "destination": "/public/ayuda.html" },
+    { "source": "/noticias", "destination": "/public/noticias.html" },
+    { "source": "/categorias", "destination": "/public/categorias.html" },
+    { "source": "/calendario", "destination": "/public/calendario.html" },
     { "source": "/robots.txt", "destination": "/public/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/public/sitemap.xml" },
     { "source": "/privacidad", "destination": "/public/legal/privacidad.html" },
@@ -14,6 +18,14 @@
     { "source": "/app", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
     { "source": "/consultas", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
     { "source": "/public/consultas.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/ayuda", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/public/ayuda.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/noticias", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/public/noticias.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/categorias", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/public/categorias.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/calendario", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/public/calendario.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
     { "source": "/public/index.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
     { "source": "/public/portal.html", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
     { "source": "/src/(.*)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
@@ -31,7 +43,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'sha256-Bujujk4mmUFZZB4u54NvOipHhu5SYt4vkrP/D06zoR0='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: https://i.ytimg.com; media-src blob:; frame-src https://www.youtube-nocookie.com https://www.google.com; connect-src 'self' https://lseqvbtdzebomxwtqhwu.supabase.co wss://lseqvbtdzebomxwtqhwu.supabase.co https://www.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'sha256-Bujujk4mmUFZZB4u54NvOipHhu5SYt4vkrP/D06zoR0='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' blob: https://i.ytimg.com https://lseqvbtdzebomxwtqhwu.supabase.co; media-src 'self' blob:; frame-src https://www.youtube-nocookie.com https://www.google.com; connect-src 'self' https://lseqvbtdzebomxwtqhwu.supabase.co wss://lseqvbtdzebomxwtqhwu.supabase.co https://www.googleapis.com; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
         },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },

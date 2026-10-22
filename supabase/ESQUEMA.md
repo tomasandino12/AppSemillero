@@ -314,6 +314,14 @@ Los formularios de Google que el portal público (`/`) le muestra a las familias
 - **Destino (0061):** columna `destino` (nula = común; `consultas` = "Quiero jugar en Newell's", destacado y destino de la dirección fija `/consultas` del QR; `colaboradores` = sección de sponsors), con un check y un **índice único parcial por (club, destino)**: a lo sumo un formulario por destino. `formularios_publicos` se rehizo (drop + create) y devuelve también `destino`; `anon` sigue ejecutando sólo esa función y no tiene permisos sobre la columna. Verificación: `tests/verificarDestinoFormulario.sql` (8 casos); contrato: `tests/contratoDestinoFormulario.test.js`; deshacer en local: `tests/rollback0061.sql`. **Aplicar 0061 antes de publicar el código que la usa** (el panel nuevo pide la columna).
 - **Verificación:** `tests/verificarFormularioPortal.sql` (8 casos: la coordinación escribe y queda sellada; entrenador, coordinación de otro club y anon no leen ni escriben la tabla; la función devuelve sólo lo activo del club pedido; enlaces y textos inválidos rechazados; nadie borra). Contrato: `tests/contratoFormularioPortal.test.js`. Deshacer en local: `tests/rollback0058.sql`.
 
+### Noticias del portal: `noticia`, `noticias_publicas`, `noticia_publica` y el bucket `noticias` (0064)
+Las noticias que publica la coordinación en el portal (`/` y `/noticias`): título, resumen (la tarjeta), cuerpo (texto plano, párrafos separados por una línea en blanco), etiqueta (`club`, `partidos`, `eventos`, `inscripcion`), hasta 6 fotos `{ruta, alt}` y `publicada` (spec `docs/superpowers/specs/2026-10-21-portal-multipagina-design.md`).
+
+- **anon no recibe nada sobre la tabla**, como en 0058: sólo `execute` de `noticias_publicas(club, limite, antes)` (tarjetas, de a páginas, tope 24) y `noticia_publica(club, id)`, las dos `security definer` y sólo con filas **publicadas**.
+- **Escribe, publica y borra sólo la coordinación del club.** El id lo genera el cliente (las fotos se suben a la carpeta de la noticia antes de crear la fila). `sellar_noticia` pone `actualizado_por/en` y, la primera vez que se publica, `publicada_en`, que ya no cambia.
+- **Fotos:** bucket público `noticias` (1 MB, webp/jpeg), en `<club>/<noticia>/<uuid>.(webp|jpg)`. Suben, ven y borran sólo los coordinadores del club de la carpeta (`club_de_ruta_noticia`). El check `fotos_de_noticia_validas` exige rutas de la carpeta de esa noticia, alt de 1 a 150, sin claves de más. **Con fotos, `autorizacion_imagen` tiene que ser true** (`noticia_fotos_autorizadas`).
+- **Verificación:** `tests/verificarNoticias.sql` (7 casos). Contrato: `tests/contratoNoticia.test.js`. Deshacer: `tests/rollback0064.sql` (vaciar antes el bucket).
+
 ## Políticas RLS
 
 Hasta 0015 la autorización era sólo por club: quien tenía una fila en `miembro_club` veía **todos los planteles**. Desde 0016 pasa por la asignación, y **lectura y escritura son ejes separados**. Desde 0018 el coordinador no lee datos individuales.

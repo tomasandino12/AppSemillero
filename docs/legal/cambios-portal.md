@@ -110,3 +110,11 @@ los dice **desde el resumen** y en las secciones 2, 3, 4, 7, 8 y 9. Qué dice:
   de Datos" no nombra a Semillero: **decidir con Tomás** si alcanza o si se les pide
   la confirmación de nuevo (por ejemplo con el link de la reinscripción) antes de
   cargar sus emergencias.
+
+## Noticias con fotos (0064, 2026-10-21) — PENDIENTE de aprobación del club
+
+El portal suma noticias que publica la coordinación, con fotos guardadas en el Storage de Supabase (bucket público: cualquiera con el link de una foto la ve). En la base y en la interfaz, una noticia con fotos exige que la coordinación confirme la autorización de imagen de las familias. Cada foto lleva una descripción sin nombres de chicos.
+
+Despublicar una noticia **no** saca sus fotos del bucket: siguen abiertas por su link (con caché de hasta una hora). Para que una foto deje de verse hay que quitarla de la noticia o borrar la noticia. Los archivos se borran del bucket, pero una copia en la caché de Supabase puede tardar en irse.
+
+**Falta decidir con el club** si `public/legal/privacidad.html` tiene que mencionarlo (qué fotos se publican, con qué autorización, dónde se guardan y cómo pedir que se saque una). Si se cambia el texto, sube `VERSION_LEGAL` y todos los usuarios aceptan de nuevo, como en `2026-10-19`. **Esta rama no toca `privacidad.html`.**

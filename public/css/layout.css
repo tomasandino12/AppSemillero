@@ -383,31 +383,14 @@
   .publico .futuro{padding-inline:var(--sp-6)}
   /* Portal: las bandas con esquinas y más aire, atajos en una fila,
      formularios y categorías en dos columnas. */
-  .publico .portal-barra,.publico .portal-atajos,.publico .portal-sec{padding-inline:var(--sp-6)}
-  .publico .portal-barra{padding-top:var(--sp-5)}
-  .publico .portal-barra .s{display:block}
-  /* La hoja de Ayuda: un diálogo centrado. */
-  .publico .portal-hoja{inset:0;margin:auto;width:min(40rem,calc(100vw - 4rem));max-height:80dvh;border-radius:var(--r);border:1px solid var(--pub-borde);animation:none}
-  .publico .portal-hoja-cuerpo{max-height:80dvh;padding:var(--sp-6)}
   .publico .portal-sem-btn{max-width:none;white-space:nowrap}
-  .publico .portal-heroe,.publico .portal-banda{margin-inline:var(--sp-6);border-radius:var(--r);padding:var(--sp-8)}
-  .publico .portal-heroe h1{max-width:none}
-  .publico .portal-heroe-bajada{max-width:32rem;margin-bottom:var(--sp-6)}
-  /* Las dos tarjetas lado a lado, del mismo alto. */
-  .publico .portal-acciones{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-4);max-width:52rem}
-  .publico .portal-accion.principal{height:100%}
+  .publico .portal-accion{flex:0 1 auto}
   .publico .portal-formas{grid-template-columns:repeat(2,minmax(0,1fr))}
   /* La categoría: el año a la izquierda y el resultado al lado, ocupando todo el ancho. */
   .publico .portal-buscador{grid-template-columns:minmax(15rem,18rem) 1fr;align-items:end;gap:var(--sp-4)}
   /* Dónde se entrena: el texto a la izquierda y el mapa a la derecha. */
   .publico .portal-sede{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);align-items:center;gap:var(--sp-6)}
-  .publico .portal-atajos{grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:var(--sp-3)}
-  .publico .portal-atajos a{flex-direction:row;justify-content:center;font-size:var(--fs-145);padding:var(--sp-3)}
   .publico .portal-lista{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-4)}
-  .publico .portal-cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-  .publico .portal-cats li + li{border-top:0}
-  .publico .portal-cats li:nth-child(n+3){border-top:1px solid var(--pub-borde)}
-  .publico .portal-cats li:nth-child(even){border-left:1px solid var(--pub-borde)}
   .publico .portal-logos-lista{grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-4)}
   /* Bento en 2 columnas: las anchas y las altas ocupan el ancho completo; las dos últimas van lado a lado. */
   .publico .ben.ancha,.publico .ben.alta{grid-column:1 / -1}
@@ -488,4 +471,68 @@
   .cabecera .salir:hover{color:var(--sobre-oscuro)}
   .cat:hover{background:var(--sup-2)}
   .cat.on:hover{background:var(--primario-osc)}
+}
+
+/* ---- portal multipágina (portal.css) ---- */
+@media (min-width:40rem){
+  /* La barra de acciones: una franja arriba de todo, como el aviso del gimnasio. Siempre a la vista. */
+  .publico .portal-acc-barra,.publico .portal-acc-barra.flotante,.publico .portal-acc-barra.escondida{
+    position:static;display:flex;justify-content:center;gap:var(--sp-6);padding:var(--sp-2) var(--sp-6);
+    background:var(--pf-sup);border-top:0;border-bottom:1px solid var(--pf-borde);animation:none
+  }
+  .publico .portal-acc-barra[hidden]{display:none}
+  .publico .portal-acc-btn,.publico .portal-acc-btn.principal,.publico .portal-acc-btn.pago,.publico .portal-acc-btn.apagada{
+    flex-direction:row;min-height:2rem;padding:0;border:0;border-radius:0;background:none;font-size:var(--fs-125)
+  }
+  .publico .portal-acc-btn.principal{color:var(--pf-pill-texto)}
+  .publico .portal-acc-btn.pago{color:var(--pf-muted)}
+  .publico .portal-acc-btn.principal::after,.publico .portal-acc-btn.pago::after{content:" \2192"}
+  .publico .portal-acc-btn.apagada{color:var(--pf-muted)}
+  .publico.con-barra{padding-bottom:0}
+  .publico .portal-nots{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .publico .portal-art-fotos{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .publico .portal-cat-datos{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .publico .portal-contacto{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .publico .portal-barra .s{display:none}
+}
+/* El encabezado en compu: marca, navegación al centro y Semillero a la derecha. */
+@media (min-width:64rem){
+  .publico .portal-barra{flex-wrap:nowrap;min-height:5rem;padding-block:0}
+  .publico .portal-nav{order:1;flex:1 1 auto;justify-content:center;margin:0;padding:0;overflow:visible;gap:var(--sp-2)}
+  .publico .portal-nav a{min-height:5rem;border-bottom:0;padding:0 var(--sp-3)}
+  .publico .portal-nav a[aria-current="page"]{color:var(--pf-pill-texto);border-bottom:0}
+  .publico .portal-barra-acc{order:2;margin-left:0}
+  .publico .portal-nots{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .publico .portal-destacadas{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .publico .portal-pie{grid-template-columns:1.2fr auto 1.2fr;align-items:start;column-gap:var(--sp-8)}
+  .publico .portal-pie .pie-legal{grid-column:1 / -1}
+  .publico .portal-pie-nav{flex-direction:column;gap:0}
+  /* El hero partido: texto a la izquierda y el video a la derecha, cortado en diagonal.
+     El video llega 3 rem a la columna del texto y el corte va de 6 rem adentro arriba a 0 abajo:
+     la diagonal pasa por el medio de la pantalla y no pisa el texto (el padding derecho de 3 rem). */
+  .publico .portal-heroe.con-fondo{grid-template-columns:repeat(2,minmax(0,1fr));min-height:min(calc(100svh - 7rem),56rem)}
+  .publico .portal-heroe.con-fondo .portal-heroe-cont{
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+    padding:var(--sp-8) var(--sp-8) var(--sp-8) var(--lado-vw)
+  }
+  .publico .portal-heroe:not(.con-fondo) .portal-heroe-cont{max-width:56rem;padding-block:var(--sp-8) var(--sp-8)}
+  .publico .portal-heroe h1{font-size:clamp(3.25rem,5.6vw,5.25rem)}
+  .publico .portal-heroe-fondo{
+    position:absolute;top:0;bottom:0;right:0;left:calc(50% - 3rem);margin:0;aspect-ratio:auto;border:0;border-radius:0;
+    clip-path:polygon(6rem 0,100% 0,100% 100%,0 100%)
+  }
+}
+@media (hover:hover){
+  .publico .portal-nav a:hover,.publico .portal-pie-nav a:hover{color:var(--pf-pill-texto)}
+  .publico .portal-not{transition:transform var(--dur-3) var(--ease-salida)}
+  .publico .portal-not:hover{transform:translateY(-.375rem)}
+  .publico .portal-not:hover a::after{opacity:.5}
+  .publico .portal-tarjeta{transition:transform var(--dur-3) var(--ease-salida)}
+  .publico .portal-tarjeta:hover{transform:translateY(-.375rem)}
+  .publico .portal-cinta-pista:hover{animation-play-state:paused}
+}
+
+/* Celulares bajitos: las dos acciones primero; la bajada del hero es lo que sobra. */
+@media (max-width:39.99rem) and (max-height:600px){
+  .publico .portal-heroe-bajada{display:none}
 }
